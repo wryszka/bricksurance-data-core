@@ -91,16 +91,17 @@ semantic layer natively:
   "the semantic layer is done" is: *Genie answers actuarial questions correctly with
   no hand-holding.* The generator emits the Genie instruction text from the specs.
 
-## 4. Federated topology (the Hiscox-shaped scenario)
+## 4. Federated topology
 
-The reference scenario, deliberately heterogeneous:
+The reference scenario is deliberately heterogeneous — the shape most groups end
+up with after a few acquisitions:
 
 ```
             Group centre (GCP / BigQuery)          ← group model, consolidated views
                  ▲ reads via open formats
    ┌─────────────┴──────────────┐
    │                            │
-Retail units (Databricks)   London Market & Re (Snowflake)
+Retail units (Databricks)   Specialty unit (Snowflake)
 bricksurance_* schemas      BRICKSURANCE database
    │                            ▲
    └── exchange ────────────────┘
@@ -120,7 +121,7 @@ Interop mechanisms, in order of preference:
    conformed tables during transition or for group reporting.
 
 We do not overbuild this: the demo shows **one example of each** — a Snowflake trial
-account acting as "Bricksurance London Market" running the generated Snowflake DDL,
+account acting as "Bricksurance Specialty" running the generated Snowflake DDL,
 one cross-platform read, and one bordereau exchanged with full dictionary.
 
 ## 5. Data exchange — killing the bordereau
@@ -167,7 +168,7 @@ generator emits the seed rows — reference data is versioned with the model.
 | 1 | Full core P&C slice (party/party_role, coverage, insured object, premium & claim transactions, treaty & cession) deployed to Unity Catalog with synthetic data | next |
 | 2 | Semantic layer proven: metric views, Genie space, certification; Genie acceptance test passes | |
 | 3 | Exchange: D2D Delta Share to `fevm-lr-dev-aws-us` (Bricksurance Re), bordereau ingest demo (messy file → canonical, dictionary-assisted) | |
-| 4 | Federation example: Snowflake trial as "London Market" unit — generated DDL deployed, one cross-platform read, one cross-platform exchange | |
+| 4 | Federation example: Snowflake trial as the "Bricksurance Specialty" unit — generated DDL deployed, one cross-platform read, one cross-platform exchange | |
 | 5 | Adoption proof: retrofit one existing Bricksurance demo as a consumer via views | |
 | 6 | Extension proof: life domain (LifeCast) and full reinsurance domain added with zero rework to existing entities | |
 

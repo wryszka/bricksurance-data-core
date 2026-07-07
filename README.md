@@ -39,8 +39,8 @@ federated estates insurers actually have.
    proven structural patterns (party–role, agreement, coverage, money provision),
    not the full model ocean.
 4. **Federation is the normal case.** Group centre on one cloud, retail units on
-   Databricks, London Market and Re on Snowflake — that is a *supported topology*,
-   not a migration problem. Exchange rides on open table formats and open sharing
+   Databricks, an acquired specialty unit on Snowflake — that is a *supported
+   topology*, not a migration problem. Exchange rides on open table formats and open sharing
    protocols, never bespoke middleware.
 5. **Extend, never restart.** New lines of business, new domains, new parties are
    new spec files and new code-set rows. The party–role pattern and the generator
