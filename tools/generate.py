@@ -188,15 +188,6 @@ def entity_ddl(binding, manifest, entity):
         f"ALTER TABLE {table} ADD CONSTRAINT pk_{entity['name']} "
         f"PRIMARY KEY ({', '.join(pk)});"
     )
-    for a in entity["attributes"]:
-        cs = a.get("code_set")
-        if cs and not entity.get("_is_code_set"):
-            ref = fqn(binding, "reference", cs)
-            stmts.append(
-                f"ALTER TABLE {table} ADD CONSTRAINT "
-                f"fk_{entity['name']}_{cs} FOREIGN KEY ({a['name']}) "
-                f"REFERENCES {ref} ({cs}_code);"
-            )
 
     if platform == "databricks":
         tags = {
@@ -216,6 +207,37 @@ def entity_ddl(binding, manifest, entity):
                     f"SET TAGS ('data_classification' = '{a['classification']}');"
                 )
     return "\n\n".join(stmts)
+
+
+def fk_targets(entity, entity_index):
+    """Yield (attr_name, ref_domain, ref_table, ref_column) for every FK-bearing
+    attribute: code_set references and entity references."""
+    if entity.get("_is_code_set"):
+        return
+    for a in entity["attributes"]:
+        if a.get("code_set"):
+            yield a["name"], "reference", a["code_set"], f"{a['code_set']}_code"
+        elif a.get("references"):
+            ref = entity_index[a["references"]]
+            pk = ref["keys"]["primary"]
+            if len(pk) != 1:
+                raise ValueError(
+                    f"{entity['name']}.{a['name']} references {ref['name']} "
+                    "which has a composite primary key"
+                )
+            yield a["name"], ref["domain"], ref["name"], pk[0]
+
+
+def entity_fk_ddl(binding, entity, entity_index):
+    table = fqn(binding, entity["domain"], entity["name"])
+    stmts = []
+    for attr, ref_domain, ref_table, ref_col in fk_targets(entity, entity_index):
+        stmts.append(
+            f"ALTER TABLE {table} ADD CONSTRAINT fk_{entity['name']}_{attr} "
+            f"FOREIGN KEY ({attr}) "
+            f"REFERENCES {fqn(binding, ref_domain, ref_table)} ({ref_col});"
+        )
+    return stmts
 
 
 def insert_overwrite(platform, table):
@@ -297,6 +319,13 @@ def generate_platform(binding, manifest, entities, code_sets):
         path = out / f"20_{e['domain']}_{e['name']}.sql"
         path.write_text(header + entity_ddl(binding, manifest, e) + "\n")
 
+    # 90 - all foreign keys, after every table (and its primary key) exists
+    entity_index = {e["name"]: e for e in all_entities}
+    fks = []
+    for e in all_entities:
+        fks.extend(entity_fk_ddl(binding, e, entity_index))
+    (out / "90_relationships.sql").write_text(header + "\n\n".join(fks) + "\n")
+
 
 def generate_docs(manifest, entities, code_sets):
     out = BUILD / "docs"
@@ -358,12 +387,10 @@ def generate_docs(manifest, entities, code_sets):
             flag = " PK" if a["name"] in e["keys"]["primary"] else ""
             erd.append(f"        {mtype} {a['name']}{flag}")
         erd.append("    }")
+    entity_index = {e["name"]: e for e in all_entities}
     for e in entities:
-        for a in e["attributes"]:
-            if a.get("code_set"):
-                erd.append(
-                    f"    {e['name']} }}o--|| {a['code_set']} : {a['name']}"
-                )
+        for attr, _, ref_table, _ in fk_targets(e, entity_index):
+            erd.append(f"    {e['name']} }}o--|| {ref_table} : {attr}")
     (out / "erd.mmd").write_text("\n".join(erd) + "\n")
 
 
@@ -386,14 +413,13 @@ def generate_genie(binding, manifest, entities, code_sets):
         lines.append(f"- `{table}` — {' '.join(str(e['description']).split())} "
                      f"Grain: {' '.join(str(e['grain']).split())}")
     lines += ["", "## Join hints", ""]
+    entity_index = {e["name"]: e for e in ref_entities + [DICTIONARY_ENTITY] + entities}
     for e in entities:
-        for a in e["attributes"]:
-            cs = a.get("code_set")
-            if cs:
-                lines.append(
-                    f"- `{fqn(binding, e['domain'], e['name'])}.{a['name']}` joins to "
-                    f"`{fqn(binding, 'reference', cs)}.{cs}_code`."
-                )
+        for attr, ref_domain, ref_table, ref_col in fk_targets(e, entity_index):
+            lines.append(
+                f"- `{fqn(binding, e['domain'], e['name'])}.{attr}` joins to "
+                f"`{fqn(binding, ref_domain, ref_table)}.{ref_col}`."
+            )
     lines += ["", "## Vocabulary", ""]
     for cs in code_sets:
         codes = ", ".join(f"{c['code']} ({c['label']})" for c in cs["codes"])

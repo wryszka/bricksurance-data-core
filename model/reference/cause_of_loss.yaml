@@ -1,0 +1,31 @@
+kind: code_set
+name: cause_of_loss
+title: Cause of Loss
+description: >
+  The peril or event that gave rise to a claim. Aligned to ACORD cause-of-loss
+  vocabulary; one primary cause per claim.
+standards:
+  acord: LossCauseCd
+  lloyds_cdr: Cause of loss
+codes:
+  - code: FIRE
+    label: Fire
+    description: Fire, including smoke damage and firefighting damage.
+  - code: FLOOD
+    label: Flood
+    description: Inundation from external water, including river and surface water flooding.
+  - code: STORM
+    label: Storm
+    description: Windstorm, hail and associated weather damage.
+  - code: WATER_DAMAGE
+    label: Water Damage
+    description: Escape of water from internal systems such as burst pipes.
+  - code: THEFT
+    label: Theft
+    description: Theft, attempted theft and malicious damage in connection with it.
+  - code: COLLISION
+    label: Collision
+    description: Impact of a vehicle with another vehicle or object.
+  - code: LIABILITY_INCIDENT
+    label: Liability Incident
+    description: An event giving rise to third-party injury or property damage.

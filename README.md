@@ -62,6 +62,15 @@ uv run --with pyyaml tools/generate.py
 To target your own environment, edit the binding files in `bindings/` — for example
 the Unity Catalog name and schema naming pattern. Nothing in `model/` needs to change.
 
+To deploy to a Databricks workspace, with optional synthetic demo data and an
+end-to-end smoke test:
+
+```bash
+uv run --with pyyaml tools/generate_demo_data.py           # optional demo book
+uv run --with databricks-sdk tools/deploy_databricks.py --profile DEFAULT
+uv run --with databricks-sdk,pyyaml tools/smoke_test.py --profile DEFAULT
+```
+
 ## Repository layout
 
 ```

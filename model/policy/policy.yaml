@@ -34,11 +34,11 @@ attributes:
       acord: PolicyNumber
       lloyds_cdr: Contract reference
   - name: source_system_code
-    type: string
+    code_set: source_system
     required: true
     description: >
-      Code of the policy administration system this record originates from.
-      Provenance is part of the model, not an afterthought.
+      System of record this policy originates from. Provenance is part of the
+      model, not an afterthought.
     classification: internal
   - name: line_of_business_code
     code_set: line_of_business

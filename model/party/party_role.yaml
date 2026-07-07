@@ -1,0 +1,65 @@
+kind: entity
+name: party_role
+domain: party
+title: Party Role
+description: >
+  A role a party plays in a specific business context - on a policy, a claim
+  or a treaty. This is the model's central extensibility pattern: a new kind
+  of counterparty is a new party_role_type code plus rows here, never a new
+  table.
+grain: >
+  One row per role a party plays in one context (policy, claim or treaty)
+  for a period of time. Exactly one of policy_id, claim_id and treaty_id is
+  populated.
+standards:
+  acord: PartyRole patterns of the ACORD Information Model
+tags:
+  maturity: draft
+attributes:
+  - name: party_role_id
+    type: string
+    required: true
+    description: Identifier for this role assignment.
+    classification: internal
+  - name: party_id
+    references: party
+    type: string
+    required: true
+    description: The party playing the role.
+    classification: internal
+  - name: party_role_type_code
+    code_set: party_role_type
+    required: true
+    description: Which role the party plays in the context.
+  - name: policy_id
+    references: policy
+    type: string
+    required: false
+    description: Policy context of the role, when the role is played on a policy.
+    classification: internal
+  - name: claim_id
+    references: claim
+    type: string
+    required: false
+    description: Claim context of the role, when the role is played on a claim.
+    classification: internal
+  - name: treaty_id
+    references: treaty
+    type: string
+    required: false
+    description: Treaty context of the role, when the role is played on a treaty.
+    classification: internal
+  - name: start_date
+    type: date
+    required: true
+    description: Date from which the role applies (inclusive).
+  - name: end_date
+    type: date
+    required: false
+    description: Date on which the role ceased (inclusive); empty while the role is current.
+keys:
+  primary: [party_role_id]
+quality:
+  - name: exactly_one_context
+    rule: exactly one of policy_id, claim_id, treaty_id is not null
+    description: A role is always played in exactly one business context.

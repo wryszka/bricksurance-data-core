@@ -1,0 +1,85 @@
+kind: entity
+name: claim
+domain: claim
+title: Claim
+description: >
+  A demand for indemnity under a policy arising from a loss event. The claim
+  record holds the event and handling state; all financial development lives
+  in claim transactions.
+grain: One row per claim per source system.
+standards:
+  acord: Claim (ACORD Information Model)
+  lloyds_cdr: Claim-level attributes (indicative)
+tags:
+  maturity: draft
+attributes:
+  - name: claim_id
+    type: string
+    required: true
+    description: Stable, source-agnostic identifier for the claim, owned by the data layer.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: true
+    description: Policy the claim is made under.
+    classification: internal
+  - name: coverage_id
+    references: coverage
+    type: string
+    required: false
+    description: Coverage the claim attaches to, where the source provides it.
+    classification: internal
+  - name: claim_number
+    type: string
+    required: true
+    description: >
+      Claim number as issued by the claims system. Unique within a source
+      system - always interpret together with source_system_code.
+    classification: confidential
+    standards:
+      acord: ClaimNumber
+      lloyds_cdr: Claim reference
+  - name: claim_status_code
+    code_set: claim_status
+    required: true
+    description: Current handling status of the claim.
+    standards:
+      acord: ClaimStatusCd
+  - name: cause_of_loss_code
+    code_set: cause_of_loss
+    required: true
+    description: Primary peril or event that gave rise to the claim.
+    standards:
+      acord: LossCauseCd
+      lloyds_cdr: Cause of loss
+  - name: loss_date
+    type: date
+    required: true
+    description: Date the loss occurred.
+    standards:
+      acord: LossDt
+      lloyds_cdr: Date of loss
+  - name: reported_date
+    type: date
+    required: true
+    description: Date the loss was first reported to the insurer. Must be on or after loss_date.
+    standards:
+      acord: ReportedDt
+  - name: description
+    type: string
+    required: false
+    description: Free-text description of the loss circumstances.
+    classification: confidential
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the claim originates from.
+    classification: internal
+keys:
+  primary: [claim_id]
+  natural: [source_system_code, claim_number]
+quality:
+  - name: reported_after_loss
+    rule: reported_date >= loss_date
+    description: A loss cannot be reported before it happens.

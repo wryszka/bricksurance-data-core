@@ -1,6 +1,36 @@
 erDiagram
+    cause_of_loss {
+        string cause_of_loss_code PK
+        string label
+        string description
+    }
+    claim_status {
+        string claim_status_code PK
+        string label
+        string description
+    }
+    claim_transaction_type {
+        string claim_transaction_type_code PK
+        string label
+        string description
+    }
+    country {
+        string country_code PK
+        string label
+        string description
+    }
+    coverage_type {
+        string coverage_type_code PK
+        string label
+        string description
+    }
     currency {
         string currency_code PK
+        string label
+        string description
+    }
+    insured_object_type {
+        string insured_object_type_code PK
         string label
         string description
     }
@@ -9,8 +39,33 @@ erDiagram
         string label
         string description
     }
+    party_role_type {
+        string party_role_type_code PK
+        string label
+        string description
+    }
+    party_type {
+        string party_type_code PK
+        string label
+        string description
+    }
     policy_status {
         string policy_status_code PK
+        string label
+        string description
+    }
+    premium_transaction_type {
+        string premium_transaction_type_code PK
+        string label
+        string description
+    }
+    source_system {
+        string source_system_code PK
+        string label
+        string description
+    }
+    treaty_type {
+        string treaty_type_code PK
         string label
         string description
     }
@@ -25,6 +80,60 @@ erDiagram
         string lloyds_cdr_ref
         string model_version PK
     }
+    claim {
+        string claim_id PK
+        string policy_id
+        string coverage_id
+        string claim_number
+        string claim_status_code
+        string cause_of_loss_code
+        date loss_date
+        date reported_date
+        string description
+        string source_system_code
+    }
+    claim_transaction {
+        string claim_transaction_id PK
+        string claim_id
+        string claim_transaction_type_code
+        decimal amount
+        string currency_code
+        date transaction_date
+        string source_system_code
+    }
+    party {
+        string party_id PK
+        string party_type_code
+        string name
+        string country_code
+        string source_system_code
+    }
+    party_role {
+        string party_role_id PK
+        string party_id
+        string party_role_type_code
+        string policy_id
+        string claim_id
+        string treaty_id
+        date start_date
+        date end_date
+    }
+    coverage {
+        string coverage_id PK
+        string policy_id
+        string coverage_type_code
+        decimal limit_amount
+        decimal deductible_amount
+        decimal sum_insured_amount
+    }
+    insured_object {
+        string insured_object_id PK
+        string policy_id
+        string insured_object_type_code
+        string description
+        string country_code
+        string postcode
+    }
     policy {
         string policy_id PK
         string policy_number
@@ -36,6 +145,70 @@ erDiagram
         integer underwriting_year
         string currency_code
     }
+    premium_transaction {
+        string premium_transaction_id PK
+        string policy_id
+        string coverage_id
+        string premium_transaction_type_code
+        decimal amount
+        string currency_code
+        date transaction_date
+        string source_system_code
+    }
+    cession {
+        string cession_id PK
+        string policy_id
+        string coverage_id
+        string treaty_id
+        decimal ceded_share
+    }
+    treaty {
+        string treaty_id PK
+        string treaty_reference
+        string treaty_type_code
+        string line_of_business_code
+        integer underwriting_year
+        date inception_date
+        date expiry_date
+        decimal cession_rate
+        string currency_code
+        string source_system_code
+    }
+    claim }o--|| policy : policy_id
+    claim }o--|| coverage : coverage_id
+    claim }o--|| claim_status : claim_status_code
+    claim }o--|| cause_of_loss : cause_of_loss_code
+    claim }o--|| source_system : source_system_code
+    claim_transaction }o--|| claim : claim_id
+    claim_transaction }o--|| claim_transaction_type : claim_transaction_type_code
+    claim_transaction }o--|| currency : currency_code
+    claim_transaction }o--|| source_system : source_system_code
+    party }o--|| party_type : party_type_code
+    party }o--|| country : country_code
+    party }o--|| source_system : source_system_code
+    party_role }o--|| party : party_id
+    party_role }o--|| party_role_type : party_role_type_code
+    party_role }o--|| policy : policy_id
+    party_role }o--|| claim : claim_id
+    party_role }o--|| treaty : treaty_id
+    coverage }o--|| policy : policy_id
+    coverage }o--|| coverage_type : coverage_type_code
+    insured_object }o--|| policy : policy_id
+    insured_object }o--|| insured_object_type : insured_object_type_code
+    insured_object }o--|| country : country_code
+    policy }o--|| source_system : source_system_code
     policy }o--|| line_of_business : line_of_business_code
     policy }o--|| policy_status : policy_status_code
     policy }o--|| currency : currency_code
+    premium_transaction }o--|| policy : policy_id
+    premium_transaction }o--|| coverage : coverage_id
+    premium_transaction }o--|| premium_transaction_type : premium_transaction_type_code
+    premium_transaction }o--|| currency : currency_code
+    premium_transaction }o--|| source_system : source_system_code
+    cession }o--|| policy : policy_id
+    cession }o--|| coverage : coverage_id
+    cession }o--|| treaty : treaty_id
+    treaty }o--|| treaty_type : treaty_type_code
+    treaty }o--|| line_of_business : line_of_business_code
+    treaty }o--|| currency : currency_code
+    treaty }o--|| source_system : source_system_code

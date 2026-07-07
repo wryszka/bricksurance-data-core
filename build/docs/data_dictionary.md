@@ -1,6 +1,86 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.1.0. Do not edit.*
+*Generated from model v0.2.0. Do not edit.*
+
+## Cause of Loss (`reference.cause_of_loss`)
+
+The peril or event that gave rise to a claim. Aligned to ACORD cause-of-loss vocabulary; one primary cause per claim.
+
+**Grain:** One row per cause of loss code.
+
+**Standards:** Acord: LossCauseCd; Lloyds Cdr: Cause of loss
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| cause_of_loss_code | string | yes | Code value; referenced by cause_of_loss_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** cause_of_loss_code
+
+## Claim Status (`reference.claim_status`)
+
+Lifecycle status of a claim. Financial development lives in claim transactions; status describes the handling state only.
+
+**Grain:** One row per claim status code.
+
+**Standards:** Acord: ClaimStatusCd
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_status_code | string | yes | Code value; referenced by claim_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** claim_status_code
+
+## Claim Transaction Type (`reference.claim_transaction_type`)
+
+Kinds of claim financial movement. Claims finance is transactional: case reserves, payments and recoveries are signed movements, and figures such as outstanding or incurred are always derived by summation.
+
+**Grain:** One row per claim transaction type code.
+
+**Standards:** Acord: Claim payment / reserve patterns of the ACORD Information Model
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_transaction_type_code | string | yes | Code value; referenced by claim_transaction_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** claim_transaction_type_code
+
+## Country (`reference.country`)
+
+Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes. A governed subset, extended when the business enters a market.
+
+**Grain:** One row per country code.
+
+**Standards:** Acord: CountryCd (ISO 3166-1)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| country_code | string | yes | Code value; referenced by country_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** country_code
+
+## Coverage Type (`reference.coverage_type`)
+
+Kinds of cover that can be granted under a policy. A policy bundles one or more coverages; limits, deductibles and claims attach at coverage level.
+
+**Grain:** One row per coverage type code.
+
+**Standards:** Acord: CoverageCd
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| coverage_type_code | string | yes | Code value; referenced by coverage_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** coverage_type_code
 
 ## Currency (`reference.currency`)
 
@@ -18,6 +98,22 @@ Transaction currencies used by the group, as ISO 4217 alphabetic codes. This is 
 
 **Primary key:** currency_code
 
+## Insured Object Type (`reference.insured_object_type`)
+
+Kinds of object or exposure a policy can insure. Extend with new codes as new lines of business are written (vessels, livestock, cyber estates...).
+
+**Grain:** One row per insured object type code.
+
+**Standards:** Acord: InsuredObject / Risk patterns of the ACORD Information Model
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| insured_object_type_code | string | yes | Code value; referenced by insured_object_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** insured_object_type_code
+
 ## Line of Business (`reference.line_of_business`)
 
 Classes of insurance business written by the group, aligned to ACORD LOBCd vocabulary. Extend by adding codes; never repurpose an existing code.
@@ -34,6 +130,38 @@ Classes of insurance business written by the group, aligned to ACORD LOBCd vocab
 
 **Primary key:** line_of_business_code
 
+## Party Role Type (`reference.party_role_type`)
+
+The roles a party can play in the business. This code set is the model's number-one extension point: a new kind of counterparty is a new code here, not a new table.
+
+**Grain:** One row per party role type code.
+
+**Standards:** Acord: Party role patterns of the ACORD Information Model
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| party_role_type_code | string | yes | Code value; referenced by party_role_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** party_role_type_code
+
+## Party Type (`reference.party_type`)
+
+Fundamental legal nature of a party. Everything else about a party's place in the business is a role, never a type.
+
+**Grain:** One row per party type code.
+
+**Standards:** Acord: PartyTypeCd
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| party_type_code | string | yes | Code value; referenced by party_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** party_type_code
+
 ## Policy Status (`reference.policy_status`)
 
 Lifecycle status of a policy contract. Status reflects the contract as a whole; coverage-level suspension is modelled on the coverage entity.
@@ -49,6 +177,52 @@ Lifecycle status of a policy contract. Status reflects the contract as a whole; 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** policy_status_code
+
+## Premium Transaction Type (`reference.premium_transaction_type`)
+
+Kinds of premium movement. Premium is always modelled as signed transactions; balances such as gross written premium are derived by summation, never overwritten.
+
+**Grain:** One row per premium transaction type code.
+
+**Standards:** Lloyds Cdr: Premium-related CDR attributes (indicative)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| premium_transaction_type_code | string | yes | Code value; referenced by premium_transaction_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** premium_transaction_type_code
+
+## Source System (`reference.source_system`)
+
+Systems of record that feed the data layer. Provenance is part of the model: every core entity carries a source_system_code, and identifiers are only unique within their source system.
+
+**Grain:** One row per source system code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| source_system_code | string | yes | Code value; referenced by source_system_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** source_system_code
+
+## Treaty Type (`reference.treaty_type`)
+
+Forms of treaty reinsurance. Direction (assumed or ceded) is determined by the cedant and reinsurer party roles on the treaty, not by this code.
+
+**Grain:** One row per treaty type code.
+
+**Standards:** Acord: Reinsurance agreement patterns (ACORD GRLC)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| treaty_type_code | string | yes | Code value; referenced by treaty_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** treaty_type_code
 
 ## Data Dictionary (`reference.data_dictionary`)
 
@@ -70,6 +244,129 @@ Machine-readable dictionary of every entity and attribute in the model, generate
 
 **Primary key:** entity_name, attribute_name, model_version
 
+## Claim (`claim.claim`)
+
+A demand for indemnity under a policy arising from a loss event. The claim record holds the event and handling state; all financial development lives in claim transactions.
+
+**Grain:** One row per claim per source system.
+
+**Standards:** Acord: Claim (ACORD Information Model); Lloyds Cdr: Claim-level attributes (indicative)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_id | string | yes | Stable, source-agnostic identifier for the claim, owned by the data layer. | internal |  |  |
+| policy_id | string | yes | Policy the claim is made under. | internal |  |  |
+| coverage_id | string |  | Coverage the claim attaches to, where the source provides it. | internal |  |  |
+| claim_number | string | yes | Claim number as issued by the claims system. Unique within a source system - always interpret together with source_system_code. | confidential | ClaimNumber | Claim reference |
+| claim_status_code | string | yes | Current handling status of the claim. |  | ClaimStatusCd |  |
+| cause_of_loss_code | string | yes | Primary peril or event that gave rise to the claim. |  | LossCauseCd | Cause of loss |
+| loss_date | date | yes | Date the loss occurred. |  | LossDt | Date of loss |
+| reported_date | date | yes | Date the loss was first reported to the insurer. Must be on or after loss_date. |  | ReportedDt |  |
+| description | string |  | Free-text description of the loss circumstances. | confidential |  |  |
+| source_system_code | string | yes | System of record the claim originates from. | internal |  |  |
+
+**Primary key:** claim_id
+**Natural key:** source_system_code, claim_number
+**Quality — reported_after_loss:** `reported_date >= loss_date` — A loss cannot be reported before it happens.
+
+## Claim Transaction (`claim.claim_transaction`)
+
+A signed financial movement on a claim: case reserve movements, indemnity and expense payments, and recoveries. Outstanding, paid and incurred are always derived by summation over these movements, never stored as balances.
+
+**Grain:** One row per financial movement per claim.
+
+**Standards:** Acord: Claim payment / reserve patterns of the ACORD Information Model
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_transaction_id | string | yes | Identifier for the claim transaction. | internal |  |  |
+| claim_id | string | yes | Claim the movement belongs to. | internal |  |  |
+| claim_transaction_type_code | string | yes | Kind of financial movement. |  |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the transaction currency. Reserve increases positive, reserve releases negative; payments positive; recoveries negative from the insurer's cost perspective. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| transaction_date | date | yes | Date the movement was booked. |  |  |  |
+| source_system_code | string | yes | System of record the movement originates from. | internal |  |  |
+
+**Primary key:** claim_transaction_id
+
+## Party (`party.party`)
+
+A person or organisation the group deals with. A party exists exactly once regardless of how many relationships it has; what the party does (insured, broker, cedant, claimant...) is expressed through party roles, never by duplicating the party.
+
+**Grain:** One row per unique legal person or organisation, mastered across source systems.
+
+**Standards:** Acord: Party (ACORD Information Model)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| party_id | string | yes | Stable, source-agnostic identifier for the party, owned by the data layer. | internal |  |  |
+| party_type_code | string | yes | Whether the party is a natural person or a legal entity. |  |  |  |
+| name | string | yes | Full legal name of the party. | pii | CommercialName / PersonName |  |
+| country_code | string | yes | Country of residence or registration. | pii | CountryCd |  |
+| source_system_code | string | yes | System of record this party was mastered from. | internal |  |  |
+
+**Primary key:** party_id
+
+## Party Role (`party.party_role`)
+
+A role a party plays in a specific business context - on a policy, a claim or a treaty. This is the model's central extensibility pattern: a new kind of counterparty is a new party_role_type code plus rows here, never a new table.
+
+**Grain:** One row per role a party plays in one context (policy, claim or treaty) for a period of time. Exactly one of policy_id, claim_id and treaty_id is populated.
+
+**Standards:** Acord: PartyRole patterns of the ACORD Information Model
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| party_role_id | string | yes | Identifier for this role assignment. | internal |  |  |
+| party_id | string | yes | The party playing the role. | internal |  |  |
+| party_role_type_code | string | yes | Which role the party plays in the context. |  |  |  |
+| policy_id | string |  | Policy context of the role, when the role is played on a policy. | internal |  |  |
+| claim_id | string |  | Claim context of the role, when the role is played on a claim. | internal |  |  |
+| treaty_id | string |  | Treaty context of the role, when the role is played on a treaty. | internal |  |  |
+| start_date | date | yes | Date from which the role applies (inclusive). |  |  |  |
+| end_date | date |  | Date on which the role ceased (inclusive); empty while the role is current. |  |  |  |
+
+**Primary key:** party_role_id
+**Quality — exactly_one_context:** `exactly one of policy_id, claim_id, treaty_id is not null` — A role is always played in exactly one business context.
+
+## Coverage (`policy.coverage`)
+
+A specific cover granted under a policy, with its own limit and deductible. A policy bundles one or more coverages; claims attach to coverages where the source data allows it.
+
+**Grain:** One row per coverage granted under a policy.
+
+**Standards:** Acord: Coverage (ACORD Information Model)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| coverage_id | string | yes | Identifier for the coverage. | internal |  |  |
+| policy_id | string | yes | Policy the coverage is granted under. | internal |  |  |
+| coverage_type_code | string | yes | Kind of cover granted. |  | CoverageCd |  |
+| limit_amount | decimal(18,2) |  | Maximum amount payable under this coverage, in the policy currency; empty where unlimited or not applicable. |  | Limit | Limit of liability |
+| deductible_amount | decimal(18,2) |  | Amount borne by the insured before this coverage responds, in the policy currency. |  | Deductible | Deductible / excess |
+| sum_insured_amount | decimal(18,2) |  | Declared value insured under this coverage, in the policy currency. |  |  |  |
+
+**Primary key:** coverage_id
+
+## Insured Object (`policy.insured_object`)
+
+A concrete object or exposure insured under a policy - a building, a vehicle, a shipment, a set of operations. Location lives here, which makes this the anchor for exposure and accumulation analysis.
+
+**Grain:** One row per insured object under a policy.
+
+**Standards:** Acord: InsuredObject / Risk (ACORD Information Model)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| insured_object_id | string | yes | Identifier for the insured object. | internal |  |  |
+| policy_id | string | yes | Policy the object is insured under. | internal |  |  |
+| insured_object_type_code | string | yes | Kind of object or exposure insured. |  |  |  |
+| description | string |  | Human-readable description of the object, as declared. | confidential |  |  |
+| country_code | string | yes | Country where the object is located or the exposure arises. |  |  |  |
+| postcode | string |  | Postal code of the object's location, where applicable; drives geographic accumulation. | confidential |  | Risk location |
+
+**Primary key:** insured_object_id
+
 ## Policy (`policy.policy`)
 
 A contract of insurance between an insurer and one or more policyholders, under which the insurer provides cover for defined risks in exchange for premium. This is the contract-level record: coverages, insured objects, premium transactions and parties are separate entities that reference it.
@@ -82,7 +379,7 @@ A contract of insurance between an insurer and one or more policyholders, under 
 |---|---|---|---|---|---|---|
 | policy_id | string | yes | Stable, source-agnostic identifier for the policy. A surrogate key owned by the data layer, not by any policy administration system. | internal |  |  |
 | policy_number | string | yes | Policy number as issued to the policyholder. Unique within a source system, not globally - always interpret together with source_system_code. | confidential | PolicyNumber | Contract reference |
-| source_system_code | string | yes | Code of the policy administration system this record originates from. Provenance is part of the model, not an afterthought. | internal |  |  |
+| source_system_code | string | yes | System of record this policy originates from. Provenance is part of the model, not an afterthought. | internal |  |  |
 | line_of_business_code | string | yes | Line of business written under this policy. |  | LOBCd | Class of business |
 | policy_status_code | string | yes | Current lifecycle status of the policy. |  | PolicyStatusCd |  |
 | inception_date | date | yes | Date on which cover begins (inclusive). |  | EffectiveDt | Inception date |
@@ -93,3 +390,66 @@ A contract of insurance between an insurer and one or more policyholders, under 
 **Primary key:** policy_id
 **Natural key:** source_system_code, policy_number
 **Quality — cover_period_valid:** `expiry_date >= inception_date` — Cover cannot end before it begins.
+
+## Premium Transaction (`policy.premium_transaction`)
+
+A signed premium movement on a policy. Premium is transactional by design: figures such as gross written premium are derived by summing transactions, never stored as overwritable balances.
+
+**Grain:** One row per premium movement per policy (and coverage, where known).
+
+**Standards:** Acord: Premium / MoneyProvision patterns of the ACORD Information Model; Lloyds Cdr: Premium attributes (indicative)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| premium_transaction_id | string | yes | Identifier for the premium transaction. | internal |  |  |
+| policy_id | string | yes | Policy the premium movement belongs to. | internal |  |  |
+| coverage_id | string |  | Coverage the movement is allocated to, where the source provides that split. | internal |  |  |
+| premium_transaction_type_code | string | yes | Kind of premium movement. |  |  |  |
+| amount | decimal(18,2) | yes | Signed amount of the movement in the transaction currency: written and positive adjustments positive, returns negative. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| transaction_date | date | yes | Date the movement was booked. |  |  |  |
+| source_system_code | string | yes | System of record the movement originates from. | internal |  |  |
+
+**Primary key:** premium_transaction_id
+
+## Cession (`reinsurance.cession`)
+
+The link between direct business and a treaty: which policy (or coverage) is ceded to which treaty, and to what share. Ceded premium and recoveries are derived by applying the ceded share to the underlying transactions.
+
+**Grain:** One row per policy (or coverage, where the split exists) per treaty.
+
+**Standards:** Acord: Cession patterns (ACORD GRLC)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| cession_id | string | yes | Identifier for the cession. | internal |  |  |
+| policy_id | string | yes | Policy being ceded. | internal |  |  |
+| coverage_id | string |  | Coverage being ceded, where cession applies at coverage level. | internal |  |  |
+| treaty_id | string | yes | Treaty the business is ceded to. | internal |  |  |
+| ceded_share | decimal(5,4) | yes | Share of the risk ceded under this cession, as a fraction between 0 and 1. | confidential |  |  |
+
+**Primary key:** cession_id
+
+## Treaty (`reinsurance.treaty`)
+
+A treaty reinsurance contract under which risks are ceded to or assumed from reinsurers. Cedant and reinsurer are party roles on the treaty; which business it covers is expressed through cessions.
+
+**Grain:** One row per treaty contract per underwriting year.
+
+**Standards:** Acord: Reinsurance agreement patterns (ACORD GRLC)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| treaty_id | string | yes | Stable identifier for the treaty, owned by the data layer. | internal |  |  |
+| treaty_reference | string | yes | Treaty reference as agreed between the parties. | confidential |  |  |
+| treaty_type_code | string | yes | Form of the treaty. |  |  |  |
+| line_of_business_code | string | yes | Class of business the treaty covers. |  |  |  |
+| underwriting_year | integer | yes | Underwriting year of account of the treaty. |  |  | Year of account |
+| inception_date | date | yes | Date treaty cover begins (inclusive). |  |  |  |
+| expiry_date | date | yes | Date treaty cover ends (inclusive). Must be on or after inception_date. |  |  |  |
+| cession_rate | decimal(5,4) |  | Contractual ceded share for proportional treaties, as a fraction between 0 and 1; empty for non-proportional forms. | confidential |  |  |
+| currency_code | string | yes | Currency of the treaty. |  |  |  |
+| source_system_code | string | yes | System of record the treaty originates from. | internal |  |  |
+
+**Primary key:** treaty_id
+**Quality — cover_period_valid:** `expiry_date >= inception_date` — Treaty cover cannot end before it begins.

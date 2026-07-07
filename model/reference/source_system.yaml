@@ -1,0 +1,22 @@
+kind: code_set
+name: source_system
+title: Source System
+description: >
+  Systems of record that feed the data layer. Provenance is part of the model:
+  every core entity carries a source_system_code, and identifiers are only
+  unique within their source system.
+codes:
+  - code: PAS_CORE
+    label: Policy Administration (Core)
+    description: The group's core policy administration system.
+  - code: CLM_CORE
+    label: Claims (Core)
+    description: The group's core claims management system.
+  - code: RI_CORE
+    label: Reinsurance (Core)
+    description: The group's reinsurance administration system.
+  - code: DATA_CORE
+    label: Data Core (Mastered)
+    description: >
+      Records mastered or derived inside the data layer itself, such as
+      deduplicated golden party records.

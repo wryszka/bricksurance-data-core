@@ -164,8 +164,8 @@ generator emits the seed rows — reference data is versioned with the model.
 
 | Phase | Deliverable | Status |
 |---|---|---|
-| 0 | Repo, spec format, generator, Policy exemplar + code sets, Databricks & Snowflake bindings | **this commit** |
-| 1 | Full core P&C slice (party/party_role, coverage, insured object, premium & claim transactions, treaty & cession) deployed to Unity Catalog with synthetic data | next |
+| 0 | Repo, spec format, generator, Policy exemplar + code sets, Databricks & Snowflake bindings | done |
+| 1 | Full core P&C slice (party/party_role, coverage, insured object, premium & claim transactions, treaty & cession) deployed to Unity Catalog with synthetic data | **this commit** |
 | 2 | Semantic layer proven: metric views, Genie space, certification; Genie acceptance test passes | |
 | 3 | Exchange: D2D Delta Share to `fevm-lr-dev-aws-us` (Bricksurance Re), bordereau ingest demo (messy file → canonical, dictionary-assisted) | |
 | 4 | Federation example: Snowflake trial as the "Bricksurance Specialty" unit — generated DDL deployed, one cross-platform read, one cross-platform exchange | |
