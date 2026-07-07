@@ -1,0 +1,6 @@
+# Snowflake binding — "Bricksurance London Market & Re" unit in the federated
+# scenario. Same logical model, different physical platform; definitions and
+# keys are generated as comments and informational constraints.
+platform: snowflake
+database: BRICKSURANCE
+schema_pattern: "{domain}"

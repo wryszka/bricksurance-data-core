@@ -1,0 +1,8 @@
+# Databricks binding — Bricksurance primary estate (retail units in the
+# federated scenario). This workspace has a single fixed catalog that cannot
+# be renamed, so domains map to prefixed schemas. Adopters with their own
+# metastore would typically use catalog: bricksurance and
+# schema_pattern: "{domain}" — that is the only change needed.
+platform: databricks
+catalog: lr_serverless_aws_us_catalog
+schema_pattern: "bricksurance_{domain}"

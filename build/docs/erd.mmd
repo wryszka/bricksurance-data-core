@@ -1,0 +1,41 @@
+erDiagram
+    currency {
+        string currency_code PK
+        string label
+        string description
+    }
+    line_of_business {
+        string line_of_business_code PK
+        string label
+        string description
+    }
+    policy_status {
+        string policy_status_code PK
+        string label
+        string description
+    }
+    data_dictionary {
+        string entity_name PK
+        string attribute_name PK
+        string data_type
+        boolean is_required
+        string definition
+        string data_classification
+        string acord_ref
+        string lloyds_cdr_ref
+        string model_version PK
+    }
+    policy {
+        string policy_id PK
+        string policy_number
+        string source_system_code
+        string line_of_business_code
+        string policy_status_code
+        date inception_date
+        date expiry_date
+        integer underwriting_year
+        string currency_code
+    }
+    policy }o--|| line_of_business : line_of_business_code
+    policy }o--|| policy_status : policy_status_code
+    policy }o--|| currency : currency_code

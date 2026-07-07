@@ -1,0 +1,40 @@
+model: bricksurance-data-core
+title: Bricksurance Data Core
+version: 0.1.0
+description: >
+  An open, business-first semantic data model for insurance, aligned to ACORD
+  terminology with a crosswalk to the Lloyd's Core Data Record. Platform
+  artifacts are generated from these specs; see bindings/ and tools/.
+domains:
+  - name: reference
+    description: >
+      Shared code sets and classifications used across all domains, plus the
+      generated data dictionary. Reference data is versioned with the model:
+      allowed values live in the specs, not in anyone's head.
+  - name: party
+    description: >
+      People and organisations, and the roles they play in the business
+      (insured, broker, cedant, reinsurer, claimant). A party exists once;
+      relationships are roles.
+  - name: policy
+    description: >
+      Insurance contracts and their composition - policies, coverages, insured
+      objects and premium transactions.
+  - name: claim
+    description: >
+      Claims against policies and their financial development - reserves,
+      payments and recoveries as transactions, never as overwritten balances.
+  - name: reinsurance
+    description: >
+      Outward and inward reinsurance - treaties, cessions and recoveries
+      linking the direct book to reinsurers.
+  - name: exchange
+    description: >
+      Canonical data-exchange objects (bordereau lines, submissions) and the
+      landing zone for inbound counterparty data before mapping to the
+      canonical model.
+  - name: semantics
+    description: >
+      Business metrics defined once over the canonical model - gross written
+      premium, net earned premium, incurred, loss ratio, combined ratio.
+      Physicalised as metric views where the platform supports them.

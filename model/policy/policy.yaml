@@ -1,0 +1,94 @@
+kind: entity
+name: policy
+domain: policy
+title: Policy
+description: >
+  A contract of insurance between an insurer and one or more policyholders,
+  under which the insurer provides cover for defined risks in exchange for
+  premium. This is the contract-level record: coverages, insured objects,
+  premium transactions and parties are separate entities that reference it.
+grain: >
+  One row per policy contract per source system. Mid-term changes are modelled
+  as endorsements (future entity), not as new rows here.
+standards:
+  acord: Policy (ACORD Information Model, P&C)
+  lloyds_cdr: Contract-level attributes of the Lloyd's Core Data Record (indicative)
+tags:
+  maturity: draft
+attributes:
+  - name: policy_id
+    type: string
+    required: true
+    description: >
+      Stable, source-agnostic identifier for the policy. A surrogate key owned
+      by the data layer, not by any policy administration system.
+    classification: internal
+  - name: policy_number
+    type: string
+    required: true
+    description: >
+      Policy number as issued to the policyholder. Unique within a source
+      system, not globally - always interpret together with source_system_code.
+    classification: confidential
+    standards:
+      acord: PolicyNumber
+      lloyds_cdr: Contract reference
+  - name: source_system_code
+    type: string
+    required: true
+    description: >
+      Code of the policy administration system this record originates from.
+      Provenance is part of the model, not an afterthought.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business written under this policy.
+    standards:
+      acord: LOBCd
+      lloyds_cdr: Class of business
+  - name: policy_status_code
+    code_set: policy_status
+    required: true
+    description: Current lifecycle status of the policy.
+    standards:
+      acord: PolicyStatusCd
+  - name: inception_date
+    type: date
+    required: true
+    description: Date on which cover begins (inclusive).
+    standards:
+      acord: EffectiveDt
+      lloyds_cdr: Inception date
+  - name: expiry_date
+    type: date
+    required: true
+    description: >
+      Date on which cover ends (inclusive). Must be on or after inception_date.
+    standards:
+      acord: ExpirationDt
+      lloyds_cdr: Expiry date
+  - name: underwriting_year
+    type: integer
+    required: true
+    description: >
+      Year of account to which the policy is allocated; drives reinsurance
+      cession and market reporting.
+    standards:
+      lloyds_cdr: Year of account
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: >
+      Original currency of the policy. Monetary amounts on child entities are
+      expressed in this currency unless explicitly stated otherwise.
+    standards:
+      acord: CurCd
+      lloyds_cdr: Settlement currency
+keys:
+  primary: [policy_id]
+  natural: [source_system_code, policy_number]
+quality:
+  - name: cover_period_valid
+    rule: expiry_date >= inception_date
+    description: Cover cannot end before it begins.
