@@ -15,14 +15,14 @@ COMMENT 'A role a party plays in a specific business context - on a policy, a cl
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ADD CONSTRAINT pk_party_role PRIMARY KEY (party_role_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'party', 'maturity' = 'draft', 'acord_ref' = 'PartyRole patterns of the ACORD Information Model');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'party', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'PartyRole patterns of the ACORD Information Model');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN party_role_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN party_role_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN party_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN party_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN policy_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN policy_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN claim_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN claim_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN treaty_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party_role ALTER COLUMN treaty_id SET TAGS ('bxc_classification' = 'internal');

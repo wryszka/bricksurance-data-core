@@ -10,7 +10,7 @@ COMMENT 'The peril or event that gave rise to a claim. Aligned to ACORD cause-of
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.cause_of_loss ADD CONSTRAINT pk_cause_of_loss PRIMARY KEY (cause_of_loss_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.cause_of_loss SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'LossCauseCd');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.cause_of_loss SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'LossCauseCd');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.claim_status (
   claim_status_code STRING NOT NULL COMMENT 'Code value; referenced by claim_status_code columns across the model.',
@@ -21,7 +21,7 @@ COMMENT 'Lifecycle status of a claim. Financial development lives in claim trans
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.claim_status ADD CONSTRAINT pk_claim_status PRIMARY KEY (claim_status_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.claim_status SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'ClaimStatusCd');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.claim_status SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'ClaimStatusCd');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.claim_transaction_type (
   claim_transaction_type_code STRING NOT NULL COMMENT 'Code value; referenced by claim_transaction_type_code columns across the model.',
@@ -32,7 +32,7 @@ COMMENT 'Kinds of claim financial movement. Claims finance is transactional: cas
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.claim_transaction_type ADD CONSTRAINT pk_claim_transaction_type PRIMARY KEY (claim_transaction_type_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.claim_transaction_type SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'Claim payment / reserve patterns of the ACORD Information Model');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.claim_transaction_type SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'Claim payment / reserve patterns of the ACORD Information Model');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.country (
   country_code STRING NOT NULL COMMENT 'Code value; referenced by country_code columns across the model.',
@@ -43,7 +43,7 @@ COMMENT 'Countries the group operates or insures risks in, as ISO 3166-1 alpha-2
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.country ADD CONSTRAINT pk_country PRIMARY KEY (country_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.country SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'CountryCd (ISO 3166-1)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.country SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'CountryCd (ISO 3166-1)');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.coverage_type (
   coverage_type_code STRING NOT NULL COMMENT 'Code value; referenced by coverage_type_code columns across the model.',
@@ -54,7 +54,7 @@ COMMENT 'Kinds of cover that can be granted under a policy. A policy bundles one
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.coverage_type ADD CONSTRAINT pk_coverage_type PRIMARY KEY (coverage_type_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.coverage_type SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'CoverageCd');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.coverage_type SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'CoverageCd');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.currency (
   currency_code STRING NOT NULL COMMENT 'Code value; referenced by currency_code columns across the model.',
@@ -65,7 +65,7 @@ COMMENT 'Transaction currencies used by the group, as ISO 4217 alphabetic codes.
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.currency ADD CONSTRAINT pk_currency PRIMARY KEY (currency_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.currency SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'CurCd (ISO 4217)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.currency SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'CurCd (ISO 4217)');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.insured_object_type (
   insured_object_type_code STRING NOT NULL COMMENT 'Code value; referenced by insured_object_type_code columns across the model.',
@@ -76,7 +76,7 @@ COMMENT 'Kinds of object or exposure a policy can insure. Extend with new codes 
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.insured_object_type ADD CONSTRAINT pk_insured_object_type PRIMARY KEY (insured_object_type_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.insured_object_type SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'InsuredObject / Risk patterns of the ACORD Information Model');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.insured_object_type SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'InsuredObject / Risk patterns of the ACORD Information Model');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.line_of_business (
   line_of_business_code STRING NOT NULL COMMENT 'Code value; referenced by line_of_business_code columns across the model.',
@@ -87,7 +87,7 @@ COMMENT 'Classes of insurance business written by the group, aligned to ACORD LO
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.line_of_business ADD CONSTRAINT pk_line_of_business PRIMARY KEY (line_of_business_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.line_of_business SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'LOBCd');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.line_of_business SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'LOBCd');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.party_role_type (
   party_role_type_code STRING NOT NULL COMMENT 'Code value; referenced by party_role_type_code columns across the model.',
@@ -98,7 +98,7 @@ COMMENT 'The roles a party can play in the business. This code set is the model'
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.party_role_type ADD CONSTRAINT pk_party_role_type PRIMARY KEY (party_role_type_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.party_role_type SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'Party role patterns of the ACORD Information Model');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.party_role_type SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'Party role patterns of the ACORD Information Model');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.party_type (
   party_type_code STRING NOT NULL COMMENT 'Code value; referenced by party_type_code columns across the model.',
@@ -109,7 +109,7 @@ COMMENT 'Fundamental legal nature of a party. Everything else about a party''s p
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.party_type ADD CONSTRAINT pk_party_type PRIMARY KEY (party_type_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.party_type SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'PartyTypeCd');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.party_type SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'PartyTypeCd');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.policy_status (
   policy_status_code STRING NOT NULL COMMENT 'Code value; referenced by policy_status_code columns across the model.',
@@ -120,7 +120,7 @@ COMMENT 'Lifecycle status of a policy contract. Status reflects the contract as 
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.policy_status ADD CONSTRAINT pk_policy_status PRIMARY KEY (policy_status_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.policy_status SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'PolicyStatusCd');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.policy_status SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'PolicyStatusCd');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.premium_transaction_type (
   premium_transaction_type_code STRING NOT NULL COMMENT 'Code value; referenced by premium_transaction_type_code columns across the model.',
@@ -131,7 +131,7 @@ COMMENT 'Kinds of premium movement. Premium is always modelled as signed transac
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.premium_transaction_type ADD CONSTRAINT pk_premium_transaction_type PRIMARY KEY (premium_transaction_type_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.premium_transaction_type SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.premium_transaction_type SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.source_system (
   source_system_code STRING NOT NULL COMMENT 'Code value; referenced by source_system_code columns across the model.',
@@ -142,7 +142,7 @@ COMMENT 'Systems of record that feed the data layer. Provenance is part of the m
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.source_system ADD CONSTRAINT pk_source_system PRIMARY KEY (source_system_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.source_system SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.source_system SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.treaty_type (
   treaty_type_code STRING NOT NULL COMMENT 'Code value; referenced by treaty_type_code columns across the model.',
@@ -153,7 +153,7 @@ COMMENT 'Forms of treaty reinsurance. Direction (assumed or ceded) is determined
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.treaty_type ADD CONSTRAINT pk_treaty_type PRIMARY KEY (treaty_type_code);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.treaty_type SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference', 'acord_ref' = 'Reinsurance agreement patterns (ACORD GRLC)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.treaty_type SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'Reinsurance agreement patterns (ACORD GRLC)');
 
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.data_dictionary (
   entity_name STRING NOT NULL COMMENT 'Entity (table) the attribute belongs to.',
@@ -170,7 +170,7 @@ COMMENT 'Machine-readable dictionary of every entity and attribute in the model,
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.data_dictionary ADD CONSTRAINT pk_data_dictionary PRIMARY KEY (entity_name, attribute_name, model_version);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.data_dictionary SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reference');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.data_dictionary SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reference');
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.cause_of_loss VALUES
   ('FIRE', 'Fire', 'Fire, including smoke damage and firefighting damage.'),

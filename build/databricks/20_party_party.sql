@@ -12,12 +12,12 @@ COMMENT 'A person or organisation the group deals with. A party exists exactly o
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ADD CONSTRAINT pk_party PRIMARY KEY (party_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'party', 'maturity' = 'draft', 'acord_ref' = 'Party (ACORD Information Model)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'party', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'Party (ACORD Information Model)');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ALTER COLUMN party_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ALTER COLUMN party_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ALTER COLUMN name SET TAGS ('data_classification' = 'pii');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ALTER COLUMN name SET TAGS ('bxc_classification' = 'pii');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ALTER COLUMN country_code SET TAGS ('data_classification' = 'pii');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ALTER COLUMN country_code SET TAGS ('bxc_classification' = 'pii');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ALTER COLUMN source_system_code SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_party.party ALTER COLUMN source_system_code SET TAGS ('bxc_classification' = 'internal');

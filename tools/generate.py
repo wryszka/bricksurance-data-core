@@ -190,21 +190,24 @@ def entity_ddl(binding, manifest, entity):
     )
 
     if platform == "databricks":
+        # Tag keys are namespaced via the binding's tag_prefix so they never
+        # collide with an organisation's governed tag policies.
+        prefix = binding.get("tag_prefix", "")
         tags = {
-            "model": manifest["model"],
-            "model_version": manifest["version"],
-            "domain": entity["domain"],
+            f"{prefix}model": manifest["model"],
+            f"{prefix}model_version": manifest["version"],
+            f"{prefix}domain": entity["domain"],
         }
-        tags.update(entity.get("tags", {}))
+        tags.update({f"{prefix}{k}": v for k, v in entity.get("tags", {}).items()})
         if entity.get("standards", {}).get("acord"):
-            tags["acord_ref"] = entity["standards"]["acord"]
+            tags[f"{prefix}acord_ref"] = entity["standards"]["acord"]
         tag_sql = ", ".join(f"'{k}' = '{esc(v)}'" for k, v in tags.items())
         stmts.append(f"ALTER TABLE {table} SET TAGS ({tag_sql});")
         for a in entity["attributes"]:
             if a.get("classification"):
                 stmts.append(
                     f"ALTER TABLE {table} ALTER COLUMN {a['name']} "
-                    f"SET TAGS ('data_classification' = '{a['classification']}');"
+                    f"SET TAGS ('{prefix}classification' = '{a['classification']}');"
                 )
     return "\n\n".join(stmts)
 

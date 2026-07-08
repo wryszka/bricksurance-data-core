@@ -17,16 +17,16 @@ COMMENT 'A demand for indemnity under a policy arising from a loss event. The cl
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ADD CONSTRAINT pk_claim PRIMARY KEY (claim_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'claim', 'maturity' = 'draft', 'acord_ref' = 'Claim (ACORD Information Model)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'claim', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'Claim (ACORD Information Model)');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN claim_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN claim_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN policy_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN policy_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN coverage_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN coverage_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN claim_number SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN claim_number SET TAGS ('bxc_classification' = 'confidential');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN description SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN description SET TAGS ('bxc_classification' = 'confidential');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN source_system_code SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim ALTER COLUMN source_system_code SET TAGS ('bxc_classification' = 'internal');

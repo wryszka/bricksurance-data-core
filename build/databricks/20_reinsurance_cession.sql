@@ -12,14 +12,14 @@ COMMENT 'The link between direct business and a treaty: which policy (or coverag
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ADD CONSTRAINT pk_cession PRIMARY KEY (cession_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reinsurance', 'maturity' = 'draft', 'acord_ref' = 'Cession patterns (ACORD GRLC)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reinsurance', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'Cession patterns (ACORD GRLC)');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN cession_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN cession_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN policy_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN policy_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN coverage_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN coverage_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN treaty_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN treaty_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN ceded_share SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.cession ALTER COLUMN ceded_share SET TAGS ('bxc_classification' = 'confidential');

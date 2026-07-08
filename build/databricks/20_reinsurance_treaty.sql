@@ -17,12 +17,12 @@ COMMENT 'A treaty reinsurance contract under which risks are ceded to or assumed
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ADD CONSTRAINT pk_treaty PRIMARY KEY (treaty_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'reinsurance', 'maturity' = 'draft', 'acord_ref' = 'Reinsurance agreement patterns (ACORD GRLC)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'reinsurance', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'Reinsurance agreement patterns (ACORD GRLC)');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ALTER COLUMN treaty_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ALTER COLUMN treaty_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ALTER COLUMN treaty_reference SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ALTER COLUMN treaty_reference SET TAGS ('bxc_classification' = 'confidential');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ALTER COLUMN cession_rate SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ALTER COLUMN cession_rate SET TAGS ('bxc_classification' = 'confidential');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ALTER COLUMN source_system_code SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty ALTER COLUMN source_system_code SET TAGS ('bxc_classification' = 'internal');

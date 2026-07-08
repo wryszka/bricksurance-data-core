@@ -13,8 +13,8 @@ COMMENT 'A specific cover granted under a policy, with its own limit and deducti
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.coverage ADD CONSTRAINT pk_coverage PRIMARY KEY (coverage_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.coverage SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'policy', 'maturity' = 'draft', 'acord_ref' = 'Coverage (ACORD Information Model)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.coverage SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'policy', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'Coverage (ACORD Information Model)');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.coverage ALTER COLUMN coverage_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.coverage ALTER COLUMN coverage_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.coverage ALTER COLUMN policy_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.coverage ALTER COLUMN policy_id SET TAGS ('bxc_classification' = 'internal');

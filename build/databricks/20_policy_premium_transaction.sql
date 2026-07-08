@@ -15,14 +15,14 @@ COMMENT 'A signed premium movement on a policy. Premium is transactional by desi
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ADD CONSTRAINT pk_premium_transaction PRIMARY KEY (premium_transaction_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'policy', 'maturity' = 'draft', 'acord_ref' = 'Premium / MoneyProvision patterns of the ACORD Information Model');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'policy', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'Premium / MoneyProvision patterns of the ACORD Information Model');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN premium_transaction_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN premium_transaction_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN policy_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN policy_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN coverage_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN coverage_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN amount SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN amount SET TAGS ('bxc_classification' = 'confidential');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN source_system_code SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.premium_transaction ALTER COLUMN source_system_code SET TAGS ('bxc_classification' = 'internal');

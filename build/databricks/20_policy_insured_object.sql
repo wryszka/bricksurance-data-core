@@ -13,12 +13,12 @@ COMMENT 'A concrete object or exposure insured under a policy - a building, a ve
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ADD CONSTRAINT pk_insured_object PRIMARY KEY (insured_object_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'policy', 'maturity' = 'draft', 'acord_ref' = 'InsuredObject / Risk (ACORD Information Model)');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'policy', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'InsuredObject / Risk (ACORD Information Model)');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ALTER COLUMN insured_object_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ALTER COLUMN insured_object_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ALTER COLUMN policy_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ALTER COLUMN policy_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ALTER COLUMN description SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ALTER COLUMN description SET TAGS ('bxc_classification' = 'confidential');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ALTER COLUMN postcode SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_policy.insured_object ALTER COLUMN postcode SET TAGS ('bxc_classification' = 'confidential');

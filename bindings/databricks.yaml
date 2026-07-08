@@ -6,3 +6,6 @@
 platform: databricks
 catalog: lr_serverless_aws_us_catalog
 schema_pattern: "bricksurance_{domain}"
+# Prefix for governance tag keys, so model tags never collide with the
+# organisation's governed tag policies (e.g. a reserved "domain" key).
+tag_prefix: "bxc_"

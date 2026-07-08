@@ -14,12 +14,12 @@ COMMENT 'A signed financial movement on a claim: case reserve movements, indemni
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ADD CONSTRAINT pk_claim_transaction PRIMARY KEY (claim_transaction_id);
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction SET TAGS ('model' = 'bricksurance-data-core', 'model_version' = '0.2.0', 'domain' = 'claim', 'maturity' = 'draft', 'acord_ref' = 'Claim payment / reserve patterns of the ACORD Information Model');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.2.0', 'bxc_domain' = 'claim', 'bxc_maturity' = 'draft', 'bxc_acord_ref' = 'Claim payment / reserve patterns of the ACORD Information Model');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ALTER COLUMN claim_transaction_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ALTER COLUMN claim_transaction_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ALTER COLUMN claim_id SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ALTER COLUMN claim_id SET TAGS ('bxc_classification' = 'internal');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ALTER COLUMN amount SET TAGS ('data_classification' = 'confidential');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ALTER COLUMN amount SET TAGS ('bxc_classification' = 'confidential');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ALTER COLUMN source_system_code SET TAGS ('data_classification' = 'internal');
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction ALTER COLUMN source_system_code SET TAGS ('bxc_classification' = 'internal');

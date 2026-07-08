@@ -43,6 +43,13 @@ def main():
     cat = binding["catalog"]
     prefix = binding["schema_pattern"].format(domain="")
 
+    # expected physical tables = entities + code sets + the data dictionary
+    specs = [yaml.safe_load(p.read_text()) for p in sorted((ROOT / "model").rglob("*.yaml"))
+             if p.name != "model.yaml"]
+    n_tables = len(specs) + 1
+    n_fks = sum(1 for s in specs for a in s.get("attributes", [])
+                if a.get("code_set") or a.get("references"))
+
     w = WorkspaceClient(profile=args.profile)
     wid = args.warehouse_id or pick_warehouse(w).id
 
@@ -50,12 +57,12 @@ def main():
         return f"{cat}.{binding['schema_pattern'].format(domain=domain)}.{table}"
 
     checks = [
-        ("24 tables deployed",
+        (f"{n_tables} tables deployed (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
-         f"WHERE table_schema LIKE '{prefix}%'", "24"),
-        ("38 foreign-key relationships",
+         f"WHERE table_schema LIKE '{prefix}%'", str(n_tables)),
+        (f"{n_fks} foreign-key relationships (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.table_constraints "
-         f"WHERE constraint_schema LIKE '{prefix}%' AND constraint_type = 'FOREIGN KEY'", "38"),
+         f"WHERE constraint_schema LIKE '{prefix}%' AND constraint_type = 'FOREIGN KEY'", str(n_fks)),
         ("60 policies", f"SELECT COUNT(*) FROM {q('policy', 'policy')}", "60"),
         ("18 claims", f"SELECT COUNT(*) FROM {q('claim', 'claim')}", "18"),
         ("dictionary covers every deployed column",
@@ -78,7 +85,8 @@ def main():
          f"AND ct.claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT'", "270000"),
         ("every party role has exactly one context",
          f"SELECT COUNT(*) FROM {q('party', 'party_role')} "
-         f"WHERE (policy_id IS NOT NULL) + (claim_id IS NOT NULL) + (treaty_id IS NOT NULL) <> 1", "0"),
+         f"WHERE CAST(policy_id IS NOT NULL AS INT) + CAST(claim_id IS NOT NULL AS INT) "
+         f"+ CAST(treaty_id IS NOT NULL AS INT) <> 1", "0"),
     ]
 
     failures = 0
