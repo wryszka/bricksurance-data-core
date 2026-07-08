@@ -1,0 +1,12 @@
+command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+env:
+  - name: "DATABRICKS_WAREHOUSE_ID"
+    valueFrom: "sql_warehouse"
+  - name: "SERVING_ENDPOINT"
+    value: "databricks-claude-sonnet-5"
+  - name: "GENIE_SPACE_URL"
+    value: "https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/01f17ade46ec18bc8da2cb30b55a26a6"
+  - name: "MODEL_REPO_URL"
+    value: "https://github.com/wryszka/bricksurance-data-core/tree/main/model"
+  - name: "EXCHANGE_SHARE_NAME"
+    value: "bricksurance_re_exchange"

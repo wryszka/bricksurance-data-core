@@ -90,6 +90,9 @@ docs/DESIGN.md    Architecture, federated topology, exchange patterns, roadmap.
   [Bricksurance Data Core on Google Docs](https://docs.google.com/document/d/1o0RJnVAixisAjzLmEzgqZ1N4Vs7xKobsjM_06pyQ-sY/edit)
 - **Live Genie space** (demo workspace):
   [Bricksurance Data Core](https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/01f17ade46ec18bc8da2cb30b55a26a6)
+- **Data Core Console** (Databricks App, demo workspace — the front door for demos;
+  source in [`app/`](app/)):
+  [data-core-console](https://data-core-console-7474659673789953.aws.databricksapps.com)
 
 The deck and the document reference each other; both describe exactly what this
 repository deploys.

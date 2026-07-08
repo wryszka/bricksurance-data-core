@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+npm-debug.log*
+.databricks/
+.DS_Store
+# frontend/dist is committed / deployed intentionally — do not ignore it
