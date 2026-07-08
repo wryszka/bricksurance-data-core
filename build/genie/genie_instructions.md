@@ -71,6 +71,26 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty.currency_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.currency.currency_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
 
+## Metrics
+
+For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric views below over hand-written aggregations. Query measures with MEASURE(<name>) and GROUP BY dimensions. Amounts are in original currency: always group by or filter on currency_code before summing money.
+
+- `lr_serverless_aws_us_catalog.bricksurance_semantics.underwriting_metrics` — Certified underwriting KPIs - premium, claims development and loss ratio - defined once over the canonical model. Measures are in original transaction currency: always group by or filter on currency_code before summing money. Query measures with MEASURE(name).
+  - dimension underwriting_year: Underwriting year of account of the underlying policy.
+  - dimension line_of_business: Line of business as its business label, e.g. 'Commercial Property'. Filter this dimension with labels; use line_of_business_code for codes.
+  - dimension line_of_business_code: Line of business as its code, e.g. COMMERCIAL_PROPERTY.
+  - dimension currency_code: Original currency of the transaction. Group by this before summing money.
+  - dimension transaction_month: Calendar month the movement was booked in.
+  - dimension cause_of_loss_code: Cause of loss for claim movements; empty for premium movements.
+  - MEASURE(gross_written_premium): Sum of all premium movements (written, adjustments, returns) - the book's gross written premium in original currency.
+  - MEASURE(claims_paid): Indemnity plus allocated expense paid, gross of recoveries.
+  - MEASURE(recoveries): Subrogation, salvage and contribution recoveries (negative amounts).
+  - MEASURE(outstanding_reserve): Current case reserves - the sum of all signed reserve movements.
+  - MEASURE(claims_incurred): Paid plus outstanding net of recoveries - total claims incurred.
+  - MEASURE(loss_ratio): Claims incurred divided by gross written premium. Meaningful within a single currency; not premium-earned-adjusted in this version.
+  - MEASURE(policy_count): Number of distinct policies with premium activity.
+  - MEASURE(claim_count): Number of distinct claims with financial activity.
+
 ## Vocabulary
 
 - Cause of Loss: FIRE (Fire), FLOOD (Flood), STORM (Storm), WATER_DAMAGE (Water Damage), THEFT (Theft), COLLISION (Collision), LIABILITY_INCIDENT (Liability Incident).

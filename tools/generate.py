@@ -64,19 +64,18 @@ def attr_type(attr):
 
 def load_model():
     manifest = yaml.safe_load((ROOT / "model" / "model.yaml").read_text())
-    entities, code_sets = [], []
+    entities, code_sets, views, metric_views = [], [], [], []
+    buckets = {"entity": entities, "code_set": code_sets,
+               "view": views, "metric_view": metric_views}
     for path in sorted((ROOT / "model").rglob("*.yaml")):
         if path.name == "model.yaml":
             continue
         spec = yaml.safe_load(path.read_text())
         kind = spec.get("kind")
-        if kind == "entity":
-            entities.append(spec)
-        elif kind == "code_set":
-            code_sets.append(spec)
-        else:
+        if kind not in buckets:
             raise ValueError(f"{path}: unknown kind {kind!r}")
-    return manifest, entities, code_sets
+        buckets[kind].append(spec)
+    return manifest, entities, code_sets, views, metric_views
 
 
 def code_set_as_entity(cs):
@@ -243,6 +242,73 @@ def entity_fk_ddl(binding, entity, entity_index):
     return stmts
 
 
+def resolve_refs(binding, sql):
+    """Replace {domain.table} placeholders in view SQL with bound FQNs."""
+    import re
+
+    return re.sub(
+        r"\{(\w+)\.(\w+)\}",
+        lambda m: fqn(binding, m.group(1), m.group(2)),
+        sql,
+    )
+
+
+def view_ddl(binding, view):
+    table = fqn(binding, view["domain"], view["name"])
+    comment = f"{view['description']} Grain: {view['grain']}" if view.get("grain") else view["description"]
+    return (
+        f"CREATE OR REPLACE VIEW {table}\n"
+        f"{table_comment(binding['platform'], comment)}\n"
+        f"AS\n{resolve_refs(binding, view['sql']).strip()};"
+    )
+
+
+def metric_view_ddl(binding, mv):
+    """Unity Catalog metric view (Databricks binding only)."""
+    body = [f"version: {mv.get('spec_version', '0.1')}", ""]
+    src_domain, src_table = mv["source"].split(".")
+    body.append(f"source: {fqn(binding, src_domain, src_table)}")
+    if mv.get("joins"):
+        body.append("")
+        body.append("joins:")
+        for j in mv["joins"]:
+            j_domain, j_table = j["source"].split(".")
+            body.append(f"  - name: {j['name']}")
+            body.append(f"    source: {fqn(binding, j_domain, j_table)}")
+            # spec field is 'condition' because YAML 1.1 parses a bare 'on' key as a boolean
+            body.append(f"    on: {j['condition']}")
+    body.append("")
+    body.append("dimensions:")
+    for d in mv["dimensions"]:
+        body.append(f"  - name: {d['name']}")
+        body.append(f"    expr: {d['expr']}")
+    body.append("")
+    body.append("measures:")
+    for m in mv["measures"]:
+        body.append(f"  - name: {m['name']}")
+        body.append(f"    expr: {m['expr']}")
+    table = fqn(binding, mv["domain"], mv["name"])
+    yaml_body = "\n".join(body)
+    return (
+        f"CREATE OR REPLACE VIEW {table}\n"
+        f"COMMENT '{esc(mv['description'])}'\n"
+        f"WITH METRICS\nLANGUAGE YAML\nAS $$\n{yaml_body}\n$$;"
+    )
+
+
+def semantic_dictionary_rows(manifest, views, metric_views):
+    """Dictionary rows for semantic assets, so their definitions travel too."""
+    rows = []
+    for mv in metric_views:
+        for d in mv["dimensions"]:
+            rows.append((mv["name"], d["name"], "dimension", False,
+                         d["description"], "", "", "", manifest["version"]))
+        for m in mv["measures"]:
+            rows.append((mv["name"], m["name"], "measure", False,
+                         m["description"], "", "", "", manifest["version"]))
+    return rows
+
+
 def insert_overwrite(platform, table):
     into = " INTO" if platform == "snowflake" else ""
     return f"INSERT OVERWRITE{into} {table} VALUES"
@@ -278,10 +344,10 @@ def dictionary_rows(manifest, all_entities):
     return rows
 
 
-def dictionary_seed(binding, manifest, all_entities):
+def dictionary_seed(binding, manifest, all_entities, extra_rows=()):
     table = fqn(binding, "reference", "data_dictionary")
     values = []
-    for r in dictionary_rows(manifest, all_entities):
+    for r in list(dictionary_rows(manifest, all_entities)) + list(extra_rows):
         vals = ", ".join(
             ("TRUE" if v else "FALSE") if isinstance(v, bool) else f"'{esc(v)}'"
             for v in r
@@ -291,7 +357,7 @@ def dictionary_seed(binding, manifest, all_entities):
     return f"{insert_overwrite(binding['platform'], table)}\n{rows};"
 
 
-def generate_platform(binding, manifest, entities, code_sets):
+def generate_platform(binding, manifest, entities, code_sets, views, metric_views):
     platform = binding["platform"]
     out = BUILD / platform
     out.mkdir(parents=True, exist_ok=True)
@@ -314,13 +380,23 @@ def generate_platform(binding, manifest, entities, code_sets):
     all_entities = ref_entities + entities
     parts = [entity_ddl(binding, manifest, e) for e in ref_entities]
     parts += [code_set_seed(binding, cs) for cs in code_sets]
-    parts.append(dictionary_seed(binding, manifest, all_entities))
+    parts.append(dictionary_seed(binding, manifest, all_entities,
+                                 semantic_dictionary_rows(manifest, views, metric_views)))
     (out / "10_reference.sql").write_text(header + "\n\n".join(parts) + "\n")
 
     # 20+ - one file per business entity
     for e in entities:
         path = out / f"20_{e['domain']}_{e['name']}.sql"
         path.write_text(header + entity_ddl(binding, manifest, e) + "\n")
+
+    # 30+ - semantic layer: plain views everywhere, metric views on Databricks
+    for v in views:
+        path = out / f"30_{v['domain']}_{v['name']}.sql"
+        path.write_text(header + view_ddl(binding, v) + "\n")
+    if platform == "databricks":
+        for mv in metric_views:
+            path = out / f"35_{mv['domain']}_{mv['name']}.sql"
+            path.write_text(header + metric_view_ddl(binding, mv) + "\n")
 
     # 90 - all foreign keys, after every table (and its primary key) exists
     entity_index = {e["name"]: e for e in all_entities}
@@ -397,7 +473,7 @@ def generate_docs(manifest, entities, code_sets):
     (out / "erd.mmd").write_text("\n".join(erd) + "\n")
 
 
-def generate_genie(binding, manifest, entities, code_sets):
+def generate_genie(binding, manifest, entities, code_sets, views=(), metric_views=()):
     out = BUILD / "genie"
     out.mkdir(parents=True, exist_ok=True)
     lines = [
@@ -423,6 +499,22 @@ def generate_genie(binding, manifest, entities, code_sets):
                 f"- `{fqn(binding, e['domain'], e['name'])}.{attr}` joins to "
                 f"`{fqn(binding, ref_domain, ref_table)}.{ref_col}`."
             )
+    if metric_views:
+        lines += ["", "## Metrics", ""]
+        lines.append(
+            "For KPI questions (premium, incurred, loss ratio and similar), "
+            "PREFER the metric views below over hand-written aggregations. "
+            "Query measures with MEASURE(<name>) and GROUP BY dimensions. "
+            "Amounts are in original currency: always group by or filter on "
+            "currency_code before summing money.")
+        lines.append("")
+        for mv in metric_views:
+            lines.append(f"- `{fqn(binding, mv['domain'], mv['name'])}` — "
+                         f"{' '.join(str(mv['description']).split())}")
+            for d in mv["dimensions"]:
+                lines.append(f"  - dimension {d['name']}: {' '.join(str(d['description']).split())}")
+            for m in mv["measures"]:
+                lines.append(f"  - MEASURE({m['name']}): {' '.join(str(m['description']).split())}")
     lines += ["", "## Vocabulary", ""]
     for cs in code_sets:
         codes = ", ".join(f"{c['code']} ({c['label']})" for c in cs["codes"])
@@ -431,21 +523,22 @@ def generate_genie(binding, manifest, entities, code_sets):
 
 
 def main():
-    manifest, entities, code_sets = load_model()
+    manifest, entities, code_sets, views, metric_views = load_model()
     if BUILD.exists():
         shutil.rmtree(BUILD)
     generated = []
     for binding_path in sorted((ROOT / "bindings").glob("*.yaml")):
         binding = yaml.safe_load(binding_path.read_text())
-        generate_platform(binding, manifest, entities, code_sets)
+        generate_platform(binding, manifest, entities, code_sets, views, metric_views)
         generated.append(binding["platform"])
         if binding["platform"] == "databricks":
-            generate_genie(binding, manifest, entities, code_sets)
+            generate_genie(binding, manifest, entities, code_sets, views, metric_views)
     generate_docs(manifest, entities, code_sets)
     n_files = sum(1 for _ in BUILD.rglob("*") if _.is_file())
     print(
         f"Generated {n_files} files for platforms {', '.join(generated)} "
-        f"from {len(entities)} entities and {len(code_sets)} code sets "
+        f"from {len(entities)} entities, {len(code_sets)} code sets, "
+        f"{len(views)} views and {len(metric_views)} metric views "
         f"(model v{manifest['version']})."
     )
 

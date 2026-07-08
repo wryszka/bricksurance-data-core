@@ -43,10 +43,11 @@ def main():
     cat = binding["catalog"]
     prefix = binding["schema_pattern"].format(domain="")
 
-    # expected physical tables = entities + code sets + the data dictionary
+    # expected physical objects, derived from the model specs
     specs = [yaml.safe_load(p.read_text()) for p in sorted((ROOT / "model").rglob("*.yaml"))
              if p.name != "model.yaml"]
-    n_tables = len(specs) + 1
+    n_tables = sum(1 for s in specs if s["kind"] in ("entity", "code_set")) + 1
+    n_views = sum(1 for s in specs if s["kind"] in ("view", "metric_view"))
     n_fks = sum(1 for s in specs for a in s.get("attributes", [])
                 if a.get("code_set") or a.get("references"))
 
@@ -59,7 +60,10 @@ def main():
     checks = [
         (f"{n_tables} tables deployed (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
-         f"WHERE table_schema LIKE '{prefix}%'", str(n_tables)),
+         f"WHERE table_schema LIKE '{prefix}%' AND table_type = 'MANAGED'", str(n_tables)),
+        (f"{n_views} semantic views deployed (from the model)",
+         f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
+         f"WHERE table_schema LIKE '{prefix}%' AND table_type <> 'MANAGED'", str(n_views)),
         (f"{n_fks} foreign-key relationships (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.table_constraints "
          f"WHERE constraint_schema LIKE '{prefix}%' AND constraint_type = 'FOREIGN KEY'", str(n_fks)),
@@ -83,6 +87,10 @@ def main():
          f"JOIN {q('claim', 'claim')} c ON c.claim_id = ct.claim_id "
          f"WHERE c.claim_number = 'CLM-2026-000001' "
          f"AND ct.claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT'", "270000"),
+        ("metric view answers GWP for GBP / UWY 2026",
+         f"SELECT CAST(MEASURE(gross_written_premium) AS INT) > 0 "
+         f"FROM {q('semantics', 'underwriting_metrics')} "
+         f"WHERE currency_code = 'GBP' AND underwriting_year = 2026", "true"),
         ("every party role has exactly one context",
          f"SELECT COUNT(*) FROM {q('party', 'party_role')} "
          f"WHERE CAST(policy_id IS NOT NULL AS INT) + CAST(claim_id IS NOT NULL AS INT) "

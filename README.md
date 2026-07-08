@@ -82,6 +82,18 @@ build/            Generated artifacts (committed for visibility — do not edit)
 docs/DESIGN.md    Architecture, federated topology, exchange patterns, roadmap.
 ```
 
+## Project resources
+
+- **Slide deck** (10-minute version, Databricks internal):
+  [Bricksurance Data Core — One Common Data Layer](https://docs.google.com/presentation/d/1_ELYXU0bk5JbS1JNrvtCnnS2UY99CXJhMLtPnGcROd8/edit)
+- **Project document** (full written companion, Databricks internal):
+  [Bricksurance Data Core on Google Docs](https://docs.google.com/document/d/1o0RJnVAixisAjzLmEzgqZ1N4Vs7xKobsjM_06pyQ-sY/edit)
+- **Live Genie space** (demo workspace):
+  [Bricksurance Data Core](https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/01f17ade46ec18bc8da2cb30b55a26a6)
+
+The deck and the document reference each other; both describe exactly what this
+repository deploys.
+
 ## Standards note
 
 ACORD standards are licensed to ACORD members. This project **aligns to ACORD

@@ -1,0 +1,39 @@
+kind: view
+name: financial_transaction
+domain: semantics
+title: Financial Transaction (unified)
+description: >
+  Unified view of all financial movements - premium and claim transactions -
+  with their policy context, so portfolio metrics that span premium and
+  claims (such as loss ratio) can be defined over a single source. Amounts
+  are in original transaction currency.
+grain: One row per premium or claim transaction.
+sql: |
+  SELECT
+    p.policy_id,
+    p.underwriting_year,
+    p.line_of_business_code,
+    pt.currency_code,
+    pt.transaction_date,
+    'PREMIUM' AS transaction_kind,
+    pt.premium_transaction_type_code AS transaction_type_code,
+    CAST(NULL AS STRING) AS claim_id,
+    CAST(NULL AS STRING) AS cause_of_loss_code,
+    pt.amount
+  FROM {policy.premium_transaction} pt
+  JOIN {policy.policy} p ON p.policy_id = pt.policy_id
+  UNION ALL
+  SELECT
+    p.policy_id,
+    p.underwriting_year,
+    p.line_of_business_code,
+    ct.currency_code,
+    ct.transaction_date,
+    'CLAIM' AS transaction_kind,
+    ct.claim_transaction_type_code AS transaction_type_code,
+    c.claim_id,
+    c.cause_of_loss_code,
+    ct.amount
+  FROM {claim.claim_transaction} ct
+  JOIN {claim.claim} c ON c.claim_id = ct.claim_id
+  JOIN {policy.policy} p ON p.policy_id = c.policy_id
