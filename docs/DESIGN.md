@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Design
 
-*Status: living document. Model version 0.1.0.*
+*Status: living document. Model version 0.2.0.*
 
 ## 1. Problem
 
@@ -147,7 +147,7 @@ fields:
 
 | Field | Purpose |
 |---|---|
-| `kind` | `entity` or `code_set` |
+| `kind` | `entity`, `code_set`, `view` or `metric_view` |
 | `name` / `domain` / `title` | Identity and placement |
 | `description` | The business definition — this becomes the table comment, the docs, and the LLM context |
 | `grain` | One-sentence statement of what one row means (non-negotiable) |
