@@ -1,0 +1,31 @@
+kind: view
+name: cession_bordereau_line
+domain: exchange
+title: Cession Bordereau Line (outbound)
+description: >
+  The outbound cession bordereau, derived live from the canonical model: one
+  line per policy premium movement ceded to a treaty, with the ceded amount
+  computed from the contractual ceded share. This view - together with the
+  data_dictionary - IS the bordereau: it is shared as a governed table, never
+  exported to a spreadsheet.
+grain: One row per ceded premium movement per policy per treaty.
+sql: |
+  SELECT
+    tr.treaty_reference,
+    DATE_TRUNC('MONTH', pt.transaction_date) AS reporting_month,
+    p.policy_number,
+    ins.name AS insured_name,
+    p.line_of_business_code,
+    p.inception_date,
+    p.expiry_date,
+    pt.currency_code,
+    pt.amount AS gross_premium,
+    ces.ceded_share,
+    CAST(ROUND(pt.amount * ces.ceded_share, 2) AS DECIMAL(18,2)) AS ceded_premium
+  FROM {reinsurance.cession} ces
+  JOIN {policy.policy} p ON p.policy_id = ces.policy_id
+  JOIN {reinsurance.treaty} tr ON tr.treaty_id = ces.treaty_id
+  JOIN {policy.premium_transaction} pt ON pt.policy_id = p.policy_id
+  LEFT JOIN {party.party_role} pr
+    ON pr.policy_id = p.policy_id AND pr.party_role_type_code = 'INSURED'
+  LEFT JOIN {party.party} ins ON ins.party_id = pr.party_id

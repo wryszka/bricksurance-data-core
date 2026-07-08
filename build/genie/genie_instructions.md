@@ -1,4 +1,4 @@
-# Genie instructions — Bricksurance Data Core v0.2.0
+# Genie instructions — Bricksurance Data Core v0.3.0
 
 You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses.
 
@@ -21,6 +21,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.data_dictionary` — Machine-readable dictionary of every entity and attribute in the model, generated from the specs. Include this table in every data share so the semantics travel with the data. Grain: One row per attribute per entity per model version.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim` — A demand for indemnity under a policy arising from a loss event. The claim record holds the event and handling state; all financial development lives in claim transactions. Grain: One row per claim per source system.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction` — A signed financial movement on a claim: case reserve movements, indemnity and expense payments, and recoveries. Outstanding, paid and incurred are always derived by summation over these movements, never stored as balances. Grain: One row per financial movement per claim.
+- `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line` — The canonical form of an inbound premium bordereau line, as reported by a coverholder or broker. Messy source files land in the exchange domain and are mapped into this shape - using the data dictionary as the contract - before flowing into the core model. Grain: One row per policy per reporting month per inbound bordereau.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party` — A person or organisation the group deals with. A party exists exactly once regardless of how many relationships it has; what the party does (insured, broker, cedant, claimant...) is expressed through party roles, never by duplicating the party. Grain: One row per unique legal person or organisation, mastered across source systems.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party_role` — A role a party plays in a specific business context - on a policy, a claim or a treaty. This is the model's central extensibility pattern: a new kind of counterparty is a new party_role_type code plus rows here, never a new table. Grain: One row per role a party plays in one context (policy, claim or treaty) for a period of time. Exactly one of policy_id, claim_id and treaty_id is populated.
 - `lr_serverless_aws_us_catalog.bricksurance_policy.coverage` — A specific cover granted under a policy, with its own limit and deductible. A policy bundles one or more coverages; claims attach to coverages where the source data allows it. Grain: One row per coverage granted under a policy.
@@ -41,6 +42,10 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction.claim_transaction_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.claim_transaction_type.claim_transaction_type_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction.currency_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.currency.currency_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line.line_of_business_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.line_of_business.line_of_business_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line.currency_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.currency.currency_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line.risk_country_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.country.country_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.party_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.party_type.party_type_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.country_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.country.country_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
@@ -105,5 +110,5 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Party Type: PERSON (Person), ORGANISATION (Organisation).
 - Policy Status: QUOTED (Quoted), BOUND (Bound), IN_FORCE (In Force), EXPIRED (Expired), CANCELLED (Cancelled), LAPSED (Lapsed).
 - Premium Transaction Type: WRITTEN (Written Premium), ADJUSTMENT (Adjustment Premium), RETURN (Return Premium).
-- Source System: PAS_CORE (Policy Administration (Core)), CLM_CORE (Claims (Core)), RI_CORE (Reinsurance (Core)), DATA_CORE (Data Core (Mastered)).
+- Source System: PAS_CORE (Policy Administration (Core)), CLM_CORE (Claims (Core)), RI_CORE (Reinsurance (Core)), DATA_CORE (Data Core (Mastered)), COVERHOLDER_BDX (Coverholder Bordereau).
 - Treaty Type: QUOTA_SHARE (Quota Share), SURPLUS (Surplus), XOL_PER_RISK (Excess of Loss (Per Risk)), XOL_CATASTROPHE (Excess of Loss (Catastrophe)).

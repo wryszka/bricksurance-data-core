@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.2.0. Do not edit.*
+*Generated from model v0.3.0. Do not edit.*
 
 ## Cause of Loss (`reference.cause_of_loss`)
 
@@ -288,6 +288,33 @@ A signed financial movement on a claim: case reserve movements, indemnity and ex
 | source_system_code | string | yes | System of record the movement originates from. | internal |  |  |
 
 **Primary key:** claim_transaction_id
+
+## Premium Bordereau Line (inbound) (`exchange.premium_bordereau_line`)
+
+The canonical form of an inbound premium bordereau line, as reported by a coverholder or broker. Messy source files land in the exchange domain and are mapped into this shape - using the data dictionary as the contract - before flowing into the core model.
+
+**Grain:** One row per policy per reporting month per inbound bordereau.
+
+**Standards:** Lloyds Cdr: Coverholder premium reporting attributes (indicative)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| bordereau_line_id | string | yes | Identifier for the bordereau line, assigned on ingestion. | internal |  |  |
+| reporting_month | date | yes | First day of the calendar month the bordereau reports on. |  |  |  |
+| coverholder_name | string | yes | Name of the coverholder or broker submitting the bordereau. | confidential |  |  |
+| policy_number | string | yes | Policy reference as reported by the coverholder; matched to the core model downstream. | confidential |  |  |
+| insured_name | string |  | Name of the insured as reported. | pii |  |  |
+| line_of_business_code | string | yes | Line of business, mapped from the coverholder's own class descriptions to the canonical code set. |  |  |  |
+| inception_date | date | yes | Cover inception as reported. |  |  |  |
+| expiry_date | date |  | Cover expiry as reported. |  |  |  |
+| currency_code | string | yes | Currency of the reported amounts. |  |  |  |
+| gross_premium | decimal(18,2) | yes | Gross written premium reported for the line. | confidential |  |  |
+| commission_amount | decimal(18,2) |  | Coverholder commission reported for the line. | confidential |  |  |
+| risk_country_code | string |  | Country of the risk location, where reported. |  |  |  |
+| risk_postcode | string |  | Postal code of the risk location, where reported. | confidential |  |  |
+| source_system_code | string | yes | Provenance of the line; coverholder bordereaux use COVERHOLDER_BDX. | internal |  |  |
+
+**Primary key:** bordereau_line_id
 
 ## Party (`party.party`)
 

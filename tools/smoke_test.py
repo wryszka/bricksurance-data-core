@@ -87,6 +87,9 @@ def main():
          f"JOIN {q('claim', 'claim')} c ON c.claim_id = ct.claim_id "
          f"WHERE c.claim_number = 'CLM-2026-000001' "
          f"AND ct.claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT'", "270000"),
+        ("outbound cession bordereau derives lines with correct ceded premium",
+         f"SELECT COUNT(*) > 0 AND SUM(ABS(ceded_premium - ROUND(gross_premium * ceded_share, 2))) = 0 "
+         f"FROM {q('exchange', 'cession_bordereau_line')}", "true"),
         ("metric view answers GWP for GBP / UWY 2026",
          f"SELECT CAST(MEASURE(gross_written_premium) AS INT) > 0 "
          f"FROM {q('semantics', 'underwriting_metrics')} "

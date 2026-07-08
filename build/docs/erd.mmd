@@ -101,6 +101,22 @@ erDiagram
         date transaction_date
         string source_system_code
     }
+    premium_bordereau_line {
+        string bordereau_line_id PK
+        date reporting_month
+        string coverholder_name
+        string policy_number
+        string insured_name
+        string line_of_business_code
+        date inception_date
+        date expiry_date
+        string currency_code
+        decimal gross_premium
+        decimal commission_amount
+        string risk_country_code
+        string risk_postcode
+        string source_system_code
+    }
     party {
         string party_id PK
         string party_type_code
@@ -183,6 +199,10 @@ erDiagram
     claim_transaction }o--|| claim_transaction_type : claim_transaction_type_code
     claim_transaction }o--|| currency : currency_code
     claim_transaction }o--|| source_system : source_system_code
+    premium_bordereau_line }o--|| line_of_business : line_of_business_code
+    premium_bordereau_line }o--|| currency : currency_code
+    premium_bordereau_line }o--|| country : risk_country_code
+    premium_bordereau_line }o--|| source_system : source_system_code
     party }o--|| party_type : party_type_code
     party }o--|| country : country_code
     party }o--|| source_system : source_system_code

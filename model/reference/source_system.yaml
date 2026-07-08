@@ -20,3 +20,8 @@ codes:
     description: >
       Records mastered or derived inside the data layer itself, such as
       deduplicated golden party records.
+  - code: COVERHOLDER_BDX
+    label: Coverholder Bordereau
+    description: >
+      Lines reported by coverholders or brokers via bordereaux and mapped
+      into the canonical model through the exchange domain.
