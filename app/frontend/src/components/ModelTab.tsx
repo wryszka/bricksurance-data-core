@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, Domain, Entity, ModelResponse } from '../api';
+import PurposeCard from './PurposeCard';
+import { DOCS } from '../docs';
 
 function classBadge(c: string | null) {
   if (!c) return null;
@@ -30,10 +32,11 @@ export default function ModelTab() {
 
   return (
     <>
-      <div className="banner">
-        Everything on this page is generated from versioned YAML specs — the business owns
-        the model, the platform is an output.
-      </div>
+      <PurposeCard
+        seeing="Every entity, definition, classification and standards crosswalk — read live from the data dictionary, generated from versioned YAML specs."
+        matters="The business owns the model; the platform is an output — governance that cannot drift."
+        links={[DOCS.overview, DOCS.tagging, DOCS.design]}
+      />
       <h2 className="section">Model — governance browser</h2>
       <p className="sub">
         Domains, entities and every attribute definition, read live from the deployed data

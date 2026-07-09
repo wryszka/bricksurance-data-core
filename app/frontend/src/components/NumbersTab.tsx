@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, MetricsResponse, money } from '../api';
+import PurposeCard from './PurposeCard';
+import { DOCS } from '../docs';
 
 const KPI_DEFS: { key: keyof MetricsResponse['kpis']; label: string; defKey: string; kind: 'money' | 'ratio' | 'count' }[] = [
   { key: 'gross_written_premium', label: 'Gross written premium', defKey: 'gross_written_premium', kind: 'money' },
@@ -40,11 +42,11 @@ export default function NumbersTab() {
 
   return (
     <>
-      <div className="banner">
-        These KPIs are defined once, in the <span className="mono">underwriting_metrics</span>{' '}
-        metric view, and computed on the fly with <span className="mono">MEASURE()</span> —
-        one governed definition, every consumer.
-      </div>
+      <PurposeCard
+        seeing="KPIs served by Unity Catalog metric views — each figure carries its business definition."
+        matters="One definition of every measure, for humans, dashboards and LLM agents alike."
+        links={[DOCS.metrics]}
+      />
       <h2 className="section">Numbers — the semantic layer in action</h2>
       <p className="sub">
         Certified underwriting metrics. Amounts are per-currency; pick a currency before

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, LoadResponse, MapResponse, OutboundResponse } from '../api';
+import PurposeCard from './PurposeCard';
+import { DOCS } from '../docs';
 
 function OutboundPane() {
   const [data, setData] = useState<OutboundResponse | null>(null);
@@ -269,10 +271,11 @@ function InboundPane() {
 export default function ExchangeTab() {
   return (
     <>
-      <div className="banner">
-        Killing the bordereau: the outbound share is a governed view, and inbound messy files
-        are mapped to the canonical model with the dictionary as the contract.
-      </div>
+      <PurposeCard
+        seeing="The outbound bordereau as a governed view, and Claude mapping a messy inbound file against the data dictionary as a contract."
+        matters="Data exchange without middleware — the standard travels with the data."
+        links={[DOCS.cookbook, DOCS.adoption]}
+      />
       <h2 className="section">Exchange — semantics that travel</h2>
       <p className="sub">
         The standard travels with the data. Every exchange carries its definitions.

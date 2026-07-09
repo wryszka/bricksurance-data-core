@@ -1,73 +1,69 @@
-flowchart TB
+flowchart LR
     classDef ent fill:#eef5f5,stroke:#0b6e6e,stroke-width:1.5px,color:#0b2a3b
     classDef hub fill:#fdf1e3,stroke:#d9822b,stroke-width:2px,color:#0b2a3b,font-weight:bold
 
-    subgraph Row1
-        direction LR
-        subgraph REF["reference"]
-            direction TB
-            REFL["23 code sets<br/>data_dictionary<br/>schema_migration"]:::ent
-        end
-        subgraph PARTYD["party"]
-            direction LR
-            PTY["party"]:::ent
-            PTYR["party_role<br/>(5 contexts)"]:::ent
-        end
-        subgraph POLICYD["policy"]
-            direction LR
-            QUOTE["quote"]:::hub
-            POL["policy"]:::hub
-            ENDT["endorsement"]:::ent
-            COV["coverage"]:::ent
-            INSOBJ["insured_object<br/>+ vehicle"]:::ent
-            PREM["premium_transaction"]:::ent
-        end
+    subgraph REF["reference"]
+        direction TB
+        REFL["23 code sets<br/>data_dictionary<br/>schema_migration"]:::ent
     end
 
-    subgraph Row2
-        direction LR
-        subgraph CLAIMD["claim"]
-            direction LR
-            CLM["claim"]:::hub
-            CLMT["claim_transaction"]:::ent
-        end
-        subgraph REINSD["reinsurance"]
-            direction LR
-            TREATY["submission →<br/>treaty + layers"]:::hub
-            CES["cession"]:::hub
-            CAT["cat_event"]:::ent
-            EVL["event_loss"]:::ent
-        end
-        subgraph LIFED["life"]
-            direction LR
-            MP["model_point"]:::ent
-            AS["assumption_set"]:::ent
-            SS["scenario_set"]:::ent
-            VR["valuation_run<br/>(+assumptions)"]:::hub
-        end
+    subgraph PARTYD["party"]
+        direction TB
+        PTY["party"]:::ent
+        PTYR["party_role<br/>(5 contexts)"]:::ent
     end
 
-    subgraph Row3
-        direction LR
-        subgraph FIND["finance"]
-            direction TB
-            VALRES["valuation_result<br/>measure codes: BEL…CSM"]:::hub
-        end
-        subgraph EXCHD["exchange"]
-            direction TB
-            BORD["bordereau lines<br/>in / out"]:::ent
-        end
-        subgraph SEMD["semantics"]
-            direction TB
-            MV["4 metric views"]:::ent
-        end
+    subgraph POLICYD["policy"]
+        direction TB
+        QUOTE["quote"]:::hub
+        POL["policy"]:::hub
+        ENDT["endorsement"]:::ent
+        COV["coverage"]:::ent
+        INSOBJ["insured_object<br/>+ vehicle"]:::ent
+        PREM["premium_transaction"]:::ent
+        QUOTE --> POL
     end
 
-    Row1 ~~~ Row2
-    Row2 ~~~ Row3
+    subgraph CLAIMD["claim"]
+        direction TB
+        CLM["claim"]:::hub
+        CLMT["claim_transaction"]:::ent
+    end
 
-    QUOTE --> POL
+    subgraph REINSD["reinsurance"]
+        direction TB
+        TREATY["submission →<br/>treaty + layers"]:::hub
+        CES["cession"]:::hub
+        CAT["cat_event"]:::ent
+        EVL["event_loss"]:::ent
+        CES --> TREATY
+    end
+
+    subgraph LIFED["life"]
+        direction TB
+        MP["model_point"]:::ent
+        AS["assumption_set"]:::ent
+        SS["scenario_set"]:::ent
+        VR["valuation_run<br/>(+assumptions)"]:::hub
+    end
+
+    subgraph FIND["finance"]
+        direction TB
+        VALRES["valuation_result<br/>measure codes: BEL…CSM"]:::hub
+    end
+
+    subgraph EXCHD["exchange"]
+        direction TB
+        BORD["bordereau lines<br/>in / out"]:::ent
+    end
+
+    subgraph SEMD["semantics"]
+        direction TB
+        MV["4 metric views"]:::ent
+    end
+
+    REF ~~~ PARTYD ~~~ POLICYD ~~~ CLAIMD ~~~ REINSD ~~~ LIFED ~~~ FIND ~~~ EXCHD ~~~ SEMD
+
     CLM --> POL
     CES --> POL
-    CES --> TREATY
     VALRES --> VR

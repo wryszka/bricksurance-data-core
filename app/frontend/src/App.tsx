@@ -3,6 +3,7 @@ import ModelTab from './components/ModelTab';
 import NumbersTab from './components/NumbersTab';
 import ExchangeTab from './components/ExchangeTab';
 import NetworkTab from './components/NetworkTab';
+import DocsPanel from './components/DocsPanel';
 
 const TABS = [
   { id: 'model', label: 'Model' },
@@ -15,6 +16,7 @@ type TabId = (typeof TABS)[number]['id'];
 
 export default function App() {
   const [tab, setTab] = useState<TabId>('model');
+  const [docsOpen, setDocsOpen] = useState(false);
   return (
     <div className="app">
       <header className="header">
@@ -23,6 +25,9 @@ export default function App() {
             Bricksurance <span className="accent">Data Core</span> Console
           </span>
           <span className="tagline">One business-first semantic model for insurance</span>
+          <button className="docs-btn" onClick={() => setDocsOpen(true)}>
+            Documents
+          </button>
         </div>
         <nav className="tabs">
           {TABS.map((t) => (
@@ -37,6 +42,13 @@ export default function App() {
         </nav>
       </header>
 
+      <div className="framing">
+        <strong>Goal: make insurance data and context available to LLM agents — and prove how much better things get.</strong>{' '}
+        <span className="framing-sub">
+          Everything here is generated from one open, ACORD-aligned ontology.
+        </span>
+      </div>
+
       <main className="main">
         {tab === 'model' && <ModelTab />}
         {tab === 'numbers' && <NumbersTab />}
@@ -48,6 +60,8 @@ export default function App() {
         Bricksurance SE is a fictional insurance group. All data is synthetic. Demo by
         Databricks Field Engineering.
       </footer>
+
+      {docsOpen && <DocsPanel onClose={() => setDocsOpen(false)} />}
     </div>
   );
 }

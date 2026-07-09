@@ -6,11 +6,7 @@ flowchart TB
 
     subgraph AI["LLM Agents & Genie Spaces"]
         direction LR
-        AG[LLM Agents]
-        G1["Genie: P&C"]
-        G2["Genie: Reinsurance & Exchange"]
-        G3["Genie: Life & Valuations"]
-        G4["Genie One"]
+        AG[LLM Agents] ~~~ G1["Genie: P&C"] ~~~ G2["Genie: Reinsurance & Exchange"] ~~~ G3["Genie: Life & Valuations"] ~~~ G4["Genie One"]
     end
 
     CORE(["Bricksurance Data Core<br/>Unity Catalog — 9 domains<br/>reference · party · policy · claim · reinsurance<br/>life · finance · exchange · semantics"]):::core
@@ -19,22 +15,15 @@ flowchart TB
 
     subgraph WB["Workbenches — plug in via read extracts / write-back / shared semantics"]
         direction LR
-        W1["Pricing Workbench"]
-        W2["Claims Workbench"]
-        W3["Solvency II Workbench"]
-        W4["Reinsurance Workbench"]
-        W5["LifeCast"]
-        W6["Underwriting (in build)"]
-        W7["IFRS 17 (in build)"]
+        W1["Pricing Workbench"] ~~~ W2["Claims Workbench"] ~~~ W3["Solvency II Workbench"] ~~~ W4["Reinsurance Workbench"]
+        W5["LifeCast"] ~~~ W6["Underwriting (in build)"] ~~~ W7["IFRS 17 (in build)"]
     end
 
     CORE <--> WB
 
     subgraph EXT["External — dictionary travels with the data"]
-        direction TB
-        E1["Bricksurance Re<br/>(Delta Share)"]
-        E2["Brokers<br/>(open sharing)"]
-        E3["Another insurer<br/>(ontology import)"]
+        direction LR
+        E1["Bricksurance Re<br/>(Delta Share)"] ~~~ E2["Brokers<br/>(open sharing)"] ~~~ E3["Another insurer<br/>(ontology import)"]
     end
 
     CORE --> E1

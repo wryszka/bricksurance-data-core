@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, NetworkNode, NetworkResponse } from '../api';
+import PurposeCard from './PurposeCard';
+import { DOCS } from '../docs';
 
 function Node({ n, variant }: { n: NetworkNode; variant?: string }) {
   return (
@@ -27,11 +29,11 @@ export default function NetworkTab() {
 
   return (
     <>
-      <div className="banner">
-        Federation is the normal case: a group centre on one cloud, retail units on
-        Databricks, an acquired specialty unit on Snowflake — a supported topology, not a
-        migration problem.
-      </div>
+      <PurposeCard
+        seeing="The federated estate and live exchange status — shares checked against the real API."
+        matters="Two entities that adopt the same ontology exchange data with meaning intact."
+        links={[DOCS.gettingStarted, DOCS.assets]}
+      />
       <h2 className="section">Network — the federated estate</h2>
       <p className="sub">
         Live status is checked against Unity Catalog Delta Sharing. Planned units show the

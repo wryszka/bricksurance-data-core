@@ -71,6 +71,14 @@ money, typed satellites, measure codes across regulatory regimes. European /
 UK-first in its examples (Solvency II, IFRS 17, GDPR-aware classifications),
 portable everywhere.
 
+## The picture
+
+Four diagrams in [`docs/diagrams/`](diagrams/) (mermaid sources alongside):
+the **estate map** (one company, workbenches and LLM agents around one core),
+the **compile pipeline** (specs → generator → everything), the **exchange
+flow** (killing the bordereau, both directions) and the **domain map** (the
+ontology at a glance).
+
 ## Where everything lives
 
 Repo: [github.com/wryszka/bricksurance-data-core](https://github.com/wryszka/bricksurance-data-core) ·
