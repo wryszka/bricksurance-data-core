@@ -1,0 +1,46 @@
+flowchart TB
+    classDef core fill:#0b3d5c,stroke:#082c42,stroke-width:2px,color:#ffffff,font-weight:bold
+    classDef ai fill:#eef5f5,stroke:#0b6e6e,stroke-width:1.5px,color:#0b2a3b
+    classDef wb fill:#e8f1f1,stroke:#0b6e6e,stroke-width:1.5px,color:#0b2a3b
+    classDef ext fill:#fdf1e3,stroke:#d9822b,stroke-width:1.5px,color:#0b2a3b
+
+    subgraph AI["LLM Agents & Genie Spaces"]
+        direction LR
+        AG[LLM Agents]
+        G1["Genie: P&C"]
+        G2["Genie: Reinsurance & Exchange"]
+        G3["Genie: Life & Valuations"]
+        G4["Genie One"]
+    end
+
+    CORE(["Bricksurance Data Core<br/>Unity Catalog — 9 domains<br/>reference · party · policy · claim · reinsurance<br/>life · finance · exchange · semantics"]):::core
+
+    AI --> CORE
+
+    subgraph WB["Workbenches — plug in via read extracts / write-back / shared semantics"]
+        direction LR
+        W1["Pricing Workbench"]
+        W2["Claims Workbench"]
+        W3["Solvency II Workbench"]
+        W4["Reinsurance Workbench"]
+        W5["LifeCast"]
+        W6["Underwriting (in build)"]
+        W7["IFRS 17 (in build)"]
+    end
+
+    CORE <--> WB
+
+    subgraph EXT["External — dictionary travels with the data"]
+        direction TB
+        E1["Bricksurance Re<br/>(Delta Share)"]
+        E2["Brokers<br/>(open sharing)"]
+        E3["Another insurer<br/>(ontology import)"]
+    end
+
+    CORE --> E1
+    CORE --> E2
+    CORE --> E3
+
+    class AI ai
+    class W1,W2,W3,W4,W5,W6,W7 wb
+    class E1,E2,E3 ext

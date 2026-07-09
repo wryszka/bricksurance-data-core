@@ -1,0 +1,38 @@
+flowchart LR
+    classDef input fill:#e8f1f1,stroke:#0b6e6e,stroke-width:1.5px,color:#0b2a3b
+    classDef compiler fill:#0b3d5c,stroke:#082c42,stroke-width:2px,color:#ffffff,font-weight:bold
+    classDef output fill:#eef5f5,stroke:#0b6e6e,stroke-width:1.5px,color:#0b2a3b
+    classDef accent fill:#d9822b,stroke:#a85f18,stroke-width:1.5px,color:#ffffff
+    classDef downstream fill:#fdf1e3,stroke:#d9822b,stroke-width:1.5px,color:#0b2a3b
+
+    A["model/ YAML specs<br/>business-owned: definitions,<br/>grains, code sets, metrics"]:::input
+    B["tools/generate.py<br/>(the compiler)"]:::compiler
+
+    A --> B
+
+    subgraph OUT["Generated Artifacts"]
+        direction TB
+        C1["Unity Catalog DDL<br/>+ comments + PK/FK + tags"]
+        C2["Metric views"]
+        C3["Data dictionary table"]
+        C4["Genie space context"]
+        C5["Ontology JSON<br/>(portable)"]:::accent
+        C6["Snowflake DDL"]
+        C7["Docs + ERD"]
+    end
+
+    B --> C1
+    B --> C2
+    B --> C3
+    B --> C4
+    B --> C5
+    B --> C6
+    B --> C7
+
+    D1["import_ontology.py<br/>→ another company adopts in one file"]:::downstream
+    D2["plan_migration.py<br/>→ versioned change control"]:::downstream
+
+    C5 --> D1
+    C5 --> D2
+
+    class C1,C2,C3,C4,C6,C7 output

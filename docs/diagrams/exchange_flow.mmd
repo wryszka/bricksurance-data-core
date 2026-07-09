@@ -1,0 +1,21 @@
+flowchart TB
+    classDef canon fill:#e8f1f1,stroke:#0b6e6e,stroke-width:1.5px,color:#0b2a3b
+    classDef share fill:#0b3d5c,stroke:#082c42,stroke-width:2px,color:#ffffff,font-weight:bold
+    classDef messy fill:#fdf1e3,stroke:#d9822b,stroke-width:1.5px,color:#0b2a3b
+    classDef ai fill:#d9822b,stroke:#a85f18,stroke-width:1.5px,color:#ffffff
+    classDef caption fill:#ffffff,stroke:#0b2a3b,stroke-width:1px,color:#0b2a3b,stroke-dasharray: 4 3
+
+    subgraph OUTBOUND["OUTBOUND — ceding to Bricksurance Re"]
+        direction LR
+        O1["Canonical model"]:::canon --> O2["cession_bordereau_line<br/>governed view"]:::canon --> O3["Delta Share<br/>+ data dictionary + code sets"]:::share --> O4["Bricksurance Re<br/>queries with meaning intact"]:::canon
+    end
+
+    subgraph INBOUND["INBOUND — coverholder bordereaux"]
+        direction LR
+        I1["Coverholder CSV<br/>messy: title rows, DD/MM dates,<br/>home-grown class names"]:::messy --> I2["Claude (FMAPI)<br/>maps against data dictionary as contract"]:::ai --> I3["Validation<br/>types · required · allowed codes"]:::canon --> I4["premium_bordereau_line<br/>canonical"]:::canon
+    end
+
+    CAP["no middleware · no mapping spreadsheets"]:::caption
+
+    OUTBOUND ~~~ CAP
+    CAP ~~~ INBOUND
