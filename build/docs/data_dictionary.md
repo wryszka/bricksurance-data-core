@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.4.0. Do not edit.*
+*Generated from model v0.5.0. Do not edit.*
 
 ## Assumption Status (`reference.assumption_status`)
 
@@ -529,7 +529,7 @@ A delivered economic scenario set (risk-free curves, equity paths) used by stoch
 
 ## Valuation Run (`life.valuation_run`)
 
-One execution of a valuation process: which valuation date, which approved assumption set, which scenario set, which model version, run by whom, with what quality verdict. The run is the unit of auditability - every published valuation result points back to exactly one run.
+One execution of a valuation process: which valuation date, which approved assumption sets (one per assumption type, via valuation_run_assumption), which scenario set, which model version, run by whom, with what quality verdict. The run is the unit of auditability - every published valuation result points back to exactly one run.
 
 **Grain:** One row per valuation run execution.
 
@@ -538,7 +538,6 @@ One execution of a valuation process: which valuation date, which approved assum
 | valuation_run_id | string | yes | Identifier for the run. | internal |  |  |
 | valuation_date | date | yes | Valuation date the run values the book at. |  |  |  |
 | run_timestamp | timestamp | yes | When the run executed. |  |  |  |
-| assumption_set_id | string |  | Approved assumption set the run used. | internal |  |  |
 | scenario_set_id | string |  | Scenario set the run used, for stochastic runs. | internal |  |  |
 | model_version | string |  | Version of the valuation model/engine used (e.g. a Unity Catalog model version). |  |  |  |
 | run_verdict_code | string | yes | Quality-gate verdict; RED runs never feed published results. |  |  |  |
@@ -546,6 +545,19 @@ One execution of a valuation process: which valuation date, which approved assum
 | source_system_code | string | yes | System that executed the run. | internal |  |  |
 
 **Primary key:** valuation_run_id
+
+## Valuation Run Assumption (`life.valuation_run_assumption`)
+
+Which assumption sets a valuation run used - one row per assumption set, typically one per assumption type (mortality, lapse, expense, economic). This junction is what makes any past result exactly reproducible: run plus sets plus scenario plus model version is the full recipe.
+
+**Grain:** One row per assumption set used by a valuation run.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| valuation_run_id | string | yes | The valuation run. | internal |  |  |
+| assumption_set_id | string | yes | An assumption set the run used. | internal |  |  |
+
+**Primary key:** valuation_run_id, assumption_set_id
 
 ## Party (`party.party`)
 

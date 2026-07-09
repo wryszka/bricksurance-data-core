@@ -90,6 +90,32 @@ def main():
         ("outbound cession bordereau derives lines with correct ceded premium",
          f"SELECT COUNT(*) > 0 AND SUM(ABS(ceded_premium - ROUND(gross_premium * ceded_share, 2))) = 0 "
          f"FROM {q('exchange', 'cession_bordereau_line')}", "true"),
+        ("every policy converted from exactly one quote",
+         f"SELECT COUNT(*) = (SELECT COUNT(*) FROM {q('policy', 'policy')}) "
+         f"AND COUNT(DISTINCT policy_id) = COUNT(*) "
+         f"FROM {q('policy', 'quote')} WHERE quote_status_code = 'CONVERTED'", "true"),
+        ("bound submission thread resolves to the golden-thread treaty",
+         f"SELECT s.submission_reference, t.treaty_reference "
+         f"FROM {q('reinsurance', 'submission')} s "
+         f"JOIN {q('reinsurance', 'treaty')} t ON t.treaty_id = s.treaty_id "
+         f"WHERE s.submission_reference = 'SUB-2026-000001'",
+         "SUB-2026-000001|TR-QS-PROP-2026"),
+        ("published case reserves tie out to claim transactions (CP, GBP)",
+         f"SELECT (SELECT CAST(vr.amount AS DECIMAL(18,2)) FROM {q('finance', 'valuation_result')} vr "
+         f"WHERE vr.valuation_measure_code = 'CASE_RESERVE_TOTAL' "
+         f"AND vr.line_of_business_code = 'COMMERCIAL_PROPERTY' AND vr.currency_code = 'GBP') = "
+         f"(SELECT CAST(SUM(ct.amount) AS DECIMAL(18,2)) FROM {q('claim', 'claim_transaction')} ct "
+         f"JOIN {q('claim', 'claim')} c ON c.claim_id = ct.claim_id "
+         f"JOIN {q('policy', 'policy')} p ON p.policy_id = c.policy_id "
+         f"WHERE ct.claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT' "
+         f"AND p.line_of_business_code = 'COMMERCIAL_PROPERTY' AND ct.currency_code = 'GBP')", "true"),
+        ("every motor insured object has its vehicle satellite",
+         f"SELECT COUNT(*) FROM {q('policy', 'insured_object')} io "
+         f"LEFT JOIN {q('policy', 'vehicle')} v ON v.insured_object_id = io.insured_object_id "
+         f"WHERE io.insured_object_type_code = 'VEHICLE' AND v.vehicle_id IS NULL", "0"),
+        ("every event loss belongs to exactly one book",
+         f"SELECT COUNT(*) FROM {q('reinsurance', 'event_loss')} "
+         f"WHERE CAST(treaty_id IS NOT NULL AS INT) + CAST(policy_id IS NOT NULL AS INT) <> 1", "0"),
         ("metric view answers GWP for GBP / UWY 2026",
          f"SELECT CAST(MEASURE(gross_written_premium) AS INT) > 0 "
          f"FROM {q('semantics', 'underwriting_metrics')} "

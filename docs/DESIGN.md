@@ -174,8 +174,9 @@ Re, with provisions for anything that comes next.
 | 3 | Exchange: cession bordereau (outbound view) + dictionary-driven LLM ingest of messy inbound bordereaux; D2D share to Bricksurance Re | ingest done; share awaits a metastore grant |
 | 3.5 | Data Core Console app — model browser / metrics / exchange / network | done |
 | 4 | Ontology as a product: one portable JSON export + importer, round-trip proven | done |
-| 5 | Model expansion to the full landscape: quote/endorsement/motor (P&C), life domain (model points, assumption sets, valuation runs/results), reinsurance depth (submissions, layers, cat events, event losses), finance thin slice; per-domain metric views | next |
-| 6 | World Engine: one deterministic Bricksurance world emitting the canonical rows **and** per-source-system extracts; semantics-first, with scale as a knob for the cases that need volume to look real; sacred demo heroes preserved as world invariants | |
+| 5 | Model expansion to the full landscape: quote/endorsement/motor (P&C), life domain, reinsurance depth, finance thin slice; per-domain metric views | done |
+| 6 | World Engine: one deterministic Bricksurance world across all domains, scale as a knob, heroes as invariants (per-source-system extracts arrive with phase 7) | done |
+| 6.5 | Schema evolution tooling: ontology diff → classified migration plan + migration log table (process already defined in [EVOLUTION.md](EVOLUTION.md)) | |
 | 7 | Plug-in foundations per workbench (pricing first, then claims): derived extracts + write-back contracts — **data foundation only, no workbench is moved** | |
 | 8 | Exchange fleet: Re D2D share live, broker via the open sharing protocol, regulator share | |
 | 9 | A second insurer stood up on a separate workspace from the ontology import; exchange both ways | |

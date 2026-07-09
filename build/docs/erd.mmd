@@ -206,12 +206,15 @@ erDiagram
         string valuation_run_id PK
         date valuation_date
         timestamp run_timestamp
-        string assumption_set_id
         string scenario_set_id
         string model_version
         string run_verdict_code
         string run_by
         string source_system_code
+    }
+    valuation_run_assumption {
+        string valuation_run_id PK
+        string assumption_set_id PK
     }
     party {
         string party_id PK
@@ -385,10 +388,11 @@ erDiagram
     model_point }o--|| source_system : source_system_code
     scenario_set }o--|| scenario_status : scenario_status_code
     scenario_set }o--|| source_system : source_system_code
-    valuation_run }o--|| assumption_set : assumption_set_id
     valuation_run }o--|| scenario_set : scenario_set_id
     valuation_run }o--|| run_verdict : run_verdict_code
     valuation_run }o--|| source_system : source_system_code
+    valuation_run_assumption }o--|| valuation_run : valuation_run_id
+    valuation_run_assumption }o--|| assumption_set : assumption_set_id
     party }o--|| party_type : party_type_code
     party }o--|| country : country_code
     party }o--|| source_system : source_system_code

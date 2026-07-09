@@ -71,7 +71,7 @@ To deploy to a Databricks workspace, with optional synthetic demo data and an
 end-to-end smoke test:
 
 ```bash
-uv run --with pyyaml tools/generate_demo_data.py           # optional demo book
+uv run --with pyyaml tools/world_engine.py [--scale 1.0]   # the deterministic Bricksurance world
 uv run --with databricks-sdk tools/deploy_databricks.py --profile DEFAULT
 uv run --with databricks-sdk,pyyaml tools/smoke_test.py --profile DEFAULT
 ```
@@ -93,8 +93,11 @@ docs/DESIGN.md    Architecture, federated topology, exchange patterns, roadmap.
   [Bricksurance Data Core — One Common Data Layer](https://docs.google.com/presentation/d/1_ELYXU0bk5JbS1JNrvtCnnS2UY99CXJhMLtPnGcROd8/edit)
 - **Project document** (full written companion, Databricks internal):
   [Bricksurance Data Core on Google Docs](https://docs.google.com/document/d/1o0RJnVAixisAjzLmEzgqZ1N4Vs7xKobsjM_06pyQ-sY/edit)
-- **Live Genie space** (demo workspace):
-  [Bricksurance Data Core](https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/01f17ade46ec18bc8da2cb30b55a26a6)
+- **Live Genie spaces** (demo workspace) — specialized per domain, surfaced
+  together by Genie One:
+  [P&C Book](https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/01f17ade46ec18bc8da2cb30b55a26a6) ·
+  [Reinsurance & Exchange](https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/01f17b83371f1d56bba2404ad475e29d) ·
+  [Life & Valuations](https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/01f17b8339b41106b9f5784f0b2d04a4)
 - **Data Core Console** (Databricks App, demo workspace — the front door for demos;
   source in [`app/`](app/)):
   [data-core-console](https://data-core-console-7474659673789953.aws.databricksapps.com)

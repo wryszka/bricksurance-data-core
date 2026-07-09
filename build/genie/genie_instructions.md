@@ -1,4 +1,4 @@
-# Genie instructions — Bricksurance Data Core v0.4.0
+# Genie instructions — Bricksurance Data Core v0.5.0
 
 You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses.
 
@@ -35,7 +35,8 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_life.assumption_set` — A versioned, governed set of actuarial assumptions (mortality, lapse, expense, economic). Sets move through a maker/checker lifecycle; valuation runs record exactly which approved set they used, which is what makes any past result reproducible. Grain: One row per assumption set version per assumption type.
 - `lr_serverless_aws_us_catalog.bricksurance_life.model_point` — A grouped model point for life valuation: policies compressed into cohorts (attained age by outstanding term) at a valuation date. Model points are derived from in-force life policies; the grouping is proven back to the policy count and sum assured it represents. Grain: One row per cohort per line of business per valuation date.
 - `lr_serverless_aws_us_catalog.bricksurance_life.scenario_set` — A delivered economic scenario set (risk-free curves, equity paths) used by stochastic valuation. Registered with a lifecycle so exactly one set is active for production runs, and every run records which set it used. Grain: One row per delivered scenario set.
-- `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run` — One execution of a valuation process: which valuation date, which approved assumption set, which scenario set, which model version, run by whom, with what quality verdict. The run is the unit of auditability - every published valuation result points back to exactly one run. Grain: One row per valuation run execution.
+- `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run` — One execution of a valuation process: which valuation date, which approved assumption sets (one per assumption type, via valuation_run_assumption), which scenario set, which model version, run by whom, with what quality verdict. The run is the unit of auditability - every published valuation result points back to exactly one run. Grain: One row per valuation run execution.
+- `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run_assumption` — Which assumption sets a valuation run used - one row per assumption set, typically one per assumption type (mortality, lapse, expense, economic). This junction is what makes any past result exactly reproducible: run plus sets plus scenario plus model version is the full recipe. Grain: One row per assumption set used by a valuation run.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party` — A person or organisation the group deals with. A party exists exactly once regardless of how many relationships it has; what the party does (insured, broker, cedant, claimant...) is expressed through party roles, never by duplicating the party. Grain: One row per unique legal person or organisation, mastered across source systems.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party_role` — A role a party plays in a specific business context - on a policy, a claim or a treaty. This is the model's central extensibility pattern: a new kind of counterparty is a new party_role_type code plus rows here, never a new table. Grain: One row per role a party plays in one context (policy, claim, treaty, quote or submission) for a period of time. Exactly one of policy_id, claim_id, treaty_id, quote_id and submission_id is populated.
 - `lr_serverless_aws_us_catalog.bricksurance_policy.coverage` — A specific cover granted under a policy, with its own limit and deductible. A policy bundles one or more coverages; claims attach to coverages where the source data allows it. Grain: One row per coverage granted under a policy.
@@ -79,10 +80,11 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_life.model_point.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_life.scenario_set.scenario_status_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.scenario_status.scenario_status_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_life.scenario_set.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
-- `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run.assumption_set_id` joins to `lr_serverless_aws_us_catalog.bricksurance_life.assumption_set.assumption_set_id`.
 - `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run.scenario_set_id` joins to `lr_serverless_aws_us_catalog.bricksurance_life.scenario_set.scenario_set_id`.
 - `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run.run_verdict_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.run_verdict.run_verdict_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run_assumption.valuation_run_id` joins to `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run.valuation_run_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run_assumption.assumption_set_id` joins to `lr_serverless_aws_us_catalog.bricksurance_life.assumption_set.assumption_set_id`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.party_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.party_type.party_type_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.country_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.country.country_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
@@ -147,7 +149,8 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.cession_metrics` — Outward reinsurance KPIs over the cession bordereau: gross and ceded premium by treaty and period. Amounts are in original transaction currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
   - dimension treaty_reference: Treaty the premium is ceded to.
   - dimension reporting_month: Bordereau reporting month.
-  - dimension line_of_business: Line of business as its business label.
+  - dimension line_of_business: Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.
+  - dimension line_of_business_code: Line of business as its code, e.g. COMMERCIAL_PROPERTY.
   - dimension currency_code: Original currency of the amounts. Group by this before summing money.
   - MEASURE(gross_premium): Gross premium on the ceded policies, in original currency.
   - MEASURE(ceded_premium): Premium ceded to reinsurers, in original currency.
@@ -157,7 +160,8 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - dimension underwriting_year: Underwriting year the cover would attach to.
   - dimension submission_status: Funnel status as its business label.
   - dimension treaty_type_code: Form of treaty requested.
-  - dimension line_of_business: Line of business as its business label.
+  - dimension line_of_business: Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.
+  - dimension line_of_business_code: Line of business as its code, e.g. COMMERCIAL_PROPERTY.
   - dimension currency_code: Original currency of requested terms. Group by this before summing money.
   - MEASURE(submission_count): Number of submissions.
   - MEASURE(bound_count): Submissions bound into treaties.
@@ -181,7 +185,8 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.valuation_metrics` — Published valuation figures (BEL, technical provisions, SCR, CSM...) by run, measure and line of business - one semantic surface across life and non-life, Solvency II and IFRS 17. Amounts are in original currency; group by or filter on currency_code and valuation_measure_code before summing. Query measures with MEASURE(name).
   - dimension valuation_date: Valuation date of the producing run.
   - dimension valuation_measure_code: Which defined measure the figure is (BEL, SCR, CSM...). Always constrain this before summing.
-  - dimension line_of_business: Line of business as its business label.
+  - dimension line_of_business: Line of business as its business label, e.g. 'Term Life'. Filter this dimension with labels; use line_of_business_code for codes.
+  - dimension line_of_business_code: Line of business as its code, e.g. TERM_LIFE.
   - dimension cohort: Optional sub-division of the figure.
   - dimension currency_code: Original currency. Group by this before summing money.
   - MEASURE(total_amount): Sum of the figures - only meaningful within one measure and one currency.

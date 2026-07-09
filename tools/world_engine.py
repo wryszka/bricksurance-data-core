@@ -1,0 +1,555 @@
+#!/usr/bin/env python3
+"""The Bricksurance World Engine.
+
+Generates ONE deterministic, coherent synthetic world across every domain of
+the model — P&C (commercial + motor), life, reinsurance, finance — and emits
+it as build/databricks/95_demo_data.sql (INSERT OVERWRITE, so reruns are
+idempotent). Run AFTER tools/generate.py.
+
+Coherence is the point: quotes convert into the policies that carry the
+claims that are ceded to the treaties that were bound from submissions; the
+finance domain's published case-reserve totals tie out to the sum of claim
+transactions; life valuation runs reference the approved assumption sets and
+the active scenario set. Change the world, and every surface changes together.
+
+Scale: --scale multiplies book volumes (policies, quotes, cohort sizes).
+Semantics never change with scale; the SACRED HEROES exist at every scale:
+  - POL-2026-000001 (Aldgate Mills Ltd) -> fire claim CLM-2026-000001
+    (450k reserved, 180k paid, 270k outstanding derived)
+    -> 30% ceded to TR-QS-PROP-2026 -> quote QUO-2026-000001 it converted from
+  - SUB-2026-000001 (BOUND) -> TR-QS-PROP-2026
+
+Usage:
+    uv run --with pyyaml tools/world_engine.py [--scale 1.0]
+"""
+
+import argparse
+import random
+from datetime import date, datetime, timedelta
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "build" / "databricks" / "95_demo_data.sql"
+TODAY = date(2026, 7, 7)
+rng = random.Random(20260707)
+
+
+def load_entities():
+    entities = {}
+    for path in sorted((ROOT / "model").rglob("*.yaml")):
+        spec = yaml.safe_load(path.read_text())
+        if spec.get("kind") == "entity":
+            entities[spec["name"]] = spec
+    return entities
+
+
+def load_binding():
+    return yaml.safe_load((ROOT / "bindings" / "databricks.yaml").read_text())
+
+
+def fqn(binding, domain, table):
+    return f"{binding['catalog']}.{binding['schema_pattern'].format(domain=domain)}.{table}"
+
+
+def lit(v):
+    if v is None:
+        return "NULL"
+    if isinstance(v, datetime):
+        return f"TIMESTAMP '{v.strftime('%Y-%m-%d %H:%M:%S')}'"
+    if isinstance(v, date):
+        return f"DATE '{v.isoformat()}'"
+    if isinstance(v, (int, float)):
+        return str(v)
+    return "'" + str(v).replace("'", "''") + "'"
+
+
+def insert(binding, entity, rows):
+    cols = [a["name"] for a in entity["attributes"]]
+    for r in rows:
+        unknown = set(r) - set(cols)
+        assert not unknown, f"{entity['name']}: unknown columns {unknown}"
+    table = fqn(binding, entity["domain"], entity["name"])
+    values = ",\n".join("  (" + ", ".join(lit(r.get(c)) for c in cols) + ")" for r in rows)
+    return f"INSERT OVERWRITE {table} ({', '.join(cols)}) VALUES\n{values};"
+
+
+# ---------------------------------------------------------------- fixed cast
+
+ORGS = [
+    ("Aldgate Mills Ltd", "GB"), ("Bluestone Retail Ltd", "GB"),
+    ("Clyde Fabrication Ltd", "GB"), ("Rivelin Foods plc", "GB"),
+    ("Northgate Logistics GmbH", "DE"), ("Hafen Industrie AG", "DE"),
+    ("Vantera Pharma SE", "IE"), ("Cormorant Marine SA", "FR"),
+    ("Helvetia Precision AG", "CH"), ("Beacon Point Hotels Inc", "US"),
+]
+PERSONS = [("Anna Novak", "GB"), ("James Whitfield", "GB"), ("Claire Dubois", "FR")]
+BROKERS = [("Marlin & Rees Brokers LLP", "GB"), ("Atlas Cover Partners", "IE")]
+GROUP = [("Bricksurance SE", "DE"), ("Bricksurance Re AG", "CH")]
+CEDANTS = [("Meridian Mutual Insurance", "GB"), ("Nordlicht Versicherung AG", "DE")]
+
+CCY = {"GB": "GBP", "IE": "EUR", "DE": "EUR", "FR": "EUR", "CH": "CHF", "US": "USD"}
+LOB_MIX = [("COMMERCIAL_PROPERTY", 0.4), ("MOTOR", 0.3),
+           ("GENERAL_LIABILITY", 0.2), ("MARINE_CARGO", 0.1)]
+BASE_PREMIUM = {"COMMERCIAL_PROPERTY": 85000, "MOTOR": 18000,
+                "GENERAL_LIABILITY": 22000, "MARINE_CARGO": 30000}
+OBJ_TYPE = {"COMMERCIAL_PROPERTY": "BUILDING", "MOTOR": "VEHICLE",
+            "GENERAL_LIABILITY": "LIABILITY_EXPOSURE", "MARINE_CARGO": "CARGO_SHIPMENT"}
+OBJ_DESC = {"COMMERCIAL_PROPERTY": ["Warehouse and distribution centre", "Office building",
+                                    "Factory unit", "Retail premises"],
+            "MOTOR": ["Fleet of delivery vans", "Company car fleet", "Mixed commercial fleet"],
+            "GENERAL_LIABILITY": ["Business operations at head office",
+                                  "Manufacturing operations", "Hospitality operations"],
+            "MARINE_CARGO": ["Machinery consignments, EU routes",
+                             "Pharmaceutical consignments, transatlantic"]}
+POSTCODES = {"GB": ["M3 5EN", "LS1 4AP", "B4 7DA", "G2 1AL", "BS1 6QF"],
+             "DE": ["20457", "60311", "80331"], "IE": ["D02 X285"],
+             "FR": ["13002", "75008"], "CH": ["8005"], "US": ["33131", "94105"]}
+COL_BY_LOB = {"COMMERCIAL_PROPERTY": ["FIRE", "FLOOD", "STORM", "WATER_DAMAGE"],
+              "MOTOR": ["COLLISION", "COLLISION", "THEFT"],
+              "GENERAL_LIABILITY": ["LIABILITY_INCIDENT"],
+              "MARINE_CARGO": ["THEFT", "WATER_DAMAGE"]}
+VEHICLES = [("Ford", "Transit"), ("VW", "Crafter"), ("Mercedes-Benz", "Sprinter"),
+            ("Toyota", "Hilux"), ("Iveco", "Daily")]
+
+
+class World:
+    def __init__(self, scale):
+        self.scale = scale
+        self.t = {}          # table -> rows
+        self.counters = {}
+        for name in ("party", "party_role", "policy", "quote", "endorsement", "coverage",
+                     "insured_object", "vehicle", "premium_transaction", "claim",
+                     "claim_transaction", "treaty", "treaty_layer", "submission", "cession",
+                     "cat_event", "event_loss", "model_point", "assumption_set",
+                     "scenario_set", "valuation_run", "valuation_run_assumption",
+                     "valuation_result"):
+            self.t[name] = []
+
+    def n(self, base):
+        return max(1, round(base * self.scale))
+
+    def nid(self, prefix):
+        self.counters[prefix] = self.counters.get(prefix, 0) + 1
+        return f"{prefix}_{self.counters[prefix]:04d}"
+
+    def add(self, table, **row):
+        self.t[table].append(row)
+        return row
+
+
+def build_world(scale):
+    w = World(scale)
+    pid = {}
+
+    for name, country in GROUP + BROKERS + CEDANTS + ORGS + PERSONS:
+        party_type = "PERSON" if (name, country) in PERSONS else "ORGANISATION"
+        key = w.nid("pty")
+        pid[name] = key
+        w.add("party", party_id=key, party_type_code=party_type, name=name,
+              country_code=country, source_system_code="DATA_CORE")
+
+    def add_role(role_type, party, start, **ctx):
+        w.add("party_role", party_role_id=w.nid("prl"), party_id=pid[party],
+              party_role_type_code=role_type, start_date=start, end_date=None, **ctx)
+
+    # ---------------------------------------------------------- P&C book
+    n_policies = w.n(60)
+    lobs = []
+    for lob, share in LOB_MIX:
+        lobs += [lob] * round(n_policies * share)
+    lobs = (lobs + ["COMMERCIAL_PROPERTY"] * n_policies)[:n_policies]
+    rng.shuffle(lobs)
+    lobs[0] = "COMMERCIAL_PROPERTY"          # the hero
+    uwy_plan = [2024, 2025, 2026] * n_policies
+
+    for i in range(n_policies):
+        num = i + 1
+        hero = i == 0
+        uwy = 2026 if hero else uwy_plan[i]
+        lob = lobs[i]
+        org, country = ORGS[0] if hero else ORGS[i % len(ORGS)]
+        ccy = CCY[country]
+        inception = date(2026, 1, 1) if hero else date(uwy, rng.randint(1, 12), rng.randint(1, 28))
+        expiry = inception + timedelta(days=364)
+        cancelled = (not hero) and uwy == 2025 and num % 17 == 0
+        if cancelled:
+            status = "CANCELLED"
+        elif expiry < TODAY:
+            status = "EXPIRED"
+        elif inception > TODAY:
+            status = "BOUND"
+        else:
+            status = "IN_FORCE"
+        policy_id = w.nid("pol")
+        policy_number = f"POL-{uwy}-{num:06d}"
+        w.add("policy", policy_id=policy_id, policy_number=policy_number,
+              source_system_code="PAS_CORE", line_of_business_code=lob,
+              policy_status_code=status, inception_date=inception, expiry_date=expiry,
+              underwriting_year=uwy, currency_code=ccy)
+
+        written = 120000.00 if hero else round(BASE_PREMIUM[lob] * rng.uniform(0.7, 1.3), 2)
+
+        # every policy converted from exactly one quote
+        w.add("quote", quote_id=w.nid("quo"), quote_number=f"QUO-{uwy}-{num:06d}",
+              policy_id=policy_id, line_of_business_code=lob, quote_status_code="CONVERTED",
+              quote_date=inception - timedelta(days=14 if hero else rng.randint(14, 45)),
+              requested_inception_date=inception, quoted_gross_premium=written,
+              currency_code=ccy, source_system_code="PAS_CORE")
+
+        add_role("POLICYHOLDER", org, inception, policy_id=policy_id)
+        add_role("INSURED", org, inception, policy_id=policy_id)
+        if num % 2 == 0:
+            add_role("BROKER", BROKERS[(num // 2) % 2][0], inception, policy_id=policy_id)
+
+        def add_cov(ctype, limit, ded, sum_insured):
+            row = w.add("coverage", coverage_id=w.nid("cov"), policy_id=policy_id,
+                        coverage_type_code=ctype, limit_amount=limit,
+                        deductible_amount=ded, sum_insured_amount=sum_insured)
+            return row["coverage_id"]
+
+        if lob == "COMMERCIAL_PROPERTY":
+            first_cov = add_cov("BUILDINGS", 8000000 if hero else rng.randrange(4, 16) * 1000000,
+                                25000, 6500000 if hero else None)
+            add_cov("CONTENTS", rng.randrange(1, 4) * 1000000, 10000, None)
+            if hero or rng.random() < 0.6:
+                add_cov("BUSINESS_INTERRUPTION", rng.randrange(2, 6) * 1000000, 50000, None)
+        elif lob == "MOTOR":
+            first_cov = add_cov("MOTOR_OWN_DAMAGE", None, 1000, 250000)
+            add_cov("MOTOR_TPL", 5000000, None, None)
+        elif lob == "GENERAL_LIABILITY":
+            first_cov = add_cov("PUBLIC_LIABILITY", 5000000, 5000, None)
+        else:
+            first_cov = add_cov("CARGO", 2000000, 10000, None)
+
+        obj = w.add("insured_object", insured_object_id=w.nid("obj"), policy_id=policy_id,
+                    insured_object_type_code=OBJ_TYPE[lob],
+                    description=OBJ_DESC[lob][0] if hero else rng.choice(OBJ_DESC[lob]),
+                    country_code=country,
+                    postcode="M3 5EN" if hero else (rng.choice(POSTCODES[country])
+                                                    if lob == "COMMERCIAL_PROPERTY" else None))
+        if lob == "MOTOR":
+            make, model = rng.choice(VEHICLES)
+            w.add("vehicle", vehicle_id=w.nid("veh"),
+                  insured_object_id=obj["insured_object_id"],
+                  registration_number=f"B{chr(65 + num % 26)}{num % 100:02d} "
+                                      f"{chr(65 + (num * 7) % 26)}{chr(65 + (num * 3) % 26)}"
+                                      f"{chr(65 + (num * 5) % 26)}",
+                  make=make, model=model, year_of_manufacture=uwy - rng.randint(0, 6))
+
+        def add_prm(ptype, amount, when):
+            w.add("premium_transaction", premium_transaction_id=w.nid("prm"),
+                  policy_id=policy_id, coverage_id=None, premium_transaction_type_code=ptype,
+                  amount=amount, currency_code=ccy, transaction_date=when,
+                  source_system_code="PAS_CORE")
+
+        add_prm("WRITTEN", written, inception)
+        if not hero and not cancelled and num % 7 == 0:
+            when = inception + timedelta(days=rng.randint(90, 240))
+            add_prm("ADJUSTMENT", round(written * rng.uniform(0.04, 0.10), 2), when)
+            w.add("endorsement", endorsement_id=w.nid("end"), policy_id=policy_id,
+                  endorsement_type_code="SUM_INSURED_CHANGE" if num % 14 == 0 else "MID_TERM_ADJUSTMENT",
+                  effective_date=when, description="Declared values revised mid-term.",
+                  source_system_code="PAS_CORE")
+        if cancelled:
+            when = inception + timedelta(days=rng.randint(120, 300))
+            add_prm("RETURN", round(-written * 0.4, 2), when)
+            w.add("endorsement", endorsement_id=w.nid("end"), policy_id=policy_id,
+                  endorsement_type_code="CANCELLATION", effective_date=when,
+                  description="Policy cancelled at the policyholder's request.",
+                  source_system_code="PAS_CORE")
+
+        # claims across the book, capped
+        makes_claim = hero or (status in ("EXPIRED", "IN_FORCE") and num % 3 == 1
+                               and len(w.t["claim"]) < w.n(18))
+        if makes_claim:
+            c = len(w.t["claim"]) + 1
+            claim_id = w.nid("clm")
+            if hero:
+                cause, loss = "FIRE", date(2026, 3, 14)
+            else:
+                cause = rng.choice(COL_BY_LOB[lob])
+                last_loss = min(expiry, TODAY - timedelta(days=30))
+                loss = inception + timedelta(days=rng.randrange(max((last_loss - inception).days, 1)))
+            reported = date(2026, 3, 16) if hero else loss + timedelta(days=rng.randint(2, 21))
+            if hero:
+                cstatus = "OPEN"
+            elif c % 9 == 0:
+                cstatus = "DECLINED"
+            elif uwy == 2024:
+                cstatus = "REOPENED" if c % 8 == 0 else "CLOSED"
+            else:
+                cstatus = rng.choice(["OPEN", "CLOSED"])
+            w.add("claim", claim_id=claim_id, policy_id=policy_id, coverage_id=first_cov,
+                  claim_number=f"CLM-{loss.year}-{c:06d}", claim_status_code=cstatus,
+                  cause_of_loss_code=cause, loss_date=loss, reported_date=reported,
+                  description=("Fire in the main warehouse; sprinkler activation and smoke "
+                               "damage across two floors.") if hero else None,
+                  source_system_code="CLM_CORE")
+            add_role("CLAIMANT",
+                     PERSONS[c % 3][0] if (lob == "MOTOR" and c % 2 == 0) else org,
+                     reported, claim_id=claim_id)
+
+            def add_ctx(ttype, amount, when):
+                w.add("claim_transaction", claim_transaction_id=w.nid("ctx"), claim_id=claim_id,
+                      claim_transaction_type_code=ttype, amount=amount, currency_code=ccy,
+                      transaction_date=when, source_system_code="CLM_CORE")
+
+            reserve = 450000.00 if hero else round(written * rng.uniform(0.5, 3.0), 2)
+            add_ctx("CASE_RESERVE_MOVEMENT", reserve, reported + timedelta(days=3))
+            if hero:
+                add_ctx("INDEMNITY_PAYMENT", 180000.00, date(2026, 5, 20))
+                add_ctx("EXPENSE_PAYMENT", 12000.00, date(2026, 4, 28))
+                add_ctx("CASE_RESERVE_MOVEMENT", -180000.00, date(2026, 5, 20))
+            elif cstatus == "DECLINED":
+                add_ctx("CASE_RESERVE_MOVEMENT", -reserve, reported + timedelta(days=45))
+            elif cstatus in ("CLOSED", "REOPENED"):
+                paid = round(reserve * rng.uniform(0.55, 0.95), 2)
+                pay_day = reported + timedelta(days=rng.randint(60, 200))
+                add_ctx("INDEMNITY_PAYMENT", paid, pay_day)
+                add_ctx("EXPENSE_PAYMENT", round(reserve * rng.uniform(0.03, 0.08), 2), pay_day)
+                add_ctx("CASE_RESERVE_MOVEMENT", -reserve, pay_day)
+                if cstatus == "REOPENED":
+                    add_ctx("CASE_RESERVE_MOVEMENT", round(reserve * 0.4, 2),
+                            pay_day + timedelta(days=90))
+                if c % 5 == 0:
+                    add_ctx("RECOVERY", round(-paid * rng.uniform(0.10, 0.20), 2),
+                            pay_day + timedelta(days=60))
+            else:
+                if rng.random() < 0.5:
+                    add_ctx("EXPENSE_PAYMENT", round(reserve * 0.04, 2),
+                            reported + timedelta(days=30))
+
+    # the rest of the quote funnel: quotes that never became policies
+    lost = ["OFFERED", "REJECTED_BY_CUSTOMER", "EXPIRED", "DECLINED_BY_INSURER", "OPEN"]
+    for k in range(w.n(25)):
+        lob = rng.choice([l for l, _ in LOB_MIX])
+        org, country = ORGS[(k * 3) % len(ORGS)]
+        w.add("quote", quote_id=w.nid("quo"), quote_number=f"QUO-2026-{200 + k:06d}",
+              policy_id=None, line_of_business_code=lob,
+              quote_status_code=lost[k % len(lost)],
+              quote_date=date(2026, 1, 5) + timedelta(days=rng.randint(0, 150)),
+              requested_inception_date=None,
+              quoted_gross_premium=None if lost[k % len(lost)] == "OPEN"
+              else round(BASE_PREMIUM[lob] * rng.uniform(0.7, 1.3), 2),
+              currency_code=CCY[country], source_system_code="PAS_CORE")
+
+    # ---------------------------------------------------------- reinsurance
+    qs = w.add("treaty", treaty_id=w.nid("trt"), treaty_reference="TR-QS-PROP-2026",
+               treaty_type_code="QUOTA_SHARE", line_of_business_code="COMMERCIAL_PROPERTY",
+               underwriting_year=2026, inception_date=date(2026, 1, 1),
+               expiry_date=date(2026, 12, 31), cession_rate=0.3000,
+               currency_code="GBP", source_system_code="RI_CORE")
+    xl = w.add("treaty", treaty_id=w.nid("trt"), treaty_reference="TR-XL-PROP-2026",
+               treaty_type_code="XOL_CATASTROPHE", line_of_business_code="COMMERCIAL_PROPERTY",
+               underwriting_year=2026, inception_date=date(2026, 1, 1),
+               expiry_date=date(2026, 12, 31), cession_rate=None,
+               currency_code="GBP", source_system_code="RI_CORE")
+    for treaty in (qs, xl):
+        add_role("CEDANT", "Bricksurance SE", date(2026, 1, 1), treaty_id=treaty["treaty_id"])
+        add_role("REINSURER", "Bricksurance Re AG", date(2026, 1, 1), treaty_id=treaty["treaty_id"])
+    w.add("treaty_layer", treaty_layer_id=w.nid("lay"), treaty_id=qs["treaty_id"],
+          layer_number=1, limit_amount=25000000.00, attachment_amount=None,
+          reinstatement_count=None, reinstatement_premium_rate=None)
+    w.add("treaty_layer", treaty_layer_id=w.nid("lay"), treaty_id=xl["treaty_id"],
+          layer_number=1, limit_amount=10000000.00, attachment_amount=5000000.00,
+          reinstatement_count=1, reinstatement_premium_rate=1.0000)
+    w.add("treaty_layer", treaty_layer_id=w.nid("lay"), treaty_id=xl["treaty_id"],
+          layer_number=2, limit_amount=20000000.00, attachment_amount=15000000.00,
+          reinstatement_count=1, reinstatement_premium_rate=1.0000)
+
+    # bound submissions behind the two treaties (the hero thread), plus a funnel
+    for ref_num, treaty in ((1, qs), (2, xl)):
+        sub = w.add("submission", submission_id=w.nid("sub"),
+                    submission_reference=f"SUB-2026-{ref_num:06d}",
+                    treaty_id=treaty["treaty_id"], submission_status_code="BOUND",
+                    treaty_type_code=treaty["treaty_type_code"],
+                    line_of_business_code="COMMERCIAL_PROPERTY", underwriting_year=2026,
+                    requested_limit=25000000.00 if treaty is qs else 30000000.00,
+                    requested_attachment=None if treaty is qs else 5000000.00,
+                    currency_code="GBP", received_date=date(2025, 11, 15),
+                    source_system_code="RI_CORE")
+        add_role("CEDANT", "Bricksurance SE", sub["received_date"],
+                 submission_id=sub["submission_id"])
+    funnel = ["RECEIVED", "IN_REVIEW", "QUOTED", "QUOTED", "DECLINED", "WITHDRAWN", "IN_REVIEW"]
+    for k in range(w.n(7)):
+        status = funnel[k % len(funnel)]
+        cedant = CEDANTS[k % 2][0]
+        sub = w.add("submission", submission_id=w.nid("sub"),
+                    submission_reference=f"SUB-2026-{100 + k:06d}", treaty_id=None,
+                    submission_status_code=status,
+                    treaty_type_code=rng.choice(["QUOTA_SHARE", "SURPLUS", "XOL_PER_RISK",
+                                                 "XOL_CATASTROPHE"]),
+                    line_of_business_code=rng.choice(["COMMERCIAL_PROPERTY", "MOTOR",
+                                                      "GENERAL_LIABILITY"]),
+                    underwriting_year=2026,
+                    requested_limit=rng.randrange(5, 40) * 1000000.0,
+                    requested_attachment=None, currency_code=rng.choice(["GBP", "EUR"]),
+                    received_date=date(2025, 11, 1) + timedelta(days=rng.randint(0, 90)),
+                    source_system_code="RI_CORE")
+        add_role("CEDANT", cedant, sub["received_date"], submission_id=sub["submission_id"])
+
+    for p in w.t["policy"]:
+        if p["line_of_business_code"] == "COMMERCIAL_PROPERTY" and p["underwriting_year"] == 2026:
+            w.add("cession", cession_id=w.nid("ces"), policy_id=p["policy_id"],
+                  coverage_id=None, treaty_id=qs["treaty_id"], ceded_share=0.3000)
+
+    # Windstorm Ostara: modelled day one, reported a month later
+    evt = w.add("cat_event", cat_event_id=w.nid("cev"), event_name="Windstorm Ostara",
+                cause_of_loss_code="STORM", event_date=date(2026, 2, 18), country_code="GB",
+                industry_loss_estimate=850000000.00, currency_code="GBP",
+                source_system_code="RI_CORE")
+    hit = [p for p in w.t["policy"]
+           if p["line_of_business_code"] == "COMMERCIAL_PROPERTY"
+           and p["currency_code"] == "GBP"
+           and p["inception_date"] <= evt["event_date"] <= p["expiry_date"]][:w.n(5)]
+    for p in hit:
+        modelled = round(rng.uniform(200000, 900000), 2)
+        w.add("event_loss", event_loss_id=w.nid("evl"), cat_event_id=evt["cat_event_id"],
+              treaty_id=None, policy_id=p["policy_id"], loss_basis_code="MODELLED",
+              gross_loss_amount=modelled, ceded_loss_amount=round(modelled * 0.3, 2),
+              currency_code="GBP", as_of_date=date(2026, 2, 20))
+        w.add("event_loss", event_loss_id=w.nid("evl"), cat_event_id=evt["cat_event_id"],
+              treaty_id=None, policy_id=p["policy_id"], loss_basis_code="REPORTED",
+              gross_loss_amount=round(modelled * rng.uniform(0.75, 1.15), 2),
+              ceded_loss_amount=None, currency_code="GBP", as_of_date=date(2026, 3, 20))
+    for basis, as_of, gross, ceded in (("MODELLED", date(2026, 2, 20), 12400000.00, 7400000.00),
+                                       ("REPORTED", date(2026, 3, 20), 10900000.00, 5900000.00)):
+        w.add("event_loss", event_loss_id=w.nid("evl"), cat_event_id=evt["cat_event_id"],
+              treaty_id=xl["treaty_id"], policy_id=None, loss_basis_code=basis,
+              gross_loss_amount=gross, ceded_loss_amount=ceded,
+              currency_code="GBP", as_of_date=as_of)
+
+    # ---------------------------------------------------------- life & finance
+    def add_assumption(atype, version, status, effective, approved):
+        return w.add("assumption_set", assumption_set_id=w.nid("asm"),
+                     assumption_type_code=atype, assumption_status_code=status,
+                     version=version,
+                     description=f"{atype.title()} basis v{version}.",
+                     effective_from=effective,
+                     approved_by="Chief Actuary (checker)" if approved else None,
+                     approved_at=datetime(2026, 6, 28, 14, 30) if approved and status == "APPROVED"
+                     else (datetime(2026, 1, 10, 9, 0) if approved else None),
+                     source_system_code="LIFE_CORE")
+
+    mort_v1 = add_assumption("MORTALITY", 1, "SUPERSEDED", date(2026, 1, 1), True)
+    mort_v2 = add_assumption("MORTALITY", 2, "APPROVED", date(2026, 6, 30), True)
+    add_assumption("MORTALITY", 3, "REJECTED", None, True)
+    lapse_v1 = add_assumption("LAPSE", 1, "APPROVED", date(2026, 1, 1), True)
+    exp_v1 = add_assumption("EXPENSE", 1, "APPROVED", date(2026, 1, 1), True)
+    econ_v1 = add_assumption("ECONOMIC", 1, "APPROVED", date(2026, 1, 1), True)
+
+    scn_q1 = w.add("scenario_set", scenario_set_id=w.nid("scn"),
+                   name="EIOPA RFR 2026-03 + HW1F 1,000 paths",
+                   scenario_status_code="SUPERSEDED", scenario_count=1000,
+                   calibration_date=date(2026, 3, 31), source_system_code="LIFE_CORE")
+    scn_q2 = w.add("scenario_set", scenario_set_id=w.nid("scn"),
+                   name="EIOPA RFR 2026-06 + HW1F 1,000 paths",
+                   scenario_status_code="ACTIVE", scenario_count=1000,
+                   calibration_date=date(2026, 6, 30), source_system_code="LIFE_CORE")
+    w.add("scenario_set", scenario_set_id=w.nid("scn"),
+          name="Vendor ESG 2026-06 delivery", scenario_status_code="AVAILABLE",
+          scenario_count=1000, calibration_date=date(2026, 6, 30),
+          source_system_code="LIFE_CORE")
+
+    MP_PLAN = [("TERM_LIFE", [30, 35, 40, 45, 50, 55], [5, 10, 15, 20], 120000, 220),
+               ("CREDIT_LIFE", [30, 40, 50], [1, 3, 5], 15000, 340),
+               ("GROUP_PROTECTION", [35, 45], [1], 250000, 900)]
+    for val_date in (date(2026, 3, 31), date(2026, 6, 30)):
+        for lob, ages, terms, avg_sa, base_count in MP_PLAN:
+            for age in ages:
+                for term in terms:
+                    count = w.n(round(base_count * rng.uniform(0.7, 1.3)))
+                    w.add("model_point", model_point_id=w.nid("mpt"),
+                          valuation_date=val_date, line_of_business_code=lob,
+                          age_attained=age, outstanding_term_years=term,
+                          policy_count=count,
+                          sum_assured=round(count * avg_sa * rng.uniform(0.9, 1.1), 2),
+                          annual_premium=round(count * avg_sa * 0.011 * rng.uniform(0.9, 1.1), 2),
+                          currency_code="GBP", source_system_code="LIFE_CORE")
+
+    def add_run(val_date, ts, verdict, scenario, source, model_version, sets=()):
+        run = w.add("valuation_run", valuation_run_id=w.nid("run"), valuation_date=val_date,
+                    run_timestamp=ts, scenario_set_id=scenario, model_version=model_version,
+                    run_verdict_code=verdict, run_by="svc-valuation",
+                    source_system_code=source)
+        for s in sets:
+            w.add("valuation_run_assumption", valuation_run_id=run["valuation_run_id"],
+                  assumption_set_id=s["assumption_set_id"])
+        return run
+
+    run_q1 = add_run(date(2026, 3, 31), datetime(2026, 4, 2, 3, 10), "GREEN",
+                     scn_q1["scenario_set_id"], "LIFE_CORE", "engine v2.0",
+                     (mort_v1, lapse_v1, exp_v1, econ_v1))
+    add_run(date(2026, 6, 30), datetime(2026, 7, 1, 22, 40), "RED",
+            scn_q2["scenario_set_id"], "LIFE_CORE", "engine v2.1",
+            (mort_v2, lapse_v1, exp_v1, econ_v1))          # gate blocked; no results
+    run_q2 = add_run(date(2026, 6, 30), datetime(2026, 7, 2, 3, 5), "GREEN",
+                     scn_q2["scenario_set_id"], "LIFE_CORE", "engine v2.1",
+                     (mort_v2, lapse_v1, exp_v1, econ_v1))
+    run_pnc = add_run(date(2026, 6, 30), datetime(2026, 7, 3, 6, 15), "GREEN",
+                      None, "CLM_CORE", "chain-ladder v1")
+
+    BEL = {(run_q1["valuation_run_id"], "TERM_LIFE"): -23150000.00,
+           (run_q1["valuation_run_id"], "CREDIT_LIFE"): 3180000.00,
+           (run_q1["valuation_run_id"], "GROUP_PROTECTION"): 10940000.00,
+           (run_q2["valuation_run_id"], "TERM_LIFE"): -24370000.00,
+           (run_q2["valuation_run_id"], "CREDIT_LIFE"): 3210000.00,
+           (run_q2["valuation_run_id"], "GROUP_PROTECTION"): 11420000.00}
+
+    def add_result(run, lob, measure, amount, ccy="GBP"):
+        w.add("valuation_result", valuation_result_id=w.nid("vrs"),
+              valuation_run_id=run["valuation_run_id"], line_of_business_code=lob,
+              valuation_measure_code=measure, cohort=None, amount=amount, currency_code=ccy)
+
+    for (run_id, lob), bel in BEL.items():
+        run = run_q1 if run_id == run_q1["valuation_run_id"] else run_q2
+        rm = round(abs(bel) * 0.04, 2)
+        add_result(run, lob, "BEL", bel)
+        add_result(run, lob, "RISK_MARGIN", rm)
+        add_result(run, lob, "TECHNICAL_PROVISION", round(bel + rm, 2))
+
+    # P&C case reserves: published figures DERIVED from the world's own claims
+    outstanding = {}
+    lob_by_policy = {p["policy_id"]: p["line_of_business_code"] for p in w.t["policy"]}
+    policy_by_claim = {c["claim_id"]: c["policy_id"] for c in w.t["claim"]}
+    for tx in w.t["claim_transaction"]:
+        if tx["claim_transaction_type_code"] == "CASE_RESERVE_MOVEMENT":
+            key = (lob_by_policy[policy_by_claim[tx["claim_id"]]], tx["currency_code"])
+            outstanding[key] = round(outstanding.get(key, 0) + tx["amount"], 2)
+    for (lob, ccy), amount in sorted(outstanding.items()):
+        add_result(run_pnc, lob, "CASE_RESERVE_TOTAL", amount, ccy)
+        add_result(run_pnc, lob, "IBNR", round(amount * 0.4, 2), ccy)
+
+    return w
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--scale", type=float, default=1.0,
+                    help="Volume multiplier; semantics and heroes are scale-invariant")
+    args = ap.parse_args()
+
+    entities = load_entities()
+    binding = load_binding()
+    w = build_world(args.scale)
+
+    order = ["party", "policy", "quote", "coverage", "insured_object", "vehicle",
+             "premium_transaction", "endorsement", "claim", "claim_transaction",
+             "treaty", "treaty_layer", "submission", "cession", "cat_event", "event_loss",
+             "assumption_set", "scenario_set", "valuation_run", "valuation_run_assumption",
+             "valuation_result", "model_point", "party_role"]
+    missing = set(order) - set(entities)
+    assert not missing, f"world emits unknown entities: {missing}"
+
+    header = ("-- Generated by tools/world_engine.py — the deterministic Bricksurance world.\n"
+              f"-- Scale {args.scale}. Bricksurance is fictional; every row is synthetic.\n\n")
+    stmts = [insert(binding, entities[name], w.t[name]) for name in order if w.t[name]]
+    OUT.write_text(header + "\n\n".join(stmts) + "\n")
+    counts = ", ".join(f"{k}={len(v)}" for k, v in w.t.items() if v)
+    print(f"Wrote {OUT.relative_to(ROOT)} ({counts})")
+
+
+if __name__ == "__main__":
+    main()

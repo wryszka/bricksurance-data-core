@@ -4,9 +4,10 @@ domain: life
 title: Valuation Run
 description: >
   One execution of a valuation process: which valuation date, which approved
-  assumption set, which scenario set, which model version, run by whom, with
-  what quality verdict. The run is the unit of auditability - every published
-  valuation result points back to exactly one run.
+  assumption sets (one per assumption type, via valuation_run_assumption),
+  which scenario set, which model version, run by whom, with what quality
+  verdict. The run is the unit of auditability - every published valuation
+  result points back to exactly one run.
 grain: One row per valuation run execution.
 tags:
   maturity: draft
@@ -24,12 +25,6 @@ attributes:
     type: timestamp
     required: true
     description: When the run executed.
-  - name: assumption_set_id
-    references: assumption_set
-    type: string
-    required: false
-    description: Approved assumption set the run used.
-    classification: internal
   - name: scenario_set_id
     references: scenario_set
     type: string

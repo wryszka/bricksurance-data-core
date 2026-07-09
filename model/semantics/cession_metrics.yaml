@@ -21,7 +21,12 @@ dimensions:
     description: Bordereau reporting month.
   - name: line_of_business
     expr: line_of_business.label
-    description: Line of business as its business label.
+    description: >
+      Line of business as its business label, e.g. 'Commercial Property'.
+      Filter with labels; use line_of_business_code for codes.
+  - name: line_of_business_code
+    expr: source.line_of_business_code
+    description: Line of business as its code, e.g. COMMERCIAL_PROPERTY.
   - name: currency_code
     expr: currency_code
     description: Original currency of the amounts. Group by this before summing money.

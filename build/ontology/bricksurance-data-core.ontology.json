@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with a Lloyd's Core Data Record crosswalk. Element names are cited as a crosswalk only; licensed standards are not reproduced.",
   "domains": [
@@ -1453,7 +1453,7 @@
       "name": "valuation_run",
       "domain": "life",
       "title": "Valuation Run",
-      "description": "One execution of a valuation process: which valuation date, which approved assumption set, which scenario set, which model version, run by whom, with what quality verdict. The run is the unit of auditability - every published valuation result points back to exactly one run.\n",
+      "description": "One execution of a valuation process: which valuation date, which approved assumption sets (one per assumption type, via valuation_run_assumption), which scenario set, which model version, run by whom, with what quality verdict. The run is the unit of auditability - every published valuation result points back to exactly one run.\n",
       "grain": "One row per valuation run execution.",
       "tags": {
         "maturity": "draft"
@@ -1477,14 +1477,6 @@
           "type": "timestamp",
           "required": true,
           "description": "When the run executed."
-        },
-        {
-          "name": "assumption_set_id",
-          "references": "assumption_set",
-          "type": "string",
-          "required": false,
-          "description": "Approved assumption set the run used.",
-          "classification": "internal"
         },
         {
           "name": "scenario_set_id",
@@ -1524,6 +1516,41 @@
       "keys": {
         "primary": [
           "valuation_run_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "valuation_run_assumption",
+      "domain": "life",
+      "title": "Valuation Run Assumption",
+      "description": "Which assumption sets a valuation run used - one row per assumption set, typically one per assumption type (mortality, lapse, expense, economic). This junction is what makes any past result exactly reproducible: run plus sets plus scenario plus model version is the full recipe.\n",
+      "grain": "One row per assumption set used by a valuation run.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "valuation_run_id",
+          "references": "valuation_run",
+          "type": "string",
+          "required": true,
+          "description": "The valuation run.",
+          "classification": "internal"
+        },
+        {
+          "name": "assumption_set_id",
+          "references": "assumption_set",
+          "type": "string",
+          "required": true,
+          "description": "An assumption set the run used.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "valuation_run_id",
+          "assumption_set_id"
         ]
       }
     },
@@ -2771,7 +2798,12 @@
         {
           "name": "line_of_business",
           "expr": "line_of_business.label",
-          "description": "Line of business as its business label."
+          "description": "Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.\n"
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "source.line_of_business_code",
+          "description": "Line of business as its code, e.g. COMMERCIAL_PROPERTY."
         },
         {
           "name": "currency_code",
@@ -2840,7 +2872,12 @@
         {
           "name": "line_of_business",
           "expr": "line_of_business.label",
-          "description": "Line of business as its business label."
+          "description": "Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.\n"
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "source.line_of_business_code",
+          "description": "Line of business as its code, e.g. COMMERCIAL_PROPERTY."
         },
         {
           "name": "currency_code",
@@ -2993,7 +3030,12 @@
         {
           "name": "line_of_business",
           "expr": "line_of_business.label",
-          "description": "Line of business as its business label."
+          "description": "Line of business as its business label, e.g. 'Term Life'. Filter this dimension with labels; use line_of_business_code for codes.\n"
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "source.line_of_business_code",
+          "description": "Line of business as its code, e.g. TERM_LIFE."
         },
         {
           "name": "cohort",
@@ -3198,13 +3240,6 @@
     },
     {
       "from_entity": "valuation_run",
-      "attribute": "assumption_set_id",
-      "to": "assumption_set",
-      "to_kind": "entity",
-      "to_attribute": "assumption_set_id"
-    },
-    {
-      "from_entity": "valuation_run",
       "attribute": "scenario_set_id",
       "to": "scenario_set",
       "to_kind": "entity",
@@ -3223,6 +3258,20 @@
       "to": "source_system",
       "to_kind": "code_set",
       "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "valuation_run_assumption",
+      "attribute": "valuation_run_id",
+      "to": "valuation_run",
+      "to_kind": "entity",
+      "to_attribute": "valuation_run_id"
+    },
+    {
+      "from_entity": "valuation_run_assumption",
+      "attribute": "assumption_set_id",
+      "to": "assumption_set",
+      "to_kind": "entity",
+      "to_attribute": "assumption_set_id"
     },
     {
       "from_entity": "party",

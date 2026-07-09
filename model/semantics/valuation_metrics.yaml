@@ -25,7 +25,12 @@ dimensions:
     description: Which defined measure the figure is (BEL, SCR, CSM...). Always constrain this before summing.
   - name: line_of_business
     expr: line_of_business.label
-    description: Line of business as its business label.
+    description: >
+      Line of business as its business label, e.g. 'Term Life'. Filter this
+      dimension with labels; use line_of_business_code for codes.
+  - name: line_of_business_code
+    expr: source.line_of_business_code
+    description: Line of business as its code, e.g. TERM_LIFE.
   - name: cohort
     expr: cohort
     description: Optional sub-division of the figure.
