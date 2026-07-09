@@ -176,7 +176,7 @@ Re, with provisions for anything that comes next.
 | 4 | Ontology as a product: one portable JSON export + importer, round-trip proven | done |
 | 5 | Model expansion to the full landscape: quote/endorsement/motor (P&C), life domain, reinsurance depth, finance thin slice; per-domain metric views | done |
 | 6 | World Engine: one deterministic Bricksurance world across all domains, scale as a knob, heroes as invariants (per-source-system extracts arrive with phase 7) | done |
-| 6.5 | Schema evolution tooling: ontology diff → classified migration plan + migration log table (process already defined in [EVOLUTION.md](EVOLUTION.md)) | |
+| 6.5 | Schema evolution tooling: ontology diff → classified migration plan + migration log table ([EVOLUTION.md](EVOLUTION.md)) | done |
 | 7 | Plug-in foundations per workbench (pricing first, then claims): derived extracts + write-back contracts — **data foundation only, no workbench is moved** | |
 | 8 | Exchange fleet: Re D2D share live, broker via the open sharing protocol, regulator share | |
 | 9 | A second insurer stood up on a separate workspace from the ontology import; exchange both ways | |

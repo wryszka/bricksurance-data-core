@@ -50,9 +50,20 @@ The demo estate may use **drop + redeploy + reseed** for regenerable tables —
 an adopter with real data must not, which is exactly why the tooling below
 matters.
 
-## 4. What the tooling will do (roadmap: phase 6.5)
+## 4. The tooling (built — phase 6.5)
 
-`tools/plan_migration.py <old.ontology.json> <new.ontology.json>`:
+```bash
+uv run --with pyyaml tools/plan_migration.py OLD.ontology.json NEW.ontology.json
+# old versions come straight from git:
+#   git show <commit>:build/ontology/bricksurance-data-core.ontology.json > /tmp/old.json
+```
+
+The planner **never applies anything** — it produces a reviewable script in
+`build/migrations/`. Pre-1.0 rule: while the major version is 0, breaking
+changes require only a MINOR bump (standard semver convention); from 1.0.0
+they require MAJOR.
+
+What it does:
 
 1. **Diff the two ontology documents** (they are complete and deterministic,
    so the diff is exact): entities/attributes/code values added, removed,
@@ -73,6 +84,8 @@ v0.4.0 shipped `valuation_run.assumption_set_id` (one set per run). A run in
 fact uses one set **per assumption type**, so v0.5.0 removes that column and
 adds the `valuation_run_assumption` junction. Classification: **MAJOR in
 principle** (column drop). Because every affected table was empty, the demo
-migration was drop + redeploy; the tooling in §4 would have emitted the same
-conclusion with a `-- MANUAL` block, and the migration log would show
-0.4.0 → 0.5.0 applied.
+migration was drop + redeploy. The built tool confirms the analysis — run
+against the real v0.4.0 and v0.5.0 exports it finds all 6 changes, classifies
+the column removal MAJOR with a `-- MANUAL` block, accepts the 0.x MINOR bump
+under the pre-1.0 rule, and emits `build/migrations/0.4.0__0.5.0.databricks.sql`
+(committed as the reference example — reviewed, not applied).
