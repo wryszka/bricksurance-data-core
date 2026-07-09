@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Design
 
-*Status: living document. Model version 0.2.0.*
+*Status: living document. Model version 0.5.0.*
 
 ## 1. Problem
 
