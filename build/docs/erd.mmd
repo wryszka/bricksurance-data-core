@@ -1,4 +1,14 @@
 erDiagram
+    assumption_status {
+        string assumption_status_code PK
+        string label
+        string description
+    }
+    assumption_type {
+        string assumption_type_code PK
+        string label
+        string description
+    }
     cause_of_loss {
         string cause_of_loss_code PK
         string label
@@ -29,6 +39,11 @@ erDiagram
         string label
         string description
     }
+    endorsement_type {
+        string endorsement_type_code PK
+        string label
+        string description
+    }
     insured_object_type {
         string insured_object_type_code PK
         string label
@@ -36,6 +51,11 @@ erDiagram
     }
     line_of_business {
         string line_of_business_code PK
+        string label
+        string description
+    }
+    loss_basis {
+        string loss_basis_code PK
         string label
         string description
     }
@@ -59,13 +79,38 @@ erDiagram
         string label
         string description
     }
+    quote_status {
+        string quote_status_code PK
+        string label
+        string description
+    }
+    run_verdict {
+        string run_verdict_code PK
+        string label
+        string description
+    }
+    scenario_status {
+        string scenario_status_code PK
+        string label
+        string description
+    }
     source_system {
         string source_system_code PK
         string label
         string description
     }
+    submission_status {
+        string submission_status_code PK
+        string label
+        string description
+    }
     treaty_type {
         string treaty_type_code PK
+        string label
+        string description
+    }
+    valuation_measure {
+        string valuation_measure_code PK
         string label
         string description
     }
@@ -117,6 +162,57 @@ erDiagram
         string risk_postcode
         string source_system_code
     }
+    valuation_result {
+        string valuation_result_id PK
+        string valuation_run_id
+        string line_of_business_code
+        string valuation_measure_code
+        string cohort
+        decimal amount
+        string currency_code
+    }
+    assumption_set {
+        string assumption_set_id PK
+        string assumption_type_code
+        string assumption_status_code
+        integer version
+        string description
+        date effective_from
+        string approved_by
+        timestamp approved_at
+        string source_system_code
+    }
+    model_point {
+        string model_point_id PK
+        date valuation_date
+        string line_of_business_code
+        integer age_attained
+        integer outstanding_term_years
+        integer policy_count
+        decimal sum_assured
+        decimal annual_premium
+        string currency_code
+        string source_system_code
+    }
+    scenario_set {
+        string scenario_set_id PK
+        string name
+        string scenario_status_code
+        integer scenario_count
+        date calibration_date
+        string source_system_code
+    }
+    valuation_run {
+        string valuation_run_id PK
+        date valuation_date
+        timestamp run_timestamp
+        string assumption_set_id
+        string scenario_set_id
+        string model_version
+        string run_verdict_code
+        string run_by
+        string source_system_code
+    }
     party {
         string party_id PK
         string party_type_code
@@ -131,6 +227,8 @@ erDiagram
         string policy_id
         string claim_id
         string treaty_id
+        string quote_id
+        string submission_id
         date start_date
         date end_date
     }
@@ -141,6 +239,14 @@ erDiagram
         decimal limit_amount
         decimal deductible_amount
         decimal sum_insured_amount
+    }
+    endorsement {
+        string endorsement_id PK
+        string policy_id
+        string endorsement_type_code
+        date effective_date
+        string description
+        string source_system_code
     }
     insured_object {
         string insured_object_id PK
@@ -171,12 +277,67 @@ erDiagram
         date transaction_date
         string source_system_code
     }
+    quote {
+        string quote_id PK
+        string quote_number
+        string policy_id
+        string line_of_business_code
+        string quote_status_code
+        date quote_date
+        date requested_inception_date
+        decimal quoted_gross_premium
+        string currency_code
+        string source_system_code
+    }
+    vehicle {
+        string vehicle_id PK
+        string insured_object_id
+        string registration_number
+        string make
+        string model
+        integer year_of_manufacture
+    }
+    cat_event {
+        string cat_event_id PK
+        string event_name
+        string cause_of_loss_code
+        date event_date
+        string country_code
+        decimal industry_loss_estimate
+        string currency_code
+        string source_system_code
+    }
     cession {
         string cession_id PK
         string policy_id
         string coverage_id
         string treaty_id
         decimal ceded_share
+    }
+    event_loss {
+        string event_loss_id PK
+        string cat_event_id
+        string treaty_id
+        string policy_id
+        string loss_basis_code
+        decimal gross_loss_amount
+        decimal ceded_loss_amount
+        string currency_code
+        date as_of_date
+    }
+    submission {
+        string submission_id PK
+        string submission_reference
+        string treaty_id
+        string submission_status_code
+        string treaty_type_code
+        string line_of_business_code
+        integer underwriting_year
+        decimal requested_limit
+        decimal requested_attachment
+        string currency_code
+        date received_date
+        string source_system_code
     }
     treaty {
         string treaty_id PK
@@ -189,6 +350,15 @@ erDiagram
         decimal cession_rate
         string currency_code
         string source_system_code
+    }
+    treaty_layer {
+        string treaty_layer_id PK
+        string treaty_id
+        integer layer_number
+        decimal limit_amount
+        decimal attachment_amount
+        integer reinstatement_count
+        decimal reinstatement_premium_rate
     }
     claim }o--|| policy : policy_id
     claim }o--|| coverage : coverage_id
@@ -203,6 +373,22 @@ erDiagram
     premium_bordereau_line }o--|| currency : currency_code
     premium_bordereau_line }o--|| country : risk_country_code
     premium_bordereau_line }o--|| source_system : source_system_code
+    valuation_result }o--|| valuation_run : valuation_run_id
+    valuation_result }o--|| line_of_business : line_of_business_code
+    valuation_result }o--|| valuation_measure : valuation_measure_code
+    valuation_result }o--|| currency : currency_code
+    assumption_set }o--|| assumption_type : assumption_type_code
+    assumption_set }o--|| assumption_status : assumption_status_code
+    assumption_set }o--|| source_system : source_system_code
+    model_point }o--|| line_of_business : line_of_business_code
+    model_point }o--|| currency : currency_code
+    model_point }o--|| source_system : source_system_code
+    scenario_set }o--|| scenario_status : scenario_status_code
+    scenario_set }o--|| source_system : source_system_code
+    valuation_run }o--|| assumption_set : assumption_set_id
+    valuation_run }o--|| scenario_set : scenario_set_id
+    valuation_run }o--|| run_verdict : run_verdict_code
+    valuation_run }o--|| source_system : source_system_code
     party }o--|| party_type : party_type_code
     party }o--|| country : country_code
     party }o--|| source_system : source_system_code
@@ -211,8 +397,13 @@ erDiagram
     party_role }o--|| policy : policy_id
     party_role }o--|| claim : claim_id
     party_role }o--|| treaty : treaty_id
+    party_role }o--|| quote : quote_id
+    party_role }o--|| submission : submission_id
     coverage }o--|| policy : policy_id
     coverage }o--|| coverage_type : coverage_type_code
+    endorsement }o--|| policy : policy_id
+    endorsement }o--|| endorsement_type : endorsement_type_code
+    endorsement }o--|| source_system : source_system_code
     insured_object }o--|| policy : policy_id
     insured_object }o--|| insured_object_type : insured_object_type_code
     insured_object }o--|| country : country_code
@@ -225,10 +416,32 @@ erDiagram
     premium_transaction }o--|| premium_transaction_type : premium_transaction_type_code
     premium_transaction }o--|| currency : currency_code
     premium_transaction }o--|| source_system : source_system_code
+    quote }o--|| policy : policy_id
+    quote }o--|| line_of_business : line_of_business_code
+    quote }o--|| quote_status : quote_status_code
+    quote }o--|| currency : currency_code
+    quote }o--|| source_system : source_system_code
+    vehicle }o--|| insured_object : insured_object_id
+    cat_event }o--|| cause_of_loss : cause_of_loss_code
+    cat_event }o--|| country : country_code
+    cat_event }o--|| currency : currency_code
+    cat_event }o--|| source_system : source_system_code
     cession }o--|| policy : policy_id
     cession }o--|| coverage : coverage_id
     cession }o--|| treaty : treaty_id
+    event_loss }o--|| cat_event : cat_event_id
+    event_loss }o--|| treaty : treaty_id
+    event_loss }o--|| policy : policy_id
+    event_loss }o--|| loss_basis : loss_basis_code
+    event_loss }o--|| currency : currency_code
+    submission }o--|| treaty : treaty_id
+    submission }o--|| submission_status : submission_status_code
+    submission }o--|| treaty_type : treaty_type_code
+    submission }o--|| line_of_business : line_of_business_code
+    submission }o--|| currency : currency_code
+    submission }o--|| source_system : source_system_code
     treaty }o--|| treaty_type : treaty_type_code
     treaty }o--|| line_of_business : line_of_business_code
     treaty }o--|| currency : currency_code
     treaty }o--|| source_system : source_system_code
+    treaty_layer }o--|| treaty : treaty_id

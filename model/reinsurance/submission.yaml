@@ -1,0 +1,73 @@
+kind: entity
+name: submission
+domain: reinsurance
+title: Submission
+description: >
+  A reinsurance submission: a cedant's (or broker's) request for treaty
+  cover, from receipt through triage, pricing and decision. A bound
+  submission links to the treaty it produced. Cedant and broker are party
+  roles on the submission.
+grain: One row per submission per source system.
+standards:
+  acord: Placement / submission patterns (ACORD GRLC)
+tags:
+  maturity: draft
+attributes:
+  - name: submission_id
+    type: string
+    required: true
+    description: Stable identifier for the submission, owned by the data layer.
+    classification: internal
+  - name: submission_reference
+    type: string
+    required: true
+    description: Submission reference as received; unique within a source system.
+    classification: confidential
+  - name: treaty_id
+    references: treaty
+    type: string
+    required: false
+    description: Treaty bound from this submission; populated only when BOUND.
+    classification: internal
+  - name: submission_status_code
+    code_set: submission_status
+    required: true
+    description: Lifecycle status from receipt to bind or decline.
+  - name: treaty_type_code
+    code_set: treaty_type
+    required: true
+    description: Form of treaty requested.
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Class of business the cover is requested for.
+  - name: underwriting_year
+    type: integer
+    required: true
+    description: Underwriting year the cover would attach to.
+  - name: requested_limit
+    type: decimal(18,2)
+    required: false
+    description: Limit requested, in the submission currency.
+    classification: confidential
+  - name: requested_attachment
+    type: decimal(18,2)
+    required: false
+    description: Attachment point requested, for non-proportional forms.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the requested terms.
+  - name: received_date
+    type: date
+    required: true
+    description: Date the submission was received.
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the submission originates from.
+    classification: internal
+keys:
+  primary: [submission_id]
+  natural: [source_system_code, submission_reference]

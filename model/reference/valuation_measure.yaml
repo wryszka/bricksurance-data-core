@@ -1,0 +1,37 @@
+kind: code_set
+name: valuation_measure
+title: Valuation Measure
+description: >
+  Financial measures produced by valuation processes across regimes. One code
+  set serves life and non-life, Solvency II and IFRS 17: a measure is a
+  defined quantity, and new regimes add codes, not tables.
+standards:
+  lloyds_cdr: n/a — regime measures per Solvency II / IFRS 17 definitions
+codes:
+  - code: BEL
+    label: Best Estimate Liability
+    description: Present value of expected future cash flows, Solvency II best estimate.
+  - code: RISK_MARGIN
+    label: Risk Margin
+    description: Solvency II risk margin over the best estimate.
+  - code: TECHNICAL_PROVISION
+    label: Technical Provision
+    description: Best estimate plus risk margin.
+  - code: CASE_RESERVE_TOTAL
+    label: Case Reserves (Total)
+    description: Sum of open case reserves at the valuation date.
+  - code: IBNR
+    label: IBNR
+    description: Incurred-but-not-reported reserve at the valuation date.
+  - code: SCR
+    label: Solvency Capital Requirement
+    description: Solvency II capital requirement.
+  - code: OWN_FUNDS
+    label: Own Funds
+    description: Eligible own funds at the valuation date.
+  - code: CSM
+    label: Contractual Service Margin
+    description: IFRS 17 contractual service margin.
+  - code: RISK_ADJUSTMENT
+    label: Risk Adjustment
+    description: IFRS 17 risk adjustment for non-financial risk.

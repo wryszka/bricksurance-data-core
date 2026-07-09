@@ -29,3 +29,15 @@ codes:
     description: >
       Treaty reinsurance of property business, assumed or ceded; the direction
       is determined by the party roles on the contract, not by this code.
+  - code: TERM_LIFE
+    label: Term Life
+    description: Individual term life protection.
+  - code: CREDIT_LIFE
+    label: Credit Life
+    description: Life cover written against outstanding credit balances.
+  - code: GROUP_PROTECTION
+    label: Group Protection
+    description: Employer-sponsored group life and disability protection.
+  - code: ANNUITY
+    label: Annuity
+    description: Annuities in payment or deferment.

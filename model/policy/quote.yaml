@@ -1,0 +1,64 @@
+kind: entity
+name: quote
+domain: policy
+title: Quote
+description: >
+  A quotation for insurance cover. Quotes live upstream of policies: a
+  converted quote links to the policy issued from it, closing the
+  quote-to-policy thread that pricing and underwriting processes work in.
+  Premium only ever arises on the policy.
+grain: One row per quotation per source system.
+standards:
+  acord: Quote / PolicyQuoteInqRq patterns
+tags:
+  maturity: draft
+attributes:
+  - name: quote_id
+    type: string
+    required: true
+    description: Stable, source-agnostic identifier for the quote, owned by the data layer.
+    classification: internal
+  - name: quote_number
+    type: string
+    required: true
+    description: Quote reference as issued; unique within a source system.
+    classification: confidential
+  - name: policy_id
+    references: policy
+    type: string
+    required: false
+    description: Policy issued from this quote; populated only when the quote converted.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business quoted.
+  - name: quote_status_code
+    code_set: quote_status
+    required: true
+    description: Lifecycle status of the quote.
+  - name: quote_date
+    type: date
+    required: true
+    description: Date the quotation was produced.
+  - name: requested_inception_date
+    type: date
+    required: false
+    description: Cover start date requested by the prospect.
+  - name: quoted_gross_premium
+    type: decimal(18,2)
+    required: false
+    description: Gross premium quoted, in the quote currency; empty while the quote is open.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the quoted premium.
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the quote originates from.
+    classification: internal
+keys:
+  primary: [quote_id]
+  natural: [source_system_code, quote_number]

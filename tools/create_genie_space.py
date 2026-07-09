@@ -29,13 +29,11 @@ DESCRIPTION = (
     "Demo data is synthetic."
 )
 
-# Curated space content: reference tables every conversation needs, plus all
-# business entities and semantic views (derived from the model below).
-REFERENCE_TABLES = [
-    "line_of_business", "policy_status", "claim_status", "cause_of_loss",
-    "coverage_type", "party_role_type", "treaty_type", "currency",
-    "premium_transaction_type", "claim_transaction_type", "data_dictionary",
-]
+# Genie spaces allow AT MOST 30 tables. The space exposes every entity and
+# semantic view plus the data dictionary and the line_of_business lookup;
+# other code sets stay out — their values are in the instructions vocabulary,
+# which is how Genie maps business labels to codes.
+MAX_SPACE_TABLES = 30
 
 
 def uid():
@@ -58,7 +56,11 @@ def main():
              if p.name != "model.yaml"]
     tables = [t(s["domain"], s["name"]) for s in specs
               if s["kind"] in ("entity", "view", "metric_view")]
-    tables += [t("reference", name) for name in REFERENCE_TABLES]
+    tables += [t("reference", "data_dictionary")]
+    if len(set(tables)) > MAX_SPACE_TABLES:
+        raise SystemExit(
+            f"{len(set(tables))} objects exceed the Genie limit of "
+            f"{MAX_SPACE_TABLES} tables per space — curate the list.")
 
     instructions = (ROOT / "build" / "genie" / "genie_instructions.md").read_text()
 

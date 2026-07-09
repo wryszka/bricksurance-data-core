@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with a Lloyd's Core Data Record crosswalk. Element names are cited as a crosswalk only; licensed standards are not reproduced.",
   "domains": [
@@ -27,6 +27,14 @@
       "description": "Outward and inward reinsurance - treaties, cessions and recoveries linking the direct book to reinsurers.\n"
     },
     {
+      "name": "life",
+      "description": "Life business - grouped model points, governed assumption sets, economic scenario sets and valuation runs. Life policies themselves are ordinary policies with life lines of business.\n"
+    },
+    {
+      "name": "finance",
+      "description": "Financial and regulatory measures - valuation results across regimes (Solvency II, IFRS 17) and lines of business, always tied to an auditable valuation run.\n"
+    },
+    {
       "name": "exchange",
       "description": "Canonical data-exchange objects (bordereau lines, submissions) and the landing zone for inbound counterparty data before mapping to the canonical model.\n"
     },
@@ -36,6 +44,67 @@
     }
   ],
   "code_sets": [
+    {
+      "kind": "code_set",
+      "name": "assumption_status",
+      "title": "Assumption Status",
+      "description": "Maker/checker lifecycle of an assumption set. Only one set per assumption type is APPROVED and in force at a time; superseded sets remain queryable for reproducibility.\n",
+      "codes": [
+        {
+          "code": "DRAFT",
+          "label": "Draft",
+          "description": "Being prepared by the maker; not usable in valuations."
+        },
+        {
+          "code": "PENDING_APPROVAL",
+          "label": "Pending Approval",
+          "description": "Submitted for checker approval."
+        },
+        {
+          "code": "APPROVED",
+          "label": "Approved",
+          "description": "Approved and in force for valuation runs."
+        },
+        {
+          "code": "REJECTED",
+          "label": "Rejected",
+          "description": "Rejected by the checker; retained for audit."
+        },
+        {
+          "code": "SUPERSEDED",
+          "label": "Superseded",
+          "description": "Replaced by a newer approved set; retained for reproducibility."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "assumption_type",
+      "title": "Assumption Type",
+      "description": "Kinds of actuarial assumption governed through the assumption-set maker/checker process.\n",
+      "codes": [
+        {
+          "code": "MORTALITY",
+          "label": "Mortality",
+          "description": "Mortality rates by age, typically expressed against a standard table."
+        },
+        {
+          "code": "LAPSE",
+          "label": "Lapse",
+          "description": "Policy discontinuance rates by duration."
+        },
+        {
+          "code": "EXPENSE",
+          "label": "Expense",
+          "description": "Per-policy and percentage expense loadings."
+        },
+        {
+          "code": "ECONOMIC",
+          "label": "Economic",
+          "description": "Economic assumptions such as discount and inflation bases."
+        }
+      ]
+    },
     {
       "kind": "code_set",
       "name": "cause_of_loss",
@@ -266,6 +335,42 @@
     },
     {
       "kind": "code_set",
+      "name": "endorsement_type",
+      "title": "Endorsement Type",
+      "description": "Kinds of mid-term change to a policy. The premium effect of an endorsement is always booked as premium transactions; the endorsement records the contractual change itself.\n",
+      "standards": {
+        "acord": "PolicyChange / endorsement patterns"
+      },
+      "codes": [
+        {
+          "code": "MID_TERM_ADJUSTMENT",
+          "label": "Mid-term Adjustment",
+          "description": "General adjustment to terms during the policy period."
+        },
+        {
+          "code": "COVERAGE_CHANGE",
+          "label": "Coverage Change",
+          "description": "Cover added, removed or amended."
+        },
+        {
+          "code": "SUM_INSURED_CHANGE",
+          "label": "Sum Insured Change",
+          "description": "Declared values increased or decreased."
+        },
+        {
+          "code": "EXTENSION",
+          "label": "Extension",
+          "description": "Cover period extended beyond the original expiry."
+        },
+        {
+          "code": "CANCELLATION",
+          "label": "Cancellation",
+          "description": "Policy terminated before natural expiry."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "insured_object_type",
       "title": "Insured Object Type",
       "description": "Kinds of object or exposure a policy can insure. Extend with new codes as new lines of business are written (vessels, livestock, cyber estates...).\n",
@@ -329,6 +434,44 @@
           "code": "PROPERTY_TREATY",
           "label": "Property Treaty Reinsurance",
           "description": "Treaty reinsurance of property business, assumed or ceded; the direction is determined by the party roles on the contract, not by this code.\n"
+        },
+        {
+          "code": "TERM_LIFE",
+          "label": "Term Life",
+          "description": "Individual term life protection."
+        },
+        {
+          "code": "CREDIT_LIFE",
+          "label": "Credit Life",
+          "description": "Life cover written against outstanding credit balances."
+        },
+        {
+          "code": "GROUP_PROTECTION",
+          "label": "Group Protection",
+          "description": "Employer-sponsored group life and disability protection."
+        },
+        {
+          "code": "ANNUITY",
+          "label": "Annuity",
+          "description": "Annuities in payment or deferment."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "loss_basis",
+      "title": "Loss Basis",
+      "description": "Whether an event loss figure is modelled or reported. Day-one catastrophe numbers are modelled (event footprint against in-force exposure); cedant reports firm up over the following weeks — the basis keeps the two honest.\n",
+      "codes": [
+        {
+          "code": "MODELLED",
+          "label": "Modelled",
+          "description": "Estimated from an event footprint applied to in-force exposure."
+        },
+        {
+          "code": "REPORTED",
+          "label": "Reported",
+          "description": "Reported by the cedant or claims process."
         }
       ]
     },
@@ -468,6 +611,93 @@
     },
     {
       "kind": "code_set",
+      "name": "quote_status",
+      "title": "Quote Status",
+      "description": "Lifecycle status of a quotation. A quote that converts is linked to the resulting policy; premium only ever arises on the policy, never the quote.\n",
+      "standards": {
+        "acord": "QuoteStatusCd"
+      },
+      "codes": [
+        {
+          "code": "OPEN",
+          "label": "Open",
+          "description": "Quotation requested and being worked."
+        },
+        {
+          "code": "OFFERED",
+          "label": "Offered",
+          "description": "Terms offered to the prospective policyholder."
+        },
+        {
+          "code": "CONVERTED",
+          "label": "Converted",
+          "description": "Offer accepted; a policy has been issued from this quote."
+        },
+        {
+          "code": "DECLINED_BY_INSURER",
+          "label": "Declined by Insurer",
+          "description": "The insurer declined to offer terms."
+        },
+        {
+          "code": "REJECTED_BY_CUSTOMER",
+          "label": "Rejected by Customer",
+          "description": "Terms offered but not taken up."
+        },
+        {
+          "code": "EXPIRED",
+          "label": "Expired",
+          "description": "Offer lapsed unanswered at its validity date."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "run_verdict",
+      "title": "Run Verdict",
+      "description": "Quality-gate verdict of a processing or valuation run. RED runs never feed downstream consumption; the verdict is part of the auditable run record.\n",
+      "codes": [
+        {
+          "code": "GREEN",
+          "label": "Green",
+          "description": "All quality checks passed; results released downstream."
+        },
+        {
+          "code": "AMBER",
+          "label": "Amber",
+          "description": "Passed with warnings; released with commentary."
+        },
+        {
+          "code": "RED",
+          "label": "Red",
+          "description": "Quality gate failed; results blocked from downstream use."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "scenario_status",
+      "title": "Scenario Set Status",
+      "description": "Lifecycle of an economic scenario set. Exactly one set is ACTIVE for production valuations; others remain AVAILABLE for analysis.\n",
+      "codes": [
+        {
+          "code": "ACTIVE",
+          "label": "Active",
+          "description": "The scenario set used by production valuation runs."
+        },
+        {
+          "code": "AVAILABLE",
+          "label": "Available",
+          "description": "Delivered and validated, usable for analysis, not the production set."
+        },
+        {
+          "code": "SUPERSEDED",
+          "label": "Superseded",
+          "description": "Replaced by a newer set; retained for reproducibility."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "source_system",
       "title": "Source System",
       "description": "Systems of record that feed the data layer. Provenance is part of the model: every core entity carries a source_system_code, and identifiers are only unique within their source system.\n",
@@ -493,9 +723,55 @@
           "description": "Records mastered or derived inside the data layer itself, such as deduplicated golden party records.\n"
         },
         {
+          "code": "LIFE_CORE",
+          "label": "Life Administration (Core)",
+          "description": "The group's life policy administration and valuation feed."
+        },
+        {
           "code": "COVERHOLDER_BDX",
           "label": "Coverholder Bordereau",
           "description": "Lines reported by coverholders or brokers via bordereaux and mapped into the canonical model through the exchange domain.\n"
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "submission_status",
+      "title": "Submission Status",
+      "description": "Lifecycle of a reinsurance submission from receipt to bind or decline.\n",
+      "standards": {
+        "acord": "Placement / submission patterns (ACORD GRLC)"
+      },
+      "codes": [
+        {
+          "code": "RECEIVED",
+          "label": "Received",
+          "description": "Submission received and awaiting triage."
+        },
+        {
+          "code": "IN_REVIEW",
+          "label": "In Review",
+          "description": "Under triage, pricing and accumulation assessment."
+        },
+        {
+          "code": "QUOTED",
+          "label": "Quoted",
+          "description": "Terms quoted back to the cedant or broker."
+        },
+        {
+          "code": "BOUND",
+          "label": "Bound",
+          "description": "Accepted and bound; a treaty exists for this submission."
+        },
+        {
+          "code": "DECLINED",
+          "label": "Declined",
+          "description": "Declined by the reinsurer."
+        },
+        {
+          "code": "WITHDRAWN",
+          "label": "Withdrawn",
+          "description": "Withdrawn by the cedant or broker before a decision."
         }
       ]
     },
@@ -527,6 +803,62 @@
           "code": "XOL_CATASTROPHE",
           "label": "Excess of Loss (Catastrophe)",
           "description": "Non-proportional cover for accumulated losses from a single catastrophe event."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "valuation_measure",
+      "title": "Valuation Measure",
+      "description": "Financial measures produced by valuation processes across regimes. One code set serves life and non-life, Solvency II and IFRS 17: a measure is a defined quantity, and new regimes add codes, not tables.\n",
+      "standards": {
+        "lloyds_cdr": "n/a — regime measures per Solvency II / IFRS 17 definitions"
+      },
+      "codes": [
+        {
+          "code": "BEL",
+          "label": "Best Estimate Liability",
+          "description": "Present value of expected future cash flows, Solvency II best estimate."
+        },
+        {
+          "code": "RISK_MARGIN",
+          "label": "Risk Margin",
+          "description": "Solvency II risk margin over the best estimate."
+        },
+        {
+          "code": "TECHNICAL_PROVISION",
+          "label": "Technical Provision",
+          "description": "Best estimate plus risk margin."
+        },
+        {
+          "code": "CASE_RESERVE_TOTAL",
+          "label": "Case Reserves (Total)",
+          "description": "Sum of open case reserves at the valuation date."
+        },
+        {
+          "code": "IBNR",
+          "label": "IBNR",
+          "description": "Incurred-but-not-reported reserve at the valuation date."
+        },
+        {
+          "code": "SCR",
+          "label": "Solvency Capital Requirement",
+          "description": "Solvency II capital requirement."
+        },
+        {
+          "code": "OWN_FUNDS",
+          "label": "Own Funds",
+          "description": "Eligible own funds at the valuation date."
+        },
+        {
+          "code": "CSM",
+          "label": "Contractual Service Margin",
+          "description": "IFRS 17 contractual service margin."
+        },
+        {
+          "code": "RISK_ADJUSTMENT",
+          "label": "Risk Adjustment",
+          "description": "IFRS 17 risk adjustment for non-financial risk."
         }
       ]
     }
@@ -834,6 +1166,369 @@
     },
     {
       "kind": "entity",
+      "name": "valuation_result",
+      "domain": "finance",
+      "title": "Valuation Result",
+      "description": "A published valuation figure: one measure (BEL, technical provision, IBNR, SCR, CSM...) for one line of business and cohort, produced by exactly one auditable valuation run. One shape serves life and non-life, Solvency II and IFRS 17 - new regimes add measure codes, not tables.\n",
+      "grain": "One row per valuation run per line of business per measure per cohort.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "valuation_result_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the result row.",
+          "classification": "internal"
+        },
+        {
+          "name": "valuation_run_id",
+          "references": "valuation_run",
+          "type": "string",
+          "required": true,
+          "description": "The run that produced this figure.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business the figure relates to."
+        },
+        {
+          "name": "valuation_measure_code",
+          "code_set": "valuation_measure",
+          "required": true,
+          "description": "Which defined measure this figure is."
+        },
+        {
+          "name": "cohort",
+          "type": "string",
+          "required": false,
+          "description": "Optional sub-division (e.g. an age-by-term band or underwriting-year cohort)."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "The figure, in the stated currency. Sign follows the measure's own convention.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "valuation_result_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "assumption_set",
+      "domain": "life",
+      "title": "Assumption Set",
+      "description": "A versioned, governed set of actuarial assumptions (mortality, lapse, expense, economic). Sets move through a maker/checker lifecycle; valuation runs record exactly which approved set they used, which is what makes any past result reproducible.\n",
+      "grain": "One row per assumption set version per assumption type.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "assumption_set_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the assumption set version.",
+          "classification": "internal"
+        },
+        {
+          "name": "assumption_type_code",
+          "code_set": "assumption_type",
+          "required": true,
+          "description": "Kind of assumption governed by this set."
+        },
+        {
+          "name": "assumption_status_code",
+          "code_set": "assumption_status",
+          "required": true,
+          "description": "Maker/checker lifecycle status."
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "required": true,
+          "description": "Monotonic version number within the assumption type."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "What changed in this version and why."
+        },
+        {
+          "name": "effective_from",
+          "type": "date",
+          "required": false,
+          "description": "First valuation date this set applies to, once approved."
+        },
+        {
+          "name": "approved_by",
+          "type": "string",
+          "required": false,
+          "description": "Checker who approved or rejected the set.",
+          "classification": "internal"
+        },
+        {
+          "name": "approved_at",
+          "type": "timestamp",
+          "required": false,
+          "description": "When the approval decision was made."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the assumption set originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "assumption_set_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "model_point",
+      "domain": "life",
+      "title": "Model Point",
+      "description": "A grouped model point for life valuation: policies compressed into cohorts (attained age by outstanding term) at a valuation date. Model points are derived from in-force life policies; the grouping is proven back to the policy count and sum assured it represents.\n",
+      "grain": "One row per cohort per line of business per valuation date.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "model_point_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the model point.",
+          "classification": "internal"
+        },
+        {
+          "name": "valuation_date",
+          "type": "date",
+          "required": true,
+          "description": "Valuation date the model point file was cut at."
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Life line of business the cohort belongs to."
+        },
+        {
+          "name": "age_attained",
+          "type": "integer",
+          "required": true,
+          "description": "Attained age of the cohort at the valuation date."
+        },
+        {
+          "name": "outstanding_term_years",
+          "type": "integer",
+          "required": true,
+          "description": "Remaining policy term of the cohort in whole years."
+        },
+        {
+          "name": "policy_count",
+          "type": "integer",
+          "required": true,
+          "description": "Number of in-force policies grouped into this model point."
+        },
+        {
+          "name": "sum_assured",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Total sum assured of the cohort, in the cohort currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "annual_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Total annualised premium of the cohort.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the monetary amounts."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the model point file originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "model_point_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "grouping_proven",
+          "rule": "sum(policy_count) per valuation_date equals the in-force policy count it was cut from",
+          "description": "Model point grouping must reconcile exactly to the underlying book."
+        }
+      ]
+    },
+    {
+      "kind": "entity",
+      "name": "scenario_set",
+      "domain": "life",
+      "title": "Scenario Set",
+      "description": "A delivered economic scenario set (risk-free curves, equity paths) used by stochastic valuation. Registered with a lifecycle so exactly one set is active for production runs, and every run records which set it used.\n",
+      "grain": "One row per delivered scenario set.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "scenario_set_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the scenario set.",
+          "classification": "internal"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Human-readable name of the set, including its calibration reference."
+        },
+        {
+          "name": "scenario_status_code",
+          "code_set": "scenario_status",
+          "required": true,
+          "description": "Lifecycle status; exactly one set is ACTIVE for production."
+        },
+        {
+          "name": "scenario_count",
+          "type": "integer",
+          "required": false,
+          "description": "Number of stochastic paths in the set."
+        },
+        {
+          "name": "calibration_date",
+          "type": "date",
+          "required": false,
+          "description": "Market date the set was calibrated to."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Provenance of the set (vendor delivery or internal generation).",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "scenario_set_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "valuation_run",
+      "domain": "life",
+      "title": "Valuation Run",
+      "description": "One execution of a valuation process: which valuation date, which approved assumption set, which scenario set, which model version, run by whom, with what quality verdict. The run is the unit of auditability - every published valuation result points back to exactly one run.\n",
+      "grain": "One row per valuation run execution.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "valuation_run_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the run.",
+          "classification": "internal"
+        },
+        {
+          "name": "valuation_date",
+          "type": "date",
+          "required": true,
+          "description": "Valuation date the run values the book at."
+        },
+        {
+          "name": "run_timestamp",
+          "type": "timestamp",
+          "required": true,
+          "description": "When the run executed."
+        },
+        {
+          "name": "assumption_set_id",
+          "references": "assumption_set",
+          "type": "string",
+          "required": false,
+          "description": "Approved assumption set the run used.",
+          "classification": "internal"
+        },
+        {
+          "name": "scenario_set_id",
+          "references": "scenario_set",
+          "type": "string",
+          "required": false,
+          "description": "Scenario set the run used, for stochastic runs.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_version",
+          "type": "string",
+          "required": false,
+          "description": "Version of the valuation model/engine used (e.g. a Unity Catalog model version)."
+        },
+        {
+          "name": "run_verdict_code",
+          "code_set": "run_verdict",
+          "required": true,
+          "description": "Quality-gate verdict; RED runs never feed published results."
+        },
+        {
+          "name": "run_by",
+          "type": "string",
+          "required": false,
+          "description": "Operator or service principal that executed the run.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System that executed the run.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "valuation_run_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
       "name": "party",
       "domain": "party",
       "title": "Party",
@@ -899,7 +1594,7 @@
       "domain": "party",
       "title": "Party Role",
       "description": "A role a party plays in a specific business context - on a policy, a claim or a treaty. This is the model's central extensibility pattern: a new kind of counterparty is a new party_role_type code plus rows here, never a new table.\n",
-      "grain": "One row per role a party plays in one context (policy, claim or treaty) for a period of time. Exactly one of policy_id, claim_id and treaty_id is populated.\n",
+      "grain": "One row per role a party plays in one context (policy, claim, treaty, quote or submission) for a period of time. Exactly one of policy_id, claim_id, treaty_id, quote_id and submission_id is populated.\n",
       "standards": {
         "acord": "PartyRole patterns of the ACORD Information Model"
       },
@@ -953,6 +1648,22 @@
           "classification": "internal"
         },
         {
+          "name": "quote_id",
+          "references": "quote",
+          "type": "string",
+          "required": false,
+          "description": "Quote context of the role, when the role is played on a quotation.",
+          "classification": "internal"
+        },
+        {
+          "name": "submission_id",
+          "references": "submission",
+          "type": "string",
+          "required": false,
+          "description": "Submission context of the role, when the role is played on a reinsurance submission.",
+          "classification": "internal"
+        },
+        {
           "name": "start_date",
           "type": "date",
           "required": true,
@@ -973,7 +1684,7 @@
       "quality": [
         {
           "name": "exactly_one_context",
-          "rule": "exactly one of policy_id, claim_id, treaty_id is not null",
+          "rule": "exactly one of policy_id, claim_id, treaty_id, quote_id, submission_id is not null",
           "description": "A role is always played in exactly one business context."
         }
       ]
@@ -1046,6 +1757,68 @@
       "keys": {
         "primary": [
           "coverage_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "endorsement",
+      "domain": "policy",
+      "title": "Endorsement",
+      "description": "A mid-term change to a policy contract. The endorsement records the contractual change; any premium effect is booked as premium transactions referencing the same policy, never stored here.\n",
+      "grain": "One row per endorsement per policy.",
+      "standards": {
+        "acord": "PolicyChange / endorsement patterns"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "endorsement_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the endorsement.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy being endorsed.",
+          "classification": "internal"
+        },
+        {
+          "name": "endorsement_type_code",
+          "code_set": "endorsement_type",
+          "required": true,
+          "description": "Kind of contractual change."
+        },
+        {
+          "name": "effective_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the change takes effect (inclusive)."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Free-text description of the change as recorded.",
+          "classification": "confidential"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the endorsement originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "endorsement_id"
         ]
       }
     },
@@ -1309,6 +2082,232 @@
     },
     {
       "kind": "entity",
+      "name": "quote",
+      "domain": "policy",
+      "title": "Quote",
+      "description": "A quotation for insurance cover. Quotes live upstream of policies: a converted quote links to the policy issued from it, closing the quote-to-policy thread that pricing and underwriting processes work in. Premium only ever arises on the policy.\n",
+      "grain": "One row per quotation per source system.",
+      "standards": {
+        "acord": "Quote / PolicyQuoteInqRq patterns"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "quote_id",
+          "type": "string",
+          "required": true,
+          "description": "Stable, source-agnostic identifier for the quote, owned by the data layer.",
+          "classification": "internal"
+        },
+        {
+          "name": "quote_number",
+          "type": "string",
+          "required": true,
+          "description": "Quote reference as issued; unique within a source system.",
+          "classification": "confidential"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "Policy issued from this quote; populated only when the quote converted.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business quoted."
+        },
+        {
+          "name": "quote_status_code",
+          "code_set": "quote_status",
+          "required": true,
+          "description": "Lifecycle status of the quote."
+        },
+        {
+          "name": "quote_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the quotation was produced."
+        },
+        {
+          "name": "requested_inception_date",
+          "type": "date",
+          "required": false,
+          "description": "Cover start date requested by the prospect."
+        },
+        {
+          "name": "quoted_gross_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Gross premium quoted, in the quote currency; empty while the quote is open.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the quoted premium."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the quote originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "quote_id"
+        ],
+        "natural": [
+          "source_system_code",
+          "quote_number"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "vehicle",
+      "domain": "policy",
+      "title": "Vehicle",
+      "description": "Motor-specific detail for an insured object of type VEHICLE. This is the model's typed-satellite pattern: the generic insured_object stays lean, and object types that need depth get a satellite entity - vessels, buildings surveys or cyber estates would follow the same shape.\n",
+      "grain": "One row per vehicle per insured object.",
+      "standards": {
+        "acord": "Vehicle (ACORD Information Model, personal/commercial auto)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "vehicle_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the vehicle record.",
+          "classification": "internal"
+        },
+        {
+          "name": "insured_object_id",
+          "references": "insured_object",
+          "type": "string",
+          "required": true,
+          "description": "The insured object this vehicle detail belongs to (object type VEHICLE).",
+          "classification": "internal"
+        },
+        {
+          "name": "registration_number",
+          "type": "string",
+          "required": false,
+          "description": "Vehicle registration mark.",
+          "classification": "pii",
+          "standards": {
+            "acord": "VehIdentificationNumber / registration"
+          }
+        },
+        {
+          "name": "make",
+          "type": "string",
+          "required": false,
+          "description": "Manufacturer."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false,
+          "description": "Model designation."
+        },
+        {
+          "name": "year_of_manufacture",
+          "type": "integer",
+          "required": false,
+          "description": "Year of manufacture."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "vehicle_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "cat_event",
+      "domain": "reinsurance",
+      "title": "Catastrophe Event",
+      "description": "A named catastrophe event (windstorm, flood...) that losses accumulate against, across the direct book and the treaty portfolio. Event losses - modelled on day one, reported as cedant figures firm up - reference this event.\n",
+      "grain": "One row per catastrophe event.",
+      "standards": {
+        "acord": "Catastrophe / event patterns"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "cat_event_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the event.",
+          "classification": "internal"
+        },
+        {
+          "name": "event_name",
+          "type": "string",
+          "required": true,
+          "description": "Market name of the event (e.g. a named windstorm)."
+        },
+        {
+          "name": "cause_of_loss_code",
+          "code_set": "cause_of_loss",
+          "required": true,
+          "description": "Primary peril of the event."
+        },
+        {
+          "name": "event_date",
+          "type": "date",
+          "required": true,
+          "description": "Date of the event (first landfall or onset)."
+        },
+        {
+          "name": "country_code",
+          "code_set": "country",
+          "required": false,
+          "description": "Primary country affected, where a single country applies."
+        },
+        {
+          "name": "industry_loss_estimate",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Market-wide insured loss estimate, in the stated currency."
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": false,
+          "description": "Currency of the industry loss estimate."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the event was registered in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "cat_event_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
       "name": "cession",
       "domain": "reinsurance",
       "title": "Cession",
@@ -1363,6 +2362,198 @@
       "keys": {
         "primary": [
           "cession_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "event_loss",
+      "domain": "reinsurance",
+      "title": "Event Loss",
+      "description": "A loss figure attributed to a catastrophe event - against a treaty (assumed book) or a policy (direct book). The loss basis keeps modelled day-one estimates and firming cedant reports honestly apart; figures are point-in- time as-of snapshots, never overwritten.\n",
+      "grain": "One row per event per treaty-or-policy per basis per as-of date.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "event_loss_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the loss row.",
+          "classification": "internal"
+        },
+        {
+          "name": "cat_event_id",
+          "references": "cat_event",
+          "type": "string",
+          "required": true,
+          "description": "The catastrophe event the loss belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "treaty_id",
+          "references": "treaty",
+          "type": "string",
+          "required": false,
+          "description": "Treaty the loss attaches to, for the assumed book.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "Policy the loss attaches to, for the direct book.",
+          "classification": "internal"
+        },
+        {
+          "name": "loss_basis_code",
+          "code_set": "loss_basis",
+          "required": true,
+          "description": "Whether the figure is modelled or reported."
+        },
+        {
+          "name": "gross_loss_amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Gross loss to the contract, in the stated currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "ceded_loss_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Portion ceded onward under outward protections, where computed.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amounts."
+        },
+        {
+          "name": "as_of_date",
+          "type": "date",
+          "required": true,
+          "description": "Snapshot date of the figure."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "event_loss_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "exactly_one_book",
+          "rule": "exactly one of treaty_id, policy_id is not null",
+          "description": "A loss row belongs to either the assumed or the direct book, never both."
+        }
+      ]
+    },
+    {
+      "kind": "entity",
+      "name": "submission",
+      "domain": "reinsurance",
+      "title": "Submission",
+      "description": "A reinsurance submission: a cedant's (or broker's) request for treaty cover, from receipt through triage, pricing and decision. A bound submission links to the treaty it produced. Cedant and broker are party roles on the submission.\n",
+      "grain": "One row per submission per source system.",
+      "standards": {
+        "acord": "Placement / submission patterns (ACORD GRLC)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "submission_id",
+          "type": "string",
+          "required": true,
+          "description": "Stable identifier for the submission, owned by the data layer.",
+          "classification": "internal"
+        },
+        {
+          "name": "submission_reference",
+          "type": "string",
+          "required": true,
+          "description": "Submission reference as received; unique within a source system.",
+          "classification": "confidential"
+        },
+        {
+          "name": "treaty_id",
+          "references": "treaty",
+          "type": "string",
+          "required": false,
+          "description": "Treaty bound from this submission; populated only when BOUND.",
+          "classification": "internal"
+        },
+        {
+          "name": "submission_status_code",
+          "code_set": "submission_status",
+          "required": true,
+          "description": "Lifecycle status from receipt to bind or decline."
+        },
+        {
+          "name": "treaty_type_code",
+          "code_set": "treaty_type",
+          "required": true,
+          "description": "Form of treaty requested."
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Class of business the cover is requested for."
+        },
+        {
+          "name": "underwriting_year",
+          "type": "integer",
+          "required": true,
+          "description": "Underwriting year the cover would attach to."
+        },
+        {
+          "name": "requested_limit",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Limit requested, in the submission currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "requested_attachment",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Attachment point requested, for non-proportional forms.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the requested terms."
+        },
+        {
+          "name": "received_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the submission was received."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the submission originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "submission_id"
+        ],
+        "natural": [
+          "source_system_code",
+          "submission_reference"
         ]
       }
     },
@@ -1460,6 +2651,75 @@
           "description": "Treaty cover cannot end before it begins."
         }
       ]
+    },
+    {
+      "kind": "entity",
+      "name": "treaty_layer",
+      "domain": "reinsurance",
+      "title": "Treaty Layer",
+      "description": "A layer of a treaty programme: limit and attachment for non-proportional forms, with reinstatement terms where they apply. Proportional treaties typically have a single layer carrying the ceded share economics on the treaty itself.\n",
+      "grain": "One row per layer per treaty.",
+      "standards": {
+        "acord": "Layer / section patterns (ACORD GRLC)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "treaty_layer_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the layer.",
+          "classification": "internal"
+        },
+        {
+          "name": "treaty_id",
+          "references": "treaty",
+          "type": "string",
+          "required": true,
+          "description": "Treaty the layer belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "layer_number",
+          "type": "integer",
+          "required": true,
+          "description": "Position of the layer in the programme, 1 = lowest attachment."
+        },
+        {
+          "name": "limit_amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Limit of the layer, in the treaty currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "attachment_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Attachment point of the layer; empty for proportional forms.",
+          "classification": "confidential"
+        },
+        {
+          "name": "reinstatement_count",
+          "type": "integer",
+          "required": false,
+          "description": "Number of reinstatements available, where applicable."
+        },
+        {
+          "name": "reinstatement_premium_rate",
+          "type": "decimal(5,4)",
+          "required": false,
+          "description": "Reinstatement premium as a fraction of the layer premium.",
+          "classification": "confidential"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "treaty_layer_id"
+        ]
+      }
     }
   ],
   "views": [
@@ -1483,6 +2743,134 @@
     }
   ],
   "metric_views": [
+    {
+      "kind": "metric_view",
+      "name": "cession_metrics",
+      "domain": "semantics",
+      "title": "Cession Metrics",
+      "description": "Outward reinsurance KPIs over the cession bordereau: gross and ceded premium by treaty and period. Amounts are in original transaction currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "source": "exchange.cession_bordereau_line",
+      "joins": [
+        {
+          "name": "line_of_business",
+          "source": "reference.line_of_business",
+          "condition": "source.line_of_business_code = line_of_business.line_of_business_code"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "treaty_reference",
+          "expr": "treaty_reference",
+          "description": "Treaty the premium is ceded to."
+        },
+        {
+          "name": "reporting_month",
+          "expr": "reporting_month",
+          "description": "Bordereau reporting month."
+        },
+        {
+          "name": "line_of_business",
+          "expr": "line_of_business.label",
+          "description": "Line of business as its business label."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Original currency of the amounts. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "gross_premium",
+          "expr": "SUM(gross_premium)",
+          "description": "Gross premium on the ceded policies, in original currency."
+        },
+        {
+          "name": "ceded_premium",
+          "expr": "SUM(ceded_premium)",
+          "description": "Premium ceded to reinsurers, in original currency."
+        },
+        {
+          "name": "average_ceded_share",
+          "expr": "SUM(ceded_premium) / NULLIF(SUM(gross_premium), 0)",
+          "description": "Effective ceded share - ceded premium over gross premium."
+        },
+        {
+          "name": "ceded_policy_count",
+          "expr": "COUNT(DISTINCT policy_number)",
+          "description": "Number of distinct policies with ceded premium."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "submission_metrics",
+      "domain": "semantics",
+      "title": "Submission Metrics",
+      "description": "Reinsurance submission funnel KPIs: volumes and requested capacity by status, form and year. Amounts are in original submission currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "source": "reinsurance.submission",
+      "joins": [
+        {
+          "name": "submission_status",
+          "source": "reference.submission_status",
+          "condition": "source.submission_status_code = submission_status.submission_status_code"
+        },
+        {
+          "name": "line_of_business",
+          "source": "reference.line_of_business",
+          "condition": "source.line_of_business_code = line_of_business.line_of_business_code"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "underwriting_year",
+          "expr": "underwriting_year",
+          "description": "Underwriting year the cover would attach to."
+        },
+        {
+          "name": "submission_status",
+          "expr": "submission_status.label",
+          "description": "Funnel status as its business label."
+        },
+        {
+          "name": "treaty_type_code",
+          "expr": "treaty_type_code",
+          "description": "Form of treaty requested."
+        },
+        {
+          "name": "line_of_business",
+          "expr": "line_of_business.label",
+          "description": "Line of business as its business label."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Original currency of requested terms. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "submission_count",
+          "expr": "COUNT(DISTINCT submission_id)",
+          "description": "Number of submissions."
+        },
+        {
+          "name": "bound_count",
+          "expr": "COUNT(DISTINCT CASE WHEN submission_status_code = 'BOUND' THEN submission_id END)",
+          "description": "Submissions bound into treaties."
+        },
+        {
+          "name": "bind_ratio",
+          "expr": "COUNT(DISTINCT CASE WHEN submission_status_code = 'BOUND' THEN submission_id END) / NULLIF(COUNT(DISTINCT submission_id), 0)",
+          "description": "Bound submissions over all submissions."
+        },
+        {
+          "name": "requested_limit_total",
+          "expr": "SUM(requested_limit)",
+          "description": "Total limit requested, in original currency."
+        }
+      ]
+    },
     {
       "kind": "metric_view",
       "name": "underwriting_metrics",
@@ -1569,6 +2957,65 @@
           "name": "claim_count",
           "expr": "COUNT(DISTINCT claim_id)",
           "description": "Number of distinct claims with financial activity."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "valuation_metrics",
+      "domain": "semantics",
+      "title": "Valuation Metrics",
+      "description": "Published valuation figures (BEL, technical provisions, SCR, CSM...) by run, measure and line of business - one semantic surface across life and non-life, Solvency II and IFRS 17. Amounts are in original currency; group by or filter on currency_code and valuation_measure_code before summing. Query measures with MEASURE(name).\n",
+      "source": "finance.valuation_result",
+      "joins": [
+        {
+          "name": "valuation_run",
+          "source": "life.valuation_run",
+          "condition": "source.valuation_run_id = valuation_run.valuation_run_id"
+        },
+        {
+          "name": "line_of_business",
+          "source": "reference.line_of_business",
+          "condition": "source.line_of_business_code = line_of_business.line_of_business_code"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "valuation_date",
+          "expr": "valuation_run.valuation_date",
+          "description": "Valuation date of the producing run."
+        },
+        {
+          "name": "valuation_measure_code",
+          "expr": "valuation_measure_code",
+          "description": "Which defined measure the figure is (BEL, SCR, CSM...). Always constrain this before summing."
+        },
+        {
+          "name": "line_of_business",
+          "expr": "line_of_business.label",
+          "description": "Line of business as its business label."
+        },
+        {
+          "name": "cohort",
+          "expr": "cohort",
+          "description": "Optional sub-division of the figure."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Original currency. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "total_amount",
+          "expr": "SUM(amount)",
+          "description": "Sum of the figures - only meaningful within one measure and one currency."
+        },
+        {
+          "name": "run_count",
+          "expr": "COUNT(DISTINCT valuation_run_id)",
+          "description": "Number of distinct producing runs represented."
         }
       ]
     }
@@ -1666,6 +3113,118 @@
       "to_attribute": "source_system_code"
     },
     {
+      "from_entity": "valuation_result",
+      "attribute": "valuation_run_id",
+      "to": "valuation_run",
+      "to_kind": "entity",
+      "to_attribute": "valuation_run_id"
+    },
+    {
+      "from_entity": "valuation_result",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "valuation_result",
+      "attribute": "valuation_measure_code",
+      "to": "valuation_measure",
+      "to_kind": "code_set",
+      "to_attribute": "valuation_measure_code"
+    },
+    {
+      "from_entity": "valuation_result",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "assumption_set",
+      "attribute": "assumption_type_code",
+      "to": "assumption_type",
+      "to_kind": "code_set",
+      "to_attribute": "assumption_type_code"
+    },
+    {
+      "from_entity": "assumption_set",
+      "attribute": "assumption_status_code",
+      "to": "assumption_status",
+      "to_kind": "code_set",
+      "to_attribute": "assumption_status_code"
+    },
+    {
+      "from_entity": "assumption_set",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "model_point",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "model_point",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "model_point",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "scenario_set",
+      "attribute": "scenario_status_code",
+      "to": "scenario_status",
+      "to_kind": "code_set",
+      "to_attribute": "scenario_status_code"
+    },
+    {
+      "from_entity": "scenario_set",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "valuation_run",
+      "attribute": "assumption_set_id",
+      "to": "assumption_set",
+      "to_kind": "entity",
+      "to_attribute": "assumption_set_id"
+    },
+    {
+      "from_entity": "valuation_run",
+      "attribute": "scenario_set_id",
+      "to": "scenario_set",
+      "to_kind": "entity",
+      "to_attribute": "scenario_set_id"
+    },
+    {
+      "from_entity": "valuation_run",
+      "attribute": "run_verdict_code",
+      "to": "run_verdict",
+      "to_kind": "code_set",
+      "to_attribute": "run_verdict_code"
+    },
+    {
+      "from_entity": "valuation_run",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
       "from_entity": "party",
       "attribute": "party_type_code",
       "to": "party_type",
@@ -1722,6 +3281,20 @@
       "to_attribute": "treaty_id"
     },
     {
+      "from_entity": "party_role",
+      "attribute": "quote_id",
+      "to": "quote",
+      "to_kind": "entity",
+      "to_attribute": "quote_id"
+    },
+    {
+      "from_entity": "party_role",
+      "attribute": "submission_id",
+      "to": "submission",
+      "to_kind": "entity",
+      "to_attribute": "submission_id"
+    },
+    {
       "from_entity": "coverage",
       "attribute": "policy_id",
       "to": "policy",
@@ -1734,6 +3307,27 @@
       "to": "coverage_type",
       "to_kind": "code_set",
       "to_attribute": "coverage_type_code"
+    },
+    {
+      "from_entity": "endorsement",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "endorsement",
+      "attribute": "endorsement_type_code",
+      "to": "endorsement_type",
+      "to_kind": "code_set",
+      "to_attribute": "endorsement_type_code"
+    },
+    {
+      "from_entity": "endorsement",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
     },
     {
       "from_entity": "insured_object",
@@ -1820,6 +3414,76 @@
       "to_attribute": "source_system_code"
     },
     {
+      "from_entity": "quote",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "quote",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "quote",
+      "attribute": "quote_status_code",
+      "to": "quote_status",
+      "to_kind": "code_set",
+      "to_attribute": "quote_status_code"
+    },
+    {
+      "from_entity": "quote",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "quote",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "vehicle",
+      "attribute": "insured_object_id",
+      "to": "insured_object",
+      "to_kind": "entity",
+      "to_attribute": "insured_object_id"
+    },
+    {
+      "from_entity": "cat_event",
+      "attribute": "cause_of_loss_code",
+      "to": "cause_of_loss",
+      "to_kind": "code_set",
+      "to_attribute": "cause_of_loss_code"
+    },
+    {
+      "from_entity": "cat_event",
+      "attribute": "country_code",
+      "to": "country",
+      "to_kind": "code_set",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "cat_event",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "cat_event",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
       "from_entity": "cession",
       "attribute": "policy_id",
       "to": "policy",
@@ -1839,6 +3503,83 @@
       "to": "treaty",
       "to_kind": "entity",
       "to_attribute": "treaty_id"
+    },
+    {
+      "from_entity": "event_loss",
+      "attribute": "cat_event_id",
+      "to": "cat_event",
+      "to_kind": "entity",
+      "to_attribute": "cat_event_id"
+    },
+    {
+      "from_entity": "event_loss",
+      "attribute": "treaty_id",
+      "to": "treaty",
+      "to_kind": "entity",
+      "to_attribute": "treaty_id"
+    },
+    {
+      "from_entity": "event_loss",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "event_loss",
+      "attribute": "loss_basis_code",
+      "to": "loss_basis",
+      "to_kind": "code_set",
+      "to_attribute": "loss_basis_code"
+    },
+    {
+      "from_entity": "event_loss",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "submission",
+      "attribute": "treaty_id",
+      "to": "treaty",
+      "to_kind": "entity",
+      "to_attribute": "treaty_id"
+    },
+    {
+      "from_entity": "submission",
+      "attribute": "submission_status_code",
+      "to": "submission_status",
+      "to_kind": "code_set",
+      "to_attribute": "submission_status_code"
+    },
+    {
+      "from_entity": "submission",
+      "attribute": "treaty_type_code",
+      "to": "treaty_type",
+      "to_kind": "code_set",
+      "to_attribute": "treaty_type_code"
+    },
+    {
+      "from_entity": "submission",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "submission",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "submission",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
     },
     {
       "from_entity": "treaty",
@@ -1867,6 +3608,13 @@
       "to": "source_system",
       "to_kind": "code_set",
       "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "treaty_layer",
+      "attribute": "treaty_id",
+      "to": "treaty",
+      "to_kind": "entity",
+      "to_attribute": "treaty_id"
     }
   ]
 }

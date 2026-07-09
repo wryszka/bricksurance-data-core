@@ -1,0 +1,45 @@
+kind: entity
+name: endorsement
+domain: policy
+title: Endorsement
+description: >
+  A mid-term change to a policy contract. The endorsement records the
+  contractual change; any premium effect is booked as premium transactions
+  referencing the same policy, never stored here.
+grain: One row per endorsement per policy.
+standards:
+  acord: PolicyChange / endorsement patterns
+tags:
+  maturity: draft
+attributes:
+  - name: endorsement_id
+    type: string
+    required: true
+    description: Identifier for the endorsement.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: true
+    description: Policy being endorsed.
+    classification: internal
+  - name: endorsement_type_code
+    code_set: endorsement_type
+    required: true
+    description: Kind of contractual change.
+  - name: effective_date
+    type: date
+    required: true
+    description: Date the change takes effect (inclusive).
+  - name: description
+    type: string
+    required: false
+    description: Free-text description of the change as recorded.
+    classification: confidential
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the endorsement originates from.
+    classification: internal
+keys:
+  primary: [endorsement_id]

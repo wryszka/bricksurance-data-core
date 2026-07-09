@@ -51,9 +51,11 @@ load-bearing ideas:
 |---------------|-----------------------------------------------------------------|
 | `reference`   | Code sets (LOB, status, currency, cause of loss…) + the generated `data_dictionary` |
 | `party`       | Persons, organisations, and the **roles** they play (insured, broker, cedant, reinsurer, claimant) |
-| `policy`      | Policy contracts, coverages, insured objects, premium transactions |
+| `policy`      | Quotes, policy contracts, endorsements, coverages, insured objects (+ typed satellites like `vehicle`), premium transactions |
 | `claim`       | Claims, claim transactions (reserves, payments, recoveries)     |
-| `reinsurance` | Treaties, cessions, recoveries                                  |
+| `reinsurance` | Submissions, treaties and layers, cessions, catastrophe events and event losses |
+| `life`        | Model points, governed assumption sets, scenario sets, valuation runs |
+| `finance`     | Valuation results across regimes (Solvency II, IFRS 17) tied to auditable runs |
 | `exchange`    | Canonical exchange objects (bordereau lines, submission messages) and inbound landing |
 | `semantics`   | Metric views (GWP, NEP, incurred, loss ratio, combined ratio) — Databricks binding only |
 

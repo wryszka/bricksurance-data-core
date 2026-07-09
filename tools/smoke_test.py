@@ -97,7 +97,8 @@ def main():
         ("every party role has exactly one context",
          f"SELECT COUNT(*) FROM {q('party', 'party_role')} "
          f"WHERE CAST(policy_id IS NOT NULL AS INT) + CAST(claim_id IS NOT NULL AS INT) "
-         f"+ CAST(treaty_id IS NOT NULL AS INT) <> 1", "0"),
+         f"+ CAST(treaty_id IS NOT NULL AS INT) + CAST(quote_id IS NOT NULL AS INT) "
+         f"+ CAST(submission_id IS NOT NULL AS INT) <> 1", "0"),
     ]
 
     failures = 0

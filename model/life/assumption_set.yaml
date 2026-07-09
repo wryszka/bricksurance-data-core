@@ -1,0 +1,54 @@
+kind: entity
+name: assumption_set
+domain: life
+title: Assumption Set
+description: >
+  A versioned, governed set of actuarial assumptions (mortality, lapse,
+  expense, economic). Sets move through a maker/checker lifecycle; valuation
+  runs record exactly which approved set they used, which is what makes any
+  past result reproducible.
+grain: One row per assumption set version per assumption type.
+tags:
+  maturity: draft
+attributes:
+  - name: assumption_set_id
+    type: string
+    required: true
+    description: Identifier for the assumption set version.
+    classification: internal
+  - name: assumption_type_code
+    code_set: assumption_type
+    required: true
+    description: Kind of assumption governed by this set.
+  - name: assumption_status_code
+    code_set: assumption_status
+    required: true
+    description: Maker/checker lifecycle status.
+  - name: version
+    type: integer
+    required: true
+    description: Monotonic version number within the assumption type.
+  - name: description
+    type: string
+    required: false
+    description: What changed in this version and why.
+  - name: effective_from
+    type: date
+    required: false
+    description: First valuation date this set applies to, once approved.
+  - name: approved_by
+    type: string
+    required: false
+    description: Checker who approved or rejected the set.
+    classification: internal
+  - name: approved_at
+    type: timestamp
+    required: false
+    description: When the approval decision was made.
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the assumption set originates from.
+    classification: internal
+keys:
+  primary: [assumption_set_id]

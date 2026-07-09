@@ -20,6 +20,9 @@ codes:
     description: >
       Records mastered or derived inside the data layer itself, such as
       deduplicated golden party records.
+  - code: LIFE_CORE
+    label: Life Administration (Core)
+    description: The group's life policy administration and valuation feed.
   - code: COVERHOLDER_BDX
     label: Coverholder Bordereau
     description: >

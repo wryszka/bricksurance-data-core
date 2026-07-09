@@ -1,0 +1,25 @@
+kind: code_set
+name: endorsement_type
+title: Endorsement Type
+description: >
+  Kinds of mid-term change to a policy. The premium effect of an endorsement
+  is always booked as premium transactions; the endorsement records the
+  contractual change itself.
+standards:
+  acord: PolicyChange / endorsement patterns
+codes:
+  - code: MID_TERM_ADJUSTMENT
+    label: Mid-term Adjustment
+    description: General adjustment to terms during the policy period.
+  - code: COVERAGE_CHANGE
+    label: Coverage Change
+    description: Cover added, removed or amended.
+  - code: SUM_INSURED_CHANGE
+    label: Sum Insured Change
+    description: Declared values increased or decreased.
+  - code: EXTENSION
+    label: Extension
+    description: Cover period extended beyond the original expiry.
+  - code: CANCELLATION
+    label: Cancellation
+    description: Policy terminated before natural expiry.

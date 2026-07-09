@@ -1,0 +1,14 @@
+kind: code_set
+name: loss_basis
+title: Loss Basis
+description: >
+  Whether an event loss figure is modelled or reported. Day-one catastrophe
+  numbers are modelled (event footprint against in-force exposure); cedant
+  reports firm up over the following weeks — the basis keeps the two honest.
+codes:
+  - code: MODELLED
+    label: Modelled
+    description: Estimated from an event footprint applied to in-force exposure.
+  - code: REPORTED
+    label: Reported
+    description: Reported by the cedant or claims process.
