@@ -160,17 +160,48 @@ An attribute with `code_set: x` automatically gets a foreign key to
 `reference.x (x_code)`. Code sets carry their allowed values in the spec, and the
 generator emits the seed rows — reference data is versioned with the model.
 
-## 7. Roadmap
+## 7. Roadmap (v2, 2026-07-09)
+
+The goal grew from "a semantic model" to **the single data layer for the whole
+Bricksurance estate** — one company across P&C (commercial + motor), Life and
+Re, with provisions for anything that comes next.
 
 | Phase | Deliverable | Status |
 |---|---|---|
-| 0 | Repo, spec format, generator, Policy exemplar + code sets, Databricks & Snowflake bindings | done |
-| 1 | Full core P&C slice (party/party_role, coverage, insured object, premium & claim transactions, treaty & cession) deployed to Unity Catalog with synthetic data | done |
-| 2 | Semantic layer proven: metric view, Genie space, acceptance test passed | done |
-| 3 | Exchange: D2D Delta Share to `fevm-lr-dev-aws-us` (Bricksurance Re), bordereau ingest demo (messy file → canonical, dictionary-assisted) | |
-| 4 | Federation example: Snowflake trial as the "Bricksurance Specialty" unit — generated DDL deployed, one cross-platform read, one cross-platform exchange | |
-| 5 | Adoption proof: retrofit one existing Bricksurance demo as a consumer via views | |
-| 6 | Extension proof: life domain (LifeCast) and full reinsurance domain added with zero rework to existing entities | |
+| 0–2 | Model-as-code foundation; core P&C slice in Unity Catalog; semantic layer (metric view + Genie acceptance test) | done |
+| 3 | Exchange: cession bordereau (outbound view) + dictionary-driven LLM ingest of messy inbound bordereaux; D2D share to Bricksurance Re | ingest done; share awaits a metastore grant |
+| 3.5 | Data Core Console app — model browser / metrics / exchange / network | done |
+| 4 | Ontology as a product: one portable JSON export + importer, round-trip proven | done |
+| 5 | Model expansion to the full landscape: quote/endorsement/motor (P&C), life domain (model points, assumption sets, valuation runs/results), reinsurance depth (submissions, layers, cat events, event losses), finance thin slice; per-domain metric views | next |
+| 6 | World Engine: one deterministic Bricksurance world emitting the canonical rows **and** per-source-system extracts; semantics-first, with scale as a knob for the cases that need volume to look real; sacred demo heroes preserved as world invariants | |
+| 7 | Plug-in foundations per workbench (pricing first, then claims): derived extracts + write-back contracts — **data foundation only, no workbench is moved** | |
+| 8 | Exchange fleet: Re D2D share live, broker via the open sharing protocol, regulator share | |
+| 9 | A second insurer stood up on a separate workspace from the ontology import; exchange both ways | |
+| 10 | Snowflake "Bricksurance Specialty" federation example | deferred |
+
+### 7.1 The one-company landscape
+
+The workbench estate this layer serves — all Bricksurance, all Databricks:
+
+| Workbench | Entity | Lives today | Plug-in route |
+|---|---|---|---|
+| Pricing (commercial) | SE | dev workspace | first proof: policies/claims derived from core; quotes written back |
+| Claims (motor + home) | SE | dev | landing tables become Guidewire-shaped extracts *of* the core world |
+| Solvency 2 workbench | SE | dev (live app) | reads the finance/valuation slice |
+| Reinsurance | Re | dev | submissions/treaties/events join the reinsurance domain |
+| LifeCast | Life | dev | model points/assumptions/valuations join the life domain |
+| Underwriting | SE | in build | born on the core from day one |
+| IFRS 17 | SE | in build | born on the core from day one |
+
+Plug-in conformance levels: **(1) read** — a workbench's source/landing tables
+are source-system-shaped extracts of the one world; **(2) write back** —
+workbench outcomes become core facts (decisions → claim transactions, quotes →
+quote rows, BEL → valuation results); **(3) shared semantics** — dictionary,
+metric views and Genie context come from the core. Workbench-operational data
+(app state, agent outputs, caches, ML features) stays in workbench schemas: the
+core holds business facts only. Nothing is migrated as part of this roadmap —
+the foundation is prepared so each workbench plugs in when its own lifecycle
+allows.
 
 ## 8. Conventions
 

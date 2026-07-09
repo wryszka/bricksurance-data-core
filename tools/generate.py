@@ -522,6 +522,52 @@ def generate_genie(binding, manifest, entities, code_sets, views=(), metric_view
     (out / "genie_instructions.md").write_text("\n".join(lines) + "\n")
 
 
+def generate_ontology(manifest, entities, code_sets, views, metric_views):
+    """The whole model as ONE portable JSON document — the ontology.
+
+    Platform-neutral (no bindings), deterministic, versioned. This is the
+    exchange artifact: an adopter imports it with tools/import_ontology.py and
+    owns the same model. Relationships are included (derived) for consumers
+    that don't want to re-derive them from attributes.
+    """
+    import json
+
+    entity_index = {e["name"]: e for e in entities}
+    relationships = []
+    for e in entities:
+        for attr, ref_domain, ref_table, ref_col in fk_targets(e, entity_index):
+            relationships.append({
+                "from_entity": e["name"],
+                "attribute": attr,
+                "to": ref_table,
+                "to_kind": "code_set" if ref_domain == "reference" and attr.endswith("_code") else "entity",
+                "to_attribute": ref_col,
+            })
+
+    doc = {
+        "ontology_format": "bricksurance-data-core/ontology-v1",
+        "name": manifest["model"],
+        "title": manifest["title"],
+        "version": manifest["version"],
+        "description": " ".join(str(manifest["description"]).split()),
+        "standards_basis": (
+            "Aligned to ACORD terminology with a Lloyd's Core Data Record "
+            "crosswalk. Element names are cited as a crosswalk only; licensed "
+            "standards are not reproduced."
+        ),
+        "domains": manifest["domains"],
+        "code_sets": code_sets,
+        "entities": entities,
+        "views": views,
+        "metric_views": metric_views,
+        "relationships": relationships,
+    }
+    out = BUILD / "ontology"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"{manifest['model']}.ontology.json").write_text(
+        json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+
+
 def main():
     manifest, entities, code_sets, views, metric_views = load_model()
     if BUILD.exists():
@@ -534,6 +580,7 @@ def main():
         if binding["platform"] == "databricks":
             generate_genie(binding, manifest, entities, code_sets, views, metric_views)
     generate_docs(manifest, entities, code_sets)
+    generate_ontology(manifest, entities, code_sets, views, metric_views)
     n_files = sum(1 for _ in BUILD.rglob("*") if _.is_file())
     print(
         f"Generated {n_files} files for platforms {', '.join(generated)} "

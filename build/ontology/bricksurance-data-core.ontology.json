@@ -1,0 +1,1872 @@
+{
+  "ontology_format": "bricksurance-data-core/ontology-v1",
+  "name": "bricksurance-data-core",
+  "title": "Bricksurance Data Core",
+  "version": "0.3.0",
+  "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
+  "standards_basis": "Aligned to ACORD terminology with a Lloyd's Core Data Record crosswalk. Element names are cited as a crosswalk only; licensed standards are not reproduced.",
+  "domains": [
+    {
+      "name": "reference",
+      "description": "Shared code sets and classifications used across all domains, plus the generated data dictionary. Reference data is versioned with the model: allowed values live in the specs, not in anyone's head.\n"
+    },
+    {
+      "name": "party",
+      "description": "People and organisations, and the roles they play in the business (insured, broker, cedant, reinsurer, claimant). A party exists once; relationships are roles.\n"
+    },
+    {
+      "name": "policy",
+      "description": "Insurance contracts and their composition - policies, coverages, insured objects and premium transactions.\n"
+    },
+    {
+      "name": "claim",
+      "description": "Claims against policies and their financial development - reserves, payments and recoveries as transactions, never as overwritten balances.\n"
+    },
+    {
+      "name": "reinsurance",
+      "description": "Outward and inward reinsurance - treaties, cessions and recoveries linking the direct book to reinsurers.\n"
+    },
+    {
+      "name": "exchange",
+      "description": "Canonical data-exchange objects (bordereau lines, submissions) and the landing zone for inbound counterparty data before mapping to the canonical model.\n"
+    },
+    {
+      "name": "semantics",
+      "description": "Business metrics defined once over the canonical model - gross written premium, net earned premium, incurred, loss ratio, combined ratio. Physicalised as metric views where the platform supports them.\n"
+    }
+  ],
+  "code_sets": [
+    {
+      "kind": "code_set",
+      "name": "cause_of_loss",
+      "title": "Cause of Loss",
+      "description": "The peril or event that gave rise to a claim. Aligned to ACORD cause-of-loss vocabulary; one primary cause per claim.\n",
+      "standards": {
+        "acord": "LossCauseCd",
+        "lloyds_cdr": "Cause of loss"
+      },
+      "codes": [
+        {
+          "code": "FIRE",
+          "label": "Fire",
+          "description": "Fire, including smoke damage and firefighting damage."
+        },
+        {
+          "code": "FLOOD",
+          "label": "Flood",
+          "description": "Inundation from external water, including river and surface water flooding."
+        },
+        {
+          "code": "STORM",
+          "label": "Storm",
+          "description": "Windstorm, hail and associated weather damage."
+        },
+        {
+          "code": "WATER_DAMAGE",
+          "label": "Water Damage",
+          "description": "Escape of water from internal systems such as burst pipes."
+        },
+        {
+          "code": "THEFT",
+          "label": "Theft",
+          "description": "Theft, attempted theft and malicious damage in connection with it."
+        },
+        {
+          "code": "COLLISION",
+          "label": "Collision",
+          "description": "Impact of a vehicle with another vehicle or object."
+        },
+        {
+          "code": "LIABILITY_INCIDENT",
+          "label": "Liability Incident",
+          "description": "An event giving rise to third-party injury or property damage."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "claim_status",
+      "title": "Claim Status",
+      "description": "Lifecycle status of a claim. Financial development lives in claim transactions; status describes the handling state only.\n",
+      "standards": {
+        "acord": "ClaimStatusCd"
+      },
+      "codes": [
+        {
+          "code": "OPEN",
+          "label": "Open",
+          "description": "Claim reported and under active handling."
+        },
+        {
+          "code": "CLOSED",
+          "label": "Closed",
+          "description": "Claim settled and closed; reserves released or exhausted."
+        },
+        {
+          "code": "REOPENED",
+          "label": "Reopened",
+          "description": "Previously closed claim reopened for further development."
+        },
+        {
+          "code": "DECLINED",
+          "label": "Declined",
+          "description": "Claim declined as not covered; no indemnity payable."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "claim_transaction_type",
+      "title": "Claim Transaction Type",
+      "description": "Kinds of claim financial movement. Claims finance is transactional: case reserves, payments and recoveries are signed movements, and figures such as outstanding or incurred are always derived by summation.\n",
+      "standards": {
+        "acord": "Claim payment / reserve patterns of the ACORD Information Model"
+      },
+      "codes": [
+        {
+          "code": "CASE_RESERVE_MOVEMENT",
+          "label": "Case Reserve Movement",
+          "description": "Signed change to the case reserve estimate. The current outstanding reserve is the sum of these movements less indemnity payments.\n"
+        },
+        {
+          "code": "INDEMNITY_PAYMENT",
+          "label": "Indemnity Payment",
+          "description": "Payment to the claimant in settlement of the insured loss."
+        },
+        {
+          "code": "EXPENSE_PAYMENT",
+          "label": "Expense Payment",
+          "description": "Allocated loss adjustment expense, such as legal or surveyor fees."
+        },
+        {
+          "code": "RECOVERY",
+          "label": "Recovery",
+          "description": "Amount recovered by subrogation, salvage or contribution; negative from the insurer's cost perspective."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "country",
+      "title": "Country",
+      "description": "Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes. A governed subset, extended when the business enters a market.\n",
+      "standards": {
+        "acord": "CountryCd (ISO 3166-1)"
+      },
+      "codes": [
+        {
+          "code": "GB",
+          "label": "United Kingdom",
+          "description": "United Kingdom of Great Britain and Northern Ireland."
+        },
+        {
+          "code": "IE",
+          "label": "Ireland",
+          "description": "Republic of Ireland."
+        },
+        {
+          "code": "DE",
+          "label": "Germany",
+          "description": "Federal Republic of Germany."
+        },
+        {
+          "code": "FR",
+          "label": "France",
+          "description": "French Republic."
+        },
+        {
+          "code": "CH",
+          "label": "Switzerland",
+          "description": "Swiss Confederation."
+        },
+        {
+          "code": "US",
+          "label": "United States",
+          "description": "United States of America."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "coverage_type",
+      "title": "Coverage Type",
+      "description": "Kinds of cover that can be granted under a policy. A policy bundles one or more coverages; limits, deductibles and claims attach at coverage level.\n",
+      "standards": {
+        "acord": "CoverageCd"
+      },
+      "codes": [
+        {
+          "code": "BUILDINGS",
+          "label": "Buildings",
+          "description": "Physical damage to buildings and fixed structures."
+        },
+        {
+          "code": "CONTENTS",
+          "label": "Contents",
+          "description": "Physical damage to contents, stock and equipment."
+        },
+        {
+          "code": "BUSINESS_INTERRUPTION",
+          "label": "Business Interruption",
+          "description": "Loss of income and increased cost of working following insured physical damage."
+        },
+        {
+          "code": "MOTOR_OWN_DAMAGE",
+          "label": "Motor Own Damage",
+          "description": "Damage to the insured vehicle itself."
+        },
+        {
+          "code": "MOTOR_TPL",
+          "label": "Motor Third-Party Liability",
+          "description": "Liability to third parties arising from use of the insured vehicle."
+        },
+        {
+          "code": "PUBLIC_LIABILITY",
+          "label": "Public Liability",
+          "description": "Liability to third parties for injury or property damage arising from business operations."
+        },
+        {
+          "code": "CARGO",
+          "label": "Cargo",
+          "description": "Loss of or damage to goods in transit."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "currency",
+      "title": "Currency",
+      "description": "Transaction currencies used by the group, as ISO 4217 alphabetic codes. This is deliberately a governed subset, not the full ISO list: a currency is added here when the business starts writing in it.\n",
+      "standards": {
+        "acord": "CurCd (ISO 4217)",
+        "lloyds_cdr": "Settlement currency (ISO 4217)"
+      },
+      "codes": [
+        {
+          "code": "GBP",
+          "label": "Pound Sterling",
+          "description": "United Kingdom pound sterling."
+        },
+        {
+          "code": "EUR",
+          "label": "Euro",
+          "description": "Euro."
+        },
+        {
+          "code": "USD",
+          "label": "US Dollar",
+          "description": "United States dollar."
+        },
+        {
+          "code": "CHF",
+          "label": "Swiss Franc",
+          "description": "Swiss franc."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "insured_object_type",
+      "title": "Insured Object Type",
+      "description": "Kinds of object or exposure a policy can insure. Extend with new codes as new lines of business are written (vessels, livestock, cyber estates...).\n",
+      "standards": {
+        "acord": "InsuredObject / Risk patterns of the ACORD Information Model"
+      },
+      "codes": [
+        {
+          "code": "BUILDING",
+          "label": "Building",
+          "description": "A building or fixed structure at a defined location."
+        },
+        {
+          "code": "VEHICLE",
+          "label": "Vehicle",
+          "description": "A road vehicle."
+        },
+        {
+          "code": "CARGO_SHIPMENT",
+          "label": "Cargo Shipment",
+          "description": "A defined consignment of goods in transit."
+        },
+        {
+          "code": "LIABILITY_EXPOSURE",
+          "label": "Liability Exposure",
+          "description": "An abstract exposure unit for liability covers, such as a set of business operations at a location.\n"
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "line_of_business",
+      "title": "Line of Business",
+      "description": "Classes of insurance business written by the group, aligned to ACORD LOBCd vocabulary. Extend by adding codes; never repurpose an existing code.\n",
+      "standards": {
+        "acord": "LOBCd",
+        "lloyds_cdr": "Class of business"
+      },
+      "codes": [
+        {
+          "code": "COMMERCIAL_PROPERTY",
+          "label": "Commercial Property",
+          "description": "Direct insurance of commercial buildings, contents and consequent business interruption.\n"
+        },
+        {
+          "code": "MOTOR",
+          "label": "Motor",
+          "description": "Direct motor insurance, own damage and third-party liability."
+        },
+        {
+          "code": "GENERAL_LIABILITY",
+          "label": "General Liability",
+          "description": "Direct third-party liability other than motor, including public and products liability.\n"
+        },
+        {
+          "code": "MARINE_CARGO",
+          "label": "Marine Cargo",
+          "description": "Direct insurance of goods in transit by sea, air or land."
+        },
+        {
+          "code": "PROPERTY_TREATY",
+          "label": "Property Treaty Reinsurance",
+          "description": "Treaty reinsurance of property business, assumed or ceded; the direction is determined by the party roles on the contract, not by this code.\n"
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "party_role_type",
+      "title": "Party Role Type",
+      "description": "The roles a party can play in the business. This code set is the model's number-one extension point: a new kind of counterparty is a new code here, not a new table.\n",
+      "standards": {
+        "acord": "Party role patterns of the ACORD Information Model"
+      },
+      "codes": [
+        {
+          "code": "POLICYHOLDER",
+          "label": "Policyholder",
+          "description": "The party that entered into the policy contract and owes the premium."
+        },
+        {
+          "code": "INSURED",
+          "label": "Insured",
+          "description": "A party whose interest is covered by the policy; often, but not always, the policyholder."
+        },
+        {
+          "code": "BROKER",
+          "label": "Broker",
+          "description": "An intermediary placing the business on behalf of the policyholder."
+        },
+        {
+          "code": "CLAIMANT",
+          "label": "Claimant",
+          "description": "The party claiming under a policy; may be a third party."
+        },
+        {
+          "code": "CEDANT",
+          "label": "Cedant",
+          "description": "The insurer ceding risk under a reinsurance contract."
+        },
+        {
+          "code": "REINSURER",
+          "label": "Reinsurer",
+          "description": "The party assuming risk under a reinsurance contract."
+        },
+        {
+          "code": "COVERHOLDER",
+          "label": "Coverholder",
+          "description": "A party authorised to bind business on the insurer's behalf under a delegated authority."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "party_type",
+      "title": "Party Type",
+      "description": "Fundamental legal nature of a party. Everything else about a party's place in the business is a role, never a type.\n",
+      "standards": {
+        "acord": "PartyTypeCd"
+      },
+      "codes": [
+        {
+          "code": "PERSON",
+          "label": "Person",
+          "description": "A natural person."
+        },
+        {
+          "code": "ORGANISATION",
+          "label": "Organisation",
+          "description": "A legal entity - company, partnership, public body or association."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "policy_status",
+      "title": "Policy Status",
+      "description": "Lifecycle status of a policy contract. Status reflects the contract as a whole; coverage-level suspension is modelled on the coverage entity.\n",
+      "standards": {
+        "acord": "PolicyStatusCd"
+      },
+      "codes": [
+        {
+          "code": "QUOTED",
+          "label": "Quoted",
+          "description": "Terms offered to the prospective policyholder; no cover yet in force."
+        },
+        {
+          "code": "BOUND",
+          "label": "Bound",
+          "description": "Cover agreed and legally binding but inception date not yet reached."
+        },
+        {
+          "code": "IN_FORCE",
+          "label": "In Force",
+          "description": "Cover currently active; today is within the cover period."
+        },
+        {
+          "code": "EXPIRED",
+          "label": "Expired",
+          "description": "Cover period ended at its natural expiry date."
+        },
+        {
+          "code": "CANCELLED",
+          "label": "Cancelled",
+          "description": "Cover terminated before natural expiry by either party; return premium may exist as premium transactions.\n"
+        },
+        {
+          "code": "LAPSED",
+          "label": "Lapsed",
+          "description": "Cover terminated for non-payment of premium."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "premium_transaction_type",
+      "title": "Premium Transaction Type",
+      "description": "Kinds of premium movement. Premium is always modelled as signed transactions; balances such as gross written premium are derived by summation, never overwritten.\n",
+      "standards": {
+        "lloyds_cdr": "Premium-related CDR attributes (indicative)"
+      },
+      "codes": [
+        {
+          "code": "WRITTEN",
+          "label": "Written Premium",
+          "description": "Premium written on binding or renewal of cover; positive amount."
+        },
+        {
+          "code": "ADJUSTMENT",
+          "label": "Adjustment Premium",
+          "description": "Mid-term or declaration-based premium adjustment; signed amount."
+        },
+        {
+          "code": "RETURN",
+          "label": "Return Premium",
+          "description": "Premium returned to the policyholder, typically on cancellation; negative amount."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "source_system",
+      "title": "Source System",
+      "description": "Systems of record that feed the data layer. Provenance is part of the model: every core entity carries a source_system_code, and identifiers are only unique within their source system.\n",
+      "codes": [
+        {
+          "code": "PAS_CORE",
+          "label": "Policy Administration (Core)",
+          "description": "The group's core policy administration system."
+        },
+        {
+          "code": "CLM_CORE",
+          "label": "Claims (Core)",
+          "description": "The group's core claims management system."
+        },
+        {
+          "code": "RI_CORE",
+          "label": "Reinsurance (Core)",
+          "description": "The group's reinsurance administration system."
+        },
+        {
+          "code": "DATA_CORE",
+          "label": "Data Core (Mastered)",
+          "description": "Records mastered or derived inside the data layer itself, such as deduplicated golden party records.\n"
+        },
+        {
+          "code": "COVERHOLDER_BDX",
+          "label": "Coverholder Bordereau",
+          "description": "Lines reported by coverholders or brokers via bordereaux and mapped into the canonical model through the exchange domain.\n"
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "treaty_type",
+      "title": "Treaty Type",
+      "description": "Forms of treaty reinsurance. Direction (assumed or ceded) is determined by the cedant and reinsurer party roles on the treaty, not by this code.\n",
+      "standards": {
+        "acord": "Reinsurance agreement patterns (ACORD GRLC)"
+      },
+      "codes": [
+        {
+          "code": "QUOTA_SHARE",
+          "label": "Quota Share",
+          "description": "Proportional treaty ceding a fixed share of every risk in scope."
+        },
+        {
+          "code": "SURPLUS",
+          "label": "Surplus",
+          "description": "Proportional treaty ceding the portion of each risk above the cedant's retained line."
+        },
+        {
+          "code": "XOL_PER_RISK",
+          "label": "Excess of Loss (Per Risk)",
+          "description": "Non-proportional cover for individual risk losses above an attachment point."
+        },
+        {
+          "code": "XOL_CATASTROPHE",
+          "label": "Excess of Loss (Catastrophe)",
+          "description": "Non-proportional cover for accumulated losses from a single catastrophe event."
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "kind": "entity",
+      "name": "claim",
+      "domain": "claim",
+      "title": "Claim",
+      "description": "A demand for indemnity under a policy arising from a loss event. The claim record holds the event and handling state; all financial development lives in claim transactions.\n",
+      "grain": "One row per claim per source system.",
+      "standards": {
+        "acord": "Claim (ACORD Information Model)",
+        "lloyds_cdr": "Claim-level attributes (indicative)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "claim_id",
+          "type": "string",
+          "required": true,
+          "description": "Stable, source-agnostic identifier for the claim, owned by the data layer.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy the claim is made under.",
+          "classification": "internal"
+        },
+        {
+          "name": "coverage_id",
+          "references": "coverage",
+          "type": "string",
+          "required": false,
+          "description": "Coverage the claim attaches to, where the source provides it.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_number",
+          "type": "string",
+          "required": true,
+          "description": "Claim number as issued by the claims system. Unique within a source system - always interpret together with source_system_code.\n",
+          "classification": "confidential",
+          "standards": {
+            "acord": "ClaimNumber",
+            "lloyds_cdr": "Claim reference"
+          }
+        },
+        {
+          "name": "claim_status_code",
+          "code_set": "claim_status",
+          "required": true,
+          "description": "Current handling status of the claim.",
+          "standards": {
+            "acord": "ClaimStatusCd"
+          }
+        },
+        {
+          "name": "cause_of_loss_code",
+          "code_set": "cause_of_loss",
+          "required": true,
+          "description": "Primary peril or event that gave rise to the claim.",
+          "standards": {
+            "acord": "LossCauseCd",
+            "lloyds_cdr": "Cause of loss"
+          }
+        },
+        {
+          "name": "loss_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the loss occurred.",
+          "standards": {
+            "acord": "LossDt",
+            "lloyds_cdr": "Date of loss"
+          }
+        },
+        {
+          "name": "reported_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the loss was first reported to the insurer. Must be on or after loss_date.",
+          "standards": {
+            "acord": "ReportedDt"
+          }
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Free-text description of the loss circumstances.",
+          "classification": "confidential"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the claim originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "claim_id"
+        ],
+        "natural": [
+          "source_system_code",
+          "claim_number"
+        ]
+      },
+      "quality": [
+        {
+          "name": "reported_after_loss",
+          "rule": "reported_date >= loss_date",
+          "description": "A loss cannot be reported before it happens."
+        }
+      ]
+    },
+    {
+      "kind": "entity",
+      "name": "claim_transaction",
+      "domain": "claim",
+      "title": "Claim Transaction",
+      "description": "A signed financial movement on a claim: case reserve movements, indemnity and expense payments, and recoveries. Outstanding, paid and incurred are always derived by summation over these movements, never stored as balances.\n",
+      "grain": "One row per financial movement per claim.",
+      "standards": {
+        "acord": "Claim payment / reserve patterns of the ACORD Information Model"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "claim_transaction_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the claim transaction.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": true,
+          "description": "Claim the movement belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_transaction_type_code",
+          "code_set": "claim_transaction_type",
+          "required": true,
+          "description": "Kind of financial movement."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount in the transaction currency. Reserve increases positive, reserve releases negative; payments positive; recoveries negative from the insurer's cost perspective.\n",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the movement was booked."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the movement originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "claim_transaction_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "premium_bordereau_line",
+      "domain": "exchange",
+      "title": "Premium Bordereau Line (inbound)",
+      "description": "The canonical form of an inbound premium bordereau line, as reported by a coverholder or broker. Messy source files land in the exchange domain and are mapped into this shape - using the data dictionary as the contract - before flowing into the core model.\n",
+      "grain": "One row per policy per reporting month per inbound bordereau.",
+      "standards": {
+        "lloyds_cdr": "Coverholder premium reporting attributes (indicative)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "bordereau_line_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the bordereau line, assigned on ingestion.",
+          "classification": "internal"
+        },
+        {
+          "name": "reporting_month",
+          "type": "date",
+          "required": true,
+          "description": "First day of the calendar month the bordereau reports on."
+        },
+        {
+          "name": "coverholder_name",
+          "type": "string",
+          "required": true,
+          "description": "Name of the coverholder or broker submitting the bordereau.",
+          "classification": "confidential"
+        },
+        {
+          "name": "policy_number",
+          "type": "string",
+          "required": true,
+          "description": "Policy reference as reported by the coverholder; matched to the core model downstream.",
+          "classification": "confidential"
+        },
+        {
+          "name": "insured_name",
+          "type": "string",
+          "required": false,
+          "description": "Name of the insured as reported.",
+          "classification": "pii"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business, mapped from the coverholder's own class descriptions to the canonical code set."
+        },
+        {
+          "name": "inception_date",
+          "type": "date",
+          "required": true,
+          "description": "Cover inception as reported."
+        },
+        {
+          "name": "expiry_date",
+          "type": "date",
+          "required": false,
+          "description": "Cover expiry as reported."
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the reported amounts."
+        },
+        {
+          "name": "gross_premium",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Gross written premium reported for the line.",
+          "classification": "confidential"
+        },
+        {
+          "name": "commission_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Coverholder commission reported for the line.",
+          "classification": "confidential"
+        },
+        {
+          "name": "risk_country_code",
+          "code_set": "country",
+          "required": false,
+          "description": "Country of the risk location, where reported."
+        },
+        {
+          "name": "risk_postcode",
+          "type": "string",
+          "required": false,
+          "description": "Postal code of the risk location, where reported.",
+          "classification": "confidential"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Provenance of the line; coverholder bordereaux use COVERHOLDER_BDX.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "bordereau_line_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "party",
+      "domain": "party",
+      "title": "Party",
+      "description": "A person or organisation the group deals with. A party exists exactly once regardless of how many relationships it has; what the party does (insured, broker, cedant, claimant...) is expressed through party roles, never by duplicating the party.\n",
+      "grain": "One row per unique legal person or organisation, mastered across source systems.\n",
+      "standards": {
+        "acord": "Party (ACORD Information Model)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "party_id",
+          "type": "string",
+          "required": true,
+          "description": "Stable, source-agnostic identifier for the party, owned by the data layer.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_type_code",
+          "code_set": "party_type",
+          "required": true,
+          "description": "Whether the party is a natural person or a legal entity."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Full legal name of the party.",
+          "classification": "pii",
+          "standards": {
+            "acord": "CommercialName / PersonName"
+          }
+        },
+        {
+          "name": "country_code",
+          "code_set": "country",
+          "required": true,
+          "description": "Country of residence or registration.",
+          "classification": "pii",
+          "standards": {
+            "acord": "CountryCd"
+          }
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record this party was mastered from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "party_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "party_role",
+      "domain": "party",
+      "title": "Party Role",
+      "description": "A role a party plays in a specific business context - on a policy, a claim or a treaty. This is the model's central extensibility pattern: a new kind of counterparty is a new party_role_type code plus rows here, never a new table.\n",
+      "grain": "One row per role a party plays in one context (policy, claim or treaty) for a period of time. Exactly one of policy_id, claim_id and treaty_id is populated.\n",
+      "standards": {
+        "acord": "PartyRole patterns of the ACORD Information Model"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "party_role_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for this role assignment.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The party playing the role.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_role_type_code",
+          "code_set": "party_role_type",
+          "required": true,
+          "description": "Which role the party plays in the context."
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "Policy context of the role, when the role is played on a policy.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": false,
+          "description": "Claim context of the role, when the role is played on a claim.",
+          "classification": "internal"
+        },
+        {
+          "name": "treaty_id",
+          "references": "treaty",
+          "type": "string",
+          "required": false,
+          "description": "Treaty context of the role, when the role is played on a treaty.",
+          "classification": "internal"
+        },
+        {
+          "name": "start_date",
+          "type": "date",
+          "required": true,
+          "description": "Date from which the role applies (inclusive)."
+        },
+        {
+          "name": "end_date",
+          "type": "date",
+          "required": false,
+          "description": "Date on which the role ceased (inclusive); empty while the role is current."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "party_role_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "exactly_one_context",
+          "rule": "exactly one of policy_id, claim_id, treaty_id is not null",
+          "description": "A role is always played in exactly one business context."
+        }
+      ]
+    },
+    {
+      "kind": "entity",
+      "name": "coverage",
+      "domain": "policy",
+      "title": "Coverage",
+      "description": "A specific cover granted under a policy, with its own limit and deductible. A policy bundles one or more coverages; claims attach to coverages where the source data allows it.\n",
+      "grain": "One row per coverage granted under a policy.",
+      "standards": {
+        "acord": "Coverage (ACORD Information Model)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "coverage_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the coverage.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy the coverage is granted under.",
+          "classification": "internal"
+        },
+        {
+          "name": "coverage_type_code",
+          "code_set": "coverage_type",
+          "required": true,
+          "description": "Kind of cover granted.",
+          "standards": {
+            "acord": "CoverageCd"
+          }
+        },
+        {
+          "name": "limit_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Maximum amount payable under this coverage, in the policy currency; empty where unlimited or not applicable.\n",
+          "standards": {
+            "acord": "Limit",
+            "lloyds_cdr": "Limit of liability"
+          }
+        },
+        {
+          "name": "deductible_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Amount borne by the insured before this coverage responds, in the policy currency.",
+          "standards": {
+            "acord": "Deductible",
+            "lloyds_cdr": "Deductible / excess"
+          }
+        },
+        {
+          "name": "sum_insured_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Declared value insured under this coverage, in the policy currency."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "coverage_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "insured_object",
+      "domain": "policy",
+      "title": "Insured Object",
+      "description": "A concrete object or exposure insured under a policy - a building, a vehicle, a shipment, a set of operations. Location lives here, which makes this the anchor for exposure and accumulation analysis.\n",
+      "grain": "One row per insured object under a policy.",
+      "standards": {
+        "acord": "InsuredObject / Risk (ACORD Information Model)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "insured_object_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the insured object.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy the object is insured under.",
+          "classification": "internal"
+        },
+        {
+          "name": "insured_object_type_code",
+          "code_set": "insured_object_type",
+          "required": true,
+          "description": "Kind of object or exposure insured."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Human-readable description of the object, as declared.",
+          "classification": "confidential"
+        },
+        {
+          "name": "country_code",
+          "code_set": "country",
+          "required": true,
+          "description": "Country where the object is located or the exposure arises."
+        },
+        {
+          "name": "postcode",
+          "type": "string",
+          "required": false,
+          "description": "Postal code of the object's location, where applicable; drives geographic accumulation.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Risk location"
+          }
+        }
+      ],
+      "keys": {
+        "primary": [
+          "insured_object_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "policy",
+      "domain": "policy",
+      "title": "Policy",
+      "description": "A contract of insurance between an insurer and one or more policyholders, under which the insurer provides cover for defined risks in exchange for premium. This is the contract-level record: coverages, insured objects, premium transactions and parties are separate entities that reference it.\n",
+      "grain": "One row per policy contract per source system. Mid-term changes are modelled as endorsements (future entity), not as new rows here.\n",
+      "standards": {
+        "acord": "Policy (ACORD Information Model, P&C)",
+        "lloyds_cdr": "Contract-level attributes of the Lloyd's Core Data Record (indicative)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "policy_id",
+          "type": "string",
+          "required": true,
+          "description": "Stable, source-agnostic identifier for the policy. A surrogate key owned by the data layer, not by any policy administration system.\n",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_number",
+          "type": "string",
+          "required": true,
+          "description": "Policy number as issued to the policyholder. Unique within a source system, not globally - always interpret together with source_system_code.\n",
+          "classification": "confidential",
+          "standards": {
+            "acord": "PolicyNumber",
+            "lloyds_cdr": "Contract reference"
+          }
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record this policy originates from. Provenance is part of the model, not an afterthought.\n",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business written under this policy.",
+          "standards": {
+            "acord": "LOBCd",
+            "lloyds_cdr": "Class of business"
+          }
+        },
+        {
+          "name": "policy_status_code",
+          "code_set": "policy_status",
+          "required": true,
+          "description": "Current lifecycle status of the policy.",
+          "standards": {
+            "acord": "PolicyStatusCd"
+          }
+        },
+        {
+          "name": "inception_date",
+          "type": "date",
+          "required": true,
+          "description": "Date on which cover begins (inclusive).",
+          "standards": {
+            "acord": "EffectiveDt",
+            "lloyds_cdr": "Inception date"
+          }
+        },
+        {
+          "name": "expiry_date",
+          "type": "date",
+          "required": true,
+          "description": "Date on which cover ends (inclusive). Must be on or after inception_date.\n",
+          "standards": {
+            "acord": "ExpirationDt",
+            "lloyds_cdr": "Expiry date"
+          }
+        },
+        {
+          "name": "underwriting_year",
+          "type": "integer",
+          "required": true,
+          "description": "Year of account to which the policy is allocated; drives reinsurance cession and market reporting.\n",
+          "standards": {
+            "lloyds_cdr": "Year of account"
+          }
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Original currency of the policy. Monetary amounts on child entities are expressed in this currency unless explicitly stated otherwise.\n",
+          "standards": {
+            "acord": "CurCd",
+            "lloyds_cdr": "Settlement currency"
+          }
+        }
+      ],
+      "keys": {
+        "primary": [
+          "policy_id"
+        ],
+        "natural": [
+          "source_system_code",
+          "policy_number"
+        ]
+      },
+      "quality": [
+        {
+          "name": "cover_period_valid",
+          "rule": "expiry_date >= inception_date",
+          "description": "Cover cannot end before it begins."
+        }
+      ]
+    },
+    {
+      "kind": "entity",
+      "name": "premium_transaction",
+      "domain": "policy",
+      "title": "Premium Transaction",
+      "description": "A signed premium movement on a policy. Premium is transactional by design: figures such as gross written premium are derived by summing transactions, never stored as overwritable balances.\n",
+      "grain": "One row per premium movement per policy (and coverage, where known).",
+      "standards": {
+        "acord": "Premium / MoneyProvision patterns of the ACORD Information Model",
+        "lloyds_cdr": "Premium attributes (indicative)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "premium_transaction_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the premium transaction.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy the premium movement belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "coverage_id",
+          "references": "coverage",
+          "type": "string",
+          "required": false,
+          "description": "Coverage the movement is allocated to, where the source provides that split.",
+          "classification": "internal"
+        },
+        {
+          "name": "premium_transaction_type_code",
+          "code_set": "premium_transaction_type",
+          "required": true,
+          "description": "Kind of premium movement."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount of the movement in the transaction currency: written and positive adjustments positive, returns negative.\n",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the movement was booked."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the movement originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "premium_transaction_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "cession",
+      "domain": "reinsurance",
+      "title": "Cession",
+      "description": "The link between direct business and a treaty: which policy (or coverage) is ceded to which treaty, and to what share. Ceded premium and recoveries are derived by applying the ceded share to the underlying transactions.\n",
+      "grain": "One row per policy (or coverage, where the split exists) per treaty.",
+      "standards": {
+        "acord": "Cession patterns (ACORD GRLC)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "cession_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the cession.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy being ceded.",
+          "classification": "internal"
+        },
+        {
+          "name": "coverage_id",
+          "references": "coverage",
+          "type": "string",
+          "required": false,
+          "description": "Coverage being ceded, where cession applies at coverage level.",
+          "classification": "internal"
+        },
+        {
+          "name": "treaty_id",
+          "references": "treaty",
+          "type": "string",
+          "required": true,
+          "description": "Treaty the business is ceded to.",
+          "classification": "internal"
+        },
+        {
+          "name": "ceded_share",
+          "type": "decimal(5,4)",
+          "required": true,
+          "description": "Share of the risk ceded under this cession, as a fraction between 0 and 1.",
+          "classification": "confidential"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "cession_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "treaty",
+      "domain": "reinsurance",
+      "title": "Treaty",
+      "description": "A treaty reinsurance contract under which risks are ceded to or assumed from reinsurers. Cedant and reinsurer are party roles on the treaty; which business it covers is expressed through cessions.\n",
+      "grain": "One row per treaty contract per underwriting year.",
+      "standards": {
+        "acord": "Reinsurance agreement patterns (ACORD GRLC)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "treaty_id",
+          "type": "string",
+          "required": true,
+          "description": "Stable identifier for the treaty, owned by the data layer.",
+          "classification": "internal"
+        },
+        {
+          "name": "treaty_reference",
+          "type": "string",
+          "required": true,
+          "description": "Treaty reference as agreed between the parties.",
+          "classification": "confidential"
+        },
+        {
+          "name": "treaty_type_code",
+          "code_set": "treaty_type",
+          "required": true,
+          "description": "Form of the treaty."
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Class of business the treaty covers."
+        },
+        {
+          "name": "underwriting_year",
+          "type": "integer",
+          "required": true,
+          "description": "Underwriting year of account of the treaty.",
+          "standards": {
+            "lloyds_cdr": "Year of account"
+          }
+        },
+        {
+          "name": "inception_date",
+          "type": "date",
+          "required": true,
+          "description": "Date treaty cover begins (inclusive)."
+        },
+        {
+          "name": "expiry_date",
+          "type": "date",
+          "required": true,
+          "description": "Date treaty cover ends (inclusive). Must be on or after inception_date."
+        },
+        {
+          "name": "cession_rate",
+          "type": "decimal(5,4)",
+          "required": false,
+          "description": "Contractual ceded share for proportional treaties, as a fraction between 0 and 1; empty for non-proportional forms.\n",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the treaty."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the treaty originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "treaty_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "cover_period_valid",
+          "rule": "expiry_date >= inception_date",
+          "description": "Treaty cover cannot end before it begins."
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "kind": "view",
+      "name": "cession_bordereau_line",
+      "domain": "exchange",
+      "title": "Cession Bordereau Line (outbound)",
+      "description": "The outbound cession bordereau, derived live from the canonical model: one line per policy premium movement ceded to a treaty, with the ceded amount computed from the contractual ceded share. This view - together with the data_dictionary - IS the bordereau: it is shared as a governed table, never exported to a spreadsheet.\n",
+      "grain": "One row per ceded premium movement per policy per treaty.",
+      "sql": "SELECT\n  tr.treaty_reference,\n  DATE_TRUNC('MONTH', pt.transaction_date) AS reporting_month,\n  p.policy_number,\n  ins.name AS insured_name,\n  p.line_of_business_code,\n  p.inception_date,\n  p.expiry_date,\n  pt.currency_code,\n  pt.amount AS gross_premium,\n  ces.ceded_share,\n  CAST(ROUND(pt.amount * ces.ceded_share, 2) AS DECIMAL(18,2)) AS ceded_premium\nFROM {reinsurance.cession} ces\nJOIN {policy.policy} p ON p.policy_id = ces.policy_id\nJOIN {reinsurance.treaty} tr ON tr.treaty_id = ces.treaty_id\nJOIN {policy.premium_transaction} pt ON pt.policy_id = p.policy_id\nLEFT JOIN {party.party_role} pr\n  ON pr.policy_id = p.policy_id AND pr.party_role_type_code = 'INSURED'\nLEFT JOIN {party.party} ins ON ins.party_id = pr.party_id\n"
+    },
+    {
+      "kind": "view",
+      "name": "financial_transaction",
+      "domain": "semantics",
+      "title": "Financial Transaction (unified)",
+      "description": "Unified view of all financial movements - premium and claim transactions - with their policy context, so portfolio metrics that span premium and claims (such as loss ratio) can be defined over a single source. Amounts are in original transaction currency.\n",
+      "grain": "One row per premium or claim transaction.",
+      "sql": "SELECT\n  p.policy_id,\n  p.underwriting_year,\n  p.line_of_business_code,\n  pt.currency_code,\n  pt.transaction_date,\n  'PREMIUM' AS transaction_kind,\n  pt.premium_transaction_type_code AS transaction_type_code,\n  CAST(NULL AS STRING) AS claim_id,\n  CAST(NULL AS STRING) AS cause_of_loss_code,\n  pt.amount\nFROM {policy.premium_transaction} pt\nJOIN {policy.policy} p ON p.policy_id = pt.policy_id\nUNION ALL\nSELECT\n  p.policy_id,\n  p.underwriting_year,\n  p.line_of_business_code,\n  ct.currency_code,\n  ct.transaction_date,\n  'CLAIM' AS transaction_kind,\n  ct.claim_transaction_type_code AS transaction_type_code,\n  c.claim_id,\n  c.cause_of_loss_code,\n  ct.amount\nFROM {claim.claim_transaction} ct\nJOIN {claim.claim} c ON c.claim_id = ct.claim_id\nJOIN {policy.policy} p ON p.policy_id = c.policy_id\n"
+    }
+  ],
+  "metric_views": [
+    {
+      "kind": "metric_view",
+      "name": "underwriting_metrics",
+      "domain": "semantics",
+      "title": "Underwriting Metrics",
+      "description": "Certified underwriting KPIs - premium, claims development and loss ratio - defined once over the canonical model. Measures are in original transaction currency: always group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "source": "semantics.financial_transaction",
+      "joins": [
+        {
+          "name": "line_of_business",
+          "source": "reference.line_of_business",
+          "condition": "source.line_of_business_code = line_of_business.line_of_business_code"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "underwriting_year",
+          "expr": "underwriting_year",
+          "description": "Underwriting year of account of the underlying policy."
+        },
+        {
+          "name": "line_of_business",
+          "expr": "line_of_business.label",
+          "description": "Line of business as its business label, e.g. 'Commercial Property'. Filter this dimension with labels; use line_of_business_code for codes.\n"
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "source.line_of_business_code",
+          "description": "Line of business as its code, e.g. COMMERCIAL_PROPERTY."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Original currency of the transaction. Group by this before summing money."
+        },
+        {
+          "name": "transaction_month",
+          "expr": "DATE_TRUNC('MONTH', transaction_date)",
+          "description": "Calendar month the movement was booked in."
+        },
+        {
+          "name": "cause_of_loss_code",
+          "expr": "cause_of_loss_code",
+          "description": "Cause of loss for claim movements; empty for premium movements."
+        }
+      ],
+      "measures": [
+        {
+          "name": "gross_written_premium",
+          "expr": "SUM(CASE WHEN transaction_kind = 'PREMIUM' THEN amount ELSE 0 END)",
+          "description": "Sum of all premium movements (written, adjustments, returns) - the book's gross written premium in original currency.\n"
+        },
+        {
+          "name": "claims_paid",
+          "expr": "SUM(CASE WHEN transaction_type_code IN ('INDEMNITY_PAYMENT', 'EXPENSE_PAYMENT') THEN amount ELSE 0 END)",
+          "description": "Indemnity plus allocated expense paid, gross of recoveries."
+        },
+        {
+          "name": "recoveries",
+          "expr": "SUM(CASE WHEN transaction_type_code = 'RECOVERY' THEN amount ELSE 0 END)",
+          "description": "Subrogation, salvage and contribution recoveries (negative amounts)."
+        },
+        {
+          "name": "outstanding_reserve",
+          "expr": "SUM(CASE WHEN transaction_type_code = 'CASE_RESERVE_MOVEMENT' THEN amount ELSE 0 END)",
+          "description": "Current case reserves - the sum of all signed reserve movements."
+        },
+        {
+          "name": "claims_incurred",
+          "expr": "SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END)",
+          "description": "Paid plus outstanding net of recoveries - total claims incurred."
+        },
+        {
+          "name": "loss_ratio",
+          "expr": "SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN transaction_kind = 'PREMIUM' THEN amount ELSE 0 END), 0)",
+          "description": "Claims incurred divided by gross written premium. Meaningful within a single currency; not premium-earned-adjusted in this version.\n"
+        },
+        {
+          "name": "policy_count",
+          "expr": "COUNT(DISTINCT CASE WHEN transaction_kind = 'PREMIUM' THEN policy_id END)",
+          "description": "Number of distinct policies with premium activity."
+        },
+        {
+          "name": "claim_count",
+          "expr": "COUNT(DISTINCT claim_id)",
+          "description": "Number of distinct claims with financial activity."
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from_entity": "claim",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "claim",
+      "attribute": "coverage_id",
+      "to": "coverage",
+      "to_kind": "entity",
+      "to_attribute": "coverage_id"
+    },
+    {
+      "from_entity": "claim",
+      "attribute": "claim_status_code",
+      "to": "claim_status",
+      "to_kind": "code_set",
+      "to_attribute": "claim_status_code"
+    },
+    {
+      "from_entity": "claim",
+      "attribute": "cause_of_loss_code",
+      "to": "cause_of_loss",
+      "to_kind": "code_set",
+      "to_attribute": "cause_of_loss_code"
+    },
+    {
+      "from_entity": "claim",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "claim_transaction",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "claim_transaction",
+      "attribute": "claim_transaction_type_code",
+      "to": "claim_transaction_type",
+      "to_kind": "code_set",
+      "to_attribute": "claim_transaction_type_code"
+    },
+    {
+      "from_entity": "claim_transaction",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "claim_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "premium_bordereau_line",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "premium_bordereau_line",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "premium_bordereau_line",
+      "attribute": "risk_country_code",
+      "to": "country",
+      "to_kind": "code_set",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "premium_bordereau_line",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "party",
+      "attribute": "party_type_code",
+      "to": "party_type",
+      "to_kind": "code_set",
+      "to_attribute": "party_type_code"
+    },
+    {
+      "from_entity": "party",
+      "attribute": "country_code",
+      "to": "country",
+      "to_kind": "code_set",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "party",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "party_role",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "party_role",
+      "attribute": "party_role_type_code",
+      "to": "party_role_type",
+      "to_kind": "code_set",
+      "to_attribute": "party_role_type_code"
+    },
+    {
+      "from_entity": "party_role",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "party_role",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "party_role",
+      "attribute": "treaty_id",
+      "to": "treaty",
+      "to_kind": "entity",
+      "to_attribute": "treaty_id"
+    },
+    {
+      "from_entity": "coverage",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "coverage",
+      "attribute": "coverage_type_code",
+      "to": "coverage_type",
+      "to_kind": "code_set",
+      "to_attribute": "coverage_type_code"
+    },
+    {
+      "from_entity": "insured_object",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "insured_object",
+      "attribute": "insured_object_type_code",
+      "to": "insured_object_type",
+      "to_kind": "code_set",
+      "to_attribute": "insured_object_type_code"
+    },
+    {
+      "from_entity": "insured_object",
+      "attribute": "country_code",
+      "to": "country",
+      "to_kind": "code_set",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "policy",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "policy",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "policy",
+      "attribute": "policy_status_code",
+      "to": "policy_status",
+      "to_kind": "code_set",
+      "to_attribute": "policy_status_code"
+    },
+    {
+      "from_entity": "policy",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "premium_transaction",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "premium_transaction",
+      "attribute": "coverage_id",
+      "to": "coverage",
+      "to_kind": "entity",
+      "to_attribute": "coverage_id"
+    },
+    {
+      "from_entity": "premium_transaction",
+      "attribute": "premium_transaction_type_code",
+      "to": "premium_transaction_type",
+      "to_kind": "code_set",
+      "to_attribute": "premium_transaction_type_code"
+    },
+    {
+      "from_entity": "premium_transaction",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "premium_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "cession",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "cession",
+      "attribute": "coverage_id",
+      "to": "coverage",
+      "to_kind": "entity",
+      "to_attribute": "coverage_id"
+    },
+    {
+      "from_entity": "cession",
+      "attribute": "treaty_id",
+      "to": "treaty",
+      "to_kind": "entity",
+      "to_attribute": "treaty_id"
+    },
+    {
+      "from_entity": "treaty",
+      "attribute": "treaty_type_code",
+      "to": "treaty_type",
+      "to_kind": "code_set",
+      "to_attribute": "treaty_type_code"
+    },
+    {
+      "from_entity": "treaty",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "treaty",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "treaty",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    }
+  ]
+}

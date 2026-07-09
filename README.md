@@ -25,6 +25,11 @@ federated estates insurers actually have.
 - **A data-exchange pattern** where the standard travels with the data: every share
   between parties (insurer ↔ reinsurer ↔ broker) includes a `data_dictionary` table
   generated from the same specs, so the receiver gets the semantics, not just rows.
+- **A portable ontology** — the whole model as one versioned JSON document
+  (`build/ontology/*.ontology.json`), with an importer
+  ([`tools/import_ontology.py`](tools/import_ontology.py)) that regenerates the
+  full spec tree from it. Export → import → export is verified identical, so
+  adopting the model — or exchanging it between companies — is one file.
 
 ## Design principles
 
