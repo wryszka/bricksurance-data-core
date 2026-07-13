@@ -123,6 +123,74 @@ def spaces_config(t):
                  f"AND l.treaty_id IS NOT NULL"),
             ],
         },
+        "distribution": {
+            "title": "Bricksurance — Distribution, Underwriting & Conduct",
+            "description": ("The front of the business: products and appetite as data, the "
+                            "quote funnel across channels (including machine buyer agents), "
+                            "audited underwriting decisions, commissions, complaints and the "
+                            f"business event stream. {DISCLAIMER}"),
+            "objects": [("product", "product"), ("product", "product_coverage"),
+                        ("product", "underwriting_question"), ("product", "appetite_rule"),
+                        ("policy", "quote"), ("policy", "underwriting_decision"),
+                        ("policy", "policy"), ("distribution", "commission_transaction"),
+                        ("conduct", "complaint"), ("events", "business_event"),
+                        ("party", "party"), ("party", "party_role"),
+                        ("reference", "data_dictionary")],
+            "examples": [
+                ("Quote funnel by channel",
+                 f"SELECT distribution_channel_code, quote_status_code, COUNT(*) AS quotes "
+                 f"FROM {t('policy', 'quote')} GROUP BY 1, 2 ORDER BY 1, 2",
+                 "Machine agents (MACHINE_AGENT) are a channel like any other."),
+                ("Agent vs human underwriting decisions",
+                 f"SELECT decided_by_agent, underwriting_decision_type_code, COUNT(*) "
+                 f"FROM {t('policy', 'underwriting_decision')} GROUP BY 1, 2",
+                 "Machine decisions are audited identically to human ones."),
+            ],
+            "benchmarks": [
+                ("Which quotes came from machine buyer agents and what was decided?",
+                 f"SELECT qq.quote_number, qq.quote_status_code, d.underwriting_decision_type_code, d.rationale "
+                 f"FROM {t('policy', 'quote')} qq "
+                 f"LEFT JOIN {t('policy', 'underwriting_decision')} d ON d.quote_id = qq.quote_id "
+                 f"WHERE qq.distribution_channel_code = 'MACHINE_AGENT' ORDER BY qq.quote_number"),
+                ("How much commission did we pay each broker, including clawbacks?",
+                 f"SELECT pt.name, SUM(ct.amount) AS net_commission "
+                 f"FROM {t('distribution', 'commission_transaction')} ct "
+                 f"JOIN {t('party', 'party')} pt ON pt.party_id = ct.party_id "
+                 f"GROUP BY pt.name ORDER BY net_commission DESC"),
+                ("How many complaints were upheld and what redress did we pay?",
+                 f"SELECT complaint_status_code, COUNT(*) AS complaints, SUM(redress_amount) AS redress "
+                 f"FROM {t('conduct', 'complaint')} GROUP BY complaint_status_code"),
+                ("What is our quote-to-policy retention: how many 2026 policies are renewals?",
+                 f"SELECT COUNT(*) AS policies, COUNT(renews_policy_id) AS renewals "
+                 f"FROM {t('policy', 'policy')} WHERE underwriting_year = 2026"),
+            ],
+        },
+        "governance": {
+            "title": "Bricksurance — Data Governance",
+            "description": ("The model explaining itself: every entity and attribute with its "
+                            "business definition, classification and standards crosswalk, plus "
+                            f"the applied schema-migration history. {DISCLAIMER}"),
+            "objects": [("reference", "data_dictionary"), ("reference", "schema_migration")],
+            "examples": [
+                ("Every PII attribute in the model",
+                 f"SELECT entity_name, attribute_name, definition "
+                 f"FROM {t('reference', 'data_dictionary')} "
+                 f"WHERE data_classification = 'pii' ORDER BY entity_name",
+                 "Classification is declared in the specs and generated everywhere."),
+            ],
+            "benchmarks": [
+                ("Which attributes hold PII?",
+                 f"SELECT entity_name, attribute_name FROM {t('reference', 'data_dictionary')} "
+                 f"WHERE data_classification = 'pii' ORDER BY entity_name, attribute_name"),
+                ("What schema migrations have been applied and when?",
+                 f"SELECT from_version, to_version, classification, applied_at "
+                 f"FROM {t('reference', 'schema_migration')} ORDER BY applied_at"),
+                ("How many attributes does each entity have, by ACORD crosswalk coverage?",
+                 f"SELECT entity_name, COUNT(*) AS attributes, "
+                 f"COUNT(CASE WHEN acord_ref <> '' THEN 1 END) AS with_acord_ref "
+                 f"FROM {t('reference', 'data_dictionary')} GROUP BY entity_name ORDER BY entity_name"),
+            ],
+        },
         "life": {
             "title": "Bricksurance — Life & Valuations",
             "description": ("Bricksurance Life and group valuations: model points, governed "
@@ -178,7 +246,7 @@ def uid():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--space", required=True, choices=["pnc", "reinsurance", "life"])
+    ap.add_argument("--space", required=True, choices=["pnc", "reinsurance", "life", "distribution", "governance"])
     ap.add_argument("--profile", default="DEFAULT")
     ap.add_argument("--warehouse-id")
     ap.add_argument("--space-id", help="Patch this space instead of creating a new one")
