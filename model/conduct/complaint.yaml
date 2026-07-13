@@ -1,0 +1,76 @@
+kind: entity
+name: complaint
+domain: conduct
+title: Complaint
+description: >
+  A customer complaint, categorised per UK FCA reporting groupings and
+  tracked through to ombudsman referral. The conduct domain is where fair
+  treatment becomes measurable.
+grain: One row per complaint per source system.
+tags:
+  maturity: draft
+attributes:
+  - name: complaint_id
+    type: string
+    required: true
+    description: Identifier for the complaint.
+    classification: internal
+  - name: complaint_reference
+    type: string
+    required: true
+    description: Reference as issued to the complainant.
+    classification: confidential
+  - name: complainant_party_id
+    references: party
+    type: string
+    required: true
+    description: The complaining party.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: false
+    description: Policy concerned, where applicable.
+    classification: internal
+  - name: claim_id
+    references: claim
+    type: string
+    required: false
+    description: Claim concerned, where applicable.
+    classification: internal
+  - name: complaint_category_code
+    code_set: complaint_category
+    required: true
+    description: Root category.
+  - name: complaint_status_code
+    code_set: complaint_status
+    required: true
+    description: Handling status.
+  - name: received_date
+    type: date
+    required: true
+    description: Date received.
+  - name: closed_date
+    type: date
+    required: false
+    description: Date resolved or referred; empty while open.
+  - name: redress_amount
+    type: decimal(18,2)
+    required: false
+    description: Redress paid, where upheld, in the stated currency.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: false
+    description: Currency of any redress.
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record.
+    classification: internal
+keys:
+  primary: [complaint_id]
+quality:
+  - name: closed_after_received
+    rule: closed_date >= received_date
+    description: A complaint cannot close before it is received.

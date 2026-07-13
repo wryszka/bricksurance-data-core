@@ -59,6 +59,16 @@ attributes:
     required: true
     description: System of record the quote originates from.
     classification: internal
+  - name: product_id
+    references: product
+    type: string
+    required: false
+    description: The product quoted, where the product catalog applies.
+    classification: internal
+  - name: distribution_channel_code
+    code_set: distribution_channel
+    required: false
+    description: Channel the quote was requested through.
 keys:
   primary: [quote_id]
   natural: [source_system_code, quote_number]

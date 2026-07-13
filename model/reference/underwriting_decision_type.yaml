@@ -1,0 +1,17 @@
+kind: code_set
+name: underwriting_decision_type
+title: Underwriting Decision
+description: >
+  Outcome of an underwriting decision. Every decision records who or what
+  decided and against which appetite rule - human and machine decisions are
+  audited identically.
+codes:
+  - code: ACCEPT
+    label: Accept
+    description: Risk accepted at the quoted terms.
+  - code: REFER
+    label: Refer
+    description: Referred to a human underwriter; outside automatic authority.
+  - code: DECLINE
+    label: Decline
+    description: Risk declined.

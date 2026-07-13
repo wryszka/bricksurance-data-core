@@ -1,6 +1,20 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.5.0. Do not edit.*
+*Generated from model v0.6.0. Do not edit.*
+
+## Appetite Effect (`reference.appetite_effect`)
+
+What a matching appetite rule does to a risk. Appetite lives as data, not as code buried in a rating engine - so agents and humans read the same rules.
+
+**Grain:** One row per appetite effect code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| appetite_effect_code | string | yes | Code value; referenced by appetite_effect_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** appetite_effect_code
 
 ## Assumption Status (`reference.assumption_status`)
 
@@ -29,6 +43,20 @@ Kinds of actuarial assumption governed through the assumption-set maker/checker 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** assumption_type_code
+
+## Business Event Type (`reference.business_event_type`)
+
+Kinds of business event captured on the event stream - the near-real-time face of the model. Extend per domain as processes come online.
+
+**Grain:** One row per business event type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| business_event_type_code | string | yes | Code value; referenced by business_event_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** business_event_type_code
 
 ## Cause of Loss (`reference.cause_of_loss`)
 
@@ -78,6 +106,48 @@ Kinds of claim financial movement. Claims finance is transactional: case reserve
 
 **Primary key:** claim_transaction_type_code
 
+## Commission Type (`reference.commission_type`)
+
+Kinds of intermediary remuneration. Commission is transactional - signed movements, never overwritten balances - and disclosable by design.
+
+**Grain:** One row per commission type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| commission_type_code | string | yes | Code value; referenced by commission_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** commission_type_code
+
+## Complaint Category (`reference.complaint_category`)
+
+Root category of a customer complaint, aligned to UK FCA complaints reporting groupings.
+
+**Grain:** One row per complaint category code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| complaint_category_code | string | yes | Code value; referenced by complaint_category_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** complaint_category_code
+
+## Complaint Status (`reference.complaint_status`)
+
+Handling status of a complaint, through to ombudsman referral.
+
+**Grain:** One row per complaint status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| complaint_status_code | string | yes | Code value; referenced by complaint_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** complaint_status_code
+
 ## Country (`reference.country`)
 
 Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes. A governed subset, extended when the business enters a market.
@@ -125,6 +195,34 @@ Transaction currencies used by the group, as ISO 4217 alphabetic codes. This is 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** currency_code
+
+## Distribution Channel (`reference.distribution_channel`)
+
+How business reaches the insurer. Machine channels are first-class: an agentic buyer is a channel, not an exception.
+
+**Grain:** One row per distribution channel code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| distribution_channel_code | string | yes | Code value; referenced by distribution_channel_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** distribution_channel_code
+
+## Document Type (`reference.document_type`)
+
+Kinds of unstructured content the model governs. Documents carry extracted text so LLM tools can search and cite them under the same governance as structured data.
+
+**Grain:** One row per document type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| document_type_code | string | yes | Code value; referenced by document_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** document_type_code
 
 ## Endorsement Type (`reference.endorsement_type`)
 
@@ -252,6 +350,20 @@ Kinds of premium movement. Premium is always modelled as signed transactions; ba
 
 **Primary key:** premium_transaction_type_code
 
+## Product Status (`reference.product_status`)
+
+Lifecycle status of an insurance product.
+
+**Grain:** One row per product status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| product_status_code | string | yes | Code value; referenced by product_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** product_status_code
+
 ## Quote Status (`reference.quote_status`)
 
 Lifecycle status of a quotation. A quote that converts is linked to the resulting policy; premium only ever arises on the policy, never the quote.
@@ -342,6 +454,20 @@ Forms of treaty reinsurance. Direction (assumed or ceded) is determined by the c
 
 **Primary key:** treaty_type_code
 
+## Underwriting Decision (`reference.underwriting_decision_type`)
+
+Outcome of an underwriting decision. Every decision records who or what decided and against which appetite rule - human and machine decisions are audited identically.
+
+**Grain:** One row per underwriting decision code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| underwriting_decision_type_code | string | yes | Code value; referenced by underwriting_decision_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** underwriting_decision_type_code
+
 ## Valuation Measure (`reference.valuation_measure`)
 
 Financial measures produced by valuation processes across regimes. One code set serves life and non-life, Solvency II and IFRS 17: a measure is a defined quantity, and new regimes add codes, not tables.
@@ -422,6 +548,92 @@ A signed financial movement on a claim: case reserve movements, indemnity and ex
 | source_system_code | string | yes | System of record the movement originates from. | internal |  |  |
 
 **Primary key:** claim_transaction_id
+
+## Complaint (`conduct.complaint`)
+
+A customer complaint, categorised per UK FCA reporting groupings and tracked through to ombudsman referral. The conduct domain is where fair treatment becomes measurable.
+
+**Grain:** One row per complaint per source system.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| complaint_id | string | yes | Identifier for the complaint. | internal |  |  |
+| complaint_reference | string | yes | Reference as issued to the complainant. | confidential |  |  |
+| complainant_party_id | string | yes | The complaining party. | internal |  |  |
+| policy_id | string |  | Policy concerned, where applicable. | internal |  |  |
+| claim_id | string |  | Claim concerned, where applicable. | internal |  |  |
+| complaint_category_code | string | yes | Root category. |  |  |  |
+| complaint_status_code | string | yes | Handling status. |  |  |  |
+| received_date | date | yes | Date received. |  |  |  |
+| closed_date | date |  | Date resolved or referred; empty while open. |  |  |  |
+| redress_amount | decimal(18,2) |  | Redress paid, where upheld, in the stated currency. | confidential |  |  |
+| currency_code | string |  | Currency of any redress. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** complaint_id
+**Quality — closed_after_received:** `closed_date >= received_date` — A complaint cannot close before it is received.
+
+## Document (`content.document`)
+
+Governed unstructured content: policy wordings, schedules, claim evidence, survey reports, MRC slips. The extracted text is carried in the row so LLM tools search and cite documents under the same classification and lineage as structured data; binary originals live in a Volume referenced by path.
+
+**Grain:** One row per document version.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| document_id | string | yes | Identifier for the document. | internal |  |  |
+| document_type_code | string | yes | Kind of document. |  |  |  |
+| title | string | yes | Document title. |  |  |  |
+| product_id | string |  | Product context (wordings attach here). | internal |  |  |
+| policy_id | string |  | Policy context (schedules attach here). | internal |  |  |
+| claim_id | string |  | Claim context (evidence attaches here). | internal |  |  |
+| submission_id | string |  | Submission context (slips attach here). | internal |  |  |
+| extracted_text | string |  | Full extracted text, indexed for semantic search. | confidential |  |  |
+| volume_path | string |  | Path to the binary original in a governed Volume, where one exists. | internal |  |  |
+| created_date | date | yes | Date the document version was created. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** document_id
+**Quality — exactly_one_context:** `exactly one of product_id, policy_id, claim_id, submission_id is not null` — A document belongs to exactly one business context.
+
+## Commission Transaction (`distribution.commission_transaction`)
+
+A signed intermediary remuneration movement on a policy. Transactional like all money in this model; disclosable commission is a query, not a project.
+
+**Grain:** One row per commission movement per policy per intermediary.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| commission_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
+| policy_id | string | yes | The policy the commission relates to. | internal |  |  |
+| party_id | string | yes | The intermediary earning (or repaying) the commission. | internal |  |  |
+| commission_type_code | string | yes | Kind of remuneration. |  |  |  |
+| rate | decimal(5,4) |  | Commission rate applied, as a fraction of premium. | confidential |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the transaction currency; clawbacks negative. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| transaction_date | date | yes | Date the movement was booked. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** commission_transaction_id
+
+## Business Event (`events.business_event`)
+
+The event stream: business moments (quote requested, loss notified, payment made, complaint received) as append-only, timestamped records referencing the entity they concern. This is the near-real-time face of the model and the natural feed for monitoring agents.
+
+**Grain:** One row per business event occurrence; append-only.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| business_event_id | string | yes | Identifier for the event. | internal |  |  |
+| business_event_type_code | string | yes | Kind of event. |  |  |  |
+| subject_entity | string | yes | Entity name of the subject (e.g. quote, claim). |  |  |  |
+| subject_id | string | yes | Identifier of the subject row. | internal |  |  |
+| occurred_at | timestamp | yes | When the event occurred. |  |  |  |
+| channel_code | string |  | Channel the event arrived through, where relevant. |  |  |  |
+| payload | string |  | Event payload as JSON, schema per event type. | confidential |  |  |
+| source_system_code | string | yes | Emitting system. | internal |  |  |
+
+**Primary key:** business_event_id
 
 ## Premium Bordereau Line (inbound) (`exchange.premium_bordereau_line`)
 
@@ -655,6 +867,8 @@ A concrete object or exposure insured under a policy - a building, a vehicle, a 
 | description | string |  | Human-readable description of the object, as declared. | confidential |  |  |
 | country_code | string | yes | Country where the object is located or the exposure arises. |  |  |  |
 | postcode | string |  | Postal code of the object's location, where applicable; drives geographic accumulation. | confidential |  | Risk location |
+| latitude | decimal(9,6) |  | Latitude of the object's location, where geocoded. | confidential |  |  |
+| longitude | decimal(9,6) |  | Longitude of the object's location, where geocoded. | confidential |  |  |
 
 **Primary key:** insured_object_id
 
@@ -677,6 +891,7 @@ A contract of insurance between an insurer and one or more policyholders, under 
 | expiry_date | date | yes | Date on which cover ends (inclusive). Must be on or after inception_date. |  | ExpirationDt | Expiry date |
 | underwriting_year | integer | yes | Year of account to which the policy is allocated; drives reinsurance cession and market reporting. |  |  | Year of account |
 | currency_code | string | yes | Original currency of the policy. Monetary amounts on child entities are expressed in this currency unless explicitly stated otherwise. |  | CurCd | Settlement currency |
+| renews_policy_id | string |  | The expiring policy this one renews, closing the retention chain; empty for new business. | internal |  |  |
 
 **Primary key:** policy_id
 **Natural key:** source_system_code, policy_number
@@ -723,9 +938,30 @@ A quotation for insurance cover. Quotes live upstream of policies: a converted q
 | quoted_gross_premium | decimal(18,2) |  | Gross premium quoted, in the quote currency; empty while the quote is open. | confidential |  |  |
 | currency_code | string | yes | Currency of the quoted premium. |  |  |  |
 | source_system_code | string | yes | System of record the quote originates from. | internal |  |  |
+| product_id | string |  | The product quoted, where the product catalog applies. | internal |  |  |
+| distribution_channel_code | string |  | Channel the quote was requested through. |  |  |  |
 
 **Primary key:** quote_id
 **Natural key:** source_system_code, quote_number
+
+## Underwriting Decision (`policy.underwriting_decision`)
+
+A recorded underwriting decision on a quote: the outcome, who or what decided (human underwriter or named agent), and the appetite rule applied. Machine decisions are audited to exactly the same standard as human ones - that is the condition for letting agents underwrite at all.
+
+**Grain:** One row per decision per quote.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| underwriting_decision_id | string | yes | Identifier for the decision. | internal |  |  |
+| quote_id | string | yes | The quote decided on. | internal |  |  |
+| underwriting_decision_type_code | string | yes | The outcome. |  |  |  |
+| appetite_rule_id | string |  | The appetite rule the decision applied, where rule-driven. | internal |  |  |
+| decided_by | string | yes | The human underwriter or named agent/system that decided. | internal |  |  |
+| decided_by_agent | boolean | yes | True when the decision was taken autonomously by software. |  |  |  |
+| decided_at | timestamp | yes | When the decision was taken. |  |  |  |
+| rationale | string |  | Free-text rationale, human- or agent-written. | confidential |  |  |
+
+**Primary key:** underwriting_decision_id
 
 ## Vehicle (`policy.vehicle`)
 
@@ -745,6 +981,83 @@ Motor-specific detail for an insured object of type VEHICLE. This is the model's
 | year_of_manufacture | integer |  | Year of manufacture. |  |  |  |
 
 **Primary key:** vehicle_id
+
+## Appetite Rule (`product.appetite_rule`)
+
+An underwriting appetite statement as data: for a product (or a whole line), a bounded condition and its effect - within appetite, refer, or out of appetite. Humans read the same rules agents execute, and every underwriting decision cites the rule it applied.
+
+**Grain:** One row per active appetite rule.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| appetite_rule_id | string | yes | Identifier for the rule. | internal |  |  |
+| product_id | string |  | Product the rule scopes to; empty when the rule applies to the whole line. | internal |  |  |
+| line_of_business_code | string | yes | Line of business the rule applies to. |  |  |  |
+| rule_order | integer | yes | Evaluation order; first matching terminal effect wins. |  |  |  |
+| description | string | yes | The rule in business language - what it checks and why it exists. |  |  |  |
+| max_sum_insured | decimal(18,2) |  | Upper sum-insured bound for the effect to apply, in the product currency. |  |  |  |
+| country_code | string |  | Country the rule scopes to, where geographic. |  |  |  |
+| appetite_effect_code | string | yes | What happens when the rule matches. |  |  |  |
+| effective_from | date | yes | First date the rule applies. |  |  |  |
+| effective_to | date |  | Last date the rule applies; empty while current. |  |  |  |
+
+**Primary key:** appetite_rule_id
+
+## Product (`product.product`)
+
+A machine-readable insurance product: what is offered, under which line of business, at which base rate. Products are what quotes are requested against - by humans, aggregators or buyer agents alike - and what wordings, questions and appetite rules attach to.
+
+**Grain:** One row per product version offered.
+
+**Standards:** Acord: Product / program patterns
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| product_id | string | yes | Identifier for the product. | internal |  |  |
+| product_code | string | yes | Marketing/product code, unique within the source system. |  |  |  |
+| name | string | yes | Product name as marketed. |  |  |  |
+| line_of_business_code | string | yes | Line of business the product is written under. |  |  |  |
+| product_status_code | string | yes | Lifecycle status. |  |  |  |
+| base_rate | decimal(10,6) |  | Indicative base rate per unit of sum insured, used for indicative quotes only. | confidential |  |  |
+| currency_code | string | yes | Default currency of the product. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** product_id
+**Natural key:** source_system_code, product_code
+
+## Product Coverage (`product.product_coverage`)
+
+A coverage the product offers, with its default limits. Policy coverages are instances of these offers.
+
+**Grain:** One row per coverage type offered by a product.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| product_coverage_id | string | yes | Identifier for the offered coverage. | internal |  |  |
+| product_id | string | yes | The offering product. | internal |  |  |
+| coverage_type_code | string | yes | Kind of cover offered. |  |  |  |
+| default_limit_amount | decimal(18,2) |  | Default limit offered, in the product currency. |  |  |  |
+| default_deductible_amount | decimal(18,2) |  | Default deductible, in the product currency. |  |  |  |
+| optional | boolean | yes | Whether the coverage is optional (true) or core to the product (false). |  |  |  |
+
+**Primary key:** product_coverage_id
+
+## Underwriting Question (`product.underwriting_question`)
+
+A question the product asks at quotation. The question set is data, so any channel - a form, an aggregator API or a buyer agent - can discover what the product needs to know and answer it programmatically.
+
+**Grain:** One row per question per product.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| underwriting_question_id | string | yes | Identifier for the question. | internal |  |  |
+| product_id | string | yes | The product asking the question. | internal |  |  |
+| question_order | integer | yes | Presentation order. |  |  |  |
+| question_text | string | yes | The question as asked. |  |  |  |
+| answer_type | string | yes | Expected answer type - boolean, number, text or a code. |  |  |  |
+| required | boolean | yes | Whether an answer is mandatory to quote. |  |  |  |
+
+**Primary key:** underwriting_question_id
 
 ## Catastrophe Event (`reinsurance.cat_event`)
 

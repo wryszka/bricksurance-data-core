@@ -1,0 +1,17 @@
+kind: code_set
+name: product_status
+title: Product Status
+description: Lifecycle status of an insurance product.
+codes:
+  - code: PILOT
+    label: Pilot
+    description: Limited distribution while the proposition is proven.
+  - code: ACTIVE
+    label: Active
+    description: Open for new business.
+  - code: CLOSED_TO_NEW
+    label: Closed to New Business
+    description: In-force book continues; no new sales.
+  - code: WITHDRAWN
+    label: Withdrawn
+    description: Fully withdrawn.

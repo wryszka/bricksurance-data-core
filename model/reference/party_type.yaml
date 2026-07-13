@@ -13,3 +13,9 @@ codes:
   - code: ORGANISATION
     label: Organisation
     description: A legal entity - company, partnership, public body or association.
+  - code: MACHINE_AGENT
+    label: Machine Agent
+    description: >
+      An autonomous software agent acting on behalf of a person or
+      organisation - a first-class counterparty with its own identity and
+      audited decisions.

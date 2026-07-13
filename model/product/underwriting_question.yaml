@@ -1,0 +1,41 @@
+kind: entity
+name: underwriting_question
+domain: product
+title: Underwriting Question
+description: >
+  A question the product asks at quotation. The question set is data, so any
+  channel - a form, an aggregator API or a buyer agent - can discover what
+  the product needs to know and answer it programmatically.
+grain: One row per question per product.
+tags:
+  maturity: draft
+attributes:
+  - name: underwriting_question_id
+    type: string
+    required: true
+    description: Identifier for the question.
+    classification: internal
+  - name: product_id
+    references: product
+    type: string
+    required: true
+    description: The product asking the question.
+    classification: internal
+  - name: question_order
+    type: integer
+    required: true
+    description: Presentation order.
+  - name: question_text
+    type: string
+    required: true
+    description: The question as asked.
+  - name: answer_type
+    type: string
+    required: true
+    description: Expected answer type - boolean, number, text or a code.
+  - name: required
+    type: boolean
+    required: true
+    description: Whether an answer is mandatory to quote.
+keys:
+  primary: [underwriting_question_id]

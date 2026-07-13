@@ -29,3 +29,6 @@ codes:
   - code: COVERHOLDER
     label: Coverholder
     description: A party authorised to bind business on the insurer's behalf under a delegated authority.
+  - code: BUYER_AGENT
+    label: Buyer Agent
+    description: A machine agent requesting and negotiating cover on behalf of the buyer.

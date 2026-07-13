@@ -48,7 +48,7 @@ def import_ontology(doc, model_dir):
     dump_yaml(manifest, model_dir / "model.yaml")
     for cs in doc.get("code_sets", []):
         dump_yaml(cs, model_dir / "reference" / f"{cs['name']}.yaml")
-    for kind in ("entities", "views", "metric_views"):
+    for kind in ("entities", "views", "metric_views", "functions"):
         for spec in doc.get(kind, []):
             dump_yaml(spec, model_dir / spec["domain"] / f"{spec['name']}.yaml")
 

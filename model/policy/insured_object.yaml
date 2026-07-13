@@ -43,5 +43,15 @@ attributes:
     classification: confidential
     standards:
       lloyds_cdr: Risk location
+  - name: latitude
+    type: decimal(9,6)
+    required: false
+    description: Latitude of the object's location, where geocoded.
+    classification: confidential
+  - name: longitude
+    type: decimal(9,6)
+    required: false
+    description: Longitude of the object's location, where geocoded.
+    classification: confidential
 keys:
   primary: [insured_object_id]

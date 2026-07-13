@@ -64,9 +64,10 @@ def attr_type(attr):
 
 def load_model():
     manifest = yaml.safe_load((ROOT / "model" / "model.yaml").read_text())
-    entities, code_sets, views, metric_views = [], [], [], []
+    entities, code_sets, views, metric_views, functions = [], [], [], [], []
     buckets = {"entity": entities, "code_set": code_sets,
-               "view": views, "metric_view": metric_views}
+               "view": views, "metric_view": metric_views,
+               "function": functions}
     for path in sorted((ROOT / "model").rglob("*.yaml")):
         if path.name == "model.yaml":
             continue
@@ -75,7 +76,7 @@ def load_model():
         if kind not in buckets:
             raise ValueError(f"{path}: unknown kind {kind!r}")
         buckets[kind].append(spec)
-    return manifest, entities, code_sets, views, metric_views
+    return manifest, entities, code_sets, views, metric_views, functions
 
 
 def code_set_as_entity(cs):
@@ -296,6 +297,22 @@ def metric_view_ddl(binding, mv):
     )
 
 
+def function_ddl(binding, fn):
+    """A governed tool: a UC SQL function agents may call. The ontology
+    declares what agents can DO, the same way it declares what data means."""
+    platform = binding["platform"]
+    name = fqn(binding, fn["domain"], fn["name"])
+    params = ", ".join(
+        f"{p['name']} {sql_type(platform, p['type'])} COMMENT '{esc(p['description'])}'"
+        for p in fn["inputs"])
+    return (
+        f"CREATE OR REPLACE FUNCTION {name}({params})\n"
+        f"RETURNS {sql_type(platform, fn['returns']['type'])}\n"
+        f"COMMENT '{esc(fn['description'])} Returns: {esc(fn['returns']['description'])}'\n"
+        f"RETURN {resolve_refs(binding, fn['sql']).strip()};"
+    )
+
+
 def semantic_dictionary_rows(manifest, views, metric_views):
     """Dictionary rows for semantic assets, so their definitions travel too."""
     rows = []
@@ -357,7 +374,7 @@ def dictionary_seed(binding, manifest, all_entities, extra_rows=()):
     return f"{insert_overwrite(binding['platform'], table)}\n{rows};"
 
 
-def generate_platform(binding, manifest, entities, code_sets, views, metric_views):
+def generate_platform(binding, manifest, entities, code_sets, views, metric_views, functions):
     platform = binding["platform"]
     out = BUILD / platform
     out.mkdir(parents=True, exist_ok=True)
@@ -397,6 +414,9 @@ def generate_platform(binding, manifest, entities, code_sets, views, metric_view
         for mv in metric_views:
             path = out / f"35_{mv['domain']}_{mv['name']}.sql"
             path.write_text(header + metric_view_ddl(binding, mv) + "\n")
+        for fn in functions:
+            path = out / f"40_{fn['domain']}_{fn['name']}.sql"
+            path.write_text(header + function_ddl(binding, fn) + "\n")
 
     # 90 - all foreign keys, after every table (and its primary key) exists
     entity_index = {e["name"]: e for e in all_entities}
@@ -522,7 +542,7 @@ def generate_genie(binding, manifest, entities, code_sets, views=(), metric_view
     (out / "genie_instructions.md").write_text("\n".join(lines) + "\n")
 
 
-def generate_ontology(manifest, entities, code_sets, views, metric_views):
+def generate_ontology(manifest, entities, code_sets, views, metric_views, functions):
     """The whole model as ONE portable JSON document — the ontology.
 
     Platform-neutral (no bindings), deterministic, versioned. This is the
@@ -560,6 +580,7 @@ def generate_ontology(manifest, entities, code_sets, views, metric_views):
         "entities": entities,
         "views": views,
         "metric_views": metric_views,
+        "functions": functions,
         "relationships": relationships,
     }
     out = BUILD / "ontology"
@@ -569,23 +590,23 @@ def generate_ontology(manifest, entities, code_sets, views, metric_views):
 
 
 def main():
-    manifest, entities, code_sets, views, metric_views = load_model()
+    manifest, entities, code_sets, views, metric_views, functions = load_model()
     if BUILD.exists():
         shutil.rmtree(BUILD)
     generated = []
     for binding_path in sorted((ROOT / "bindings").glob("*.yaml")):
         binding = yaml.safe_load(binding_path.read_text())
-        generate_platform(binding, manifest, entities, code_sets, views, metric_views)
+        generate_platform(binding, manifest, entities, code_sets, views, metric_views, functions)
         generated.append(binding["platform"])
         if binding["platform"] == "databricks":
             generate_genie(binding, manifest, entities, code_sets, views, metric_views)
     generate_docs(manifest, entities, code_sets)
-    generate_ontology(manifest, entities, code_sets, views, metric_views)
+    generate_ontology(manifest, entities, code_sets, views, metric_views, functions)
     n_files = sum(1 for _ in BUILD.rglob("*") if _.is_file())
     print(
         f"Generated {n_files} files for platforms {', '.join(generated)} "
         f"from {len(entities)} entities, {len(code_sets)} code sets, "
-        f"{len(views)} views and {len(metric_views)} metric views "
+        f"{len(views)} views, {len(metric_views)} metric views and {len(functions)} functions "
         f"(model v{manifest['version']})."
     )
 

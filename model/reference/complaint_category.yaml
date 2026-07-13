@@ -1,0 +1,19 @@
+kind: code_set
+name: complaint_category
+title: Complaint Category
+description: >
+  Root category of a customer complaint, aligned to UK FCA complaints
+  reporting groupings.
+codes:
+  - code: CLAIMS_HANDLING
+    label: Claims Handling
+    description: Delay, declinature, settlement amount or communication during a claim.
+  - code: SALES_AND_ADVICE
+    label: Sales & Advice
+    description: Mis-sale, unsuitable product or unclear information at the point of sale.
+  - code: ADMIN_AND_SERVICE
+    label: Administration & Service
+    description: Errors, delays or poor service in policy administration.
+  - code: PRICING_AND_RENEWAL
+    label: Pricing & Renewal
+    description: Premium levels, renewal pricing or mid-term charges.

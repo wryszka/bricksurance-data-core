@@ -1,0 +1,17 @@
+kind: code_set
+name: complaint_status
+title: Complaint Status
+description: Handling status of a complaint, through to ombudsman referral.
+codes:
+  - code: OPEN
+    label: Open
+    description: Under investigation within the regulatory response window.
+  - code: UPHELD
+    label: Upheld
+    description: Resolved in the complainant's favour; redress may apply.
+  - code: NOT_UPHELD
+    label: Not Upheld
+    description: Resolved with the original decision maintained.
+  - code: REFERRED_FOS
+    label: Referred to FOS
+    description: Escalated to the Financial Ombudsman Service.

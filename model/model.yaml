@@ -1,6 +1,6 @@
 model: bricksurance-data-core
 title: Bricksurance Data Core
-version: 0.5.0
+version: 0.6.0
 description: >
   An open, business-first semantic data model for insurance, aligned to ACORD
   terminology with a crosswalk to the Lloyd's Core Data Record. Platform
@@ -28,6 +28,27 @@ domains:
     description: >
       Outward and inward reinsurance - treaties, cessions and recoveries
       linking the direct book to reinsurers.
+  - name: product
+    description: >
+      Machine-readable products - offered coverages, underwriting questions
+      and appetite rules as data, so any channel (human, aggregator or buyer
+      agent) can discover, quote and be decided against the same rules.
+  - name: distribution
+    description: >
+      How business reaches the insurer - channels and intermediary
+      remuneration, transactional and disclosable.
+  - name: conduct
+    description: >
+      Fair treatment made measurable - complaints per FCA groupings, through
+      to ombudsman referral and redress.
+  - name: content
+    description: >
+      Governed unstructured content - wordings, schedules, evidence, slips -
+      with extracted text searchable under the same governance as rows.
+  - name: events
+    description: >
+      The append-only business event stream - the near-real-time face of the
+      model and the feed for monitoring agents.
   - name: life
     description: >
       Life business - grouped model points, governed assumption sets,

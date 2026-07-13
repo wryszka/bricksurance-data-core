@@ -58,9 +58,10 @@ def main():
         return f"{cat}.{binding['schema_pattern'].format(domain=domain)}.{table}"
 
     checks = [
-        (f"{n_tables} tables deployed (from the model)",
+        (f"{n_tables} model tables deployed (migration log excluded)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
-         f"WHERE table_schema LIKE '{prefix}%' AND table_type = 'MANAGED'", str(n_tables)),
+         f"WHERE table_schema LIKE '{prefix}%' AND table_type = 'MANAGED' "
+         f"AND table_name <> 'schema_migration'", str(n_tables)),
         (f"{n_views} semantic views deployed (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
          f"WHERE table_schema LIKE '{prefix}%' AND table_type <> 'MANAGED'", str(n_views)),
@@ -120,6 +121,31 @@ def main():
          f"SELECT CAST(MEASURE(gross_written_premium) AS INT) > 0 "
          f"FROM {q('semantics', 'underwriting_metrics')} "
          f"WHERE currency_code = 'GBP' AND underwriting_year = 2026", "true"),
+        ("governed tool: appetite check answers within and out of appetite",
+         f"SELECT {q('product', 'fn_appetite_check')}('COMMERCIAL_PROPERTY', 'GB', 5000000) "
+         f"LIKE 'WITHIN_APPETITE%' AND "
+         f"{q('product', 'fn_appetite_check')}('COMMERCIAL_PROPERTY', 'GB', 30000000) "
+         f"LIKE 'OUT_OF_APPETITE%'", "true"),
+        ("governed tool: outstanding reserve on the hero claim",
+         f"SELECT CAST({q('claim', 'fn_outstanding_reserve')}('CLM-2026-000001') AS INT)", "270000"),
+        ("agentic buyer thread: machine quote declined by the uw agent on record",
+         f"SELECT d.underwriting_decision_type_code, CAST(d.decided_by_agent AS STRING) "
+         f"FROM {q('policy', 'underwriting_decision')} d "
+         f"JOIN {q('policy', 'quote')} qq ON qq.quote_id = d.quote_id "
+         f"WHERE qq.quote_number = 'QUO-2026-000902'", "DECLINE|true"),
+        ("every converted quote carries an underwriting decision",
+         f"SELECT COUNT(*) FROM {q('policy', 'quote')} qq "
+         f"LEFT JOIN {q('policy', 'underwriting_decision')} d ON d.quote_id = qq.quote_id "
+         f"WHERE qq.quote_status_code = 'CONVERTED' AND d.underwriting_decision_id IS NULL", "0"),
+        ("renewal chains resolve to real prior policies",
+         f"SELECT COUNT(*) > 0 AND COUNT(*) = COUNT(prev.policy_id) "
+         f"FROM {q('policy', 'policy')} p "
+         f"JOIN {q('policy', 'policy')} prev ON prev.policy_id = p.renews_policy_id "
+         f"WHERE p.renews_policy_id IS NOT NULL", "true"),
+        ("every document belongs to exactly one context",
+         f"SELECT COUNT(*) FROM {q('content', 'document')} "
+         f"WHERE CAST(product_id IS NOT NULL AS INT) + CAST(policy_id IS NOT NULL AS INT) "
+         f"+ CAST(claim_id IS NOT NULL AS INT) + CAST(submission_id IS NOT NULL AS INT) <> 1", "0"),
         ("every party role has exactly one context",
          f"SELECT COUNT(*) FROM {q('party', 'party_role')} "
          f"WHERE CAST(policy_id IS NOT NULL AS INT) + CAST(claim_id IS NOT NULL AS INT) "

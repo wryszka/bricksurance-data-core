@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with a Lloyd's Core Data Record crosswalk. Element names are cited as a crosswalk only; licensed standards are not reproduced.",
   "domains": [
@@ -27,6 +27,26 @@
       "description": "Outward and inward reinsurance - treaties, cessions and recoveries linking the direct book to reinsurers.\n"
     },
     {
+      "name": "product",
+      "description": "Machine-readable products - offered coverages, underwriting questions and appetite rules as data, so any channel (human, aggregator or buyer agent) can discover, quote and be decided against the same rules.\n"
+    },
+    {
+      "name": "distribution",
+      "description": "How business reaches the insurer - channels and intermediary remuneration, transactional and disclosable.\n"
+    },
+    {
+      "name": "conduct",
+      "description": "Fair treatment made measurable - complaints per FCA groupings, through to ombudsman referral and redress.\n"
+    },
+    {
+      "name": "content",
+      "description": "Governed unstructured content - wordings, schedules, evidence, slips - with extracted text searchable under the same governance as rows.\n"
+    },
+    {
+      "name": "events",
+      "description": "The append-only business event stream - the near-real-time face of the model and the feed for monitoring agents.\n"
+    },
+    {
       "name": "life",
       "description": "Life business - grouped model points, governed assumption sets, economic scenario sets and valuation runs. Life policies themselves are ordinary policies with life lines of business.\n"
     },
@@ -44,6 +64,29 @@
     }
   ],
   "code_sets": [
+    {
+      "kind": "code_set",
+      "name": "appetite_effect",
+      "title": "Appetite Effect",
+      "description": "What a matching appetite rule does to a risk. Appetite lives as data, not as code buried in a rating engine - so agents and humans read the same rules.\n",
+      "codes": [
+        {
+          "code": "WITHIN_APPETITE",
+          "label": "Within Appetite",
+          "description": "Proceed; automatic acceptance permitted within authority limits."
+        },
+        {
+          "code": "REFER",
+          "label": "Refer",
+          "description": "Requires human underwriter review."
+        },
+        {
+          "code": "OUT_OF_APPETITE",
+          "label": "Out of Appetite",
+          "description": "Decline automatically."
+        }
+      ]
+    },
     {
       "kind": "code_set",
       "name": "assumption_status",
@@ -102,6 +145,44 @@
           "code": "ECONOMIC",
           "label": "Economic",
           "description": "Economic assumptions such as discount and inflation bases."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "business_event_type",
+      "title": "Business Event Type",
+      "description": "Kinds of business event captured on the event stream - the near-real-time face of the model. Extend per domain as processes come online.\n",
+      "codes": [
+        {
+          "code": "QUOTE_REQUESTED",
+          "label": "Quote Requested",
+          "description": "A quotation was requested through any channel."
+        },
+        {
+          "code": "POLICY_BOUND",
+          "label": "Policy Bound",
+          "description": "Cover was bound."
+        },
+        {
+          "code": "FNOL",
+          "label": "First Notification of Loss",
+          "description": "A loss was first notified."
+        },
+        {
+          "code": "CLAIM_PAYMENT",
+          "label": "Claim Payment",
+          "description": "A claim payment was issued."
+        },
+        {
+          "code": "COMPLAINT_RECEIVED",
+          "label": "Complaint Received",
+          "description": "A complaint was received."
+        },
+        {
+          "code": "BORDEREAU_RECEIVED",
+          "label": "Bordereau Received",
+          "description": "An inbound bordereau arrived for mapping."
         }
       ]
     },
@@ -211,6 +292,90 @@
           "code": "RECOVERY",
           "label": "Recovery",
           "description": "Amount recovered by subrogation, salvage or contribution; negative from the insurer's cost perspective."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "commission_type",
+      "title": "Commission Type",
+      "description": "Kinds of intermediary remuneration. Commission is transactional - signed movements, never overwritten balances - and disclosable by design.\n",
+      "codes": [
+        {
+          "code": "NEW_BUSINESS",
+          "label": "New Business Commission",
+          "description": "Commission on newly written business."
+        },
+        {
+          "code": "RENEWAL",
+          "label": "Renewal Commission",
+          "description": "Commission on renewed business."
+        },
+        {
+          "code": "PROFIT",
+          "label": "Profit Commission",
+          "description": "Contingent commission based on account performance."
+        },
+        {
+          "code": "CLAWBACK",
+          "label": "Clawback",
+          "description": "Commission returned on cancellation or lapse; negative amount."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "complaint_category",
+      "title": "Complaint Category",
+      "description": "Root category of a customer complaint, aligned to UK FCA complaints reporting groupings.\n",
+      "codes": [
+        {
+          "code": "CLAIMS_HANDLING",
+          "label": "Claims Handling",
+          "description": "Delay, declinature, settlement amount or communication during a claim."
+        },
+        {
+          "code": "SALES_AND_ADVICE",
+          "label": "Sales & Advice",
+          "description": "Mis-sale, unsuitable product or unclear information at the point of sale."
+        },
+        {
+          "code": "ADMIN_AND_SERVICE",
+          "label": "Administration & Service",
+          "description": "Errors, delays or poor service in policy administration."
+        },
+        {
+          "code": "PRICING_AND_RENEWAL",
+          "label": "Pricing & Renewal",
+          "description": "Premium levels, renewal pricing or mid-term charges."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "complaint_status",
+      "title": "Complaint Status",
+      "description": "Handling status of a complaint, through to ombudsman referral.",
+      "codes": [
+        {
+          "code": "OPEN",
+          "label": "Open",
+          "description": "Under investigation within the regulatory response window."
+        },
+        {
+          "code": "UPHELD",
+          "label": "Upheld",
+          "description": "Resolved in the complainant's favour; redress may apply."
+        },
+        {
+          "code": "NOT_UPHELD",
+          "label": "Not Upheld",
+          "description": "Resolved with the original decision maintained."
+        },
+        {
+          "code": "REFERRED_FOS",
+          "label": "Referred to FOS",
+          "description": "Escalated to the Financial Ombudsman Service."
         }
       ]
     },
@@ -330,6 +495,72 @@
           "code": "CHF",
           "label": "Swiss Franc",
           "description": "Swiss franc."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "distribution_channel",
+      "title": "Distribution Channel",
+      "description": "How business reaches the insurer. Machine channels are first-class: an agentic buyer is a channel, not an exception.\n",
+      "codes": [
+        {
+          "code": "DIRECT",
+          "label": "Direct",
+          "description": "Sold directly by the insurer to the customer."
+        },
+        {
+          "code": "BROKER",
+          "label": "Broker",
+          "description": "Placed by an intermediary acting for the customer."
+        },
+        {
+          "code": "AGGREGATOR",
+          "label": "Aggregator",
+          "description": "Price-comparison platform distribution."
+        },
+        {
+          "code": "COVERHOLDER",
+          "label": "Coverholder",
+          "description": "Bound under delegated authority."
+        },
+        {
+          "code": "MACHINE_AGENT",
+          "label": "Machine Agent",
+          "description": "Requested and negotiated by an autonomous software agent acting for the buyer."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "document_type",
+      "title": "Document Type",
+      "description": "Kinds of unstructured content the model governs. Documents carry extracted text so LLM tools can search and cite them under the same governance as structured data.\n",
+      "codes": [
+        {
+          "code": "POLICY_WORDING",
+          "label": "Policy Wording",
+          "description": "The contractual wording of a product, including exclusions and conditions."
+        },
+        {
+          "code": "SCHEDULE",
+          "label": "Schedule",
+          "description": "The policy schedule issued to the policyholder."
+        },
+        {
+          "code": "CLAIM_EVIDENCE",
+          "label": "Claim Evidence",
+          "description": "Evidence supporting a claim - reports, photographs, invoices."
+        },
+        {
+          "code": "SURVEY_REPORT",
+          "label": "Survey Report",
+          "description": "Risk survey or loss adjuster report."
+        },
+        {
+          "code": "MRC_SLIP",
+          "label": "MRC Slip",
+          "description": "Market Reform Contract slip for placed reinsurance business."
         }
       ]
     },
@@ -518,6 +749,11 @@
           "code": "COVERHOLDER",
           "label": "Coverholder",
           "description": "A party authorised to bind business on the insurer's behalf under a delegated authority."
+        },
+        {
+          "code": "BUYER_AGENT",
+          "label": "Buyer Agent",
+          "description": "A machine agent requesting and negotiating cover on behalf of the buyer."
         }
       ]
     },
@@ -539,6 +775,11 @@
           "code": "ORGANISATION",
           "label": "Organisation",
           "description": "A legal entity - company, partnership, public body or association."
+        },
+        {
+          "code": "MACHINE_AGENT",
+          "label": "Machine Agent",
+          "description": "An autonomous software agent acting on behalf of a person or organisation - a first-class counterparty with its own identity and audited decisions.\n"
         }
       ]
     },
@@ -606,6 +847,34 @@
           "code": "RETURN",
           "label": "Return Premium",
           "description": "Premium returned to the policyholder, typically on cancellation; negative amount."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "product_status",
+      "title": "Product Status",
+      "description": "Lifecycle status of an insurance product.",
+      "codes": [
+        {
+          "code": "PILOT",
+          "label": "Pilot",
+          "description": "Limited distribution while the proposition is proven."
+        },
+        {
+          "code": "ACTIVE",
+          "label": "Active",
+          "description": "Open for new business."
+        },
+        {
+          "code": "CLOSED_TO_NEW",
+          "label": "Closed to New Business",
+          "description": "In-force book continues; no new sales."
+        },
+        {
+          "code": "WITHDRAWN",
+          "label": "Withdrawn",
+          "description": "Fully withdrawn."
         }
       ]
     },
@@ -803,6 +1072,29 @@
           "code": "XOL_CATASTROPHE",
           "label": "Excess of Loss (Catastrophe)",
           "description": "Non-proportional cover for accumulated losses from a single catastrophe event."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "underwriting_decision_type",
+      "title": "Underwriting Decision",
+      "description": "Outcome of an underwriting decision. Every decision records who or what decided and against which appetite rule - human and machine decisions are audited identically.\n",
+      "codes": [
+        {
+          "code": "ACCEPT",
+          "label": "Accept",
+          "description": "Risk accepted at the quoted terms."
+        },
+        {
+          "code": "REFER",
+          "label": "Refer",
+          "description": "Referred to a human underwriter; outside automatic authority."
+        },
+        {
+          "code": "DECLINE",
+          "label": "Decline",
+          "description": "Risk declined."
         }
       ]
     },
@@ -1048,6 +1340,366 @@
       "keys": {
         "primary": [
           "claim_transaction_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "complaint",
+      "domain": "conduct",
+      "title": "Complaint",
+      "description": "A customer complaint, categorised per UK FCA reporting groupings and tracked through to ombudsman referral. The conduct domain is where fair treatment becomes measurable.\n",
+      "grain": "One row per complaint per source system.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "complaint_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the complaint.",
+          "classification": "internal"
+        },
+        {
+          "name": "complaint_reference",
+          "type": "string",
+          "required": true,
+          "description": "Reference as issued to the complainant.",
+          "classification": "confidential"
+        },
+        {
+          "name": "complainant_party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The complaining party.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "Policy concerned, where applicable.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": false,
+          "description": "Claim concerned, where applicable.",
+          "classification": "internal"
+        },
+        {
+          "name": "complaint_category_code",
+          "code_set": "complaint_category",
+          "required": true,
+          "description": "Root category."
+        },
+        {
+          "name": "complaint_status_code",
+          "code_set": "complaint_status",
+          "required": true,
+          "description": "Handling status."
+        },
+        {
+          "name": "received_date",
+          "type": "date",
+          "required": true,
+          "description": "Date received."
+        },
+        {
+          "name": "closed_date",
+          "type": "date",
+          "required": false,
+          "description": "Date resolved or referred; empty while open."
+        },
+        {
+          "name": "redress_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Redress paid, where upheld, in the stated currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": false,
+          "description": "Currency of any redress."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "complaint_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "closed_after_received",
+          "rule": "closed_date >= received_date",
+          "description": "A complaint cannot close before it is received."
+        }
+      ]
+    },
+    {
+      "kind": "entity",
+      "name": "document",
+      "domain": "content",
+      "title": "Document",
+      "description": "Governed unstructured content: policy wordings, schedules, claim evidence, survey reports, MRC slips. The extracted text is carried in the row so LLM tools search and cite documents under the same classification and lineage as structured data; binary originals live in a Volume referenced by path.\n",
+      "grain": "One row per document version.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "document_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the document.",
+          "classification": "internal"
+        },
+        {
+          "name": "document_type_code",
+          "code_set": "document_type",
+          "required": true,
+          "description": "Kind of document."
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": true,
+          "description": "Document title."
+        },
+        {
+          "name": "product_id",
+          "references": "product",
+          "type": "string",
+          "required": false,
+          "description": "Product context (wordings attach here).",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "Policy context (schedules attach here).",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": false,
+          "description": "Claim context (evidence attaches here).",
+          "classification": "internal"
+        },
+        {
+          "name": "submission_id",
+          "references": "submission",
+          "type": "string",
+          "required": false,
+          "description": "Submission context (slips attach here).",
+          "classification": "internal"
+        },
+        {
+          "name": "extracted_text",
+          "type": "string",
+          "required": false,
+          "description": "Full extracted text, indexed for semantic search.",
+          "classification": "confidential"
+        },
+        {
+          "name": "volume_path",
+          "type": "string",
+          "required": false,
+          "description": "Path to the binary original in a governed Volume, where one exists.",
+          "classification": "internal"
+        },
+        {
+          "name": "created_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the document version was created."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "document_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "exactly_one_context",
+          "rule": "exactly one of product_id, policy_id, claim_id, submission_id is not null",
+          "description": "A document belongs to exactly one business context."
+        }
+      ]
+    },
+    {
+      "kind": "entity",
+      "name": "commission_transaction",
+      "domain": "distribution",
+      "title": "Commission Transaction",
+      "description": "A signed intermediary remuneration movement on a policy. Transactional like all money in this model; disclosable commission is a query, not a project.\n",
+      "grain": "One row per commission movement per policy per intermediary.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "commission_transaction_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the movement.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "The policy the commission relates to.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The intermediary earning (or repaying) the commission.",
+          "classification": "internal"
+        },
+        {
+          "name": "commission_type_code",
+          "code_set": "commission_type",
+          "required": true,
+          "description": "Kind of remuneration."
+        },
+        {
+          "name": "rate",
+          "type": "decimal(5,4)",
+          "required": false,
+          "description": "Commission rate applied, as a fraction of premium.",
+          "classification": "confidential"
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount in the transaction currency; clawbacks negative.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the movement was booked."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "commission_transaction_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "business_event",
+      "domain": "events",
+      "title": "Business Event",
+      "description": "The event stream: business moments (quote requested, loss notified, payment made, complaint received) as append-only, timestamped records referencing the entity they concern. This is the near-real-time face of the model and the natural feed for monitoring agents.\n",
+      "grain": "One row per business event occurrence; append-only.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "business_event_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the event.",
+          "classification": "internal"
+        },
+        {
+          "name": "business_event_type_code",
+          "code_set": "business_event_type",
+          "required": true,
+          "description": "Kind of event."
+        },
+        {
+          "name": "subject_entity",
+          "type": "string",
+          "required": true,
+          "description": "Entity name of the subject (e.g. quote, claim)."
+        },
+        {
+          "name": "subject_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier of the subject row.",
+          "classification": "internal"
+        },
+        {
+          "name": "occurred_at",
+          "type": "timestamp",
+          "required": true,
+          "description": "When the event occurred."
+        },
+        {
+          "name": "channel_code",
+          "code_set": "distribution_channel",
+          "required": false,
+          "description": "Channel the event arrived through, where relevant."
+        },
+        {
+          "name": "payload",
+          "type": "string",
+          "required": false,
+          "description": "Event payload as JSON, schema per event type.",
+          "classification": "confidential"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Emitting system.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "business_event_id"
         ]
       }
     },
@@ -1906,6 +2558,20 @@
           "standards": {
             "lloyds_cdr": "Risk location"
           }
+        },
+        {
+          "name": "latitude",
+          "type": "decimal(9,6)",
+          "required": false,
+          "description": "Latitude of the object's location, where geocoded.",
+          "classification": "confidential"
+        },
+        {
+          "name": "longitude",
+          "type": "decimal(9,6)",
+          "required": false,
+          "description": "Longitude of the object's location, where geocoded.",
+          "classification": "confidential"
         }
       ],
       "keys": {
@@ -2011,6 +2677,14 @@
             "acord": "CurCd",
             "lloyds_cdr": "Settlement currency"
           }
+        },
+        {
+          "name": "renews_policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "The expiring policy this one renews, closing the retention chain; empty for new business.\n",
+          "classification": "internal"
         }
       ],
       "keys": {
@@ -2186,6 +2860,20 @@
           "required": true,
           "description": "System of record the quote originates from.",
           "classification": "internal"
+        },
+        {
+          "name": "product_id",
+          "references": "product",
+          "type": "string",
+          "required": false,
+          "description": "The product quoted, where the product catalog applies.",
+          "classification": "internal"
+        },
+        {
+          "name": "distribution_channel_code",
+          "code_set": "distribution_channel",
+          "required": false,
+          "description": "Channel the quote was requested through."
         }
       ],
       "keys": {
@@ -2195,6 +2883,79 @@
         "natural": [
           "source_system_code",
           "quote_number"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "underwriting_decision",
+      "domain": "policy",
+      "title": "Underwriting Decision",
+      "description": "A recorded underwriting decision on a quote: the outcome, who or what decided (human underwriter or named agent), and the appetite rule applied. Machine decisions are audited to exactly the same standard as human ones - that is the condition for letting agents underwrite at all.\n",
+      "grain": "One row per decision per quote.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "underwriting_decision_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the decision.",
+          "classification": "internal"
+        },
+        {
+          "name": "quote_id",
+          "references": "quote",
+          "type": "string",
+          "required": true,
+          "description": "The quote decided on.",
+          "classification": "internal"
+        },
+        {
+          "name": "underwriting_decision_type_code",
+          "code_set": "underwriting_decision_type",
+          "required": true,
+          "description": "The outcome."
+        },
+        {
+          "name": "appetite_rule_id",
+          "references": "appetite_rule",
+          "type": "string",
+          "required": false,
+          "description": "The appetite rule the decision applied, where rule-driven.",
+          "classification": "internal"
+        },
+        {
+          "name": "decided_by",
+          "type": "string",
+          "required": true,
+          "description": "The human underwriter or named agent/system that decided.",
+          "classification": "internal"
+        },
+        {
+          "name": "decided_by_agent",
+          "type": "boolean",
+          "required": true,
+          "description": "True when the decision was taken autonomously by software."
+        },
+        {
+          "name": "decided_at",
+          "type": "timestamp",
+          "required": true,
+          "description": "When the decision was taken."
+        },
+        {
+          "name": "rationale",
+          "type": "string",
+          "required": false,
+          "description": "Free-text rationale, human- or agent-written.",
+          "classification": "confidential"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "underwriting_decision_id"
         ]
       }
     },
@@ -2259,6 +3020,277 @@
       "keys": {
         "primary": [
           "vehicle_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "appetite_rule",
+      "domain": "product",
+      "title": "Appetite Rule",
+      "description": "An underwriting appetite statement as data: for a product (or a whole line), a bounded condition and its effect - within appetite, refer, or out of appetite. Humans read the same rules agents execute, and every underwriting decision cites the rule it applied.\n",
+      "grain": "One row per active appetite rule.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "appetite_rule_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the rule.",
+          "classification": "internal"
+        },
+        {
+          "name": "product_id",
+          "references": "product",
+          "type": "string",
+          "required": false,
+          "description": "Product the rule scopes to; empty when the rule applies to the whole line.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business the rule applies to."
+        },
+        {
+          "name": "rule_order",
+          "type": "integer",
+          "required": true,
+          "description": "Evaluation order; first matching terminal effect wins."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": true,
+          "description": "The rule in business language - what it checks and why it exists."
+        },
+        {
+          "name": "max_sum_insured",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Upper sum-insured bound for the effect to apply, in the product currency."
+        },
+        {
+          "name": "country_code",
+          "code_set": "country",
+          "required": false,
+          "description": "Country the rule scopes to, where geographic."
+        },
+        {
+          "name": "appetite_effect_code",
+          "code_set": "appetite_effect",
+          "required": true,
+          "description": "What happens when the rule matches."
+        },
+        {
+          "name": "effective_from",
+          "type": "date",
+          "required": true,
+          "description": "First date the rule applies."
+        },
+        {
+          "name": "effective_to",
+          "type": "date",
+          "required": false,
+          "description": "Last date the rule applies; empty while current."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "appetite_rule_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "product",
+      "domain": "product",
+      "title": "Product",
+      "description": "A machine-readable insurance product: what is offered, under which line of business, at which base rate. Products are what quotes are requested against - by humans, aggregators or buyer agents alike - and what wordings, questions and appetite rules attach to.\n",
+      "grain": "One row per product version offered.",
+      "standards": {
+        "acord": "Product / program patterns"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "product_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the product.",
+          "classification": "internal"
+        },
+        {
+          "name": "product_code",
+          "type": "string",
+          "required": true,
+          "description": "Marketing/product code, unique within the source system."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Product name as marketed."
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business the product is written under."
+        },
+        {
+          "name": "product_status_code",
+          "code_set": "product_status",
+          "required": true,
+          "description": "Lifecycle status."
+        },
+        {
+          "name": "base_rate",
+          "type": "decimal(10,6)",
+          "required": false,
+          "description": "Indicative base rate per unit of sum insured, used for indicative quotes only.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Default currency of the product."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "product_id"
+        ],
+        "natural": [
+          "source_system_code",
+          "product_code"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "product_coverage",
+      "domain": "product",
+      "title": "Product Coverage",
+      "description": "A coverage the product offers, with its default limits. Policy coverages are instances of these offers.\n",
+      "grain": "One row per coverage type offered by a product.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "product_coverage_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the offered coverage.",
+          "classification": "internal"
+        },
+        {
+          "name": "product_id",
+          "references": "product",
+          "type": "string",
+          "required": true,
+          "description": "The offering product.",
+          "classification": "internal"
+        },
+        {
+          "name": "coverage_type_code",
+          "code_set": "coverage_type",
+          "required": true,
+          "description": "Kind of cover offered."
+        },
+        {
+          "name": "default_limit_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Default limit offered, in the product currency."
+        },
+        {
+          "name": "default_deductible_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Default deductible, in the product currency."
+        },
+        {
+          "name": "optional",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the coverage is optional (true) or core to the product (false)."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "product_coverage_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "underwriting_question",
+      "domain": "product",
+      "title": "Underwriting Question",
+      "description": "A question the product asks at quotation. The question set is data, so any channel - a form, an aggregator API or a buyer agent - can discover what the product needs to know and answer it programmatically.\n",
+      "grain": "One row per question per product.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "underwriting_question_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the question.",
+          "classification": "internal"
+        },
+        {
+          "name": "product_id",
+          "references": "product",
+          "type": "string",
+          "required": true,
+          "description": "The product asking the question.",
+          "classification": "internal"
+        },
+        {
+          "name": "question_order",
+          "type": "integer",
+          "required": true,
+          "description": "Presentation order."
+        },
+        {
+          "name": "question_text",
+          "type": "string",
+          "required": true,
+          "description": "The question as asked."
+        },
+        {
+          "name": "answer_type",
+          "type": "string",
+          "required": true,
+          "description": "Expected answer type - boolean, number, text or a code."
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether an answer is mandatory to quote."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "underwriting_question_id"
         ]
       }
     },
@@ -3062,6 +4094,149 @@
       ]
     }
   ],
+  "functions": [
+    {
+      "kind": "function",
+      "name": "fn_claim_status",
+      "domain": "claim",
+      "description": "One-line status of a claim - handling status, cause and loss date.",
+      "inputs": [
+        {
+          "name": "in_claim_number",
+          "type": "string",
+          "description": "Claim number, e.g. CLM-2026-000001."
+        }
+      ],
+      "returns": {
+        "type": "string",
+        "description": "status | cause | loss date, or NULL when unknown."
+      },
+      "sql": "(SELECT max(concat(claim_status_code, ' | ', cause_of_loss_code,\n                   ' | loss date ', cast(loss_date AS STRING)))\n FROM {claim.claim} WHERE claim_number = in_claim_number)\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_outstanding_reserve",
+      "domain": "claim",
+      "description": "The current outstanding case reserve on a claim, derived live as the sum of signed reserve movements - never a stored balance.\n",
+      "inputs": [
+        {
+          "name": "in_claim_number",
+          "type": "string",
+          "description": "Claim number, e.g. CLM-2026-000001."
+        }
+      ],
+      "returns": {
+        "type": "decimal(18,2)",
+        "description": "Outstanding reserve in the claim currency; 0 when fully released."
+      },
+      "sql": "(SELECT COALESCE(SUM(ct.amount), 0)\n FROM {claim.claim_transaction} ct\n JOIN {claim.claim} c ON c.claim_id = ct.claim_id\n WHERE c.claim_number = in_claim_number\n   AND ct.claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT')\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_policy_snapshot",
+      "domain": "policy",
+      "description": "One-line snapshot of a policy - line, status, cover period, year, currency.",
+      "inputs": [
+        {
+          "name": "in_policy_number",
+          "type": "string",
+          "description": "Policy number, e.g. POL-2026-000001."
+        }
+      ],
+      "returns": {
+        "type": "string",
+        "description": "lob | status | period | underwriting year | currency, or NULL when unknown."
+      },
+      "sql": "(SELECT max(concat(line_of_business_code, ' | ', policy_status_code, ' | ',\n                   cast(inception_date AS STRING), ' to ', cast(expiry_date AS STRING),\n                   ' | uwy ', cast(underwriting_year AS STRING), ' | ', currency_code))\n FROM {policy.policy} WHERE policy_number = in_policy_number)\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_appetite_check",
+      "domain": "product",
+      "description": "Checks a prospective risk against the live appetite rules and returns the effect (WITHIN_APPETITE, REFER or OUT_OF_APPETITE) with the matching rule's business description. The same rules humans read; the tool agents call before quoting.\n",
+      "inputs": [
+        {
+          "name": "in_lob",
+          "type": "string",
+          "description": "Line of business code, e.g. COMMERCIAL_PROPERTY."
+        },
+        {
+          "name": "in_country",
+          "type": "string",
+          "description": "Country code of the risk, e.g. GB."
+        },
+        {
+          "name": "in_sum_insured",
+          "type": "decimal(18,2)",
+          "description": "Proposed sum insured in the product currency."
+        }
+      ],
+      "returns": {
+        "type": "string",
+        "description": "effect | rule description, or a REFER fallback when no rule matches."
+      },
+      "sql": "COALESCE(\n  (SELECT min_by(concat(appetite_effect_code, ' | ', description), rule_order)\n   FROM {product.appetite_rule}\n   WHERE line_of_business_code = in_lob\n     AND (country_code IS NULL OR country_code = in_country)\n     AND (max_sum_insured IS NULL OR in_sum_insured <= max_sum_insured)\n     AND effective_from <= current_date()\n     AND (effective_to IS NULL OR effective_to >= current_date())),\n  'REFER | no matching appetite rule - refer to underwriting')\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_indicative_quote",
+      "domain": "product",
+      "description": "Returns an indicative gross premium for an active product and sum insured, from the product's declared base rate. Indicative only - binding terms always pass through an underwriting decision.\n",
+      "inputs": [
+        {
+          "name": "in_product_code",
+          "type": "string",
+          "description": "Product code, e.g. CP-STD."
+        },
+        {
+          "name": "in_sum_insured",
+          "type": "decimal(18,2)",
+          "description": "Proposed sum insured in the product currency."
+        }
+      ],
+      "returns": {
+        "type": "decimal(18,2)",
+        "description": "Indicative gross premium; NULL when the product is unknown or inactive."
+      },
+      "sql": "round((SELECT max(base_rate)\n       FROM {product.product}\n       WHERE product_code = in_product_code\n         AND product_status_code = 'ACTIVE') * in_sum_insured, 2)\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_define",
+      "domain": "reference",
+      "description": "Looks a business term up in the data dictionary - the model explaining itself to humans and agents alike.\n",
+      "inputs": [
+        {
+          "name": "in_term",
+          "type": "string",
+          "description": "An entity or attribute name, e.g. loss_ratio or claim."
+        }
+      ],
+      "returns": {
+        "type": "string",
+        "description": "Up to three matching definitions, '||'-separated; NULL when unknown."
+      },
+      "sql": "(SELECT array_join(slice(sort_array(collect_list(\n          concat(entity_name, '.', attribute_name, ': ', definition))), 1, 3), ' || ')\n FROM {reference.data_dictionary}\n WHERE lower(attribute_name) = lower(in_term) OR lower(entity_name) = lower(in_term))\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_cession_trace",
+      "domain": "reinsurance",
+      "description": "Which treaties a policy is ceded to, and at what shares.",
+      "inputs": [
+        {
+          "name": "in_policy_number",
+          "type": "string",
+          "description": "Policy number, e.g. POL-2026-000001."
+        }
+      ],
+      "returns": {
+        "type": "string",
+        "description": "Semicolon-separated 'treaty @ share' list; NULL when nothing is ceded."
+      },
+      "sql": "(SELECT array_join(sort_array(collect_list(\n          concat(t.treaty_reference, ' @ ', cast(ces.ceded_share AS STRING)))), '; ')\n FROM {reinsurance.cession} ces\n JOIN {policy.policy} p ON p.policy_id = ces.policy_id\n JOIN {reinsurance.treaty} t ON t.treaty_id = ces.treaty_id\n WHERE p.policy_number = in_policy_number)\n"
+    }
+  ],
   "relationships": [
     {
       "from_entity": "claim",
@@ -3121,6 +4296,153 @@
     },
     {
       "from_entity": "claim_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "complaint",
+      "attribute": "complainant_party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "complaint",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "complaint",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "complaint",
+      "attribute": "complaint_category_code",
+      "to": "complaint_category",
+      "to_kind": "code_set",
+      "to_attribute": "complaint_category_code"
+    },
+    {
+      "from_entity": "complaint",
+      "attribute": "complaint_status_code",
+      "to": "complaint_status",
+      "to_kind": "code_set",
+      "to_attribute": "complaint_status_code"
+    },
+    {
+      "from_entity": "complaint",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "complaint",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "document",
+      "attribute": "document_type_code",
+      "to": "document_type",
+      "to_kind": "code_set",
+      "to_attribute": "document_type_code"
+    },
+    {
+      "from_entity": "document",
+      "attribute": "product_id",
+      "to": "product",
+      "to_kind": "entity",
+      "to_attribute": "product_id"
+    },
+    {
+      "from_entity": "document",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "document",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "document",
+      "attribute": "submission_id",
+      "to": "submission",
+      "to_kind": "entity",
+      "to_attribute": "submission_id"
+    },
+    {
+      "from_entity": "document",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "commission_transaction",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "commission_transaction",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "commission_transaction",
+      "attribute": "commission_type_code",
+      "to": "commission_type",
+      "to_kind": "code_set",
+      "to_attribute": "commission_type_code"
+    },
+    {
+      "from_entity": "commission_transaction",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "commission_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "business_event",
+      "attribute": "business_event_type_code",
+      "to": "business_event_type",
+      "to_kind": "code_set",
+      "to_attribute": "business_event_type_code"
+    },
+    {
+      "from_entity": "business_event",
+      "attribute": "channel_code",
+      "to": "distribution_channel",
+      "to_kind": "code_set",
+      "to_attribute": "distribution_channel_code"
+    },
+    {
+      "from_entity": "business_event",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",
@@ -3428,6 +4750,13 @@
       "to_attribute": "currency_code"
     },
     {
+      "from_entity": "policy",
+      "attribute": "renews_policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
       "from_entity": "premium_transaction",
       "attribute": "policy_id",
       "to": "policy",
@@ -3498,11 +4827,123 @@
       "to_attribute": "source_system_code"
     },
     {
+      "from_entity": "quote",
+      "attribute": "product_id",
+      "to": "product",
+      "to_kind": "entity",
+      "to_attribute": "product_id"
+    },
+    {
+      "from_entity": "quote",
+      "attribute": "distribution_channel_code",
+      "to": "distribution_channel",
+      "to_kind": "code_set",
+      "to_attribute": "distribution_channel_code"
+    },
+    {
+      "from_entity": "underwriting_decision",
+      "attribute": "quote_id",
+      "to": "quote",
+      "to_kind": "entity",
+      "to_attribute": "quote_id"
+    },
+    {
+      "from_entity": "underwriting_decision",
+      "attribute": "underwriting_decision_type_code",
+      "to": "underwriting_decision_type",
+      "to_kind": "code_set",
+      "to_attribute": "underwriting_decision_type_code"
+    },
+    {
+      "from_entity": "underwriting_decision",
+      "attribute": "appetite_rule_id",
+      "to": "appetite_rule",
+      "to_kind": "entity",
+      "to_attribute": "appetite_rule_id"
+    },
+    {
       "from_entity": "vehicle",
       "attribute": "insured_object_id",
       "to": "insured_object",
       "to_kind": "entity",
       "to_attribute": "insured_object_id"
+    },
+    {
+      "from_entity": "appetite_rule",
+      "attribute": "product_id",
+      "to": "product",
+      "to_kind": "entity",
+      "to_attribute": "product_id"
+    },
+    {
+      "from_entity": "appetite_rule",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "appetite_rule",
+      "attribute": "country_code",
+      "to": "country",
+      "to_kind": "code_set",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "appetite_rule",
+      "attribute": "appetite_effect_code",
+      "to": "appetite_effect",
+      "to_kind": "code_set",
+      "to_attribute": "appetite_effect_code"
+    },
+    {
+      "from_entity": "product",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "product",
+      "attribute": "product_status_code",
+      "to": "product_status",
+      "to_kind": "code_set",
+      "to_attribute": "product_status_code"
+    },
+    {
+      "from_entity": "product",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "product",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "product_coverage",
+      "attribute": "product_id",
+      "to": "product",
+      "to_kind": "entity",
+      "to_attribute": "product_id"
+    },
+    {
+      "from_entity": "product_coverage",
+      "attribute": "coverage_type_code",
+      "to": "coverage_type",
+      "to_kind": "code_set",
+      "to_attribute": "coverage_type_code"
+    },
+    {
+      "from_entity": "underwriting_question",
+      "attribute": "product_id",
+      "to": "product",
+      "to_kind": "entity",
+      "to_attribute": "product_id"
     },
     {
       "from_entity": "cat_event",

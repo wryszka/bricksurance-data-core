@@ -85,6 +85,14 @@ attributes:
     standards:
       acord: CurCd
       lloyds_cdr: Settlement currency
+  - name: renews_policy_id
+    references: policy
+    type: string
+    required: false
+    description: >
+      The expiring policy this one renews, closing the retention chain;
+      empty for new business.
+    classification: internal
 keys:
   primary: [policy_id]
   natural: [source_system_code, policy_number]

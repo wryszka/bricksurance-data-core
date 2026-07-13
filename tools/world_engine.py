@@ -124,7 +124,9 @@ class World:
                      "claim_transaction", "treaty", "treaty_layer", "submission", "cession",
                      "cat_event", "event_loss", "model_point", "assumption_set",
                      "scenario_set", "valuation_run", "valuation_run_assumption",
-                     "valuation_result"):
+                     "valuation_result", "product", "product_coverage",
+                     "underwriting_question", "appetite_rule", "underwriting_decision",
+                     "commission_transaction", "complaint", "document", "business_event"):
             self.t[name] = []
 
     def n(self, base):
@@ -153,6 +155,91 @@ def build_world(scale):
     def add_role(role_type, party, start, **ctx):
         w.add("party_role", party_role_id=w.nid("prl"), party_id=pid[party],
               party_role_type_code=role_type, start_date=start, end_date=None, **ctx)
+
+    def add_event(etype, subject_entity, subject_id, when, channel=None, payload=None):
+        w.add("business_event", business_event_id=w.nid("evt"),
+              business_event_type_code=etype, subject_entity=subject_entity,
+              subject_id=subject_id, occurred_at=when, channel_code=channel,
+              payload=payload, source_system_code="PAS_CORE")
+
+    # ------------------------------------------------------ machine agent party
+    AGENT_NAME = "Athena Procurement Agent v2 (for Kestrel Foods Group)"
+    key = w.nid("pty")
+    pid[AGENT_NAME] = key
+    w.add("party", party_id=key, party_type_code="MACHINE_AGENT", name=AGENT_NAME,
+          country_code="GB", source_system_code="DATA_CORE")
+
+    # ------------------------------------------------------ product catalog
+    PRODUCTS = [
+        ("CP-STD", "Commercial Property Standard", "COMMERCIAL_PROPERTY", 0.014,
+         ["BUILDINGS", "CONTENTS", "BUSINESS_INTERRUPTION"],
+         "flood in coastal postcode districts", 10000000, 25000000),
+        ("MF-STD", "Motor Fleet", "MOTOR", 0.031,
+         ["MOTOR_OWN_DAMAGE", "MOTOR_TPL"],
+         "use for racing, pace-making or speed testing", 2000000, None),
+        ("SME-LIA", "SME Combined Liability", "GENERAL_LIABILITY", 0.0044,
+         ["PUBLIC_LIABILITY"], "asbestos-related injury or damage", 5000000, None),
+        ("MC-STD", "Marine Cargo", "MARINE_CARGO", 0.015,
+         ["CARGO"], "war, strikes and confiscation except as endorsed", 2000000, None),
+    ]
+    product_by_lob, appetite_within = {}, {}
+    for code, name, lob, rate, covs, exclusion, within_max, refer_max in PRODUCTS:
+        p = w.add("product", product_id=w.nid("prd"), product_code=code, name=name,
+                  line_of_business_code=lob, product_status_code="ACTIVE",
+                  base_rate=rate, currency_code="GBP", source_system_code="PAS_CORE")
+        product_by_lob[lob] = p
+        for i, cov in enumerate(covs):
+            w.add("product_coverage", product_coverage_id=w.nid("pcv"),
+                  product_id=p["product_id"], coverage_type_code=cov,
+                  default_limit_amount=5000000.00, default_deductible_amount=10000.00,
+                  optional=i > 0)
+        for i, (q, a_type) in enumerate([
+                ("What is the total sum insured requested?", "number"),
+                ("Any claims in the last five years?", "boolean"),
+                ("Country and postcode of the main risk location?", "text")]):
+            w.add("underwriting_question", underwriting_question_id=w.nid("uwq"),
+                  product_id=p["product_id"], question_order=i + 1,
+                  question_text=q, answer_type=a_type, required=i < 2)
+        r1 = w.add("appetite_rule", appetite_rule_id=w.nid("apr"),
+                   product_id=p["product_id"], line_of_business_code=lob, rule_order=10,
+                   description=f"{name}: risks up to the automatic authority limit are within appetite.",
+                   max_sum_insured=float(within_max), country_code="GB",
+                   appetite_effect_code="WITHIN_APPETITE",
+                   effective_from=date(2026, 1, 1), effective_to=None)
+        appetite_within[lob] = r1
+        if refer_max:
+            w.add("appetite_rule", appetite_rule_id=w.nid("apr"),
+                  product_id=p["product_id"], line_of_business_code=lob, rule_order=20,
+                  description=f"{name}: between authority limit and line capacity requires underwriter review.",
+                  max_sum_insured=float(refer_max), country_code=None,
+                  appetite_effect_code="REFER",
+                  effective_from=date(2026, 1, 1), effective_to=None)
+        w.add("appetite_rule", appetite_rule_id=w.nid("apr"),
+              product_id=p["product_id"], line_of_business_code=lob, rule_order=30,
+              description=f"{name}: above line capacity, or outside written geographies, is out of appetite.",
+              max_sum_insured=None, country_code=None,
+              appetite_effect_code="OUT_OF_APPETITE",
+              effective_from=date(2026, 1, 1), effective_to=None)
+        w.add("document", document_id=w.nid("doc"), document_type_code="POLICY_WORDING",
+              title=f"{name} — Policy Wording v1", product_id=p["product_id"],
+              policy_id=None, claim_id=None, submission_id=None,
+              extracted_text=(
+                  f"{name} POLICY WORDING. Section A - Insuring clause: the insurer agrees to "
+                  f"indemnify the insured for {', '.join(c.replace('_', ' ').lower() for c in covs)} "
+                  f"as specified in the schedule, subject to the limits and deductibles stated. "
+                  f"Section B - Exclusions: this policy does not cover loss arising from {exclusion}; "
+                  f"nor liability assumed under contract beyond that implied by law; nor loss caused "
+                  f"by wilful misconduct of the insured. Section C - Conditions: claims must be "
+                  f"notified without undue delay; the insured must take reasonable precautions; "
+                  f"cover is subject to the sanctions limitation clause. Section D - Claims: "
+                  f"first notification through any channel including the digital FNOL service; "
+                  f"the insurer may appoint a loss adjuster above the delegated settlement limit."),
+              volume_path=None, created_date=date(2026, 1, 1), source_system_code="PAS_CORE")
+
+    POSTCODE_GEO = {"M3 5EN": (53.4839, -2.2521), "LS1 4AP": (53.7975, -1.5528),
+                    "B4 7DA": (52.4841, -1.8935), "G2 1AL": (55.8621, -4.2542),
+                    "BS1 6QF": (51.4500, -2.5967)}
+    last_policy_by_key = {}
 
     # ---------------------------------------------------------- P&C book
     n_policies = w.n(60)
@@ -184,24 +271,61 @@ def build_world(scale):
             status = "IN_FORCE"
         policy_id = w.nid("pol")
         policy_number = f"POL-{uwy}-{num:06d}"
-        w.add("policy", policy_id=policy_id, policy_number=policy_number,
-              source_system_code="PAS_CORE", line_of_business_code=lob,
-              policy_status_code=status, inception_date=inception, expiry_date=expiry,
-              underwriting_year=uwy, currency_code=ccy)
+        prev = last_policy_by_key.get((org, lob))
+        renews = prev["policy_id"] if prev and prev["underwriting_year"] == uwy - 1 else None
+        policy_row = w.add("policy", policy_id=policy_id, policy_number=policy_number,
+                           source_system_code="PAS_CORE", line_of_business_code=lob,
+                           policy_status_code=status, inception_date=inception,
+                           expiry_date=expiry, underwriting_year=uwy, currency_code=ccy,
+                           renews_policy_id=renews)
+        last_policy_by_key[(org, lob)] = policy_row
 
         written = 120000.00 if hero else round(BASE_PREMIUM[lob] * rng.uniform(0.7, 1.3), 2)
+        has_broker = num % 2 == 0
+        channel = "BROKER" if has_broker else "DIRECT"
 
-        # every policy converted from exactly one quote
-        w.add("quote", quote_id=w.nid("quo"), quote_number=f"QUO-{uwy}-{num:06d}",
-              policy_id=policy_id, line_of_business_code=lob, quote_status_code="CONVERTED",
-              quote_date=inception - timedelta(days=14 if hero else rng.randint(14, 45)),
-              requested_inception_date=inception, quoted_gross_premium=written,
-              currency_code=ccy, source_system_code="PAS_CORE")
+        # every policy converted from exactly one quote, with a recorded decision
+        quote = w.add("quote", quote_id=w.nid("quo"), quote_number=f"QUO-{uwy}-{num:06d}",
+                      policy_id=policy_id, line_of_business_code=lob,
+                      quote_status_code="CONVERTED",
+                      quote_date=inception - timedelta(days=14 if hero else rng.randint(14, 45)),
+                      requested_inception_date=inception, quoted_gross_premium=written,
+                      currency_code=ccy, source_system_code="PAS_CORE",
+                      product_id=product_by_lob[lob]["product_id"],
+                      distribution_channel_code=channel)
+        by_agent = (not hero) and num % 3 == 0
+        w.add("underwriting_decision", underwriting_decision_id=w.nid("uwd"),
+              quote_id=quote["quote_id"], underwriting_decision_type_code="ACCEPT",
+              appetite_rule_id=appetite_within[lob]["appetite_rule_id"],
+              decided_by="bricksurance-uw-agent v1" if by_agent else "U. Marsh (senior underwriter)",
+              decided_by_agent=by_agent,
+              decided_at=datetime.combine(quote["quote_date"], datetime.min.time()).replace(hour=10),
+              rationale="Within appetite and automatic authority." if by_agent else None)
+        add_event("QUOTE_REQUESTED", "quote", quote["quote_id"],
+                  datetime.combine(quote["quote_date"], datetime.min.time()).replace(hour=9),
+                  channel=channel)
+        add_event("POLICY_BOUND", "policy", policy_id,
+                  datetime.combine(inception, datetime.min.time()).replace(hour=12),
+                  channel=channel)
 
         add_role("POLICYHOLDER", org, inception, policy_id=policy_id)
         add_role("INSURED", org, inception, policy_id=policy_id)
-        if num % 2 == 0:
-            add_role("BROKER", BROKERS[(num // 2) % 2][0], inception, policy_id=policy_id)
+        if has_broker:
+            broker_name = BROKERS[(num // 2) % 2][0]
+            add_role("BROKER", broker_name, inception, policy_id=policy_id)
+            rate = 0.175
+            w.add("commission_transaction", commission_transaction_id=w.nid("cmt"),
+                  policy_id=policy_id, party_id=pid[broker_name],
+                  commission_type_code="RENEWAL" if renews else "NEW_BUSINESS",
+                  rate=rate, amount=round(written * rate, 2), currency_code=ccy,
+                  transaction_date=inception, source_system_code="PAS_CORE")
+            if cancelled:
+                w.add("commission_transaction", commission_transaction_id=w.nid("cmt"),
+                      policy_id=policy_id, party_id=pid[broker_name],
+                      commission_type_code="CLAWBACK", rate=rate,
+                      amount=round(-written * rate * 0.4, 2), currency_code=ccy,
+                      transaction_date=inception + timedelta(days=150),
+                      source_system_code="PAS_CORE")
 
         def add_cov(ctype, limit, ded, sum_insured):
             row = w.add("coverage", coverage_id=w.nid("cov"), policy_id=policy_id,
@@ -223,12 +347,14 @@ def build_world(scale):
         else:
             first_cov = add_cov("CARGO", 2000000, 10000, None)
 
+        pc = "M3 5EN" if hero else (rng.choice(POSTCODES[country])
+                                    if lob == "COMMERCIAL_PROPERTY" else None)
+        geo = POSTCODE_GEO.get(pc, (None, None))
         obj = w.add("insured_object", insured_object_id=w.nid("obj"), policy_id=policy_id,
                     insured_object_type_code=OBJ_TYPE[lob],
                     description=OBJ_DESC[lob][0] if hero else rng.choice(OBJ_DESC[lob]),
-                    country_code=country,
-                    postcode="M3 5EN" if hero else (rng.choice(POSTCODES[country])
-                                                    if lob == "COMMERCIAL_PROPERTY" else None))
+                    country_code=country, postcode=pc,
+                    latitude=geo[0], longitude=geo[1])
         if lob == "MOTOR":
             make, model = rng.choice(VEHICLES)
             w.add("vehicle", vehicle_id=w.nid("veh"),
@@ -290,11 +416,18 @@ def build_world(scale):
             add_role("CLAIMANT",
                      PERSONS[c % 3][0] if (lob == "MOTOR" and c % 2 == 0) else org,
                      reported, claim_id=claim_id)
+            add_event("FNOL", "claim", claim_id,
+                      datetime.combine(reported, datetime.min.time()).replace(hour=8),
+                      channel="DIRECT")
 
             def add_ctx(ttype, amount, when):
                 w.add("claim_transaction", claim_transaction_id=w.nid("ctx"), claim_id=claim_id,
                       claim_transaction_type_code=ttype, amount=amount, currency_code=ccy,
                       transaction_date=when, source_system_code="CLM_CORE")
+                if ttype == "INDEMNITY_PAYMENT":
+                    add_event("CLAIM_PAYMENT", "claim", claim_id,
+                              datetime.combine(when, datetime.min.time()).replace(hour=15),
+                              payload=f'{{"amount": {amount}, "currency": "{ccy}"}}')
 
             reserve = 450000.00 if hero else round(written * rng.uniform(0.5, 3.0), 2)
             add_ctx("CASE_RESERVE_MOVEMENT", reserve, reported + timedelta(days=3))
@@ -323,17 +456,55 @@ def build_world(scale):
 
     # the rest of the quote funnel: quotes that never became policies
     lost = ["OFFERED", "REJECTED_BY_CUSTOMER", "EXPIRED", "DECLINED_BY_INSURER", "OPEN"]
+    lost_channels = ["AGGREGATOR", "BROKER", "DIRECT", "AGGREGATOR", "DIRECT"]
     for k in range(w.n(25)):
         lob = rng.choice([l for l, _ in LOB_MIX])
         org, country = ORGS[(k * 3) % len(ORGS)]
-        w.add("quote", quote_id=w.nid("quo"), quote_number=f"QUO-2026-{200 + k:06d}",
-              policy_id=None, line_of_business_code=lob,
-              quote_status_code=lost[k % len(lost)],
-              quote_date=date(2026, 1, 5) + timedelta(days=rng.randint(0, 150)),
-              requested_inception_date=None,
-              quoted_gross_premium=None if lost[k % len(lost)] == "OPEN"
-              else round(BASE_PREMIUM[lob] * rng.uniform(0.7, 1.3), 2),
-              currency_code=CCY[country], source_system_code="PAS_CORE")
+        status = lost[k % len(lost)]
+        q = w.add("quote", quote_id=w.nid("quo"), quote_number=f"QUO-2026-{200 + k:06d}",
+                  policy_id=None, line_of_business_code=lob, quote_status_code=status,
+                  quote_date=date(2026, 1, 5) + timedelta(days=rng.randint(0, 150)),
+                  requested_inception_date=None,
+                  quoted_gross_premium=None if status == "OPEN"
+                  else round(BASE_PREMIUM[lob] * rng.uniform(0.7, 1.3), 2),
+                  currency_code=CCY[country], source_system_code="PAS_CORE",
+                  product_id=product_by_lob[lob]["product_id"],
+                  distribution_channel_code=lost_channels[k % len(lost_channels)])
+        add_event("QUOTE_REQUESTED", "quote", q["quote_id"],
+                  datetime.combine(q["quote_date"], datetime.min.time()).replace(hour=11),
+                  channel=q["distribution_channel_code"])
+        if status == "DECLINED_BY_INSURER":
+            w.add("underwriting_decision", underwriting_decision_id=w.nid("uwd"),
+                  quote_id=q["quote_id"], underwriting_decision_type_code="DECLINE",
+                  appetite_rule_id=None, decided_by="U. Marsh (senior underwriter)",
+                  decided_by_agent=False,
+                  decided_at=datetime.combine(q["quote_date"], datetime.min.time()).replace(hour=16),
+                  rationale="Outside appetite for the declared trade and claims history.")
+
+    # the agentic buyer: a MACHINE_AGENT party quoting machine-to-machine
+    agent_cases = [("QUO-2026-000901", "COMMERCIAL_PROPERTY", 8000000.00, "OFFERED",
+                    "ACCEPT", "Within appetite; automatic authority; indicative premium returned."),
+                   ("QUO-2026-000902", "COMMERCIAL_PROPERTY", 30000000.00, "DECLINED_BY_INSURER",
+                    "DECLINE", "Requested sum insured exceeds line capacity - out of appetite."),
+                   ("QUO-2026-000903", "COMMERCIAL_PROPERTY", 18000000.00, "OPEN",
+                    "REFER", "Between automatic authority and line capacity - referred to a human underwriter.")]
+    for qnum, lob, si, qstatus, decision, why in agent_cases:
+        q = w.add("quote", quote_id=w.nid("quo"), quote_number=qnum, policy_id=None,
+                  line_of_business_code=lob, quote_status_code=qstatus,
+                  quote_date=date(2026, 6, 24), requested_inception_date=date(2026, 8, 1),
+                  quoted_gross_premium=round(si * 0.014, 2) if decision == "ACCEPT" else None,
+                  currency_code="GBP", source_system_code="PAS_CORE",
+                  product_id=product_by_lob[lob]["product_id"],
+                  distribution_channel_code="MACHINE_AGENT")
+        add_role("BUYER_AGENT", AGENT_NAME, q["quote_date"], quote_id=q["quote_id"])
+        w.add("underwriting_decision", underwriting_decision_id=w.nid("uwd"),
+              quote_id=q["quote_id"], underwriting_decision_type_code=decision,
+              appetite_rule_id=appetite_within[lob]["appetite_rule_id"] if decision == "ACCEPT" else None,
+              decided_by="bricksurance-uw-agent v1", decided_by_agent=True,
+              decided_at=datetime(2026, 6, 24, 9, 42), rationale=why)
+        add_event("QUOTE_REQUESTED", "quote", q["quote_id"],
+                  datetime(2026, 6, 24, 9, 41), channel="MACHINE_AGENT",
+                  payload=f'{{"sum_insured": {si}, "requested_by": "{AGENT_NAME}"}}')
 
     # ---------------------------------------------------------- reinsurance
     qs = w.add("treaty", treaty_id=w.nid("trt"), treaty_reference="TR-QS-PROP-2026",
@@ -420,6 +591,65 @@ def build_world(scale):
               treaty_id=xl["treaty_id"], policy_id=None, loss_basis_code=basis,
               gross_loss_amount=gross, ceded_loss_amount=ceded,
               currency_code="GBP", as_of_date=as_of)
+
+    # ---------------------------------------------------------- conduct & content
+    ph_by_policy = {r["policy_id"]: r["party_id"] for r in w.t["party_role"]
+                    if r["party_role_type_code"] == "POLICYHOLDER" and r.get("policy_id")}
+    complaint_plan = [("CLAIMS_HANDLING", "UPHELD", 1200.00), ("CLAIMS_HANDLING", "NOT_UPHELD", None),
+                      ("CLAIMS_HANDLING", "REFERRED_FOS", None), ("ADMIN_AND_SERVICE", "UPHELD", 150.00),
+                      ("CLAIMS_HANDLING", "OPEN", None), ("SALES_AND_ADVICE", "NOT_UPHELD", None)]
+    claim_rows = [c for c in w.t["claim"] if c["claim_status_code"] in ("DECLINED", "CLOSED", "REOPENED")]
+    for i, (cat, cstatus, redress) in enumerate(complaint_plan):
+        if i >= len(claim_rows):
+            break
+        cl = claim_rows[i]
+        received = cl["reported_date"] + timedelta(days=30)
+        w.add("complaint", complaint_id=w.nid("cpl"), complaint_reference=f"CMP-2026-{i + 1:06d}",
+              complainant_party_id=ph_by_policy[cl["policy_id"]],
+              policy_id=None, claim_id=cl["claim_id"],
+              complaint_category_code=cat, complaint_status_code=cstatus,
+              received_date=received,
+              closed_date=None if cstatus == "OPEN" else received + timedelta(days=42),
+              redress_amount=redress, currency_code="GBP" if redress else None,
+              source_system_code="CLM_CORE")
+        add_event("COMPLAINT_RECEIVED", "complaint", f"cpl_{i + 1:04d}",
+                  datetime.combine(received, datetime.min.time()).replace(hour=14))
+    # one pricing complaint on a renewal, policy context only
+    renewed = next(p for p in w.t["policy"] if p.get("renews_policy_id"))
+    w.add("complaint", complaint_id=w.nid("cpl"), complaint_reference="CMP-2026-000099",
+          complainant_party_id=ph_by_policy[renewed["policy_id"]],
+          policy_id=renewed["policy_id"], claim_id=None,
+          complaint_category_code="PRICING_AND_RENEWAL", complaint_status_code="NOT_UPHELD",
+          received_date=renewed["inception_date"] + timedelta(days=5),
+          closed_date=renewed["inception_date"] + timedelta(days=30),
+          redress_amount=None, currency_code=None, source_system_code="PAS_CORE")
+
+    hero_claim = next(c for c in w.t["claim"] if c["claim_number"] == "CLM-2026-000001")
+    w.add("document", document_id=w.nid("doc"), document_type_code="CLAIM_EVIDENCE",
+          title="Fire investigation summary — CLM-2026-000001",
+          product_id=None, policy_id=None, claim_id=hero_claim["claim_id"], submission_id=None,
+          extracted_text=("FIRE INVESTIGATION SUMMARY. Site: warehouse and distribution centre, "
+                          "Manchester M3 5EN. Origin: electrical fault in first-floor conveyor "
+                          "control cabinet. Sprinkler activation contained spread; smoke damage "
+                          "across two floors of racked stock. No indicators of deliberate ignition. "
+                          "Recommended reserve basis: reinstatement of control systems, stock "
+                          "write-off on floors one and two, business interruption per schedule."),
+          volume_path=None, created_date=date(2026, 3, 25), source_system_code="CLM_CORE")
+    xl_sub = next(s for s in w.t["submission"] if s["submission_reference"] == "SUB-2026-000002")
+    w.add("document", document_id=w.nid("doc"), document_type_code="MRC_SLIP",
+          title="MRC slip — property catastrophe XoL 2026",
+          product_id=None, policy_id=None, claim_id=None, submission_id=xl_sub["submission_id"],
+          extracted_text=("MARKET REFORM CONTRACT. Type: Property Catastrophe Excess of Loss. "
+                          "Reinsured: Bricksurance SE. Period: 12 months at 1 January 2026. "
+                          "Layer 1: GBP 10,000,000 excess of GBP 5,000,000 each and every loss "
+                          "occurrence; one reinstatement at 100% additional premium. Layer 2: "
+                          "GBP 20,000,000 excess of GBP 15,000,000; one reinstatement. Territorial "
+                          "scope: United Kingdom. Exclusions: war, cyber as per LMA5564, "
+                          "contingent business interruption without named suppliers."),
+          volume_path=None, created_date=date(2025, 11, 15), source_system_code="RI_CORE")
+    add_event("BORDEREAU_RECEIVED", "premium_bordereau_line", "atlas_2026_06",
+              datetime(2026, 7, 2, 8, 30), channel="COVERHOLDER",
+              payload='{"coverholder": "Atlas Cover Partners", "period": "2026-06"}')
 
     # ---------------------------------------------------------- life & finance
     def add_assumption(atype, version, status, effective, approved):
@@ -535,11 +765,14 @@ def main():
     binding = load_binding()
     w = build_world(args.scale)
 
-    order = ["party", "policy", "quote", "coverage", "insured_object", "vehicle",
-             "premium_transaction", "endorsement", "claim", "claim_transaction",
+    order = ["party", "product", "product_coverage", "underwriting_question",
+             "appetite_rule", "policy", "quote", "underwriting_decision", "coverage",
+             "insured_object", "vehicle", "premium_transaction", "endorsement",
+             "commission_transaction", "claim", "claim_transaction", "complaint",
              "treaty", "treaty_layer", "submission", "cession", "cat_event", "event_loss",
-             "assumption_set", "scenario_set", "valuation_run", "valuation_run_assumption",
-             "valuation_result", "model_point", "party_role"]
+             "document", "business_event", "assumption_set", "scenario_set",
+             "valuation_run", "valuation_run_assumption", "valuation_result",
+             "model_point", "party_role"]
     missing = set(order) - set(entities)
     assert not missing, f"world emits unknown entities: {missing}"
 

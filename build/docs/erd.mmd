@@ -1,4 +1,9 @@
 erDiagram
+    appetite_effect {
+        string appetite_effect_code PK
+        string label
+        string description
+    }
     assumption_status {
         string assumption_status_code PK
         string label
@@ -6,6 +11,11 @@ erDiagram
     }
     assumption_type {
         string assumption_type_code PK
+        string label
+        string description
+    }
+    business_event_type {
+        string business_event_type_code PK
         string label
         string description
     }
@@ -24,6 +34,21 @@ erDiagram
         string label
         string description
     }
+    commission_type {
+        string commission_type_code PK
+        string label
+        string description
+    }
+    complaint_category {
+        string complaint_category_code PK
+        string label
+        string description
+    }
+    complaint_status {
+        string complaint_status_code PK
+        string label
+        string description
+    }
     country {
         string country_code PK
         string label
@@ -36,6 +61,16 @@ erDiagram
     }
     currency {
         string currency_code PK
+        string label
+        string description
+    }
+    distribution_channel {
+        string distribution_channel_code PK
+        string label
+        string description
+    }
+    document_type {
+        string document_type_code PK
         string label
         string description
     }
@@ -79,6 +114,11 @@ erDiagram
         string label
         string description
     }
+    product_status {
+        string product_status_code PK
+        string label
+        string description
+    }
     quote_status {
         string quote_status_code PK
         string label
@@ -106,6 +146,11 @@ erDiagram
     }
     treaty_type {
         string treaty_type_code PK
+        string label
+        string description
+    }
+    underwriting_decision_type {
+        string underwriting_decision_type_code PK
         string label
         string description
     }
@@ -144,6 +189,54 @@ erDiagram
         decimal amount
         string currency_code
         date transaction_date
+        string source_system_code
+    }
+    complaint {
+        string complaint_id PK
+        string complaint_reference
+        string complainant_party_id
+        string policy_id
+        string claim_id
+        string complaint_category_code
+        string complaint_status_code
+        date received_date
+        date closed_date
+        decimal redress_amount
+        string currency_code
+        string source_system_code
+    }
+    document {
+        string document_id PK
+        string document_type_code
+        string title
+        string product_id
+        string policy_id
+        string claim_id
+        string submission_id
+        string extracted_text
+        string volume_path
+        date created_date
+        string source_system_code
+    }
+    commission_transaction {
+        string commission_transaction_id PK
+        string policy_id
+        string party_id
+        string commission_type_code
+        decimal rate
+        decimal amount
+        string currency_code
+        date transaction_date
+        string source_system_code
+    }
+    business_event {
+        string business_event_id PK
+        string business_event_type_code
+        string subject_entity
+        string subject_id
+        timestamp occurred_at
+        string channel_code
+        string payload
         string source_system_code
     }
     premium_bordereau_line {
@@ -258,6 +351,8 @@ erDiagram
         string description
         string country_code
         string postcode
+        decimal latitude
+        decimal longitude
     }
     policy {
         string policy_id PK
@@ -269,6 +364,7 @@ erDiagram
         date expiry_date
         integer underwriting_year
         string currency_code
+        string renews_policy_id
     }
     premium_transaction {
         string premium_transaction_id PK
@@ -291,6 +387,18 @@ erDiagram
         decimal quoted_gross_premium
         string currency_code
         string source_system_code
+        string product_id
+        string distribution_channel_code
+    }
+    underwriting_decision {
+        string underwriting_decision_id PK
+        string quote_id
+        string underwriting_decision_type_code
+        string appetite_rule_id
+        string decided_by
+        boolean decided_by_agent
+        timestamp decided_at
+        string rationale
     }
     vehicle {
         string vehicle_id PK
@@ -299,6 +407,44 @@ erDiagram
         string make
         string model
         integer year_of_manufacture
+    }
+    appetite_rule {
+        string appetite_rule_id PK
+        string product_id
+        string line_of_business_code
+        integer rule_order
+        string description
+        decimal max_sum_insured
+        string country_code
+        string appetite_effect_code
+        date effective_from
+        date effective_to
+    }
+    product {
+        string product_id PK
+        string product_code
+        string name
+        string line_of_business_code
+        string product_status_code
+        decimal base_rate
+        string currency_code
+        string source_system_code
+    }
+    product_coverage {
+        string product_coverage_id PK
+        string product_id
+        string coverage_type_code
+        decimal default_limit_amount
+        decimal default_deductible_amount
+        boolean optional
+    }
+    underwriting_question {
+        string underwriting_question_id PK
+        string product_id
+        integer question_order
+        string question_text
+        string answer_type
+        boolean required
     }
     cat_event {
         string cat_event_id PK
@@ -372,6 +518,27 @@ erDiagram
     claim_transaction }o--|| claim_transaction_type : claim_transaction_type_code
     claim_transaction }o--|| currency : currency_code
     claim_transaction }o--|| source_system : source_system_code
+    complaint }o--|| party : complainant_party_id
+    complaint }o--|| policy : policy_id
+    complaint }o--|| claim : claim_id
+    complaint }o--|| complaint_category : complaint_category_code
+    complaint }o--|| complaint_status : complaint_status_code
+    complaint }o--|| currency : currency_code
+    complaint }o--|| source_system : source_system_code
+    document }o--|| document_type : document_type_code
+    document }o--|| product : product_id
+    document }o--|| policy : policy_id
+    document }o--|| claim : claim_id
+    document }o--|| submission : submission_id
+    document }o--|| source_system : source_system_code
+    commission_transaction }o--|| policy : policy_id
+    commission_transaction }o--|| party : party_id
+    commission_transaction }o--|| commission_type : commission_type_code
+    commission_transaction }o--|| currency : currency_code
+    commission_transaction }o--|| source_system : source_system_code
+    business_event }o--|| business_event_type : business_event_type_code
+    business_event }o--|| distribution_channel : channel_code
+    business_event }o--|| source_system : source_system_code
     premium_bordereau_line }o--|| line_of_business : line_of_business_code
     premium_bordereau_line }o--|| currency : currency_code
     premium_bordereau_line }o--|| country : risk_country_code
@@ -415,6 +582,7 @@ erDiagram
     policy }o--|| line_of_business : line_of_business_code
     policy }o--|| policy_status : policy_status_code
     policy }o--|| currency : currency_code
+    policy }o--|| policy : renews_policy_id
     premium_transaction }o--|| policy : policy_id
     premium_transaction }o--|| coverage : coverage_id
     premium_transaction }o--|| premium_transaction_type : premium_transaction_type_code
@@ -425,7 +593,23 @@ erDiagram
     quote }o--|| quote_status : quote_status_code
     quote }o--|| currency : currency_code
     quote }o--|| source_system : source_system_code
+    quote }o--|| product : product_id
+    quote }o--|| distribution_channel : distribution_channel_code
+    underwriting_decision }o--|| quote : quote_id
+    underwriting_decision }o--|| underwriting_decision_type : underwriting_decision_type_code
+    underwriting_decision }o--|| appetite_rule : appetite_rule_id
     vehicle }o--|| insured_object : insured_object_id
+    appetite_rule }o--|| product : product_id
+    appetite_rule }o--|| line_of_business : line_of_business_code
+    appetite_rule }o--|| country : country_code
+    appetite_rule }o--|| appetite_effect : appetite_effect_code
+    product }o--|| line_of_business : line_of_business_code
+    product }o--|| product_status : product_status_code
+    product }o--|| currency : currency_code
+    product }o--|| source_system : source_system_code
+    product_coverage }o--|| product : product_id
+    product_coverage }o--|| coverage_type : coverage_type_code
+    underwriting_question }o--|| product : product_id
     cat_event }o--|| cause_of_loss : cause_of_loss_code
     cat_event }o--|| country : country_code
     cat_event }o--|| currency : currency_code

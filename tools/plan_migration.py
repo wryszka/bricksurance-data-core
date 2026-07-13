@@ -34,7 +34,7 @@ LEVELS = {"PATCH": 0, "MINOR": 1, "MAJOR": 2}
 
 def index(doc):
     return {kind: {s["name"]: s for s in doc.get(kind, [])}
-            for kind in ("entities", "code_sets", "views", "metric_views")}
+            for kind in ("entities", "code_sets", "views", "metric_views", "functions")}
 
 
 def attr_map(entity):
@@ -199,6 +199,8 @@ def main():
     diff_semantics(plan, binding, o_idx["views"], n_idx["views"], "view", generate.view_ddl)
     diff_semantics(plan, binding, o_idx["metric_views"], n_idx["metric_views"],
                    "metric view", generate.metric_view_ddl)
+    diff_semantics(plan, binding, o_idx["functions"], n_idx["functions"],
+                   "function", generate.function_ddl)
 
     level = plan.required_level
     ok, needed = required_bump(old_doc["version"], new_doc["version"], level)
