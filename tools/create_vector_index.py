@@ -70,16 +70,27 @@ def main():
     except DatabricksError as e:
         if "already exists" not in str(e):
             raise
-        print(f"index {index_name} exists; syncing")
-        w.api_client.do("POST", f"/api/2.0/vector-search/indexes/{index_name}/sync")
+        print(f"index {index_name} exists")
+        try:
+            w.api_client.do("POST", f"/api/2.0/vector-search/indexes/{index_name}/sync")
+            print("sync triggered")
+        except DatabricksError as sync_err:
+            if "not ready" not in str(sync_err):
+                raise
+            print("index not ready yet; initial sync runs automatically")
 
-    for _ in range(60):
+    st = {}
+    for _ in range(90):
         idx = w.api_client.do("GET", f"/api/2.0/vector-search/indexes/{index_name}")
         st = idx.get("status", {})
         if st.get("ready"):
             break
         time.sleep(20)
     print(f"index ready: {st.get('ready')} ({st.get('indexed_row_count')} rows)")
+    if not st.get("ready"):
+        print(f"Index still provisioning ({st.get('detailed_state')}). "
+              "Re-run this tool later; creation is idempotent.")
+        return
 
     hits = w.api_client.do("POST", f"/api/2.0/vector-search/indexes/{index_name}/query", body={
         "columns": ["document_id", "title", "document_type_code"],
