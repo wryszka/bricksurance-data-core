@@ -1,0 +1,17 @@
+kind: code_set
+name: run_verdict
+title: Run Verdict
+description: 'Quality-gate verdict of a processing or valuation run. RED runs never feed downstream
+  consumption; the verdict is part of the auditable run record.
+
+  '
+codes:
+- code: GREEN
+  label: Green
+  description: All quality checks passed; results released downstream.
+- code: AMBER
+  label: Amber
+  description: Passed with warnings; released with commentary.
+- code: RED
+  label: Red
+  description: Quality gate failed; results blocked from downstream use.

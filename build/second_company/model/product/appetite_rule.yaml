@@ -1,0 +1,59 @@
+kind: entity
+name: appetite_rule
+domain: product
+title: Appetite Rule
+description: 'An underwriting appetite statement as data: for a product (or a whole line),
+  a bounded condition and its effect - within appetite, refer, or out of appetite. Humans
+  read the same rules agents execute, and every underwriting decision cites the rule it applied.
+
+  '
+grain: One row per active appetite rule.
+tags:
+  maturity: draft
+attributes:
+- name: appetite_rule_id
+  type: string
+  required: true
+  description: Identifier for the rule.
+  classification: internal
+- name: product_id
+  references: product
+  type: string
+  required: false
+  description: Product the rule scopes to; empty when the rule applies to the whole line.
+  classification: internal
+- name: line_of_business_code
+  code_set: line_of_business
+  required: true
+  description: Line of business the rule applies to.
+- name: rule_order
+  type: integer
+  required: true
+  description: Evaluation order; first matching terminal effect wins.
+- name: description
+  type: string
+  required: true
+  description: The rule in business language - what it checks and why it exists.
+- name: max_sum_insured
+  type: decimal(18,2)
+  required: false
+  description: Upper sum-insured bound for the effect to apply, in the product currency.
+- name: country_code
+  code_set: country
+  required: false
+  description: Country the rule scopes to, where geographic.
+- name: appetite_effect_code
+  code_set: appetite_effect
+  required: true
+  description: What happens when the rule matches.
+- name: effective_from
+  type: date
+  required: true
+  description: First date the rule applies.
+- name: effective_to
+  type: date
+  required: false
+  description: Last date the rule applies; empty while current.
+keys:
+  primary:
+  - appetite_rule_id

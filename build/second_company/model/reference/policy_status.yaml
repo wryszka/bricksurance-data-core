@@ -1,0 +1,31 @@
+kind: code_set
+name: policy_status
+title: Policy Status
+description: 'Lifecycle status of a policy contract. Status reflects the contract as a whole;
+  coverage-level suspension is modelled on the coverage entity.
+
+  '
+standards:
+  acord: PolicyStatusCd
+codes:
+- code: QUOTED
+  label: Quoted
+  description: Terms offered to the prospective policyholder; no cover yet in force.
+- code: BOUND
+  label: Bound
+  description: Cover agreed and legally binding but inception date not yet reached.
+- code: IN_FORCE
+  label: In Force
+  description: Cover currently active; today is within the cover period.
+- code: EXPIRED
+  label: Expired
+  description: Cover period ended at its natural expiry date.
+- code: CANCELLED
+  label: Cancelled
+  description: 'Cover terminated before natural expiry by either party; return premium may
+    exist as premium transactions.
+
+    '
+- code: LAPSED
+  label: Lapsed
+  description: Cover terminated for non-payment of premium.

@@ -1,0 +1,15 @@
+kind: function
+name: fn_policy_snapshot
+domain: policy
+description: One-line snapshot of a policy - line, status, cover period, year, currency.
+inputs:
+- name: in_policy_number
+  type: string
+  description: Policy number, e.g. POL-2026-000001.
+returns:
+  type: string
+  description: lob | status | period | underwriting year | currency, or NULL when unknown.
+sql: "(SELECT max(concat(line_of_business_code, ' | ', policy_status_code, ' | ',\n      \
+  \             cast(inception_date AS STRING), ' to ', cast(expiry_date AS STRING),\n   \
+  \                ' | uwy ', cast(underwriting_year AS STRING), ' | ', currency_code))\n\
+  \ FROM {policy.policy} WHERE policy_number = in_policy_number)\n"

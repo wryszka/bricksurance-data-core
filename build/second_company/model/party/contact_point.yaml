@@ -1,0 +1,40 @@
+kind: entity
+name: contact_point
+domain: party
+title: Contact Point
+description: 'A contact point for a party. PII is deliberately concentrated here and on party
+  - the erasure design in PRIVACY.md redacts these anchors while transactional history keeps
+  its surrogate keys.
+
+  '
+grain: One row per contact point per party.
+tags:
+  maturity: draft
+attributes:
+- name: contact_point_id
+  type: string
+  required: true
+  description: Identifier for the contact point.
+  classification: internal
+- name: party_id
+  references: party
+  type: string
+  required: true
+  description: The party contactable here.
+  classification: internal
+- name: contact_point_type_code
+  code_set: contact_point_type
+  required: true
+  description: Kind of contact point.
+- name: value
+  type: string
+  required: true
+  description: The address, number or email itself.
+  classification: pii
+- name: preferred
+  type: boolean
+  required: true
+  description: Whether this is the party's preferred contact point of its kind.
+keys:
+  primary:
+  - contact_point_id

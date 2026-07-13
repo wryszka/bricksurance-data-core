@@ -1,0 +1,22 @@
+kind: code_set
+name: claim_status
+title: Claim Status
+description: 'Lifecycle status of a claim. Financial development lives in claim transactions;
+  status describes the handling state only.
+
+  '
+standards:
+  acord: ClaimStatusCd
+codes:
+- code: OPEN
+  label: Open
+  description: Claim reported and under active handling.
+- code: CLOSED
+  label: Closed
+  description: Claim settled and closed; reserves released or exhausted.
+- code: REOPENED
+  label: Reopened
+  description: Previously closed claim reopened for further development.
+- code: DECLINED
+  label: Declined
+  description: Claim declined as not covered; no indemnity payable.

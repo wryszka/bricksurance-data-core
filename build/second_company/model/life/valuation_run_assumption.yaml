@@ -1,0 +1,30 @@
+kind: entity
+name: valuation_run_assumption
+domain: life
+title: Valuation Run Assumption
+description: 'Which assumption sets a valuation run used - one row per assumption set, typically
+  one per assumption type (mortality, lapse, expense, economic). This junction is what makes
+  any past result exactly reproducible: run plus sets plus scenario plus model version is
+  the full recipe.
+
+  '
+grain: One row per assumption set used by a valuation run.
+tags:
+  maturity: draft
+attributes:
+- name: valuation_run_id
+  references: valuation_run
+  type: string
+  required: true
+  description: The valuation run.
+  classification: internal
+- name: assumption_set_id
+  references: assumption_set
+  type: string
+  required: true
+  description: An assumption set the run used.
+  classification: internal
+keys:
+  primary:
+  - valuation_run_id
+  - assumption_set_id

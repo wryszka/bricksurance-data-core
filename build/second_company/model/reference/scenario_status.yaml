@@ -1,0 +1,17 @@
+kind: code_set
+name: scenario_status
+title: Scenario Set Status
+description: 'Lifecycle of an economic scenario set. Exactly one set is ACTIVE for production
+  valuations; others remain AVAILABLE for analysis.
+
+  '
+codes:
+- code: ACTIVE
+  label: Active
+  description: The scenario set used by production valuation runs.
+- code: AVAILABLE
+  label: Available
+  description: Delivered and validated, usable for analysis, not the production set.
+- code: SUPERSEDED
+  label: Superseded
+  description: Replaced by a newer set; retained for reproducibility.

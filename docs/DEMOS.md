@@ -54,6 +54,16 @@ better.** Every demo runs against the live estate; nothing is staged footage.
 **Do:** `generate.py` → `world_engine.py` → `deploy_databricks.py` → `smoke_test.py`.
 **Expect:** 16/16 checks including cross-domain tie-outs (published reserves == sum of claim transactions), on a freshly rebuilt estate. Add `--scale 10` to show the volume knob.
 
+## 11. Bricksurance Re, locally (the share without the share)
+**Claim:** The exchange story doesn't wait for infrastructure.
+**Do:** `create_local_exchange.py` builds a `partner_re` schema holding exactly what the Delta Share would deliver — the live cession bordereau plus the dictionary and code sets. Query it as the receiving analyst.
+**Expect:** 13 bordereau lines with their meaning readable locally ("Premium ceded to reinsurers..."). When the D2D grant lands, the recipient mounts the share instead — identical queries, zero rework.
+
+## 12. Two insurers, one ontology (the market-standard punchline)
+**Claim:** When both parties run the ontology, the mapping project disappears.
+**Do:** `create_second_company.py` — Meridian Mutual adopts via ontology import (one JSON + a one-file binding), deploys its full estate (own schemas, own tag namespace, same catalog for now), then submits its canonical premium bordereau into ours: `INSERT INTO ... SELECT *`.
+**Expect:** 6 lines, totals matching both sides, no mapping spec, no LLM needed — contrast demo 4, where the non-adopter's CSV required Claude against the dictionary. Moving Meridian to its own workspace later changes the binding, nothing else.
+
 ---
 *Bricksurance is fictional; all data synthetic. Before customer sessions:
 warehouse warm, share status checked (Console → Network), and never present a

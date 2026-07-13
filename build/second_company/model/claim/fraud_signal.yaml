@@ -1,0 +1,49 @@
+kind: entity
+name: fraud_signal
+domain: claim
+title: Fraud Signal
+description: 'A fraud indicator raised on a claim, with its score and provenance. Signals
+  inform SIU referral decisions; a signal is never itself a decision.
+
+  '
+grain: One row per signal per claim.
+tags:
+  maturity: draft
+attributes:
+- name: fraud_signal_id
+  type: string
+  required: true
+  description: Identifier for the signal.
+  classification: internal
+- name: claim_id
+  references: claim
+  type: string
+  required: true
+  description: Claim the signal concerns.
+  classification: internal
+- name: fraud_signal_type_code
+  code_set: fraud_signal_type
+  required: true
+  description: Kind of indicator.
+- name: score
+  type: integer
+  required: true
+  description: Signal strength 0-100.
+  classification: confidential
+- name: detected_at
+  type: timestamp
+  required: true
+  description: When the signal was raised.
+- name: detail
+  type: string
+  required: false
+  description: What was observed, in business language.
+  classification: confidential
+- name: source_system_code
+  code_set: source_system
+  required: true
+  description: Detecting system.
+  classification: internal
+keys:
+  primary:
+  - fraud_signal_id

@@ -1,0 +1,19 @@
+kind: code_set
+name: premium_transaction_type
+title: Premium Transaction Type
+description: 'Kinds of premium movement. Premium is always modelled as signed transactions;
+  balances such as gross written premium are derived by summation, never overwritten.
+
+  '
+standards:
+  lloyds_cdr: Premium-related CDR attributes (indicative)
+codes:
+- code: WRITTEN
+  label: Written Premium
+  description: Premium written on binding or renewal of cover; positive amount.
+- code: ADJUSTMENT
+  label: Adjustment Premium
+  description: Mid-term or declaration-based premium adjustment; signed amount.
+- code: RETURN
+  label: Return Premium
+  description: Premium returned to the policyholder, typically on cancellation; negative amount.

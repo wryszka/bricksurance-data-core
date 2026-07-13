@@ -1,0 +1,17 @@
+kind: code_set
+name: dsr_type
+title: Data Subject Request Type
+description: GDPR data subject request kinds.
+codes:
+- code: ACCESS
+  label: Access (DSAR)
+  description: Right of access to personal data held.
+- code: ERASURE
+  label: Erasure
+  description: Right to erasure, applied per the model's erasure design.
+- code: RECTIFICATION
+  label: Rectification
+  description: Correction of inaccurate personal data.
+- code: PORTABILITY
+  label: Portability
+  description: Machine-readable export of provided data.

@@ -1,0 +1,47 @@
+kind: code_set
+name: line_of_business
+title: Line of Business
+description: 'Classes of insurance business written by the group, aligned to ACORD LOBCd vocabulary.
+  Extend by adding codes; never repurpose an existing code.
+
+  '
+standards:
+  acord: LOBCd
+  lloyds_cdr: Class of business
+codes:
+- code: COMMERCIAL_PROPERTY
+  label: Commercial Property
+  description: 'Direct insurance of commercial buildings, contents and consequent business
+    interruption.
+
+    '
+- code: MOTOR
+  label: Motor
+  description: Direct motor insurance, own damage and third-party liability.
+- code: GENERAL_LIABILITY
+  label: General Liability
+  description: 'Direct third-party liability other than motor, including public and products
+    liability.
+
+    '
+- code: MARINE_CARGO
+  label: Marine Cargo
+  description: Direct insurance of goods in transit by sea, air or land.
+- code: PROPERTY_TREATY
+  label: Property Treaty Reinsurance
+  description: 'Treaty reinsurance of property business, assumed or ceded; the direction is
+    determined by the party roles on the contract, not by this code.
+
+    '
+- code: TERM_LIFE
+  label: Term Life
+  description: Individual term life protection.
+- code: CREDIT_LIFE
+  label: Credit Life
+  description: Life cover written against outstanding credit balances.
+- code: GROUP_PROTECTION
+  label: Group Protection
+  description: Employer-sponsored group life and disability protection.
+- code: ANNUITY
+  label: Annuity
+  description: Annuities in payment or deferment.

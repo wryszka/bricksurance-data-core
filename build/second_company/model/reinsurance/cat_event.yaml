@@ -1,0 +1,52 @@
+kind: entity
+name: cat_event
+domain: reinsurance
+title: Catastrophe Event
+description: 'A named catastrophe event (windstorm, flood...) that losses accumulate against,
+  across the direct book and the treaty portfolio. Event losses - modelled on day one, reported
+  as cedant figures firm up - reference this event.
+
+  '
+grain: One row per catastrophe event.
+standards:
+  acord: Catastrophe / event patterns
+tags:
+  maturity: draft
+attributes:
+- name: cat_event_id
+  type: string
+  required: true
+  description: Identifier for the event.
+  classification: internal
+- name: event_name
+  type: string
+  required: true
+  description: Market name of the event (e.g. a named windstorm).
+- name: cause_of_loss_code
+  code_set: cause_of_loss
+  required: true
+  description: Primary peril of the event.
+- name: event_date
+  type: date
+  required: true
+  description: Date of the event (first landfall or onset).
+- name: country_code
+  code_set: country
+  required: false
+  description: Primary country affected, where a single country applies.
+- name: industry_loss_estimate
+  type: decimal(18,2)
+  required: false
+  description: Market-wide insured loss estimate, in the stated currency.
+- name: currency_code
+  code_set: currency
+  required: false
+  description: Currency of the industry loss estimate.
+- name: source_system_code
+  code_set: source_system
+  required: true
+  description: System of record the event was registered in.
+  classification: internal
+keys:
+  primary:
+  - cat_event_id

@@ -1,0 +1,56 @@
+kind: entity
+name: coverage
+domain: policy
+title: Coverage
+description: 'A specific cover granted under a policy, with its own limit and deductible.
+  A policy bundles one or more coverages; claims attach to coverages where the source data
+  allows it.
+
+  '
+grain: One row per coverage granted under a policy.
+standards:
+  acord: Coverage (ACORD Information Model)
+tags:
+  maturity: draft
+attributes:
+- name: coverage_id
+  type: string
+  required: true
+  description: Identifier for the coverage.
+  classification: internal
+- name: policy_id
+  references: policy
+  type: string
+  required: true
+  description: Policy the coverage is granted under.
+  classification: internal
+- name: coverage_type_code
+  code_set: coverage_type
+  required: true
+  description: Kind of cover granted.
+  standards:
+    acord: CoverageCd
+- name: limit_amount
+  type: decimal(18,2)
+  required: false
+  description: 'Maximum amount payable under this coverage, in the policy currency; empty
+    where unlimited or not applicable.
+
+    '
+  standards:
+    acord: Limit
+    lloyds_cdr: Limit of liability
+- name: deductible_amount
+  type: decimal(18,2)
+  required: false
+  description: Amount borne by the insured before this coverage responds, in the policy currency.
+  standards:
+    acord: Deductible
+    lloyds_cdr: Deductible / excess
+- name: sum_insured_amount
+  type: decimal(18,2)
+  required: false
+  description: Declared value insured under this coverage, in the policy currency.
+keys:
+  primary:
+  - coverage_id

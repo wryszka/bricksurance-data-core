@@ -1,0 +1,28 @@
+kind: code_set
+name: country
+title: Country
+description: 'Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes.
+  A governed subset, extended when the business enters a market.
+
+  '
+standards:
+  acord: CountryCd (ISO 3166-1)
+codes:
+- code: GB
+  label: United Kingdom
+  description: United Kingdom of Great Britain and Northern Ireland.
+- code: IE
+  label: Ireland
+  description: Republic of Ireland.
+- code: DE
+  label: Germany
+  description: Federal Republic of Germany.
+- code: FR
+  label: France
+  description: French Republic.
+- code: CH
+  label: Switzerland
+  description: Swiss Confederation.
+- code: US
+  label: United States
+  description: United States of America.

@@ -1,0 +1,48 @@
+kind: entity
+name: party
+domain: party
+title: Party
+description: 'A person or organisation the group deals with. A party exists exactly once regardless
+  of how many relationships it has; what the party does (insured, broker, cedant, claimant...)
+  is expressed through party roles, never by duplicating the party.
+
+  '
+grain: 'One row per unique legal person or organisation, mastered across source systems.
+
+  '
+standards:
+  acord: Party (ACORD Information Model)
+tags:
+  maturity: draft
+attributes:
+- name: party_id
+  type: string
+  required: true
+  description: Stable, source-agnostic identifier for the party, owned by the data layer.
+  classification: internal
+- name: party_type_code
+  code_set: party_type
+  required: true
+  description: Whether the party is a natural person or a legal entity.
+- name: name
+  type: string
+  required: true
+  description: Full legal name of the party.
+  classification: pii
+  standards:
+    acord: CommercialName / PersonName
+- name: country_code
+  code_set: country
+  required: true
+  description: Country of residence or registration.
+  classification: pii
+  standards:
+    acord: CountryCd
+- name: source_system_code
+  code_set: source_system
+  required: true
+  description: System of record this party was mastered from.
+  classification: internal
+keys:
+  primary:
+  - party_id

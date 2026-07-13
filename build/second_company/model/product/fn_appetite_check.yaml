@@ -1,0 +1,27 @@
+kind: function
+name: fn_appetite_check
+domain: product
+description: 'Checks a prospective risk against the live appetite rules and returns the effect
+  (WITHIN_APPETITE, REFER or OUT_OF_APPETITE) with the matching rule''s business description.
+  The same rules humans read; the tool agents call before quoting.
+
+  '
+inputs:
+- name: in_lob
+  type: string
+  description: Line of business code, e.g. COMMERCIAL_PROPERTY.
+- name: in_country
+  type: string
+  description: Country code of the risk, e.g. GB.
+- name: in_sum_insured
+  type: decimal(18,2)
+  description: Proposed sum insured in the product currency.
+returns:
+  type: string
+  description: effect | rule description, or a REFER fallback when no rule matches.
+sql: "COALESCE(\n  (SELECT min_by(concat(appetite_effect_code, ' | ', description), rule_order)\n\
+  \   FROM {product.appetite_rule}\n   WHERE line_of_business_code = in_lob\n     AND (country_code\
+  \ IS NULL OR country_code = in_country)\n     AND (max_sum_insured IS NULL OR in_sum_insured\
+  \ <= max_sum_insured)\n     AND effective_from <= current_date()\n     AND (effective_to\
+  \ IS NULL OR effective_to >= current_date())),\n  'REFER | no matching appetite rule - refer\
+  \ to underwriting')\n"

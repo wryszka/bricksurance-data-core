@@ -1,0 +1,14 @@
+kind: code_set
+name: consent_purpose
+title: Consent Purpose
+description: Purposes a data subject can consent to, per the processing register.
+codes:
+- code: MARKETING
+  label: Marketing
+  description: Direct marketing communications.
+- code: DATA_SHARING
+  label: Data Sharing
+  description: Sharing personal data with named partners.
+- code: PROFILING
+  label: Profiling
+  description: Automated profiling for pricing or service decisions.

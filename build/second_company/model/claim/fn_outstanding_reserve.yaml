@@ -1,0 +1,17 @@
+kind: function
+name: fn_outstanding_reserve
+domain: claim
+description: 'The current outstanding case reserve on a claim, derived live as the sum of
+  signed reserve movements - never a stored balance.
+
+  '
+inputs:
+- name: in_claim_number
+  type: string
+  description: Claim number, e.g. CLM-2026-000001.
+returns:
+  type: decimal(18,2)
+  description: Outstanding reserve in the claim currency; 0 when fully released.
+sql: "(SELECT COALESCE(SUM(ct.amount), 0)\n FROM {claim.claim_transaction} ct\n JOIN {claim.claim}\
+  \ c ON c.claim_id = ct.claim_id\n WHERE c.claim_number = in_claim_number\n   AND ct.claim_transaction_type_code\
+  \ = 'CASE_RESERVE_MOVEMENT')\n"

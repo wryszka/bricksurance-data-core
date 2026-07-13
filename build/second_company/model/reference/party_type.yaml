@@ -1,0 +1,22 @@
+kind: code_set
+name: party_type
+title: Party Type
+description: 'Fundamental legal nature of a party. Everything else about a party''s place
+  in the business is a role, never a type.
+
+  '
+standards:
+  acord: PartyTypeCd
+codes:
+- code: PERSON
+  label: Person
+  description: A natural person.
+- code: ORGANISATION
+  label: Organisation
+  description: A legal entity - company, partnership, public body or association.
+- code: MACHINE_AGENT
+  label: Machine Agent
+  description: 'An autonomous software agent acting on behalf of a person or organisation
+    - a first-class counterparty with its own identity and audited decisions.
+
+    '

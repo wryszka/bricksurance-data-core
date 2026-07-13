@@ -1,0 +1,36 @@
+kind: code_set
+name: party_role_type
+title: Party Role Type
+description: 'The roles a party can play in the business. This code set is the model''s number-one
+  extension point: a new kind of counterparty is a new code here, not a new table.
+
+  '
+standards:
+  acord: Party role patterns of the ACORD Information Model
+codes:
+- code: POLICYHOLDER
+  label: Policyholder
+  description: The party that entered into the policy contract and owes the premium.
+- code: INSURED
+  label: Insured
+  description: A party whose interest is covered by the policy; often, but not always, the
+    policyholder.
+- code: BROKER
+  label: Broker
+  description: An intermediary placing the business on behalf of the policyholder.
+- code: CLAIMANT
+  label: Claimant
+  description: The party claiming under a policy; may be a third party.
+- code: CEDANT
+  label: Cedant
+  description: The insurer ceding risk under a reinsurance contract.
+- code: REINSURER
+  label: Reinsurer
+  description: The party assuming risk under a reinsurance contract.
+- code: COVERHOLDER
+  label: Coverholder
+  description: A party authorised to bind business on the insurer's behalf under a delegated
+    authority.
+- code: BUYER_AGENT
+  label: Buyer Agent
+  description: A machine agent requesting and negotiating cover on behalf of the buyer.

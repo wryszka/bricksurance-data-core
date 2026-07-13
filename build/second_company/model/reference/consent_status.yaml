@@ -1,0 +1,14 @@
+kind: code_set
+name: consent_status
+title: Consent Status
+description: State of a consent record; withdrawal is an auditable event, not a deletion.
+codes:
+- code: GRANTED
+  label: Granted
+  description: Consent currently in force.
+- code: WITHDRAWN
+  label: Withdrawn
+  description: Consent withdrawn by the data subject.
+- code: EXPIRED
+  label: Expired
+  description: Consent lapsed at its expiry.

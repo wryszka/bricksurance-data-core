@@ -1,0 +1,71 @@
+kind: entity
+name: treaty
+domain: reinsurance
+title: Treaty
+description: 'A treaty reinsurance contract under which risks are ceded to or assumed from
+  reinsurers. Cedant and reinsurer are party roles on the treaty; which business it covers
+  is expressed through cessions.
+
+  '
+grain: One row per treaty contract per underwriting year.
+standards:
+  acord: Reinsurance agreement patterns (ACORD GRLC)
+tags:
+  maturity: draft
+attributes:
+- name: treaty_id
+  type: string
+  required: true
+  description: Stable identifier for the treaty, owned by the data layer.
+  classification: internal
+- name: treaty_reference
+  type: string
+  required: true
+  description: Treaty reference as agreed between the parties.
+  classification: confidential
+- name: treaty_type_code
+  code_set: treaty_type
+  required: true
+  description: Form of the treaty.
+- name: line_of_business_code
+  code_set: line_of_business
+  required: true
+  description: Class of business the treaty covers.
+- name: underwriting_year
+  type: integer
+  required: true
+  description: Underwriting year of account of the treaty.
+  standards:
+    lloyds_cdr: Year of account
+- name: inception_date
+  type: date
+  required: true
+  description: Date treaty cover begins (inclusive).
+- name: expiry_date
+  type: date
+  required: true
+  description: Date treaty cover ends (inclusive). Must be on or after inception_date.
+- name: cession_rate
+  type: decimal(5,4)
+  required: false
+  description: 'Contractual ceded share for proportional treaties, as a fraction between 0
+    and 1; empty for non-proportional forms.
+
+    '
+  classification: confidential
+- name: currency_code
+  code_set: currency
+  required: true
+  description: Currency of the treaty.
+- name: source_system_code
+  code_set: source_system
+  required: true
+  description: System of record the treaty originates from.
+  classification: internal
+keys:
+  primary:
+  - treaty_id
+quality:
+- name: cover_period_valid
+  rule: expiry_date >= inception_date
+  description: Treaty cover cannot end before it begins.

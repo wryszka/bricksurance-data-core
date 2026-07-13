@@ -1,0 +1,42 @@
+kind: entity
+name: product_coverage
+domain: product
+title: Product Coverage
+description: 'A coverage the product offers, with its default limits. Policy coverages are
+  instances of these offers.
+
+  '
+grain: One row per coverage type offered by a product.
+tags:
+  maturity: draft
+attributes:
+- name: product_coverage_id
+  type: string
+  required: true
+  description: Identifier for the offered coverage.
+  classification: internal
+- name: product_id
+  references: product
+  type: string
+  required: true
+  description: The offering product.
+  classification: internal
+- name: coverage_type_code
+  code_set: coverage_type
+  required: true
+  description: Kind of cover offered.
+- name: default_limit_amount
+  type: decimal(18,2)
+  required: false
+  description: Default limit offered, in the product currency.
+- name: default_deductible_amount
+  type: decimal(18,2)
+  required: false
+  description: Default deductible, in the product currency.
+- name: optional
+  type: boolean
+  required: true
+  description: Whether the coverage is optional (true) or core to the product (false).
+keys:
+  primary:
+  - product_coverage_id

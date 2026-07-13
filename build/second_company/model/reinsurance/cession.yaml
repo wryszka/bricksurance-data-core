@@ -1,0 +1,46 @@
+kind: entity
+name: cession
+domain: reinsurance
+title: Cession
+description: 'The link between direct business and a treaty: which policy (or coverage) is
+  ceded to which treaty, and to what share. Ceded premium and recoveries are derived by applying
+  the ceded share to the underlying transactions.
+
+  '
+grain: One row per policy (or coverage, where the split exists) per treaty.
+standards:
+  acord: Cession patterns (ACORD GRLC)
+tags:
+  maturity: draft
+attributes:
+- name: cession_id
+  type: string
+  required: true
+  description: Identifier for the cession.
+  classification: internal
+- name: policy_id
+  references: policy
+  type: string
+  required: true
+  description: Policy being ceded.
+  classification: internal
+- name: coverage_id
+  references: coverage
+  type: string
+  required: false
+  description: Coverage being ceded, where cession applies at coverage level.
+  classification: internal
+- name: treaty_id
+  references: treaty
+  type: string
+  required: true
+  description: Treaty the business is ceded to.
+  classification: internal
+- name: ceded_share
+  type: decimal(5,4)
+  required: true
+  description: Share of the risk ceded under this cession, as a fraction between 0 and 1.
+  classification: confidential
+keys:
+  primary:
+  - cession_id

@@ -1,0 +1,23 @@
+kind: code_set
+name: assumption_status
+title: Assumption Status
+description: 'Maker/checker lifecycle of an assumption set. Only one set per assumption type
+  is APPROVED and in force at a time; superseded sets remain queryable for reproducibility.
+
+  '
+codes:
+- code: DRAFT
+  label: Draft
+  description: Being prepared by the maker; not usable in valuations.
+- code: PENDING_APPROVAL
+  label: Pending Approval
+  description: Submitted for checker approval.
+- code: APPROVED
+  label: Approved
+  description: Approved and in force for valuation runs.
+- code: REJECTED
+  label: Rejected
+  description: Rejected by the checker; retained for audit.
+- code: SUPERSEDED
+  label: Superseded
+  description: Replaced by a newer approved set; retained for reproducibility.

@@ -1,0 +1,53 @@
+kind: metric_view
+name: submission_metrics
+domain: semantics
+title: Submission Metrics
+description: 'Reinsurance submission funnel KPIs: volumes and requested capacity by status,
+  form and year. Amounts are in original submission currency; group by or filter on currency_code
+  before summing money. Query measures with MEASURE(name).
+
+  '
+source: reinsurance.submission
+joins:
+- name: submission_status
+  source: reference.submission_status
+  condition: source.submission_status_code = submission_status.submission_status_code
+- name: line_of_business
+  source: reference.line_of_business
+  condition: source.line_of_business_code = line_of_business.line_of_business_code
+dimensions:
+- name: underwriting_year
+  expr: underwriting_year
+  description: Underwriting year the cover would attach to.
+- name: submission_status
+  expr: submission_status.label
+  description: Funnel status as its business label.
+- name: treaty_type_code
+  expr: treaty_type_code
+  description: Form of treaty requested.
+- name: line_of_business
+  expr: line_of_business.label
+  description: 'Line of business as its business label, e.g. ''Commercial Property''. Filter
+    with labels; use line_of_business_code for codes.
+
+    '
+- name: line_of_business_code
+  expr: source.line_of_business_code
+  description: Line of business as its code, e.g. COMMERCIAL_PROPERTY.
+- name: currency_code
+  expr: currency_code
+  description: Original currency of requested terms. Group by this before summing money.
+measures:
+- name: submission_count
+  expr: COUNT(DISTINCT submission_id)
+  description: Number of submissions.
+- name: bound_count
+  expr: COUNT(DISTINCT CASE WHEN submission_status_code = 'BOUND' THEN submission_id END)
+  description: Submissions bound into treaties.
+- name: bind_ratio
+  expr: COUNT(DISTINCT CASE WHEN submission_status_code = 'BOUND' THEN submission_id END)
+    / NULLIF(COUNT(DISTINCT submission_id), 0)
+  description: Bound submissions over all submissions.
+- name: requested_limit_total
+  expr: SUM(requested_limit)
+  description: Total limit requested, in original currency.

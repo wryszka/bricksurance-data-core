@@ -1,0 +1,20 @@
+kind: function
+name: fn_indicative_quote
+domain: product
+description: 'Returns an indicative gross premium for an active product and sum insured, from
+  the product''s declared base rate. Indicative only - binding terms always pass through an
+  underwriting decision.
+
+  '
+inputs:
+- name: in_product_code
+  type: string
+  description: Product code, e.g. CP-STD.
+- name: in_sum_insured
+  type: decimal(18,2)
+  description: Proposed sum insured in the product currency.
+returns:
+  type: decimal(18,2)
+  description: Indicative gross premium; NULL when the product is unknown or inactive.
+sql: "round((SELECT max(base_rate)\n       FROM {product.product}\n       WHERE product_code\
+  \ = in_product_code\n         AND product_status_code = 'ACTIVE') * in_sum_insured, 2)\n"

@@ -1,0 +1,56 @@
+kind: entity
+name: product
+domain: product
+title: Product
+description: 'A machine-readable insurance product: what is offered, under which line of business,
+  at which base rate. Products are what quotes are requested against - by humans, aggregators
+  or buyer agents alike - and what wordings, questions and appetite rules attach to.
+
+  '
+grain: One row per product version offered.
+standards:
+  acord: Product / program patterns
+tags:
+  maturity: draft
+attributes:
+- name: product_id
+  type: string
+  required: true
+  description: Identifier for the product.
+  classification: internal
+- name: product_code
+  type: string
+  required: true
+  description: Marketing/product code, unique within the source system.
+- name: name
+  type: string
+  required: true
+  description: Product name as marketed.
+- name: line_of_business_code
+  code_set: line_of_business
+  required: true
+  description: Line of business the product is written under.
+- name: product_status_code
+  code_set: product_status
+  required: true
+  description: Lifecycle status.
+- name: base_rate
+  type: decimal(10,6)
+  required: false
+  description: Indicative base rate per unit of sum insured, used for indicative quotes only.
+  classification: confidential
+- name: currency_code
+  code_set: currency
+  required: true
+  description: Default currency of the product.
+- name: source_system_code
+  code_set: source_system
+  required: true
+  description: System of record.
+  classification: internal
+keys:
+  primary:
+  - product_id
+  natural:
+  - source_system_code
+  - product_code

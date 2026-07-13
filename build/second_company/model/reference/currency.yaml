@@ -1,0 +1,24 @@
+kind: code_set
+name: currency
+title: Currency
+description: 'Transaction currencies used by the group, as ISO 4217 alphabetic codes. This
+  is deliberately a governed subset, not the full ISO list: a currency is added here when
+  the business starts writing in it.
+
+  '
+standards:
+  acord: CurCd (ISO 4217)
+  lloyds_cdr: Settlement currency (ISO 4217)
+codes:
+- code: GBP
+  label: Pound Sterling
+  description: United Kingdom pound sterling.
+- code: EUR
+  label: Euro
+  description: Euro.
+- code: USD
+  label: US Dollar
+  description: United States dollar.
+- code: CHF
+  label: Swiss Franc
+  description: Swiss franc.

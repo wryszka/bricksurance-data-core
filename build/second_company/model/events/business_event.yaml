@@ -1,0 +1,53 @@
+kind: entity
+name: business_event
+domain: events
+title: Business Event
+description: 'The event stream: business moments (quote requested, loss notified, payment
+  made, complaint received) as append-only, timestamped records referencing the entity they
+  concern. This is the near-real-time face of the model and the natural feed for monitoring
+  agents.
+
+  '
+grain: One row per business event occurrence; append-only.
+tags:
+  maturity: draft
+attributes:
+- name: business_event_id
+  type: string
+  required: true
+  description: Identifier for the event.
+  classification: internal
+- name: business_event_type_code
+  code_set: business_event_type
+  required: true
+  description: Kind of event.
+- name: subject_entity
+  type: string
+  required: true
+  description: Entity name of the subject (e.g. quote, claim).
+- name: subject_id
+  type: string
+  required: true
+  description: Identifier of the subject row.
+  classification: internal
+- name: occurred_at
+  type: timestamp
+  required: true
+  description: When the event occurred.
+- name: channel_code
+  code_set: distribution_channel
+  required: false
+  description: Channel the event arrived through, where relevant.
+- name: payload
+  type: string
+  required: false
+  description: Event payload as JSON, schema per event type.
+  classification: confidential
+- name: source_system_code
+  code_set: source_system
+  required: true
+  description: Emitting system.
+  classification: internal
+keys:
+  primary:
+  - business_event_id

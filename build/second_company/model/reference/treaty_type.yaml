@@ -1,0 +1,23 @@
+kind: code_set
+name: treaty_type
+title: Treaty Type
+description: 'Forms of treaty reinsurance. Direction (assumed or ceded) is determined by the
+  cedant and reinsurer party roles on the treaty, not by this code.
+
+  '
+standards:
+  acord: Reinsurance agreement patterns (ACORD GRLC)
+codes:
+- code: QUOTA_SHARE
+  label: Quota Share
+  description: Proportional treaty ceding a fixed share of every risk in scope.
+- code: SURPLUS
+  label: Surplus
+  description: Proportional treaty ceding the portion of each risk above the cedant's retained
+    line.
+- code: XOL_PER_RISK
+  label: Excess of Loss (Per Risk)
+  description: Non-proportional cover for individual risk losses above an attachment point.
+- code: XOL_CATASTROPHE
+  label: Excess of Loss (Catastrophe)
+  description: Non-proportional cover for accumulated losses from a single catastrophe event.

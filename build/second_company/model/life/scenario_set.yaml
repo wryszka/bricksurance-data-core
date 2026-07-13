@@ -1,0 +1,42 @@
+kind: entity
+name: scenario_set
+domain: life
+title: Scenario Set
+description: 'A delivered economic scenario set (risk-free curves, equity paths) used by stochastic
+  valuation. Registered with a lifecycle so exactly one set is active for production runs,
+  and every run records which set it used.
+
+  '
+grain: One row per delivered scenario set.
+tags:
+  maturity: draft
+attributes:
+- name: scenario_set_id
+  type: string
+  required: true
+  description: Identifier for the scenario set.
+  classification: internal
+- name: name
+  type: string
+  required: true
+  description: Human-readable name of the set, including its calibration reference.
+- name: scenario_status_code
+  code_set: scenario_status
+  required: true
+  description: Lifecycle status; exactly one set is ACTIVE for production.
+- name: scenario_count
+  type: integer
+  required: false
+  description: Number of stochastic paths in the set.
+- name: calibration_date
+  type: date
+  required: false
+  description: Market date the set was calibrated to.
+- name: source_system_code
+  code_set: source_system
+  required: true
+  description: Provenance of the set (vendor delivery or internal generation).
+  classification: internal
+keys:
+  primary:
+  - scenario_set_id

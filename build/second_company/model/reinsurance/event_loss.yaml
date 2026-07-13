@@ -1,0 +1,65 @@
+kind: entity
+name: event_loss
+domain: reinsurance
+title: Event Loss
+description: 'A loss figure attributed to a catastrophe event - against a treaty (assumed
+  book) or a policy (direct book). The loss basis keeps modelled day-one estimates and firming
+  cedant reports honestly apart; figures are point-in- time as-of snapshots, never overwritten.
+
+  '
+grain: One row per event per treaty-or-policy per basis per as-of date.
+tags:
+  maturity: draft
+attributes:
+- name: event_loss_id
+  type: string
+  required: true
+  description: Identifier for the loss row.
+  classification: internal
+- name: cat_event_id
+  references: cat_event
+  type: string
+  required: true
+  description: The catastrophe event the loss belongs to.
+  classification: internal
+- name: treaty_id
+  references: treaty
+  type: string
+  required: false
+  description: Treaty the loss attaches to, for the assumed book.
+  classification: internal
+- name: policy_id
+  references: policy
+  type: string
+  required: false
+  description: Policy the loss attaches to, for the direct book.
+  classification: internal
+- name: loss_basis_code
+  code_set: loss_basis
+  required: true
+  description: Whether the figure is modelled or reported.
+- name: gross_loss_amount
+  type: decimal(18,2)
+  required: true
+  description: Gross loss to the contract, in the stated currency.
+  classification: confidential
+- name: ceded_loss_amount
+  type: decimal(18,2)
+  required: false
+  description: Portion ceded onward under outward protections, where computed.
+  classification: confidential
+- name: currency_code
+  code_set: currency
+  required: true
+  description: Currency of the amounts.
+- name: as_of_date
+  type: date
+  required: true
+  description: Snapshot date of the figure.
+keys:
+  primary:
+  - event_loss_id
+quality:
+- name: exactly_one_book
+  rule: exactly one of treaty_id, policy_id is not null
+  description: A loss row belongs to either the assumed or the direct book, never both.

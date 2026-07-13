@@ -1,0 +1,84 @@
+kind: entity
+name: premium_bordereau_line
+domain: exchange
+title: Premium Bordereau Line (inbound)
+description: 'The canonical form of an inbound premium bordereau line, as reported by a coverholder
+  or broker. Messy source files land in the exchange domain and are mapped into this shape
+  - using the data dictionary as the contract - before flowing into the core model.
+
+  '
+grain: One row per policy per reporting month per inbound bordereau.
+standards:
+  lloyds_cdr: Coverholder premium reporting attributes (indicative)
+tags:
+  maturity: draft
+attributes:
+- name: bordereau_line_id
+  type: string
+  required: true
+  description: Identifier for the bordereau line, assigned on ingestion.
+  classification: internal
+- name: reporting_month
+  type: date
+  required: true
+  description: First day of the calendar month the bordereau reports on.
+- name: coverholder_name
+  type: string
+  required: true
+  description: Name of the coverholder or broker submitting the bordereau.
+  classification: confidential
+- name: policy_number
+  type: string
+  required: true
+  description: Policy reference as reported by the coverholder; matched to the core model
+    downstream.
+  classification: confidential
+- name: insured_name
+  type: string
+  required: false
+  description: Name of the insured as reported.
+  classification: pii
+- name: line_of_business_code
+  code_set: line_of_business
+  required: true
+  description: Line of business, mapped from the coverholder's own class descriptions to the
+    canonical code set.
+- name: inception_date
+  type: date
+  required: true
+  description: Cover inception as reported.
+- name: expiry_date
+  type: date
+  required: false
+  description: Cover expiry as reported.
+- name: currency_code
+  code_set: currency
+  required: true
+  description: Currency of the reported amounts.
+- name: gross_premium
+  type: decimal(18,2)
+  required: true
+  description: Gross written premium reported for the line.
+  classification: confidential
+- name: commission_amount
+  type: decimal(18,2)
+  required: false
+  description: Coverholder commission reported for the line.
+  classification: confidential
+- name: risk_country_code
+  code_set: country
+  required: false
+  description: Country of the risk location, where reported.
+- name: risk_postcode
+  type: string
+  required: false
+  description: Postal code of the risk location, where reported.
+  classification: confidential
+- name: source_system_code
+  code_set: source_system
+  required: true
+  description: Provenance of the line; coverholder bordereaux use COVERHOLDER_BDX.
+  classification: internal
+keys:
+  primary:
+  - bordereau_line_id
