@@ -45,6 +45,9 @@ def spaces_config(t):
                         ("party", "party"), ("party", "party_role"),
                         ("semantics", "underwriting_metrics"),
                         ("semantics", "financial_transaction"),
+                        ("semantics", "performance_metrics"),
+                        ("semantics", "premium_earning"),
+                        ("claim", "fraud_signal"),
                         ("reference", "data_dictionary")],
             "examples": [
                 ("Gross written premium and loss ratio by line of business (GBP, UWY 2026)",
@@ -165,6 +168,44 @@ def spaces_config(t):
                  f"FROM {t('policy', 'policy')} WHERE underwriting_year = 2026"),
             ],
         },
+        "customer": {
+            "title": "Bricksurance — Customer & Privacy",
+            "description": ("Parties and their contact points, consents per processing "
+                            "purpose, GDPR data subject requests and complaints - the "
+                            f"customer-360 and privacy-office view. {DISCLAIMER}"),
+            "objects": [("party", "party"), ("party", "party_role"),
+                        ("party", "contact_point"), ("party", "consent"),
+                        ("party", "data_subject_request"), ("conduct", "complaint"),
+                        ("finance", "receivable_transaction"), ("policy", "policy"),
+                        ("reference", "data_dictionary")],
+            "examples": [
+                ("A party's consents and requests",
+                 f"SELECT pt.name, c.consent_purpose_code, c.consent_status_code, c.withdrawn_at "
+                 f"FROM {t('party', 'consent')} c JOIN {t('party', 'party')} pt "
+                 f"ON pt.party_id = c.party_id ORDER BY pt.name",
+                 "Withdrawal is a state change with a timestamp, never a deletion."),
+            ],
+            "benchmarks": [
+                ("Who has withdrawn marketing consent?",
+                 f"SELECT pt.name, c.withdrawn_at FROM {t('party', 'consent')} c "
+                 f"JOIN {t('party', 'party')} pt ON pt.party_id = c.party_id "
+                 f"WHERE c.consent_purpose_code = 'MARKETING' AND c.consent_status_code = 'WITHDRAWN'"),
+                ("What data subject requests are open or refused, and why?",
+                 f"SELECT pt.name, r.dsr_type_code, r.dsr_status_code, r.notes "
+                 f"FROM {t('party', 'data_subject_request')} r "
+                 f"JOIN {t('party', 'party')} pt ON pt.party_id = r.party_id "
+                 f"WHERE r.dsr_status_code <> 'COMPLETED'"),
+                ("Which policyholders owe us premium (aged debt)?",
+                 f"SELECT pt.name, p.policy_number, SUM(rt.amount) AS outstanding "
+                 f"FROM {t('finance', 'receivable_transaction')} rt "
+                 f"JOIN {t('policy', 'policy')} p ON p.policy_id = rt.policy_id "
+                 f"JOIN {t('party', 'party_role')} pr ON pr.policy_id = p.policy_id "
+                 f"AND pr.party_role_type_code = 'POLICYHOLDER' "
+                 f"JOIN {t('party', 'party')} pt ON pt.party_id = pr.party_id "
+                 f"GROUP BY pt.name, p.policy_number HAVING SUM(rt.amount) > 0 "
+                 f"ORDER BY outstanding DESC"),
+            ],
+        },
         "governance": {
             "title": "Bricksurance — Data Governance",
             "description": ("The model explaining itself: every entity and attribute with its "
@@ -246,7 +287,7 @@ def uid():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--space", required=True, choices=["pnc", "reinsurance", "life", "distribution", "governance"])
+    ap.add_argument("--space", required=True, choices=["pnc", "reinsurance", "life", "distribution", "governance", "customer"])
     ap.add_argument("--profile", default="DEFAULT")
     ap.add_argument("--warehouse-id")
     ap.add_argument("--space-id", help="Patch this space instead of creating a new one")

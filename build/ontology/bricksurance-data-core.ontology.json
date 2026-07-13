@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with a Lloyd's Core Data Record crosswalk. Element names are cited as a crosswalk only; licensed standards are not reproduced.",
   "domains": [
@@ -381,6 +381,75 @@
     },
     {
       "kind": "code_set",
+      "name": "consent_purpose",
+      "title": "Consent Purpose",
+      "description": "Purposes a data subject can consent to, per the processing register.",
+      "codes": [
+        {
+          "code": "MARKETING",
+          "label": "Marketing",
+          "description": "Direct marketing communications."
+        },
+        {
+          "code": "DATA_SHARING",
+          "label": "Data Sharing",
+          "description": "Sharing personal data with named partners."
+        },
+        {
+          "code": "PROFILING",
+          "label": "Profiling",
+          "description": "Automated profiling for pricing or service decisions."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "consent_status",
+      "title": "Consent Status",
+      "description": "State of a consent record; withdrawal is an auditable event, not a deletion.",
+      "codes": [
+        {
+          "code": "GRANTED",
+          "label": "Granted",
+          "description": "Consent currently in force."
+        },
+        {
+          "code": "WITHDRAWN",
+          "label": "Withdrawn",
+          "description": "Consent withdrawn by the data subject."
+        },
+        {
+          "code": "EXPIRED",
+          "label": "Expired",
+          "description": "Consent lapsed at its expiry."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "contact_point_type",
+      "title": "Contact Point Type",
+      "description": "Kinds of contact point held for a party.",
+      "codes": [
+        {
+          "code": "EMAIL",
+          "label": "Email",
+          "description": "Email address."
+        },
+        {
+          "code": "PHONE",
+          "label": "Phone",
+          "description": "Telephone number."
+        },
+        {
+          "code": "POSTAL_ADDRESS",
+          "label": "Postal Address",
+          "description": "Postal address."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "country",
       "title": "Country",
       "description": "Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes. A governed subset, extended when the business enters a market.\n",
@@ -566,6 +635,62 @@
     },
     {
       "kind": "code_set",
+      "name": "dsr_status",
+      "title": "Data Subject Request Status",
+      "description": "Handling status of a data subject request against the statutory clock.",
+      "codes": [
+        {
+          "code": "RECEIVED",
+          "label": "Received",
+          "description": "Logged; statutory response window running."
+        },
+        {
+          "code": "IN_PROGRESS",
+          "label": "In Progress",
+          "description": "Being fulfilled."
+        },
+        {
+          "code": "COMPLETED",
+          "label": "Completed",
+          "description": "Fulfilled and evidenced."
+        },
+        {
+          "code": "REFUSED",
+          "label": "Refused",
+          "description": "Refused with grounds (e.g. legal obligation to retain)."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "dsr_type",
+      "title": "Data Subject Request Type",
+      "description": "GDPR data subject request kinds.",
+      "codes": [
+        {
+          "code": "ACCESS",
+          "label": "Access (DSAR)",
+          "description": "Right of access to personal data held."
+        },
+        {
+          "code": "ERASURE",
+          "label": "Erasure",
+          "description": "Right to erasure, applied per the model's erasure design."
+        },
+        {
+          "code": "RECTIFICATION",
+          "label": "Rectification",
+          "description": "Correction of inaccurate personal data."
+        },
+        {
+          "code": "PORTABILITY",
+          "label": "Portability",
+          "description": "Machine-readable export of provided data."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "endorsement_type",
       "title": "Endorsement Type",
       "description": "Kinds of mid-term change to a policy. The premium effect of an endorsement is always booked as premium transactions; the endorsement records the contractual change itself.\n",
@@ -597,6 +722,95 @@
           "code": "CANCELLATION",
           "label": "Cancellation",
           "description": "Policy terminated before natural expiry."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "expense_type",
+      "title": "Expense Type",
+      "description": "Kinds of operating expense allocated to lines of business - the missing half of the combined ratio.",
+      "codes": [
+        {
+          "code": "ACQUISITION",
+          "label": "Acquisition Expense",
+          "description": "Costs of acquiring business other than commission."
+        },
+        {
+          "code": "OPERATING",
+          "label": "Operating Expense",
+          "description": "General administration allocated to the line."
+        },
+        {
+          "code": "CLAIMS_HANDLING",
+          "label": "Claims Handling Expense",
+          "description": "Unallocated claims handling cost (ULAE)."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "fraud_signal_type",
+      "title": "Fraud Signal Type",
+      "description": "Kinds of fraud indicator on a claim. Signals inform investigation; they never auto-decide.\n",
+      "codes": [
+        {
+          "code": "LATE_REPORTING",
+          "label": "Late Reporting",
+          "description": "Unusual delay between loss and notification."
+        },
+        {
+          "code": "PRIOR_CLAIMS",
+          "label": "Prior Claims Pattern",
+          "description": "Elevated recent claims frequency for the party."
+        },
+        {
+          "code": "VELOCITY",
+          "label": "Velocity",
+          "description": "Multiple claims or policies opened in a short window."
+        },
+        {
+          "code": "DOC_INCONSISTENCY",
+          "label": "Document Inconsistency",
+          "description": "Evidence contradicts the reported circumstances."
+        },
+        {
+          "code": "NETWORK_LINK",
+          "label": "Network Link",
+          "description": "Link to parties or addresses seen in confirmed fraud."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "gl_account",
+      "title": "GL Account",
+      "description": "Ledger accounts the model posts to - the thin, auditable bridge between operational transactions and finance. Every posting cites its source row.\n",
+      "codes": [
+        {
+          "code": "PREMIUM_WRITTEN",
+          "label": "Premium Written",
+          "description": "Gross written premium income."
+        },
+        {
+          "code": "CLAIMS_PAID",
+          "label": "Claims Paid",
+          "description": "Indemnity and expense payments on claims."
+        },
+        {
+          "code": "CLAIMS_RESERVE_MOVEMENT",
+          "label": "Claims Reserve Movement",
+          "description": "Movement in outstanding case reserves."
+        },
+        {
+          "code": "COMMISSION_EXPENSE",
+          "label": "Commission Expense",
+          "description": "Intermediary remuneration."
+        },
+        {
+          "code": "OPERATING_EXPENSE",
+          "label": "Operating Expense",
+          "description": "Allocated operating and acquisition expenses."
         }
       ]
     },
@@ -916,6 +1130,34 @@
           "code": "EXPIRED",
           "label": "Expired",
           "description": "Offer lapsed unanswered at its validity date."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "receivable_transaction_type",
+      "title": "Receivable Transaction Type",
+      "description": "Premium billing movements. Outstanding debt is the signed sum - invoices positive, cash negative - never a stored balance.\n",
+      "codes": [
+        {
+          "code": "INVOICE",
+          "label": "Invoice",
+          "description": "Premium invoiced to the payer; positive."
+        },
+        {
+          "code": "CASH_RECEIPT",
+          "label": "Cash Receipt",
+          "description": "Premium cash received; negative."
+        },
+        {
+          "code": "WRITE_OFF",
+          "label": "Write-off",
+          "description": "Irrecoverable balance written off; negative."
+        },
+        {
+          "code": "REFUND",
+          "label": "Refund",
+          "description": "Premium refunded to the payer; positive."
         }
       ]
     },
@@ -1340,6 +1582,72 @@
       "keys": {
         "primary": [
           "claim_transaction_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "fraud_signal",
+      "domain": "claim",
+      "title": "Fraud Signal",
+      "description": "A fraud indicator raised on a claim, with its score and provenance. Signals inform SIU referral decisions; a signal is never itself a decision.\n",
+      "grain": "One row per signal per claim.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "fraud_signal_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the signal.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": true,
+          "description": "Claim the signal concerns.",
+          "classification": "internal"
+        },
+        {
+          "name": "fraud_signal_type_code",
+          "code_set": "fraud_signal_type",
+          "required": true,
+          "description": "Kind of indicator."
+        },
+        {
+          "name": "score",
+          "type": "integer",
+          "required": true,
+          "description": "Signal strength 0-100.",
+          "classification": "confidential"
+        },
+        {
+          "name": "detected_at",
+          "type": "timestamp",
+          "required": true,
+          "description": "When the signal was raised."
+        },
+        {
+          "name": "detail",
+          "type": "string",
+          "required": false,
+          "description": "What was observed, in business language.",
+          "classification": "confidential"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Detecting system.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "fraud_signal_id"
         ]
       }
     },
@@ -1818,6 +2126,220 @@
     },
     {
       "kind": "entity",
+      "name": "expense_transaction",
+      "domain": "finance",
+      "title": "Expense Transaction",
+      "description": "An operating expense allocated to a line of business - the missing half of the combined ratio, transactional like all money in the model.\n",
+      "grain": "One row per expense allocation per line per period booking.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "expense_transaction_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the expense movement.",
+          "classification": "internal"
+        },
+        {
+          "name": "expense_type_code",
+          "code_set": "expense_type",
+          "required": true,
+          "description": "Kind of expense."
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line the expense is allocated to."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount in the stated currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "description": "Booking date."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "expense_transaction_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "gl_posting",
+      "domain": "finance",
+      "title": "GL Posting",
+      "description": "A ledger posting derived from an operational transaction - the thin, auditable bridge to finance. Every posting cites its source policy or claim, so ledger totals reconcile to operational sums by construction.\n",
+      "grain": "One row per posting per source transaction.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "gl_posting_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the posting.",
+          "classification": "internal"
+        },
+        {
+          "name": "journal_reference",
+          "type": "string",
+          "required": true,
+          "description": "Journal the posting belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "gl_account_code",
+          "code_set": "gl_account",
+          "required": true,
+          "description": "Ledger account posted to."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount in the stated currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        },
+        {
+          "name": "posting_date",
+          "type": "date",
+          "required": true,
+          "description": "Ledger posting date."
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "Source policy, where the posting derives from policy money.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": false,
+          "description": "Source claim, where the posting derives from claim money.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "gl_posting_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "receivable_transaction",
+      "domain": "finance",
+      "title": "Receivable Transaction",
+      "description": "Premium billing and collection movements on a policy. Written premium is earned exposure; this is the cash reality - outstanding and aged debt are signed sums over these rows.\n",
+      "grain": "One row per billing movement per policy.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "receivable_transaction_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the movement.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy billed.",
+          "classification": "internal"
+        },
+        {
+          "name": "receivable_transaction_type_code",
+          "code_set": "receivable_transaction_type",
+          "required": true,
+          "description": "Kind of movement; invoices positive, receipts negative."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount in the stated currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "description": "Booking date."
+        },
+        {
+          "name": "due_date",
+          "type": "date",
+          "required": false,
+          "description": "Payment due date, for invoices - the anchor for ageing."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "receivable_transaction_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
       "name": "valuation_result",
       "domain": "finance",
       "title": "Valuation Result",
@@ -2205,6 +2727,192 @@
           "assumption_set_id"
         ]
       }
+    },
+    {
+      "kind": "entity",
+      "name": "consent",
+      "domain": "party",
+      "title": "Consent",
+      "description": "A data subject's consent for a processing purpose. Withdrawal is a state change with a timestamp, never a deletion - the consent history is itself evidence.\n",
+      "grain": "One row per party per purpose per consent grant.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "consent_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the consent record.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The consenting data subject.",
+          "classification": "internal"
+        },
+        {
+          "name": "consent_purpose_code",
+          "code_set": "consent_purpose",
+          "required": true,
+          "description": "Purpose consented to."
+        },
+        {
+          "name": "consent_status_code",
+          "code_set": "consent_status",
+          "required": true,
+          "description": "Current state of the consent."
+        },
+        {
+          "name": "granted_at",
+          "type": "timestamp",
+          "required": true,
+          "description": "When consent was given."
+        },
+        {
+          "name": "withdrawn_at",
+          "type": "timestamp",
+          "required": false,
+          "description": "When consent was withdrawn, where it was."
+        },
+        {
+          "name": "channel_code",
+          "code_set": "distribution_channel",
+          "required": false,
+          "description": "Channel the consent was captured through."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "consent_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "contact_point",
+      "domain": "party",
+      "title": "Contact Point",
+      "description": "A contact point for a party. PII is deliberately concentrated here and on party - the erasure design in PRIVACY.md redacts these anchors while transactional history keeps its surrogate keys.\n",
+      "grain": "One row per contact point per party.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "contact_point_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the contact point.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The party contactable here.",
+          "classification": "internal"
+        },
+        {
+          "name": "contact_point_type_code",
+          "code_set": "contact_point_type",
+          "required": true,
+          "description": "Kind of contact point."
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "The address, number or email itself.",
+          "classification": "pii"
+        },
+        {
+          "name": "preferred",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether this is the party's preferred contact point of its kind."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "contact_point_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "data_subject_request",
+      "domain": "party",
+      "title": "Data Subject Request",
+      "description": "A GDPR data subject request (access, erasure, rectification, portability) tracked against the statutory clock. Erasure execution follows the design in PRIVACY.md.\n",
+      "grain": "One row per request received.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "data_subject_request_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the request.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The requesting data subject.",
+          "classification": "internal"
+        },
+        {
+          "name": "dsr_type_code",
+          "code_set": "dsr_type",
+          "required": true,
+          "description": "Kind of request."
+        },
+        {
+          "name": "dsr_status_code",
+          "code_set": "dsr_status",
+          "required": true,
+          "description": "Handling status."
+        },
+        {
+          "name": "received_date",
+          "type": "date",
+          "required": true,
+          "description": "Date received; the statutory window starts here."
+        },
+        {
+          "name": "completed_date",
+          "type": "date",
+          "required": false,
+          "description": "Date fulfilled or refused."
+        },
+        {
+          "name": "notes",
+          "type": "string",
+          "required": false,
+          "description": "Handling notes, including refusal grounds where applicable.",
+          "classification": "confidential"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "data_subject_request_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "completed_after_received",
+          "rule": "completed_date >= received_date",
+          "description": "A request cannot complete before it is received."
+        }
+      ]
     },
     {
       "kind": "entity",
@@ -3799,6 +4507,24 @@
       "description": "Unified view of all financial movements - premium and claim transactions - with their policy context, so portfolio metrics that span premium and claims (such as loss ratio) can be defined over a single source. Amounts are in original transaction currency.\n",
       "grain": "One row per premium or claim transaction.",
       "sql": "SELECT\n  p.policy_id,\n  p.underwriting_year,\n  p.line_of_business_code,\n  pt.currency_code,\n  pt.transaction_date,\n  'PREMIUM' AS transaction_kind,\n  pt.premium_transaction_type_code AS transaction_type_code,\n  CAST(NULL AS STRING) AS claim_id,\n  CAST(NULL AS STRING) AS cause_of_loss_code,\n  pt.amount\nFROM {policy.premium_transaction} pt\nJOIN {policy.policy} p ON p.policy_id = pt.policy_id\nUNION ALL\nSELECT\n  p.policy_id,\n  p.underwriting_year,\n  p.line_of_business_code,\n  ct.currency_code,\n  ct.transaction_date,\n  'CLAIM' AS transaction_kind,\n  ct.claim_transaction_type_code AS transaction_type_code,\n  c.claim_id,\n  c.cause_of_loss_code,\n  ct.amount\nFROM {claim.claim_transaction} ct\nJOIN {claim.claim} c ON c.claim_id = ct.claim_id\nJOIN {policy.policy} p ON p.policy_id = c.policy_id\n"
+    },
+    {
+      "kind": "view",
+      "name": "premium_earning",
+      "domain": "semantics",
+      "title": "Premium Earning",
+      "description": "Written, earned-to-date and unearned premium per policy, on a straight-line daily earning basis over the cover period. Honest limits: cancellations earn to their natural period in this version, and earning patterns other than straight-line are a later addition.\n",
+      "grain": "One row per policy per currency with premium activity.",
+      "sql": "SELECT\n  p.policy_id,\n  p.line_of_business_code,\n  p.underwriting_year,\n  pt.currency_code,\n  CAST(SUM(pt.amount) AS DECIMAL(18,2)) AS written_premium,\n  CAST(SUM(pt.amount * LEAST(1.0, GREATEST(0.0,\n      (datediff(LEAST(current_date(), p.expiry_date), p.inception_date) + 1) / 365.0)))\n    AS DECIMAL(18,2)) AS earned_premium,\n  CAST(SUM(pt.amount) - SUM(pt.amount * LEAST(1.0, GREATEST(0.0,\n      (datediff(LEAST(current_date(), p.expiry_date), p.inception_date) + 1) / 365.0)))\n    AS DECIMAL(18,2)) AS unearned_premium\nFROM {policy.premium_transaction} pt\nJOIN {policy.policy} p ON p.policy_id = pt.policy_id\nGROUP BY p.policy_id, p.line_of_business_code, p.underwriting_year, pt.currency_code\n"
+    },
+    {
+      "kind": "view",
+      "name": "underwriting_performance",
+      "domain": "semantics",
+      "title": "Underwriting Performance Components",
+      "description": "Earned premium, incurred claims and allocated expenses as one component stream, so ratio metrics (loss, expense, combined) are defined over a single source. Expenses are allocated at line level, not underwriting year.\n",
+      "grain": "One row per component per line of business (per underwriting year where applicable) per currency.",
+      "sql": "SELECT line_of_business_code, underwriting_year, currency_code,\n       'EARNED' AS component, earned_premium AS amount\nFROM {semantics.premium_earning}\nUNION ALL\nSELECT p.line_of_business_code, p.underwriting_year, ct.currency_code,\n       'INCURRED' AS component, ct.amount\nFROM {claim.claim_transaction} ct\nJOIN {claim.claim} c ON c.claim_id = ct.claim_id\nJOIN {policy.policy} p ON p.policy_id = c.policy_id\nUNION ALL\nSELECT line_of_business_code, CAST(NULL AS BIGINT), currency_code,\n       'EXPENSE' AS component, amount\nFROM {finance.expense_transaction}\n"
     }
   ],
   "metric_views": [
@@ -3863,6 +4589,70 @@
           "name": "ceded_policy_count",
           "expr": "COUNT(DISTINCT policy_number)",
           "description": "Number of distinct policies with ceded premium."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "performance_metrics",
+      "domain": "semantics",
+      "title": "Performance Metrics",
+      "description": "The underwriting result: earned premium, incurred claims, expenses and the loss / expense / combined ratios - each defined once. Earning is straight-line daily; expenses are line-level, so combined ratio is meaningful per line and currency (not per underwriting year). Always constrain currency_code. Query measures with MEASURE(name).\n",
+      "source": "semantics.underwriting_performance",
+      "joins": [
+        {
+          "name": "line_of_business",
+          "source": "reference.line_of_business",
+          "condition": "source.line_of_business_code = line_of_business.line_of_business_code"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "line_of_business",
+          "expr": "line_of_business.label",
+          "description": "Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.\n"
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "source.line_of_business_code",
+          "description": "Line of business as its code, e.g. COMMERCIAL_PROPERTY."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Original currency. Always constrain before ratios or sums."
+        }
+      ],
+      "measures": [
+        {
+          "name": "earned_premium",
+          "expr": "SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END)",
+          "description": "Premium earned to date, straight-line daily basis."
+        },
+        {
+          "name": "claims_incurred",
+          "expr": "SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END)",
+          "description": "Paid plus outstanding net of recoveries."
+        },
+        {
+          "name": "expenses",
+          "expr": "SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)",
+          "description": "Operating, acquisition and claims-handling expenses allocated to the line."
+        },
+        {
+          "name": "loss_ratio_earned",
+          "expr": "SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)",
+          "description": "Claims incurred over earned premium."
+        },
+        {
+          "name": "expense_ratio",
+          "expr": "SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)",
+          "description": "Expenses over earned premium."
+        },
+        {
+          "name": "combined_ratio",
+          "expr": "(SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) + SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)",
+          "description": "Loss ratio plus expense ratio; below 1.0 is an underwriting profit."
         }
       ]
     },
@@ -4302,6 +5092,27 @@
       "to_attribute": "source_system_code"
     },
     {
+      "from_entity": "fraud_signal",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "fraud_signal",
+      "attribute": "fraud_signal_type_code",
+      "to": "fraud_signal_type",
+      "to_kind": "code_set",
+      "to_attribute": "fraud_signal_type_code"
+    },
+    {
+      "from_entity": "fraud_signal",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
       "from_entity": "complaint",
       "attribute": "complainant_party_id",
       "to": "party",
@@ -4477,6 +5288,97 @@
       "to_attribute": "source_system_code"
     },
     {
+      "from_entity": "expense_transaction",
+      "attribute": "expense_type_code",
+      "to": "expense_type",
+      "to_kind": "code_set",
+      "to_attribute": "expense_type_code"
+    },
+    {
+      "from_entity": "expense_transaction",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "expense_transaction",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "expense_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "gl_posting",
+      "attribute": "gl_account_code",
+      "to": "gl_account",
+      "to_kind": "code_set",
+      "to_attribute": "gl_account_code"
+    },
+    {
+      "from_entity": "gl_posting",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "gl_posting",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "gl_posting",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "gl_posting",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "receivable_transaction",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "receivable_transaction",
+      "attribute": "receivable_transaction_type_code",
+      "to": "receivable_transaction_type",
+      "to_kind": "code_set",
+      "to_attribute": "receivable_transaction_type_code"
+    },
+    {
+      "from_entity": "receivable_transaction",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "receivable_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
       "from_entity": "valuation_result",
       "attribute": "valuation_run_id",
       "to": "valuation_run",
@@ -4594,6 +5496,69 @@
       "to": "assumption_set",
       "to_kind": "entity",
       "to_attribute": "assumption_set_id"
+    },
+    {
+      "from_entity": "consent",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "consent",
+      "attribute": "consent_purpose_code",
+      "to": "consent_purpose",
+      "to_kind": "code_set",
+      "to_attribute": "consent_purpose_code"
+    },
+    {
+      "from_entity": "consent",
+      "attribute": "consent_status_code",
+      "to": "consent_status",
+      "to_kind": "code_set",
+      "to_attribute": "consent_status_code"
+    },
+    {
+      "from_entity": "consent",
+      "attribute": "channel_code",
+      "to": "distribution_channel",
+      "to_kind": "code_set",
+      "to_attribute": "distribution_channel_code"
+    },
+    {
+      "from_entity": "contact_point",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "contact_point",
+      "attribute": "contact_point_type_code",
+      "to": "contact_point_type",
+      "to_kind": "code_set",
+      "to_attribute": "contact_point_type_code"
+    },
+    {
+      "from_entity": "data_subject_request",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "data_subject_request",
+      "attribute": "dsr_type_code",
+      "to": "dsr_type",
+      "to_kind": "code_set",
+      "to_attribute": "dsr_type_code"
+    },
+    {
+      "from_entity": "data_subject_request",
+      "attribute": "dsr_status_code",
+      "to": "dsr_status",
+      "to_kind": "code_set",
+      "to_attribute": "dsr_status_code"
     },
     {
       "from_entity": "party",

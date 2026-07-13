@@ -49,6 +49,21 @@ erDiagram
         string label
         string description
     }
+    consent_purpose {
+        string consent_purpose_code PK
+        string label
+        string description
+    }
+    consent_status {
+        string consent_status_code PK
+        string label
+        string description
+    }
+    contact_point_type {
+        string contact_point_type_code PK
+        string label
+        string description
+    }
     country {
         string country_code PK
         string label
@@ -74,8 +89,33 @@ erDiagram
         string label
         string description
     }
+    dsr_status {
+        string dsr_status_code PK
+        string label
+        string description
+    }
+    dsr_type {
+        string dsr_type_code PK
+        string label
+        string description
+    }
     endorsement_type {
         string endorsement_type_code PK
+        string label
+        string description
+    }
+    expense_type {
+        string expense_type_code PK
+        string label
+        string description
+    }
+    fraud_signal_type {
+        string fraud_signal_type_code PK
+        string label
+        string description
+    }
+    gl_account {
+        string gl_account_code PK
         string label
         string description
     }
@@ -121,6 +161,11 @@ erDiagram
     }
     quote_status {
         string quote_status_code PK
+        string label
+        string description
+    }
+    receivable_transaction_type {
+        string receivable_transaction_type_code PK
         string label
         string description
     }
@@ -191,6 +236,15 @@ erDiagram
         date transaction_date
         string source_system_code
     }
+    fraud_signal {
+        string fraud_signal_id PK
+        string claim_id
+        string fraud_signal_type_code
+        integer score
+        timestamp detected_at
+        string detail
+        string source_system_code
+    }
     complaint {
         string complaint_id PK
         string complaint_reference
@@ -255,6 +309,36 @@ erDiagram
         string risk_postcode
         string source_system_code
     }
+    expense_transaction {
+        string expense_transaction_id PK
+        string expense_type_code
+        string line_of_business_code
+        decimal amount
+        string currency_code
+        date transaction_date
+        string source_system_code
+    }
+    gl_posting {
+        string gl_posting_id PK
+        string journal_reference
+        string gl_account_code
+        decimal amount
+        string currency_code
+        date posting_date
+        string policy_id
+        string claim_id
+        string source_system_code
+    }
+    receivable_transaction {
+        string receivable_transaction_id PK
+        string policy_id
+        string receivable_transaction_type_code
+        decimal amount
+        string currency_code
+        date transaction_date
+        date due_date
+        string source_system_code
+    }
     valuation_result {
         string valuation_result_id PK
         string valuation_run_id
@@ -308,6 +392,31 @@ erDiagram
     valuation_run_assumption {
         string valuation_run_id PK
         string assumption_set_id PK
+    }
+    consent {
+        string consent_id PK
+        string party_id
+        string consent_purpose_code
+        string consent_status_code
+        timestamp granted_at
+        timestamp withdrawn_at
+        string channel_code
+    }
+    contact_point {
+        string contact_point_id PK
+        string party_id
+        string contact_point_type_code
+        string value
+        boolean preferred
+    }
+    data_subject_request {
+        string data_subject_request_id PK
+        string party_id
+        string dsr_type_code
+        string dsr_status_code
+        date received_date
+        date completed_date
+        string notes
     }
     party {
         string party_id PK
@@ -518,6 +627,9 @@ erDiagram
     claim_transaction }o--|| claim_transaction_type : claim_transaction_type_code
     claim_transaction }o--|| currency : currency_code
     claim_transaction }o--|| source_system : source_system_code
+    fraud_signal }o--|| claim : claim_id
+    fraud_signal }o--|| fraud_signal_type : fraud_signal_type_code
+    fraud_signal }o--|| source_system : source_system_code
     complaint }o--|| party : complainant_party_id
     complaint }o--|| policy : policy_id
     complaint }o--|| claim : claim_id
@@ -543,6 +655,19 @@ erDiagram
     premium_bordereau_line }o--|| currency : currency_code
     premium_bordereau_line }o--|| country : risk_country_code
     premium_bordereau_line }o--|| source_system : source_system_code
+    expense_transaction }o--|| expense_type : expense_type_code
+    expense_transaction }o--|| line_of_business : line_of_business_code
+    expense_transaction }o--|| currency : currency_code
+    expense_transaction }o--|| source_system : source_system_code
+    gl_posting }o--|| gl_account : gl_account_code
+    gl_posting }o--|| currency : currency_code
+    gl_posting }o--|| policy : policy_id
+    gl_posting }o--|| claim : claim_id
+    gl_posting }o--|| source_system : source_system_code
+    receivable_transaction }o--|| policy : policy_id
+    receivable_transaction }o--|| receivable_transaction_type : receivable_transaction_type_code
+    receivable_transaction }o--|| currency : currency_code
+    receivable_transaction }o--|| source_system : source_system_code
     valuation_result }o--|| valuation_run : valuation_run_id
     valuation_result }o--|| line_of_business : line_of_business_code
     valuation_result }o--|| valuation_measure : valuation_measure_code
@@ -560,6 +685,15 @@ erDiagram
     valuation_run }o--|| source_system : source_system_code
     valuation_run_assumption }o--|| valuation_run : valuation_run_id
     valuation_run_assumption }o--|| assumption_set : assumption_set_id
+    consent }o--|| party : party_id
+    consent }o--|| consent_purpose : consent_purpose_code
+    consent }o--|| consent_status : consent_status_code
+    consent }o--|| distribution_channel : channel_code
+    contact_point }o--|| party : party_id
+    contact_point }o--|| contact_point_type : contact_point_type_code
+    data_subject_request }o--|| party : party_id
+    data_subject_request }o--|| dsr_type : dsr_type_code
+    data_subject_request }o--|| dsr_status : dsr_status_code
     party }o--|| party_type : party_type_code
     party }o--|| country : country_code
     party }o--|| source_system : source_system_code

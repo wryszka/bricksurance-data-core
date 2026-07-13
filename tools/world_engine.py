@@ -126,7 +126,9 @@ class World:
                      "scenario_set", "valuation_run", "valuation_run_assumption",
                      "valuation_result", "product", "product_coverage",
                      "underwriting_question", "appetite_rule", "underwriting_decision",
-                     "commission_transaction", "complaint", "document", "business_event"):
+                     "commission_transaction", "complaint", "document", "business_event",
+                     "contact_point", "consent", "data_subject_request", "fraud_signal",
+                     "expense_transaction", "receivable_transaction", "gl_posting"):
             self.t[name] = []
 
     def n(self, base):
@@ -651,6 +653,110 @@ def build_world(scale):
               datetime(2026, 7, 2, 8, 30), channel="COVERHOLDER",
               payload='{"coverholder": "Atlas Cover Partners", "period": "2026-06"}')
 
+    # ------------------------------------------- customer detail & privacy
+    for name, country in ORGS + PERSONS + BROKERS:
+        slug = name.lower().replace(" ", ".").replace("&", "and").replace("(", "").replace(")", "")
+        w.add("contact_point", contact_point_id=w.nid("cpt"), party_id=pid[name],
+              contact_point_type_code="EMAIL", value=f"contact@{slug[:24]}.example",
+              preferred=True)
+    for i, (name, _) in enumerate(PERSONS):
+        w.add("contact_point", contact_point_id=w.nid("cpt"), party_id=pid[name],
+              contact_point_type_code="PHONE", value=f"+44 7700 900{100 + i}",
+              preferred=False)
+        for purpose, status, withdrawn in (("MARKETING", "GRANTED" if i != 1 else "WITHDRAWN",
+                                            datetime(2026, 5, 12, 10, 0) if i == 1 else None),
+                                           ("PROFILING", "GRANTED", None)):
+            w.add("consent", consent_id=w.nid("cns"), party_id=pid[name],
+                  consent_purpose_code=purpose, consent_status_code=status,
+                  granted_at=datetime(2026, 1, 15, 9, 0), withdrawn_at=withdrawn,
+                  channel_code="DIRECT")
+    for name, dtype, dstatus, completed, notes in (
+            ("Anna Novak", "ACCESS", "COMPLETED", date(2026, 4, 20),
+             "Access pack issued from the dictionary-driven PII inventory."),
+            ("James Whitfield", "ERASURE", "REFUSED", date(2026, 6, 10),
+             "Refused: open claim and regulatory retention obligations; "
+             "erasure to be executed per PRIVACY.md at retention expiry."),
+            ("Claire Dubois", "PORTABILITY", "IN_PROGRESS", None, None)):
+        w.add("data_subject_request", data_subject_request_id=w.nid("dsr"),
+              party_id=pid[name], dsr_type_code=dtype, dsr_status_code=dstatus,
+              received_date=date(2026, 3, 25), completed_date=completed, notes=notes)
+
+    # ------------------------------------------- fraud signals
+    for cl in w.t["claim"]:
+        lag = (cl["reported_date"] - cl["loss_date"]).days
+        if cl["claim_status_code"] == "DECLINED":
+            w.add("fraud_signal", fraud_signal_id=w.nid("frs"), claim_id=cl["claim_id"],
+                  fraud_signal_type_code="NETWORK_LINK", score=78,
+                  detected_at=datetime.combine(cl["reported_date"], datetime.min.time()).replace(hour=17),
+                  detail="Claimant address linked to two previously repudiated claims.",
+                  source_system_code="CLM_CORE")
+        elif lag > 14:
+            w.add("fraud_signal", fraud_signal_id=w.nid("frs"), claim_id=cl["claim_id"],
+                  fraud_signal_type_code="LATE_REPORTING", score=min(90, 30 + lag * 2),
+                  detected_at=datetime.combine(cl["reported_date"], datetime.min.time()).replace(hour=17),
+                  detail=f"Loss reported {lag} days after occurrence.",
+                  source_system_code="CLM_CORE")
+
+    # ------------------------------------------- billing & finance bridge
+    unpaid = 0
+    for pt in [x for x in w.t["premium_transaction"]
+               if x["premium_transaction_type_code"] == "WRITTEN"]:
+        inv_date = pt["transaction_date"]
+        w.add("receivable_transaction", receivable_transaction_id=w.nid("rcv"),
+              policy_id=pt["policy_id"], receivable_transaction_type_code="INVOICE",
+              amount=pt["amount"], currency_code=pt["currency_code"],
+              transaction_date=inv_date, due_date=inv_date + timedelta(days=30),
+              source_system_code="PAS_CORE")
+        unpaid += 1
+        if unpaid % 12 == 0 and inv_date > date(2026, 3, 1):
+            continue                      # aged debt: invoice never settled
+        w.add("receivable_transaction", receivable_transaction_id=w.nid("rcv"),
+              policy_id=pt["policy_id"], receivable_transaction_type_code="CASH_RECEIPT",
+              amount=round(-pt["amount"], 2), currency_code=pt["currency_code"],
+              transaction_date=inv_date + timedelta(days=rng.randint(10, 45)),
+              due_date=None, source_system_code="PAS_CORE")
+
+    # line-level expenses sized off written premium (drives the combined ratio)
+    policy_lob_ccy = {p["policy_id"]: (p["line_of_business_code"], p["currency_code"])
+                      for p in w.t["policy"]}
+    written_lob = {}
+    for pt in w.t["premium_transaction"]:
+        key = policy_lob_ccy[pt["policy_id"]]
+        written_lob[key] = round(written_lob.get(key, 0) + pt["amount"], 2)
+    for (lob, ccy), written in sorted(written_lob.items()):
+        for etype, factor, when in (("OPERATING", 0.11, date(2026, 3, 31)),
+                                    ("OPERATING", 0.11, date(2026, 6, 30)),
+                                    ("ACQUISITION", 0.05, date(2026, 6, 30)),
+                                    ("CLAIMS_HANDLING", 0.04, date(2026, 6, 30))):
+            w.add("expense_transaction", expense_transaction_id=w.nid("exp"),
+                  expense_type_code=etype, line_of_business_code=lob,
+                  amount=round(written * factor, 2), currency_code=ccy,
+                  transaction_date=when, source_system_code="PAS_CORE")
+
+    # ledger postings derived from operational money - reconcile by construction
+    def post(account, amount, ccy, when, policy_id=None, claim_id=None):
+        w.add("gl_posting", gl_posting_id=w.nid("glp"),
+              journal_reference=f"JRN-{when.strftime('%Y%m')}",
+              gl_account_code=account, amount=amount, currency_code=ccy,
+              posting_date=when, policy_id=policy_id, claim_id=claim_id,
+              source_system_code="PAS_CORE")
+
+    for pt in w.t["premium_transaction"]:
+        post("PREMIUM_WRITTEN", pt["amount"], pt["currency_code"],
+             pt["transaction_date"], policy_id=pt["policy_id"])
+    for ct in w.t["claim_transaction"]:
+        acct = ("CLAIMS_RESERVE_MOVEMENT"
+                if ct["claim_transaction_type_code"] == "CASE_RESERVE_MOVEMENT"
+                else "CLAIMS_PAID")
+        post(acct, ct["amount"], ct["currency_code"], ct["transaction_date"],
+             claim_id=ct["claim_id"])
+    for cm in w.t["commission_transaction"]:
+        post("COMMISSION_EXPENSE", cm["amount"], cm["currency_code"],
+             cm["transaction_date"], policy_id=cm["policy_id"])
+    for ex in w.t["expense_transaction"]:
+        post("OPERATING_EXPENSE", ex["amount"], ex["currency_code"],
+             ex["transaction_date"])
+
     # ---------------------------------------------------------- life & finance
     def add_assumption(atype, version, status, effective, approved):
         return w.add("assumption_set", assumption_set_id=w.nid("asm"),
@@ -770,7 +876,9 @@ def main():
              "insured_object", "vehicle", "premium_transaction", "endorsement",
              "commission_transaction", "claim", "claim_transaction", "complaint",
              "treaty", "treaty_layer", "submission", "cession", "cat_event", "event_loss",
-             "document", "business_event", "assumption_set", "scenario_set",
+             "document", "business_event", "contact_point", "consent",
+             "data_subject_request", "fraud_signal", "expense_transaction",
+             "receivable_transaction", "gl_posting", "assumption_set", "scenario_set",
              "valuation_run", "valuation_run_assumption", "valuation_result",
              "model_point", "party_role"]
     missing = set(order) - set(entities)

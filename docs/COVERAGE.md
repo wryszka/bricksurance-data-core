@@ -239,3 +239,26 @@ A sample of the matrix exercised for real, not just mapped:
 and fails *legibly* — every MISSING row names the entity or domain that closes
 it, which is exactly what "provision the data for any possible option" requires:
 the gaps are a priced backlog, not unknowns.
+
+---
+
+## Gap closure — v0.7.0 (2026-07-13)
+
+The top-5 MISSING clusters (and the Customer-360 PARTIAL) are now closed and
+live-verified:
+
+| Was missing | Now | Verified |
+|---|---|---|
+| Earning patterns + expense allocation | `expense_transaction`, `premium_earning` view, `performance_metrics` (earned/loss/expense/**combined ratio**) | Genie: CP GBP combined 1.347 = loss 0.888 + expense 0.459 |
+| Billing & receivables | `receivable_transaction` (invoices/cash/write-offs; aged debt = signed sum) | smoke: aged debt derives; Customer space benchmark |
+| Consent, DSAR & erasure | `consent`, `data_subject_request`, `contact_point` + **[PRIVACY.md](PRIVACY.md)** erasure design (PII anchors, surrogate history) | smoke: ERASURE refused-with-grounds on record |
+| General ledger linkage | `gl_posting` derived per source transaction | smoke: GL premium postings == premium transactions to the penny |
+| Fraud & SIU signals | `fraud_signal` (typed, scored, never auto-deciding) | 7 signals in world; in the P&C space |
+| (PARTIAL) ids not names in answers | label-resolution rule in every space's generated instructions | Genie: commission by broker now names Marlin & Rees / Atlas |
+
+**Updated position: ~66 COVERED / ~20 PARTIAL / ~14 MISSING.** The remaining
+notable MISSING items are deliberate scope calls (people/ops), heavier builds
+(bitemporal history, sanctions screening, IFRS 17 cohorts/groups-of-contracts)
+or Phase 8–9 outward work (broker open sharing, regulator share, second
+adopter) — all named, none unknown. A sixth Genie space
+(Customer & Privacy) now serves the customer-360 and privacy-office topics.

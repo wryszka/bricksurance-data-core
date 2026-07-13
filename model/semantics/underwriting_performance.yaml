@@ -1,0 +1,23 @@
+kind: view
+name: underwriting_performance
+domain: semantics
+title: Underwriting Performance Components
+description: >
+  Earned premium, incurred claims and allocated expenses as one component
+  stream, so ratio metrics (loss, expense, combined) are defined over a
+  single source. Expenses are allocated at line level, not underwriting year.
+grain: One row per component per line of business (per underwriting year where applicable) per currency.
+sql: |
+  SELECT line_of_business_code, underwriting_year, currency_code,
+         'EARNED' AS component, earned_premium AS amount
+  FROM {semantics.premium_earning}
+  UNION ALL
+  SELECT p.line_of_business_code, p.underwriting_year, ct.currency_code,
+         'INCURRED' AS component, ct.amount
+  FROM {claim.claim_transaction} ct
+  JOIN {claim.claim} c ON c.claim_id = ct.claim_id
+  JOIN {policy.policy} p ON p.policy_id = c.policy_id
+  UNION ALL
+  SELECT line_of_business_code, CAST(NULL AS BIGINT), currency_code,
+         'EXPENSE' AS component, amount
+  FROM {finance.expense_transaction}

@@ -1,0 +1,14 @@
+kind: code_set
+name: contact_point_type
+title: Contact Point Type
+description: Kinds of contact point held for a party.
+codes:
+  - code: EMAIL
+    label: Email
+    description: Email address.
+  - code: PHONE
+    label: Phone
+    description: Telephone number.
+  - code: POSTAL_ADDRESS
+    label: Postal Address
+    description: Postal address.

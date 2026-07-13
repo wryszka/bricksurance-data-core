@@ -501,7 +501,11 @@ def generate_genie(binding, manifest, entities, code_sets, views=(), metric_view
         "",
         "You answer questions about the insurance business of Bricksurance SE "
         "using the canonical data model below. Definitions come from the "
-        "model's data dictionary; prefer them over guesses.",
+        "model's data dictionary; prefer them over guesses. When presenting "
+        "results, always resolve identifier columns (anything ending _id) to "
+        "business names or labels by joining the referenced table - e.g. "
+        "party_id -> party.name - and never show raw surrogate ids unless "
+        "the user asks for them.",
         "",
         "## Tables",
         "",

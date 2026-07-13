@@ -1,0 +1,44 @@
+kind: entity
+name: expense_transaction
+domain: finance
+title: Expense Transaction
+description: >
+  An operating expense allocated to a line of business - the missing half of
+  the combined ratio, transactional like all money in the model.
+grain: One row per expense allocation per line per period booking.
+tags:
+  maturity: draft
+attributes:
+  - name: expense_transaction_id
+    type: string
+    required: true
+    description: Identifier for the expense movement.
+    classification: internal
+  - name: expense_type_code
+    code_set: expense_type
+    required: true
+    description: Kind of expense.
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line the expense is allocated to.
+  - name: amount
+    type: decimal(18,2)
+    required: true
+    description: Signed amount in the stated currency.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the amount.
+  - name: transaction_date
+    type: date
+    required: true
+    description: Booking date.
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record.
+    classification: internal
+keys:
+  primary: [expense_transaction_id]

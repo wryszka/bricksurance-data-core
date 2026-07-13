@@ -62,9 +62,10 @@ def main():
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
          f"WHERE table_schema LIKE '{prefix}%' AND table_type = 'MANAGED' "
          f"AND table_name <> 'schema_migration'", str(n_tables)),
-        (f"{n_views} semantic views deployed (from the model)",
+        (f"{n_views} semantic views deployed (vector indexes excluded)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
-         f"WHERE table_schema LIKE '{prefix}%' AND table_type <> 'MANAGED'", str(n_views)),
+         f"WHERE table_schema LIKE '{prefix}%' AND table_type <> 'MANAGED' "
+         f"AND table_name NOT LIKE '%\\\\_index'", str(n_views)),
         (f"{n_fks} foreign-key relationships (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.table_constraints "
          f"WHERE constraint_schema LIKE '{prefix}%' AND constraint_type = 'FOREIGN KEY'", str(n_fks)),
@@ -146,6 +147,22 @@ def main():
          f"SELECT COUNT(*) FROM {q('content', 'document')} "
          f"WHERE CAST(product_id IS NOT NULL AS INT) + CAST(policy_id IS NOT NULL AS INT) "
          f"+ CAST(claim_id IS NOT NULL AS INT) + CAST(submission_id IS NOT NULL AS INT) <> 1", "0"),
+        ("ledger reconciles: GL premium postings equal premium transactions (GBP)",
+         f"SELECT (SELECT CAST(SUM(amount) AS DECIMAL(18,2)) FROM {q('finance', 'gl_posting')} "
+         f"WHERE gl_account_code = 'PREMIUM_WRITTEN' AND currency_code = 'GBP') = "
+         f"(SELECT CAST(SUM(amount) AS DECIMAL(18,2)) FROM {q('policy', 'premium_transaction')} "
+         f"WHERE currency_code = 'GBP')", "true"),
+        ("combined ratio computes for Commercial Property (GBP)",
+         f"SELECT MEASURE(combined_ratio) BETWEEN 0.2 AND 3.0 "
+         f"FROM {q('semantics', 'performance_metrics')} "
+         f"WHERE currency_code = 'GBP' AND line_of_business = 'Commercial Property'", "true"),
+        ("aged premium debt derives from receivables",
+         f"SELECT COUNT(*) >= 1 FROM (SELECT policy_id FROM {q('finance', 'receivable_transaction')} "
+         f"GROUP BY policy_id HAVING SUM(amount) > 0)", "true"),
+        ("erasure request refused with recorded grounds",
+         f"SELECT COUNT(*) FROM {q('party', 'data_subject_request')} "
+         f"WHERE dsr_type_code = 'ERASURE' AND dsr_status_code = 'REFUSED' "
+         f"AND notes IS NOT NULL", "1"),
         ("every party role has exactly one context",
          f"SELECT COUNT(*) FROM {q('party', 'party_role')} "
          f"WHERE CAST(policy_id IS NOT NULL AS INT) + CAST(claim_id IS NOT NULL AS INT) "

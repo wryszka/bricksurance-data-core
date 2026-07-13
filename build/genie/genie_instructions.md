@@ -1,6 +1,6 @@
-# Genie instructions — Bricksurance Data Core v0.6.0
+# Genie instructions — Bricksurance Data Core v0.7.0
 
-You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses.
+You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses. When presenting results, always resolve identifier columns (anything ending _id) to business names or labels by joining the referenced table - e.g. party_id -> party.name - and never show raw surrogate ids unless the user asks for them.
 
 ## Tables
 
@@ -14,12 +14,20 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.commission_type` — Kinds of intermediary remuneration. Commission is transactional - signed movements, never overwritten balances - and disclosable by design. Grain: One row per commission type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.complaint_category` — Root category of a customer complaint, aligned to UK FCA complaints reporting groupings. Grain: One row per complaint category code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.complaint_status` — Handling status of a complaint, through to ombudsman referral. Grain: One row per complaint status code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.consent_purpose` — Purposes a data subject can consent to, per the processing register. Grain: One row per consent purpose code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.consent_status` — State of a consent record; withdrawal is an auditable event, not a deletion. Grain: One row per consent status code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.contact_point_type` — Kinds of contact point held for a party. Grain: One row per contact point type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.country` — Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes. A governed subset, extended when the business enters a market. Grain: One row per country code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.coverage_type` — Kinds of cover that can be granted under a policy. A policy bundles one or more coverages; limits, deductibles and claims attach at coverage level. Grain: One row per coverage type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.currency` — Transaction currencies used by the group, as ISO 4217 alphabetic codes. This is deliberately a governed subset, not the full ISO list: a currency is added here when the business starts writing in it. Grain: One row per currency code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.distribution_channel` — How business reaches the insurer. Machine channels are first-class: an agentic buyer is a channel, not an exception. Grain: One row per distribution channel code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.document_type` — Kinds of unstructured content the model governs. Documents carry extracted text so LLM tools can search and cite them under the same governance as structured data. Grain: One row per document type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.dsr_status` — Handling status of a data subject request against the statutory clock. Grain: One row per data subject request status code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.dsr_type` — GDPR data subject request kinds. Grain: One row per data subject request type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.endorsement_type` — Kinds of mid-term change to a policy. The premium effect of an endorsement is always booked as premium transactions; the endorsement records the contractual change itself. Grain: One row per endorsement type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.expense_type` — Kinds of operating expense allocated to lines of business - the missing half of the combined ratio. Grain: One row per expense type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.fraud_signal_type` — Kinds of fraud indicator on a claim. Signals inform investigation; they never auto-decide. Grain: One row per fraud signal type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.gl_account` — Ledger accounts the model posts to - the thin, auditable bridge between operational transactions and finance. Every posting cites its source row. Grain: One row per gl account code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.insured_object_type` — Kinds of object or exposure a policy can insure. Extend with new codes as new lines of business are written (vessels, livestock, cyber estates...). Grain: One row per insured object type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.line_of_business` — Classes of insurance business written by the group, aligned to ACORD LOBCd vocabulary. Extend by adding codes; never repurpose an existing code. Grain: One row per line of business code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.loss_basis` — Whether an event loss figure is modelled or reported. Day-one catastrophe numbers are modelled (event footprint against in-force exposure); cedant reports firm up over the following weeks — the basis keeps the two honest. Grain: One row per loss basis code.
@@ -29,6 +37,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.premium_transaction_type` — Kinds of premium movement. Premium is always modelled as signed transactions; balances such as gross written premium are derived by summation, never overwritten. Grain: One row per premium transaction type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.product_status` — Lifecycle status of an insurance product. Grain: One row per product status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.quote_status` — Lifecycle status of a quotation. A quote that converts is linked to the resulting policy; premium only ever arises on the policy, never the quote. Grain: One row per quote status code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.receivable_transaction_type` — Premium billing movements. Outstanding debt is the signed sum - invoices positive, cash negative - never a stored balance. Grain: One row per receivable transaction type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.run_verdict` — Quality-gate verdict of a processing or valuation run. RED runs never feed downstream consumption; the verdict is part of the auditable run record. Grain: One row per run verdict code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.scenario_status` — Lifecycle of an economic scenario set. Exactly one set is ACTIVE for production valuations; others remain AVAILABLE for analysis. Grain: One row per scenario set status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.source_system` — Systems of record that feed the data layer. Provenance is part of the model: every core entity carries a source_system_code, and identifiers are only unique within their source system. Grain: One row per source system code.
@@ -39,17 +48,24 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.data_dictionary` — Machine-readable dictionary of every entity and attribute in the model, generated from the specs. Include this table in every data share so the semantics travel with the data. Grain: One row per attribute per entity per model version.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim` — A demand for indemnity under a policy arising from a loss event. The claim record holds the event and handling state; all financial development lives in claim transactions. Grain: One row per claim per source system.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction` — A signed financial movement on a claim: case reserve movements, indemnity and expense payments, and recoveries. Outstanding, paid and incurred are always derived by summation over these movements, never stored as balances. Grain: One row per financial movement per claim.
+- `lr_serverless_aws_us_catalog.bricksurance_claim.fraud_signal` — A fraud indicator raised on a claim, with its score and provenance. Signals inform SIU referral decisions; a signal is never itself a decision. Grain: One row per signal per claim.
 - `lr_serverless_aws_us_catalog.bricksurance_conduct.complaint` — A customer complaint, categorised per UK FCA reporting groupings and tracked through to ombudsman referral. The conduct domain is where fair treatment becomes measurable. Grain: One row per complaint per source system.
 - `lr_serverless_aws_us_catalog.bricksurance_content.document` — Governed unstructured content: policy wordings, schedules, claim evidence, survey reports, MRC slips. The extracted text is carried in the row so LLM tools search and cite documents under the same classification and lineage as structured data; binary originals live in a Volume referenced by path. Grain: One row per document version.
 - `lr_serverless_aws_us_catalog.bricksurance_distribution.commission_transaction` — A signed intermediary remuneration movement on a policy. Transactional like all money in this model; disclosable commission is a query, not a project. Grain: One row per commission movement per policy per intermediary.
 - `lr_serverless_aws_us_catalog.bricksurance_events.business_event` — The event stream: business moments (quote requested, loss notified, payment made, complaint received) as append-only, timestamped records referencing the entity they concern. This is the near-real-time face of the model and the natural feed for monitoring agents. Grain: One row per business event occurrence; append-only.
 - `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line` — The canonical form of an inbound premium bordereau line, as reported by a coverholder or broker. Messy source files land in the exchange domain and are mapped into this shape - using the data dictionary as the contract - before flowing into the core model. Grain: One row per policy per reporting month per inbound bordereau.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.expense_transaction` — An operating expense allocated to a line of business - the missing half of the combined ratio, transactional like all money in the model. Grain: One row per expense allocation per line per period booking.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.gl_posting` — A ledger posting derived from an operational transaction - the thin, auditable bridge to finance. Every posting cites its source policy or claim, so ledger totals reconcile to operational sums by construction. Grain: One row per posting per source transaction.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.receivable_transaction` — Premium billing and collection movements on a policy. Written premium is earned exposure; this is the cash reality - outstanding and aged debt are signed sums over these rows. Grain: One row per billing movement per policy.
 - `lr_serverless_aws_us_catalog.bricksurance_finance.valuation_result` — A published valuation figure: one measure (BEL, technical provision, IBNR, SCR, CSM...) for one line of business and cohort, produced by exactly one auditable valuation run. One shape serves life and non-life, Solvency II and IFRS 17 - new regimes add measure codes, not tables. Grain: One row per valuation run per line of business per measure per cohort.
 - `lr_serverless_aws_us_catalog.bricksurance_life.assumption_set` — A versioned, governed set of actuarial assumptions (mortality, lapse, expense, economic). Sets move through a maker/checker lifecycle; valuation runs record exactly which approved set they used, which is what makes any past result reproducible. Grain: One row per assumption set version per assumption type.
 - `lr_serverless_aws_us_catalog.bricksurance_life.model_point` — A grouped model point for life valuation: policies compressed into cohorts (attained age by outstanding term) at a valuation date. Model points are derived from in-force life policies; the grouping is proven back to the policy count and sum assured it represents. Grain: One row per cohort per line of business per valuation date.
 - `lr_serverless_aws_us_catalog.bricksurance_life.scenario_set` — A delivered economic scenario set (risk-free curves, equity paths) used by stochastic valuation. Registered with a lifecycle so exactly one set is active for production runs, and every run records which set it used. Grain: One row per delivered scenario set.
 - `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run` — One execution of a valuation process: which valuation date, which approved assumption sets (one per assumption type, via valuation_run_assumption), which scenario set, which model version, run by whom, with what quality verdict. The run is the unit of auditability - every published valuation result points back to exactly one run. Grain: One row per valuation run execution.
 - `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run_assumption` — Which assumption sets a valuation run used - one row per assumption set, typically one per assumption type (mortality, lapse, expense, economic). This junction is what makes any past result exactly reproducible: run plus sets plus scenario plus model version is the full recipe. Grain: One row per assumption set used by a valuation run.
+- `lr_serverless_aws_us_catalog.bricksurance_party.consent` — A data subject's consent for a processing purpose. Withdrawal is a state change with a timestamp, never a deletion - the consent history is itself evidence. Grain: One row per party per purpose per consent grant.
+- `lr_serverless_aws_us_catalog.bricksurance_party.contact_point` — A contact point for a party. PII is deliberately concentrated here and on party - the erasure design in PRIVACY.md redacts these anchors while transactional history keeps its surrogate keys. Grain: One row per contact point per party.
+- `lr_serverless_aws_us_catalog.bricksurance_party.data_subject_request` — A GDPR data subject request (access, erasure, rectification, portability) tracked against the statutory clock. Erasure execution follows the design in PRIVACY.md. Grain: One row per request received.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party` — A person or organisation the group deals with. A party exists exactly once regardless of how many relationships it has; what the party does (insured, broker, cedant, claimant...) is expressed through party roles, never by duplicating the party. Grain: One row per unique legal person or organisation, mastered across source systems.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party_role` — A role a party plays in a specific business context - on a policy, a claim or a treaty. This is the model's central extensibility pattern: a new kind of counterparty is a new party_role_type code plus rows here, never a new table. Grain: One row per role a party plays in one context (policy, claim, treaty, quote or submission) for a period of time. Exactly one of policy_id, claim_id, treaty_id, quote_id and submission_id is populated.
 - `lr_serverless_aws_us_catalog.bricksurance_policy.coverage` — A specific cover granted under a policy, with its own limit and deductible. A policy bundles one or more coverages; claims attach to coverages where the source data allows it. Grain: One row per coverage granted under a policy.
@@ -82,6 +98,9 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction.claim_transaction_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.claim_transaction_type.claim_transaction_type_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction.currency_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.currency.currency_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_transaction.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_claim.fraud_signal.claim_id` joins to `lr_serverless_aws_us_catalog.bricksurance_claim.claim.claim_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_claim.fraud_signal.fraud_signal_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.fraud_signal_type.fraud_signal_type_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_claim.fraud_signal.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_conduct.complaint.complainant_party_id` joins to `lr_serverless_aws_us_catalog.bricksurance_party.party.party_id`.
 - `lr_serverless_aws_us_catalog.bricksurance_conduct.complaint.policy_id` joins to `lr_serverless_aws_us_catalog.bricksurance_policy.policy.policy_id`.
 - `lr_serverless_aws_us_catalog.bricksurance_conduct.complaint.claim_id` joins to `lr_serverless_aws_us_catalog.bricksurance_claim.claim.claim_id`.
@@ -107,6 +126,19 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line.currency_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.currency.currency_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line.risk_country_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.country.country_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_exchange.premium_bordereau_line.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.expense_transaction.expense_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.expense_type.expense_type_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.expense_transaction.line_of_business_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.line_of_business.line_of_business_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.expense_transaction.currency_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.currency.currency_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.expense_transaction.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.gl_posting.gl_account_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.gl_account.gl_account_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.gl_posting.currency_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.currency.currency_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.gl_posting.policy_id` joins to `lr_serverless_aws_us_catalog.bricksurance_policy.policy.policy_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.gl_posting.claim_id` joins to `lr_serverless_aws_us_catalog.bricksurance_claim.claim.claim_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.gl_posting.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.receivable_transaction.policy_id` joins to `lr_serverless_aws_us_catalog.bricksurance_policy.policy.policy_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.receivable_transaction.receivable_transaction_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.receivable_transaction_type.receivable_transaction_type_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.receivable_transaction.currency_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.currency.currency_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_finance.receivable_transaction.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_finance.valuation_result.valuation_run_id` joins to `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run.valuation_run_id`.
 - `lr_serverless_aws_us_catalog.bricksurance_finance.valuation_result.line_of_business_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.line_of_business.line_of_business_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_finance.valuation_result.valuation_measure_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.valuation_measure.valuation_measure_code`.
@@ -124,6 +156,15 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run_assumption.valuation_run_id` joins to `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run.valuation_run_id`.
 - `lr_serverless_aws_us_catalog.bricksurance_life.valuation_run_assumption.assumption_set_id` joins to `lr_serverless_aws_us_catalog.bricksurance_life.assumption_set.assumption_set_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.consent.party_id` joins to `lr_serverless_aws_us_catalog.bricksurance_party.party.party_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.consent.consent_purpose_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.consent_purpose.consent_purpose_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.consent.consent_status_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.consent_status.consent_status_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.consent.channel_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.distribution_channel.distribution_channel_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.contact_point.party_id` joins to `lr_serverless_aws_us_catalog.bricksurance_party.party.party_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.contact_point.contact_point_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.contact_point_type.contact_point_type_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.data_subject_request.party_id` joins to `lr_serverless_aws_us_catalog.bricksurance_party.party.party_id`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.data_subject_request.dsr_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.dsr_type.dsr_type_code`.
+- `lr_serverless_aws_us_catalog.bricksurance_party.data_subject_request.dsr_status_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.dsr_status.dsr_status_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.party_type_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.party_type.party_type_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.country_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.country.country_code`.
 - `lr_serverless_aws_us_catalog.bricksurance_party.party.source_system_code` joins to `lr_serverless_aws_us_catalog.bricksurance_reference.source_system.source_system_code`.
@@ -212,6 +253,16 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - MEASURE(ceded_premium): Premium ceded to reinsurers, in original currency.
   - MEASURE(average_ceded_share): Effective ceded share - ceded premium over gross premium.
   - MEASURE(ceded_policy_count): Number of distinct policies with ceded premium.
+- `lr_serverless_aws_us_catalog.bricksurance_semantics.performance_metrics` — The underwriting result: earned premium, incurred claims, expenses and the loss / expense / combined ratios - each defined once. Earning is straight-line daily; expenses are line-level, so combined ratio is meaningful per line and currency (not per underwriting year). Always constrain currency_code. Query measures with MEASURE(name).
+  - dimension line_of_business: Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.
+  - dimension line_of_business_code: Line of business as its code, e.g. COMMERCIAL_PROPERTY.
+  - dimension currency_code: Original currency. Always constrain before ratios or sums.
+  - MEASURE(earned_premium): Premium earned to date, straight-line daily basis.
+  - MEASURE(claims_incurred): Paid plus outstanding net of recoveries.
+  - MEASURE(expenses): Operating, acquisition and claims-handling expenses allocated to the line.
+  - MEASURE(loss_ratio_earned): Claims incurred over earned premium.
+  - MEASURE(expense_ratio): Expenses over earned premium.
+  - MEASURE(combined_ratio): Loss ratio plus expense ratio; below 1.0 is an underwriting profit.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.submission_metrics` — Reinsurance submission funnel KPIs: volumes and requested capacity by status, form and year. Amounts are in original submission currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
   - dimension underwriting_year: Underwriting year the cover would attach to.
   - dimension submission_status: Funnel status as its business label.
@@ -260,12 +311,20 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Commission Type: NEW_BUSINESS (New Business Commission), RENEWAL (Renewal Commission), PROFIT (Profit Commission), CLAWBACK (Clawback).
 - Complaint Category: CLAIMS_HANDLING (Claims Handling), SALES_AND_ADVICE (Sales & Advice), ADMIN_AND_SERVICE (Administration & Service), PRICING_AND_RENEWAL (Pricing & Renewal).
 - Complaint Status: OPEN (Open), UPHELD (Upheld), NOT_UPHELD (Not Upheld), REFERRED_FOS (Referred to FOS).
+- Consent Purpose: MARKETING (Marketing), DATA_SHARING (Data Sharing), PROFILING (Profiling).
+- Consent Status: GRANTED (Granted), WITHDRAWN (Withdrawn), EXPIRED (Expired).
+- Contact Point Type: EMAIL (Email), PHONE (Phone), POSTAL_ADDRESS (Postal Address).
 - Country: GB (United Kingdom), IE (Ireland), DE (Germany), FR (France), CH (Switzerland), US (United States).
 - Coverage Type: BUILDINGS (Buildings), CONTENTS (Contents), BUSINESS_INTERRUPTION (Business Interruption), MOTOR_OWN_DAMAGE (Motor Own Damage), MOTOR_TPL (Motor Third-Party Liability), PUBLIC_LIABILITY (Public Liability), CARGO (Cargo).
 - Currency: GBP (Pound Sterling), EUR (Euro), USD (US Dollar), CHF (Swiss Franc).
 - Distribution Channel: DIRECT (Direct), BROKER (Broker), AGGREGATOR (Aggregator), COVERHOLDER (Coverholder), MACHINE_AGENT (Machine Agent).
 - Document Type: POLICY_WORDING (Policy Wording), SCHEDULE (Schedule), CLAIM_EVIDENCE (Claim Evidence), SURVEY_REPORT (Survey Report), MRC_SLIP (MRC Slip).
+- Data Subject Request Status: RECEIVED (Received), IN_PROGRESS (In Progress), COMPLETED (Completed), REFUSED (Refused).
+- Data Subject Request Type: ACCESS (Access (DSAR)), ERASURE (Erasure), RECTIFICATION (Rectification), PORTABILITY (Portability).
 - Endorsement Type: MID_TERM_ADJUSTMENT (Mid-term Adjustment), COVERAGE_CHANGE (Coverage Change), SUM_INSURED_CHANGE (Sum Insured Change), EXTENSION (Extension), CANCELLATION (Cancellation).
+- Expense Type: ACQUISITION (Acquisition Expense), OPERATING (Operating Expense), CLAIMS_HANDLING (Claims Handling Expense).
+- Fraud Signal Type: LATE_REPORTING (Late Reporting), PRIOR_CLAIMS (Prior Claims Pattern), VELOCITY (Velocity), DOC_INCONSISTENCY (Document Inconsistency), NETWORK_LINK (Network Link).
+- GL Account: PREMIUM_WRITTEN (Premium Written), CLAIMS_PAID (Claims Paid), CLAIMS_RESERVE_MOVEMENT (Claims Reserve Movement), COMMISSION_EXPENSE (Commission Expense), OPERATING_EXPENSE (Operating Expense).
 - Insured Object Type: BUILDING (Building), VEHICLE (Vehicle), CARGO_SHIPMENT (Cargo Shipment), LIABILITY_EXPOSURE (Liability Exposure).
 - Line of Business: COMMERCIAL_PROPERTY (Commercial Property), MOTOR (Motor), GENERAL_LIABILITY (General Liability), MARINE_CARGO (Marine Cargo), PROPERTY_TREATY (Property Treaty Reinsurance), TERM_LIFE (Term Life), CREDIT_LIFE (Credit Life), GROUP_PROTECTION (Group Protection), ANNUITY (Annuity).
 - Loss Basis: MODELLED (Modelled), REPORTED (Reported).
@@ -275,6 +334,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Premium Transaction Type: WRITTEN (Written Premium), ADJUSTMENT (Adjustment Premium), RETURN (Return Premium).
 - Product Status: PILOT (Pilot), ACTIVE (Active), CLOSED_TO_NEW (Closed to New Business), WITHDRAWN (Withdrawn).
 - Quote Status: OPEN (Open), OFFERED (Offered), CONVERTED (Converted), DECLINED_BY_INSURER (Declined by Insurer), REJECTED_BY_CUSTOMER (Rejected by Customer), EXPIRED (Expired).
+- Receivable Transaction Type: INVOICE (Invoice), CASH_RECEIPT (Cash Receipt), WRITE_OFF (Write-off), REFUND (Refund).
 - Run Verdict: GREEN (Green), AMBER (Amber), RED (Red).
 - Scenario Set Status: ACTIVE (Active), AVAILABLE (Available), SUPERSEDED (Superseded).
 - Source System: PAS_CORE (Policy Administration (Core)), CLM_CORE (Claims (Core)), RI_CORE (Reinsurance (Core)), DATA_CORE (Data Core (Mastered)), LIFE_CORE (Life Administration (Core)), COVERHOLDER_BDX (Coverholder Bordereau).

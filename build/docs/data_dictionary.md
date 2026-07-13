@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.6.0. Do not edit.*
+*Generated from model v0.7.0. Do not edit.*
 
 ## Appetite Effect (`reference.appetite_effect`)
 
@@ -148,6 +148,48 @@ Handling status of a complaint, through to ombudsman referral.
 
 **Primary key:** complaint_status_code
 
+## Consent Purpose (`reference.consent_purpose`)
+
+Purposes a data subject can consent to, per the processing register.
+
+**Grain:** One row per consent purpose code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| consent_purpose_code | string | yes | Code value; referenced by consent_purpose_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** consent_purpose_code
+
+## Consent Status (`reference.consent_status`)
+
+State of a consent record; withdrawal is an auditable event, not a deletion.
+
+**Grain:** One row per consent status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| consent_status_code | string | yes | Code value; referenced by consent_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** consent_status_code
+
+## Contact Point Type (`reference.contact_point_type`)
+
+Kinds of contact point held for a party.
+
+**Grain:** One row per contact point type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| contact_point_type_code | string | yes | Code value; referenced by contact_point_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** contact_point_type_code
+
 ## Country (`reference.country`)
 
 Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes. A governed subset, extended when the business enters a market.
@@ -224,6 +266,34 @@ Kinds of unstructured content the model governs. Documents carry extracted text 
 
 **Primary key:** document_type_code
 
+## Data Subject Request Status (`reference.dsr_status`)
+
+Handling status of a data subject request against the statutory clock.
+
+**Grain:** One row per data subject request status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| dsr_status_code | string | yes | Code value; referenced by dsr_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** dsr_status_code
+
+## Data Subject Request Type (`reference.dsr_type`)
+
+GDPR data subject request kinds.
+
+**Grain:** One row per data subject request type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| dsr_type_code | string | yes | Code value; referenced by dsr_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** dsr_type_code
+
 ## Endorsement Type (`reference.endorsement_type`)
 
 Kinds of mid-term change to a policy. The premium effect of an endorsement is always booked as premium transactions; the endorsement records the contractual change itself.
@@ -239,6 +309,48 @@ Kinds of mid-term change to a policy. The premium effect of an endorsement is al
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** endorsement_type_code
+
+## Expense Type (`reference.expense_type`)
+
+Kinds of operating expense allocated to lines of business - the missing half of the combined ratio.
+
+**Grain:** One row per expense type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| expense_type_code | string | yes | Code value; referenced by expense_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** expense_type_code
+
+## Fraud Signal Type (`reference.fraud_signal_type`)
+
+Kinds of fraud indicator on a claim. Signals inform investigation; they never auto-decide.
+
+**Grain:** One row per fraud signal type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| fraud_signal_type_code | string | yes | Code value; referenced by fraud_signal_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** fraud_signal_type_code
+
+## GL Account (`reference.gl_account`)
+
+Ledger accounts the model posts to - the thin, auditable bridge between operational transactions and finance. Every posting cites its source row.
+
+**Grain:** One row per gl account code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| gl_account_code | string | yes | Code value; referenced by gl_account_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** gl_account_code
 
 ## Insured Object Type (`reference.insured_object_type`)
 
@@ -379,6 +491,20 @@ Lifecycle status of a quotation. A quote that converts is linked to the resultin
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** quote_status_code
+
+## Receivable Transaction Type (`reference.receivable_transaction_type`)
+
+Premium billing movements. Outstanding debt is the signed sum - invoices positive, cash negative - never a stored balance.
+
+**Grain:** One row per receivable transaction type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| receivable_transaction_type_code | string | yes | Code value; referenced by receivable_transaction_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** receivable_transaction_type_code
 
 ## Run Verdict (`reference.run_verdict`)
 
@@ -549,6 +675,24 @@ A signed financial movement on a claim: case reserve movements, indemnity and ex
 
 **Primary key:** claim_transaction_id
 
+## Fraud Signal (`claim.fraud_signal`)
+
+A fraud indicator raised on a claim, with its score and provenance. Signals inform SIU referral decisions; a signal is never itself a decision.
+
+**Grain:** One row per signal per claim.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| fraud_signal_id | string | yes | Identifier for the signal. | internal |  |  |
+| claim_id | string | yes | Claim the signal concerns. | internal |  |  |
+| fraud_signal_type_code | string | yes | Kind of indicator. |  |  |  |
+| score | integer | yes | Signal strength 0-100. | confidential |  |  |
+| detected_at | timestamp | yes | When the signal was raised. |  |  |  |
+| detail | string |  | What was observed, in business language. | confidential |  |  |
+| source_system_code | string | yes | Detecting system. | internal |  |  |
+
+**Primary key:** fraud_signal_id
+
 ## Complaint (`conduct.complaint`)
 
 A customer complaint, categorised per UK FCA reporting groupings and tracked through to ombudsman referral. The conduct domain is where fair treatment becomes measurable.
@@ -662,6 +806,63 @@ The canonical form of an inbound premium bordereau line, as reported by a coverh
 
 **Primary key:** bordereau_line_id
 
+## Expense Transaction (`finance.expense_transaction`)
+
+An operating expense allocated to a line of business - the missing half of the combined ratio, transactional like all money in the model.
+
+**Grain:** One row per expense allocation per line per period booking.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| expense_transaction_id | string | yes | Identifier for the expense movement. | internal |  |  |
+| expense_type_code | string | yes | Kind of expense. |  |  |  |
+| line_of_business_code | string | yes | Line the expense is allocated to. |  |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| transaction_date | date | yes | Booking date. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** expense_transaction_id
+
+## GL Posting (`finance.gl_posting`)
+
+A ledger posting derived from an operational transaction - the thin, auditable bridge to finance. Every posting cites its source policy or claim, so ledger totals reconcile to operational sums by construction.
+
+**Grain:** One row per posting per source transaction.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| gl_posting_id | string | yes | Identifier for the posting. | internal |  |  |
+| journal_reference | string | yes | Journal the posting belongs to. | internal |  |  |
+| gl_account_code | string | yes | Ledger account posted to. |  |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| posting_date | date | yes | Ledger posting date. |  |  |  |
+| policy_id | string |  | Source policy, where the posting derives from policy money. | internal |  |  |
+| claim_id | string |  | Source claim, where the posting derives from claim money. | internal |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** gl_posting_id
+
+## Receivable Transaction (`finance.receivable_transaction`)
+
+Premium billing and collection movements on a policy. Written premium is earned exposure; this is the cash reality - outstanding and aged debt are signed sums over these rows.
+
+**Grain:** One row per billing movement per policy.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| receivable_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
+| policy_id | string | yes | Policy billed. | internal |  |  |
+| receivable_transaction_type_code | string | yes | Kind of movement; invoices positive, receipts negative. |  |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| transaction_date | date | yes | Booking date. |  |  |  |
+| due_date | date |  | Payment due date, for invoices - the anchor for ageing. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** receivable_transaction_id
+
 ## Valuation Result (`finance.valuation_result`)
 
 A published valuation figure: one measure (BEL, technical provision, IBNR, SCR, CSM...) for one line of business and cohort, produced by exactly one auditable valuation run. One shape serves life and non-life, Solvency II and IFRS 17 - new regimes add measure codes, not tables.
@@ -770,6 +971,59 @@ Which assumption sets a valuation run used - one row per assumption set, typical
 | assumption_set_id | string | yes | An assumption set the run used. | internal |  |  |
 
 **Primary key:** valuation_run_id, assumption_set_id
+
+## Consent (`party.consent`)
+
+A data subject's consent for a processing purpose. Withdrawal is a state change with a timestamp, never a deletion - the consent history is itself evidence.
+
+**Grain:** One row per party per purpose per consent grant.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| consent_id | string | yes | Identifier for the consent record. | internal |  |  |
+| party_id | string | yes | The consenting data subject. | internal |  |  |
+| consent_purpose_code | string | yes | Purpose consented to. |  |  |  |
+| consent_status_code | string | yes | Current state of the consent. |  |  |  |
+| granted_at | timestamp | yes | When consent was given. |  |  |  |
+| withdrawn_at | timestamp |  | When consent was withdrawn, where it was. |  |  |  |
+| channel_code | string |  | Channel the consent was captured through. |  |  |  |
+
+**Primary key:** consent_id
+
+## Contact Point (`party.contact_point`)
+
+A contact point for a party. PII is deliberately concentrated here and on party - the erasure design in PRIVACY.md redacts these anchors while transactional history keeps its surrogate keys.
+
+**Grain:** One row per contact point per party.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| contact_point_id | string | yes | Identifier for the contact point. | internal |  |  |
+| party_id | string | yes | The party contactable here. | internal |  |  |
+| contact_point_type_code | string | yes | Kind of contact point. |  |  |  |
+| value | string | yes | The address, number or email itself. | pii |  |  |
+| preferred | boolean | yes | Whether this is the party's preferred contact point of its kind. |  |  |  |
+
+**Primary key:** contact_point_id
+
+## Data Subject Request (`party.data_subject_request`)
+
+A GDPR data subject request (access, erasure, rectification, portability) tracked against the statutory clock. Erasure execution follows the design in PRIVACY.md.
+
+**Grain:** One row per request received.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| data_subject_request_id | string | yes | Identifier for the request. | internal |  |  |
+| party_id | string | yes | The requesting data subject. | internal |  |  |
+| dsr_type_code | string | yes | Kind of request. |  |  |  |
+| dsr_status_code | string | yes | Handling status. |  |  |  |
+| received_date | date | yes | Date received; the statutory window starts here. |  |  |  |
+| completed_date | date |  | Date fulfilled or refused. |  |  |  |
+| notes | string |  | Handling notes, including refusal grounds where applicable. | confidential |  |  |
+
+**Primary key:** data_subject_request_id
+**Quality — completed_after_received:** `completed_date >= received_date` — A request cannot complete before it is received.
 
 ## Party (`party.party`)
 

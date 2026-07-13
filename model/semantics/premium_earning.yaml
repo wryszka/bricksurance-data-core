@@ -1,0 +1,26 @@
+kind: view
+name: premium_earning
+domain: semantics
+title: Premium Earning
+description: >
+  Written, earned-to-date and unearned premium per policy, on a straight-line
+  daily earning basis over the cover period. Honest limits: cancellations
+  earn to their natural period in this version, and earning patterns other
+  than straight-line are a later addition.
+grain: One row per policy per currency with premium activity.
+sql: |
+  SELECT
+    p.policy_id,
+    p.line_of_business_code,
+    p.underwriting_year,
+    pt.currency_code,
+    CAST(SUM(pt.amount) AS DECIMAL(18,2)) AS written_premium,
+    CAST(SUM(pt.amount * LEAST(1.0, GREATEST(0.0,
+        (datediff(LEAST(current_date(), p.expiry_date), p.inception_date) + 1) / 365.0)))
+      AS DECIMAL(18,2)) AS earned_premium,
+    CAST(SUM(pt.amount) - SUM(pt.amount * LEAST(1.0, GREATEST(0.0,
+        (datediff(LEAST(current_date(), p.expiry_date), p.inception_date) + 1) / 365.0)))
+      AS DECIMAL(18,2)) AS unearned_premium
+  FROM {policy.premium_transaction} pt
+  JOIN {policy.policy} p ON p.policy_id = pt.policy_id
+  GROUP BY p.policy_id, p.line_of_business_code, p.underwriting_year, pt.currency_code
