@@ -274,7 +274,7 @@ export default function ExchangeTab() {
       <PurposeCard
         seeing="The outbound bordereau as a governed view, and Claude mapping a messy inbound file against the data dictionary as a contract."
         matters="Data exchange without middleware — the standard travels with the data."
-        links={[DOCS.cookbook, DOCS.adoption]}
+        links={[DOCS.cookbook, DOCS.adoption, DOCS.agentPlaybook]}
       />
       <h2 className="section">Exchange — semantics that travel</h2>
       <p className="sub">

@@ -45,7 +45,7 @@ export default function NumbersTab() {
       <PurposeCard
         seeing="KPIs served by Unity Catalog metric views — each figure carries its business definition."
         matters="One definition of every measure, for humans, dashboards and LLM agents alike."
-        links={[DOCS.metrics]}
+        links={[DOCS.metrics, DOCS.genieCatalog, DOCS.agentPlaybook]}
       />
       <h2 className="section">Numbers — the semantic layer in action</h2>
       <p className="sub">

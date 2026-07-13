@@ -63,6 +63,24 @@ export const DOCS: Record<string, DocLink> = {
     url: 'https://docs.google.com/document/d/11kabV_nZDB2lwpqbsp3d3X7j1mjHzOagwRwB11WTnBU/edit',
     description: 'The end-to-end architecture and the design decisions behind it.',
   },
+  genieCatalog: {
+    key: 'genieCatalog',
+    title: 'Genie Catalog',
+    url: 'https://docs.google.com/document/d/1awgbB9aToP2ZwLKZ53aaQHN-SlxKfRIqbeCOp12IlIs/edit',
+    description: 'What genies can we run? Five live spaces + the defined backlog.',
+  },
+  agentPlaybook: {
+    key: 'agentPlaybook',
+    title: 'Agent Playbook',
+    url: 'https://docs.google.com/document/d/1M5__ezuSaVsBbSKrZFTq0DPRI2eviWrSHFClimqi1fU/edit',
+    description: 'Can an agent do X? The governed action layer and the six shapes of any ask.',
+  },
+  topicCoverage: {
+    key: 'topicCoverage',
+    title: 'Topic Coverage Matrix',
+    url: 'https://docs.google.com/document/d/1yEqIIpeByhbHhLpWdBBb-hZlnw7oG9_3gKpZuL5w8Gw/edit',
+    description: '100 client topics stress-tested: 52 covered, 22 partial, 26 missing.',
+  },
 };
 
 export const REPO = {
@@ -82,4 +100,7 @@ export const DOC_ORDER: DocLink[] = [
   DOCS.cookbook,
   DOCS.adoption,
   DOCS.evolution,
+  DOCS.genieCatalog,
+  DOCS.agentPlaybook,
+  DOCS.topicCoverage,
 ];
