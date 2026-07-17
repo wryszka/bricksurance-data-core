@@ -6,6 +6,8 @@ description: >
   The asset side: market value, book cost, unrealised gain and investment
   income by asset class and legal entity. Query with MEASURE(); constrain
   currency_code.
+owner: Chief Investment Officer
+certification: draft
 source: investment.investment_holding
 joins:
   - name: asset_class_ref

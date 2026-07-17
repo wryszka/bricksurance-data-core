@@ -7,6 +7,8 @@ description: >
   defined once over the canonical model. Measures are in original transaction
   currency: always group by or filter on currency_code before summing money.
   Query measures with MEASURE(name).
+owner: Chief Underwriting Officer
+certification: certified
 source: semantics.financial_transaction
 joins:
   - name: line_of_business

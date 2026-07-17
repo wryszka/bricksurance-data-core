@@ -5670,6 +5670,8 @@
       "domain": "semantics",
       "title": "Cession Metrics",
       "description": "Outward reinsurance KPIs over the cession bordereau: gross and ceded premium by treaty and period. Amounts are in original transaction currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "owner": "Head of Reinsurance",
+      "certification": "certified",
       "source": "exchange.cession_bordereau_line",
       "joins": [
         {
@@ -5734,6 +5736,8 @@
       "domain": "semantics",
       "title": "Financial Position",
       "description": "Financial-statement line items assembled from the ledger via the statement mapping - the balance sheet and income statement in business language, by legal entity and regime. Query MEASURE(line_amount) grouped by statement and line; constrain currency_code and reporting_regime.\n",
+      "owner": "Financial Controller",
+      "certification": "certified",
       "source": "finance.journal_line",
       "joins": [
         {
@@ -5788,6 +5792,8 @@
       "domain": "semantics",
       "title": "Investment Metrics",
       "description": "The asset side: market value, book cost, unrealised gain and investment income by asset class and legal entity. Query with MEASURE(); constrain currency_code.\n",
+      "owner": "Chief Investment Officer",
+      "certification": "draft",
       "source": "investment.investment_holding",
       "joins": [
         {
@@ -5847,6 +5853,8 @@
       "domain": "semantics",
       "title": "Performance Metrics",
       "description": "The underwriting result: earned premium, incurred claims, expenses and the loss / expense / combined ratios - each defined once. Earning is straight-line daily; expenses are line-level, so combined ratio is meaningful per line and currency (not per underwriting year). Always constrain currency_code. Query measures with MEASURE(name).\n",
+      "owner": "Chief Financial Officer",
+      "certification": "certified",
       "source": "semantics.underwriting_performance",
       "joins": [
         {
@@ -5911,6 +5919,8 @@
       "domain": "semantics",
       "title": "Submission Metrics",
       "description": "Reinsurance submission funnel KPIs: volumes and requested capacity by status, form and year. Amounts are in original submission currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "owner": "Head of Reinsurance",
+      "certification": "draft",
       "source": "reinsurance.submission",
       "joins": [
         {
@@ -5985,6 +5995,8 @@
       "domain": "semantics",
       "title": "Trial Balance",
       "description": "The trial balance: net movement by ledger account, entity and period, from the journal lines. Because every journal balances, the total across all accounts nets to zero - the controller's first check. Query with MEASURE(net_movement); always constrain currency_code.\n",
+      "owner": "Financial Controller",
+      "certification": "certified",
       "source": "finance.journal_line",
       "joins": [
         {
@@ -6054,6 +6066,8 @@
       "domain": "semantics",
       "title": "Underwriting Metrics",
       "description": "Certified underwriting KPIs - premium, claims development and loss ratio - defined once over the canonical model. Measures are in original transaction currency: always group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "owner": "Chief Underwriting Officer",
+      "certification": "certified",
       "source": "semantics.financial_transaction",
       "joins": [
         {
@@ -6143,6 +6157,8 @@
       "domain": "semantics",
       "title": "Valuation Metrics",
       "description": "Published valuation figures (BEL, technical provisions, SCR, CSM...) by run, measure and line of business - one semantic surface across life and non-life, Solvency II and IFRS 17. Amounts are in original currency; group by or filter on currency_code and valuation_measure_code before summing. Query measures with MEASURE(name).\n",
+      "owner": "Chief Actuary",
+      "certification": "certified",
       "source": "finance.valuation_result",
       "joins": [
         {

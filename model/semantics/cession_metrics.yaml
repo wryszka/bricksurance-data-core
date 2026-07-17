@@ -7,6 +7,8 @@ description: >
   premium by treaty and period. Amounts are in original transaction currency;
   group by or filter on currency_code before summing money. Query measures
   with MEASURE(name).
+owner: Head of Reinsurance
+certification: certified
 source: exchange.cession_bordereau_line
 joins:
   - name: line_of_business

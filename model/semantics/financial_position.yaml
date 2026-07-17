@@ -7,6 +7,8 @@ description: >
   mapping - the balance sheet and income statement in business language, by
   legal entity and regime. Query MEASURE(line_amount) grouped by statement and
   line; constrain currency_code and reporting_regime.
+owner: Financial Controller
+certification: certified
 source: finance.journal_line
 joins:
   - name: statement_line

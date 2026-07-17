@@ -493,6 +493,32 @@ def generate_docs(manifest, entities, code_sets):
     (out / "erd.mmd").write_text("\n".join(erd) + "\n")
 
 
+def generate_metric_catalog(manifest, metric_views):
+    """A business-readable catalog of every metric: owner, certification,
+    dimensions and the exact formula. This is the semantic layer as a person
+    reads it - the companion to the machine-readable ontology JSON."""
+    out = BUILD / "docs"
+    out.mkdir(parents=True, exist_ok=True)
+    lines = [f"# {manifest['title']} - Metric Catalog",
+             "", f"*Generated from model v{manifest['version']}. Every measure is defined "
+             "once here and physicalised as a Unity Catalog metric view; the formula is "
+             "platform-neutral SQL.*", ""]
+    for mv in metric_views:
+        lines += [f"## {mv['title']} (`{mv['domain']}.{mv['name']}`)", ""]
+        lines += [" ".join(str(mv["description"]).split()), ""]
+        lines.append(f"**Owner:** {mv.get('owner', 'unassigned')} · "
+                     f"**Certification:** {mv.get('certification', 'draft')} · "
+                     f"**Source:** `{mv['source']}`")
+        lines += ["", "**Dimensions:** " + ", ".join(d["name"] for d in mv["dimensions"]), ""]
+        lines += ["| Measure | Definition | Formula |", "|---|---|---|"]
+        for m in mv["measures"]:
+            formula = " ".join(str(m["expr"]).split()).replace("|", "\\|")
+            lines.append(f"| `{m['name']}` | {' '.join(str(m['description']).split())} "
+                         f"| `{formula}` |")
+        lines.append("")
+    (out / "metric_catalog.md").write_text("\n".join(lines))
+
+
 def generate_genie(binding, manifest, entities, code_sets, views=(), metric_views=()):
     out = BUILD / "genie"
     out.mkdir(parents=True, exist_ok=True)
@@ -590,6 +616,56 @@ def generate_ontology(manifest, entities, code_sets, views, metric_views, functi
     (out / f"{manifest['model']}.ontology.json").write_text(
         json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
 
+    # a self-describing README so the JSON is usable by anyone, standalone
+    counts = (f"{len(entities)} entities, {len(code_sets)} code sets, "
+              f"{len(views)} views, {len(metric_views)} metric views, "
+              f"{len(functions)} functions, {len(relationships)} relationships")
+    (out / "README.md").write_text(f"""# {manifest['title']} — Ontology Export
+
+`{manifest['model']}.ontology.json` is the **entire semantic model in one
+platform-neutral file** (format `bricksurance-data-core/ontology-v1`,
+v{manifest['version']}): {counts}.
+
+## What is in it
+
+| Key | What it holds |
+|---|---|
+| `domains` | The {len(manifest['domains'])} business domains |
+| `entities` | Tables: attributes with type, definition, data classification, keys, quality rules, ACORD/Lloyd's crosswalk |
+| `code_sets` | Controlled vocabularies **with their allowed values** |
+| `views` / `metric_views` | Semantic views and metrics — **each measure carries its exact SQL formula, plus owner and certification** |
+| `functions` | Governed callable tools (name, typed inputs, return, body) |
+| `relationships` | The full foreign-key graph, pre-derived |
+
+Every attribute and measure has a business definition. This is a complete,
+self-contained specification: a reader needs nothing else to understand or
+re-implement the model.
+
+## Two ways to use it
+
+1. **Think about your own implementation** — read the JSON (or the companion
+   `data_dictionary.md` and `metric_catalog.md`). It is deliberately
+   platform-agnostic: entities, definitions, relationships and metric formulas,
+   with no vendor specifics. Map it onto whatever platform you run.
+2. **Stand it up on Databricks** — follow `INSTALL_DATABRICKS.md`. In short:
+   drop this JSON into a fork, add a one-file binding (your catalog + schema
+   naming), run the generator, deploy. ~30 minutes to a governed Unity Catalog
+   with definitions, keys, tags, metric views and Genie context.
+
+## Round-trip guarantee
+
+`tools/import_ontology.py --input <this file> --target <dir>` regenerates the
+full spec tree; export→import→export is verified byte-identical. Adopting the
+model, or exchanging it between organisations, is this one file.
+""")
+    # make the export folder a self-contained hand-off bundle
+    import shutil
+    for src in (BUILD / "docs" / "data_dictionary.md",
+                BUILD / "docs" / "metric_catalog.md",
+                ROOT / "docs" / "INSTALL_DATABRICKS.md"):
+        if src.exists():
+            shutil.copy(src, out / src.name)
+
 
 def main():
     manifest, entities, code_sets, views, metric_views, functions = load_model()
@@ -603,6 +679,7 @@ def main():
         if binding["platform"] == "databricks":
             generate_genie(binding, manifest, entities, code_sets, views, metric_views)
     generate_docs(manifest, entities, code_sets)
+    generate_metric_catalog(manifest, metric_views)
     generate_ontology(manifest, entities, code_sets, views, metric_views, functions)
     n_files = sum(1 for _ in BUILD.rglob("*") if _.is_file())
     print(

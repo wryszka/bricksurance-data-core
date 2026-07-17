@@ -8,6 +8,8 @@ description: >
   straight-line daily; expenses are line-level, so combined ratio is
   meaningful per line and currency (not per underwriting year). Always
   constrain currency_code. Query measures with MEASURE(name).
+owner: Chief Financial Officer
+certification: certified
 source: semantics.underwriting_performance
 joins:
   - name: line_of_business

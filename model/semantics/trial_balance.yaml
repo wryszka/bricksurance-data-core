@@ -7,6 +7,8 @@ description: >
   the journal lines. Because every journal balances, the total across all
   accounts nets to zero - the controller's first check. Query with
   MEASURE(net_movement); always constrain currency_code.
+owner: Financial Controller
+certification: certified
 source: finance.journal_line
 joins:
   - name: account

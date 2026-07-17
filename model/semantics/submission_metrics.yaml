@@ -7,6 +7,8 @@ description: >
   status, form and year. Amounts are in original submission currency; group
   by or filter on currency_code before summing money. Query measures with
   MEASURE(name).
+owner: Head of Reinsurance
+certification: draft
 source: reinsurance.submission
 joins:
   - name: submission_status

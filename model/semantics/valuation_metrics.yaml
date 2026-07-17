@@ -8,6 +8,8 @@ description: >
   non-life, Solvency II and IFRS 17. Amounts are in original currency; group
   by or filter on currency_code and valuation_measure_code before summing.
   Query measures with MEASURE(name).
+owner: Chief Actuary
+certification: certified
 source: finance.valuation_result
 joins:
   - name: valuation_run
