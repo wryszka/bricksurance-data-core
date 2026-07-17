@@ -14,6 +14,12 @@ attributes:
     required: true
     description: Identifier for the expense movement.
     classification: internal
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: false
+    description: The entity the expense is booked in.
+    classification: internal
   - name: expense_type_code
     code_set: expense_type
     required: true

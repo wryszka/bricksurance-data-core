@@ -1,0 +1,43 @@
+kind: entity
+name: chart_of_account
+domain: finance
+title: Chart of Account
+description: >
+  The chart of accounts: every ledger account with its type (which fixes its
+  normal balance) and its parent, forming the account hierarchy that
+  statements roll up. This is what turns classified postings into a real
+  general ledger.
+grain: One row per ledger account.
+tags:
+  maturity: draft
+attributes:
+  - name: account_id
+    type: string
+    required: true
+    description: Identifier for the account.
+    classification: internal
+  - name: account_number
+    type: string
+    required: true
+    description: Ledger account number.
+  - name: name
+    type: string
+    required: true
+    description: Account name.
+  - name: account_type_code
+    code_set: account_type
+    required: true
+    description: Asset, liability, equity, income or expense - fixes the normal balance.
+  - name: parent_account_id
+    references: chart_of_account
+    type: string
+    required: false
+    description: Parent account for roll-up; empty at the top of the hierarchy.
+    classification: internal
+  - name: statement_type_code
+    code_set: statement_type
+    required: true
+    description: Which primary statement the account belongs to.
+keys:
+  primary: [account_id]
+  natural: [account_number]

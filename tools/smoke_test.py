@@ -60,15 +60,15 @@ def main():
     checks = [
         (f"{n_tables} model tables deployed (migration log excluded)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
-         f"WHERE table_schema LIKE '{prefix}%' AND table_type = 'MANAGED' "
-         f"AND table_name <> 'schema_migration'", str(n_tables)),
+         f"WHERE table_schema LIKE '{prefix}%' AND table_schema NOT LIKE '%partner\\_re' "
+         f"AND table_type = 'MANAGED' AND table_name <> 'schema_migration'", str(n_tables)),
         (f"{n_views} semantic views deployed (vector indexes excluded)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
-         f"WHERE table_schema LIKE '{prefix}%' AND table_type <> 'MANAGED' "
-         f"AND table_name NOT LIKE '%\\\\_index'", str(n_views)),
+         f"WHERE table_schema LIKE '{prefix}%' AND table_schema NOT LIKE '%partner\\_re' "
+         f"AND table_type <> 'MANAGED' AND table_name NOT LIKE '%\\_index'", str(n_views)),
         (f"{n_fks} foreign-key relationships (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.table_constraints "
-         f"WHERE constraint_schema LIKE '{prefix}%' AND constraint_type = 'FOREIGN KEY'", str(n_fks)),
+         f"WHERE constraint_schema LIKE '{prefix}%' AND constraint_schema NOT LIKE '%partner\\_re' AND constraint_type = 'FOREIGN KEY'", str(n_fks)),
         ("60 policies", f"SELECT COUNT(*) FROM {q('policy', 'policy')}", "60"),
         ("18 claims", f"SELECT COUNT(*) FROM {q('claim', 'claim')}", "18"),
         ("dictionary covers every deployed column",
@@ -147,9 +147,9 @@ def main():
          f"SELECT COUNT(*) FROM {q('content', 'document')} "
          f"WHERE CAST(product_id IS NOT NULL AS INT) + CAST(policy_id IS NOT NULL AS INT) "
          f"+ CAST(claim_id IS NOT NULL AS INT) + CAST(submission_id IS NOT NULL AS INT) <> 1", "0"),
-        ("ledger reconciles: GL premium postings equal premium transactions (GBP)",
-         f"SELECT (SELECT CAST(SUM(amount) AS DECIMAL(18,2)) FROM {q('finance', 'gl_posting')} "
-         f"WHERE gl_account_code = 'PREMIUM_WRITTEN' AND currency_code = 'GBP') = "
+        ("ledger reconciles: premium journal lines equal premium transactions (GBP)",
+         f"SELECT (SELECT CAST(SUM(jl.amount) AS DECIMAL(18,2)) FROM {q('finance', 'journal_line')} jl "
+         f"WHERE jl.source_entity = 'premium_transaction' AND jl.currency_code = 'GBP' AND jl.amount > 0) = "
          f"(SELECT CAST(SUM(amount) AS DECIMAL(18,2)) FROM {q('policy', 'premium_transaction')} "
          f"WHERE currency_code = 'GBP')", "true"),
         ("combined ratio computes for Commercial Property (GBP)",
@@ -163,6 +163,30 @@ def main():
          f"SELECT COUNT(*) FROM {q('party', 'data_subject_request')} "
          f"WHERE dsr_type_code = 'ERASURE' AND dsr_status_code = 'REFUSED' "
          f"AND notes IS NOT NULL", "1"),
+        ("the general ledger balances: trial balance nets to zero",
+         f"SELECT CAST(SUM(amount) AS DECIMAL(18,2)) FROM {q('finance', 'journal_line')}", "0.00"),
+        ("every journal is internally balanced (debits = credits)",
+         f"SELECT COUNT(*) FROM (SELECT journal_id, SUM(amount) s "
+         f"FROM {q('finance', 'journal_line')} GROUP BY journal_id) WHERE ROUND(s, 2) <> 0", "0"),
+        ("governed tool: SE ledger balances via fn_trial_balance_check",
+         f"SELECT CAST({q('finance', 'fn_trial_balance_check')}('le_se') AS DECIMAL(18,2))", "0.00"),
+        ("group SCR coverage differs from solo (diversification is real)",
+         f"SELECT (SELECT amount FROM {q('finance', 'valuation_result')} vr "
+         f"JOIN {q('life', 'valuation_run')} r ON r.valuation_run_id = vr.valuation_run_id "
+         f"WHERE r.reporting_level_code = 'GROUP' AND vr.valuation_measure_code = 'SCR_COVERAGE_RATIO') <> "
+         f"(SELECT amount FROM {q('finance', 'valuation_result')} vr "
+         f"JOIN {q('life', 'valuation_run')} r ON r.valuation_run_id = vr.valuation_run_id "
+         f"WHERE r.reporting_level_code = 'SOLO' AND r.legal_entity_id = 'le_se' "
+         f"AND vr.valuation_measure_code = 'SCR_COVERAGE_RATIO')", "true"),
+        ("IFRS 17 CSM closing derives from movements (fn_csm_closing)",
+         f"SELECT CAST({q('finance', 'fn_csm_closing')}(MIN(contract_group_id)) AS DECIMAL(18,2)) IS NOT NULL "
+         f"FROM {q('finance', 'contract_group')} WHERE cohort_year = 2025", "true"),
+        ("every legal entity rolls up to the group (or is the group)",
+         f"SELECT COUNT(*) FROM {q('org', 'legal_entity')} "
+         f"WHERE parent_legal_entity_id IS NULL AND legal_entity_type_code <> 'GROUP_HOLDING'", "0"),
+        ("balance sheet has both asset and liability lines (SII regime)",
+         f"SELECT COUNT(DISTINCT line_label) >= 4 FROM {q('finance', 'statement_line')} "
+         f"WHERE statement_type_code = 'BALANCE_SHEET' AND reporting_regime_code = 'SOLVENCY_II'", "true"),
         ("every party role has exactly one context",
          f"SELECT COUNT(*) FROM {q('party', 'party_role')} "
          f"WHERE CAST(policy_id IS NOT NULL AS INT) + CAST(claim_id IS NOT NULL AS INT) "

@@ -1,0 +1,53 @@
+kind: entity
+name: journal_line
+domain: finance
+title: Journal Line
+description: >
+  A single debit or credit line of a journal, posted to one ledger account
+  and carrying a signed amount (debits positive, credits negative) plus its
+  source operational transaction. Trial balance and financial statements are
+  sums over these lines; the link to source rows makes the ledger reconcile
+  to the sub-ledgers by construction.
+grain: One row per posting line.
+tags:
+  maturity: draft
+attributes:
+  - name: journal_line_id
+    type: string
+    required: true
+    description: Identifier for the line.
+    classification: internal
+  - name: journal_id
+    references: journal
+    type: string
+    required: true
+    description: The journal this line belongs to.
+    classification: internal
+  - name: account_id
+    references: chart_of_account
+    type: string
+    required: true
+    description: The ledger account posted to.
+    classification: internal
+  - name: amount
+    type: decimal(18,2)
+    required: true
+    description: >
+      Signed amount in the entity's functional currency: debits positive,
+      credits negative. Lines within a journal sum to zero.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the amount.
+  - name: source_entity
+    type: string
+    required: false
+    description: Entity name of the originating operational row (e.g. premium_transaction).
+  - name: source_id
+    type: string
+    required: false
+    description: Identifier of the originating operational row, for reconciliation.
+    classification: internal
+keys:
+  primary: [journal_line_id]

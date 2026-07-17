@@ -1,6 +1,16 @@
 erDiagram
+    account_type {
+        string account_type_code PK
+        string label
+        string description
+    }
     appetite_effect {
         string appetite_effect_code PK
+        string label
+        string description
+    }
+    asset_class {
+        string asset_class_code PK
         string label
         string description
     }
@@ -74,6 +84,11 @@ erDiagram
         string label
         string description
     }
+    csm_movement_type {
+        string csm_movement_type_code PK
+        string label
+        string description
+    }
     currency {
         string currency_code PK
         string label
@@ -114,13 +129,18 @@ erDiagram
         string label
         string description
     }
-    gl_account {
-        string gl_account_code PK
+    insured_object_type {
+        string insured_object_type_code PK
         string label
         string description
     }
-    insured_object_type {
-        string insured_object_type_code PK
+    investment_transaction_type {
+        string investment_transaction_type_code PK
+        string label
+        string description
+    }
+    legal_entity_type {
+        string legal_entity_type_code PK
         string label
         string description
     }
@@ -134,6 +154,11 @@ erDiagram
         string label
         string description
     }
+    measurement_model {
+        string measurement_model_code PK
+        string label
+        string description
+    }
     party_role_type {
         string party_role_type_code PK
         string label
@@ -141,6 +166,11 @@ erDiagram
     }
     party_type {
         string party_type_code PK
+        string label
+        string description
+    }
+    period_status {
+        string period_status_code PK
         string label
         string description
     }
@@ -169,6 +199,16 @@ erDiagram
         string label
         string description
     }
+    reporting_level {
+        string reporting_level_code PK
+        string label
+        string description
+    }
+    reporting_regime {
+        string reporting_regime_code PK
+        string label
+        string description
+    }
     run_verdict {
         string run_verdict_code PK
         string label
@@ -184,8 +224,18 @@ erDiagram
         string label
         string description
     }
+    statement_type {
+        string statement_type_code PK
+        string label
+        string description
+    }
     submission_status {
         string submission_status_code PK
+        string label
+        string description
+    }
+    tax_type {
+        string tax_type_code PK
         string label
         string description
     }
@@ -309,8 +359,42 @@ erDiagram
         string risk_postcode
         string source_system_code
     }
+    accounting_period {
+        string accounting_period_id PK
+        string legal_entity_id
+        string period_label
+        date start_date
+        date end_date
+        string period_status_code
+    }
+    chart_of_account {
+        string account_id PK
+        string account_number
+        string name
+        string account_type_code
+        string parent_account_id
+        string statement_type_code
+    }
+    contract_group {
+        string contract_group_id PK
+        string legal_entity_id
+        string line_of_business_code
+        integer cohort_year
+        string measurement_model_code
+        boolean onerous
+        string currency_code
+    }
+    csm_movement {
+        string csm_movement_id PK
+        string contract_group_id
+        string valuation_run_id
+        string csm_movement_type_code
+        decimal amount
+        string currency_code
+    }
     expense_transaction {
         string expense_transaction_id PK
+        string legal_entity_id
         string expense_type_code
         string line_of_business_code
         decimal amount
@@ -318,25 +402,69 @@ erDiagram
         date transaction_date
         string source_system_code
     }
-    gl_posting {
-        string gl_posting_id PK
-        string journal_reference
-        string gl_account_code
+    financial_plan {
+        string financial_plan_id PK
+        string legal_entity_id
+        string plan_version
+        string line_of_business_code
+        string plan_measure
+        string period_label
         decimal amount
         string currency_code
+    }
+    fx_rate {
+        string fx_rate_id PK
+        string from_currency_code
+        string to_currency_code
+        date rate_date
+        decimal rate
+    }
+    journal {
+        string journal_id PK
+        string journal_reference
+        string legal_entity_id
+        string accounting_period_id
         date posting_date
-        string policy_id
-        string claim_id
+        string description
         string source_system_code
+    }
+    journal_line {
+        string journal_line_id PK
+        string journal_id
+        string account_id
+        decimal amount
+        string currency_code
+        string source_entity
+        string source_id
     }
     receivable_transaction {
         string receivable_transaction_id PK
         string policy_id
+        string legal_entity_id
         string receivable_transaction_type_code
         decimal amount
         string currency_code
         date transaction_date
         date due_date
+        string source_system_code
+    }
+    statement_line {
+        string statement_line_id PK
+        string statement_type_code
+        string reporting_regime_code
+        string line_label
+        integer line_order
+        string account_id
+        integer sign
+    }
+    tax_transaction {
+        string tax_transaction_id PK
+        string legal_entity_id
+        string tax_type_code
+        string policy_id
+        decimal amount
+        string currency_code
+        date transaction_date
         string source_system_code
     }
     valuation_result {
@@ -347,6 +475,27 @@ erDiagram
         string cohort
         decimal amount
         string currency_code
+    }
+    investment_holding {
+        string investment_holding_id PK
+        string legal_entity_id
+        string asset_class_code
+        string instrument_name
+        string isin
+        decimal book_cost
+        decimal market_value
+        string currency_code
+        date valuation_date
+        string source_system_code
+    }
+    investment_transaction {
+        string investment_transaction_id PK
+        string investment_holding_id
+        string investment_transaction_type_code
+        decimal amount
+        string currency_code
+        date transaction_date
+        string source_system_code
     }
     assumption_set {
         string assumption_set_id PK
@@ -381,6 +530,9 @@ erDiagram
     }
     valuation_run {
         string valuation_run_id PK
+        string legal_entity_id
+        string reporting_level_code
+        string reporting_regime_code
         date valuation_date
         timestamp run_timestamp
         string scenario_set_id
@@ -392,6 +544,16 @@ erDiagram
     valuation_run_assumption {
         string valuation_run_id PK
         string assumption_set_id PK
+    }
+    legal_entity {
+        string legal_entity_id PK
+        string name
+        string legal_entity_type_code
+        string parent_legal_entity_id
+        string country_code
+        string functional_currency_code
+        string lei
+        string source_system_code
     }
     consent {
         string consent_id PK
@@ -466,6 +628,7 @@ erDiagram
     policy {
         string policy_id PK
         string policy_number
+        string legal_entity_id
         string source_system_code
         string line_of_business_code
         string policy_status_code
@@ -655,23 +818,60 @@ erDiagram
     premium_bordereau_line }o--|| currency : currency_code
     premium_bordereau_line }o--|| country : risk_country_code
     premium_bordereau_line }o--|| source_system : source_system_code
+    accounting_period }o--|| legal_entity : legal_entity_id
+    accounting_period }o--|| period_status : period_status_code
+    chart_of_account }o--|| account_type : account_type_code
+    chart_of_account }o--|| chart_of_account : parent_account_id
+    chart_of_account }o--|| statement_type : statement_type_code
+    contract_group }o--|| legal_entity : legal_entity_id
+    contract_group }o--|| line_of_business : line_of_business_code
+    contract_group }o--|| measurement_model : measurement_model_code
+    contract_group }o--|| currency : currency_code
+    csm_movement }o--|| contract_group : contract_group_id
+    csm_movement }o--|| valuation_run : valuation_run_id
+    csm_movement }o--|| csm_movement_type : csm_movement_type_code
+    csm_movement }o--|| currency : currency_code
+    expense_transaction }o--|| legal_entity : legal_entity_id
     expense_transaction }o--|| expense_type : expense_type_code
     expense_transaction }o--|| line_of_business : line_of_business_code
     expense_transaction }o--|| currency : currency_code
     expense_transaction }o--|| source_system : source_system_code
-    gl_posting }o--|| gl_account : gl_account_code
-    gl_posting }o--|| currency : currency_code
-    gl_posting }o--|| policy : policy_id
-    gl_posting }o--|| claim : claim_id
-    gl_posting }o--|| source_system : source_system_code
+    financial_plan }o--|| legal_entity : legal_entity_id
+    financial_plan }o--|| line_of_business : line_of_business_code
+    financial_plan }o--|| currency : currency_code
+    fx_rate }o--|| currency : from_currency_code
+    fx_rate }o--|| currency : to_currency_code
+    journal }o--|| legal_entity : legal_entity_id
+    journal }o--|| accounting_period : accounting_period_id
+    journal }o--|| source_system : source_system_code
+    journal_line }o--|| journal : journal_id
+    journal_line }o--|| chart_of_account : account_id
+    journal_line }o--|| currency : currency_code
     receivable_transaction }o--|| policy : policy_id
+    receivable_transaction }o--|| legal_entity : legal_entity_id
     receivable_transaction }o--|| receivable_transaction_type : receivable_transaction_type_code
     receivable_transaction }o--|| currency : currency_code
     receivable_transaction }o--|| source_system : source_system_code
+    statement_line }o--|| statement_type : statement_type_code
+    statement_line }o--|| reporting_regime : reporting_regime_code
+    statement_line }o--|| chart_of_account : account_id
+    tax_transaction }o--|| legal_entity : legal_entity_id
+    tax_transaction }o--|| tax_type : tax_type_code
+    tax_transaction }o--|| policy : policy_id
+    tax_transaction }o--|| currency : currency_code
+    tax_transaction }o--|| source_system : source_system_code
     valuation_result }o--|| valuation_run : valuation_run_id
     valuation_result }o--|| line_of_business : line_of_business_code
     valuation_result }o--|| valuation_measure : valuation_measure_code
     valuation_result }o--|| currency : currency_code
+    investment_holding }o--|| legal_entity : legal_entity_id
+    investment_holding }o--|| asset_class : asset_class_code
+    investment_holding }o--|| currency : currency_code
+    investment_holding }o--|| source_system : source_system_code
+    investment_transaction }o--|| investment_holding : investment_holding_id
+    investment_transaction }o--|| investment_transaction_type : investment_transaction_type_code
+    investment_transaction }o--|| currency : currency_code
+    investment_transaction }o--|| source_system : source_system_code
     assumption_set }o--|| assumption_type : assumption_type_code
     assumption_set }o--|| assumption_status : assumption_status_code
     assumption_set }o--|| source_system : source_system_code
@@ -680,11 +880,19 @@ erDiagram
     model_point }o--|| source_system : source_system_code
     scenario_set }o--|| scenario_status : scenario_status_code
     scenario_set }o--|| source_system : source_system_code
+    valuation_run }o--|| legal_entity : legal_entity_id
+    valuation_run }o--|| reporting_level : reporting_level_code
+    valuation_run }o--|| reporting_regime : reporting_regime_code
     valuation_run }o--|| scenario_set : scenario_set_id
     valuation_run }o--|| run_verdict : run_verdict_code
     valuation_run }o--|| source_system : source_system_code
     valuation_run_assumption }o--|| valuation_run : valuation_run_id
     valuation_run_assumption }o--|| assumption_set : assumption_set_id
+    legal_entity }o--|| legal_entity_type : legal_entity_type_code
+    legal_entity }o--|| legal_entity : parent_legal_entity_id
+    legal_entity }o--|| country : country_code
+    legal_entity }o--|| currency : functional_currency_code
+    legal_entity }o--|| source_system : source_system_code
     consent }o--|| party : party_id
     consent }o--|| consent_purpose : consent_purpose_code
     consent }o--|| consent_status : consent_status_code
@@ -712,6 +920,7 @@ erDiagram
     insured_object }o--|| policy : policy_id
     insured_object }o--|| insured_object_type : insured_object_type_code
     insured_object }o--|| country : country_code
+    policy }o--|| legal_entity : legal_entity_id
     policy }o--|| source_system : source_system_code
     policy }o--|| line_of_business : line_of_business_code
     policy }o--|| policy_status : policy_status_code

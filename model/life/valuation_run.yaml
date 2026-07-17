@@ -17,6 +17,22 @@ attributes:
     required: true
     description: Identifier for the run.
     classification: internal
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: false
+    description: >
+      The legal entity the run values. With reporting_level this is what
+      distinguishes a subsidiary's solo run from the group consolidated run.
+    classification: internal
+  - name: reporting_level_code
+    code_set: reporting_level
+    required: false
+    description: Solo (this entity) or group (consolidated).
+  - name: reporting_regime_code
+    code_set: reporting_regime
+    required: false
+    description: Regime the run is prepared under (Solvency II, IFRS 17...).
   - name: valuation_date
     type: date
     required: true

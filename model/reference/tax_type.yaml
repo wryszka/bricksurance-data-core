@@ -1,0 +1,14 @@
+kind: code_set
+name: tax_type
+title: Tax Type
+description: Kinds of tax the group accounts for.
+codes:
+  - code: IPT
+    label: Insurance Premium Tax
+    description: Premium tax collected on policies and remitted to the authority.
+  - code: CORPORATION_TAX
+    label: Corporation Tax
+    description: Tax on taxable profits.
+  - code: DEFERRED_TAX
+    label: Deferred Tax
+    description: Deferred tax on timing differences.

@@ -1,0 +1,14 @@
+kind: code_set
+name: statement_type
+title: Financial Statement Type
+description: The primary financial statement a line belongs to.
+codes:
+  - code: BALANCE_SHEET
+    label: Balance Sheet
+    description: Statement of financial position.
+  - code: INCOME_STATEMENT
+    label: Income Statement
+    description: Statement of profit or loss.
+  - code: CASH_FLOW
+    label: Cash Flow Statement
+    description: Statement of cash flows.

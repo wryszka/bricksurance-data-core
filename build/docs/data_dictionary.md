@@ -1,6 +1,20 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.7.0. Do not edit.*
+*Generated from model v0.8.0. Do not edit.*
+
+## Account Type (`reference.account_type`)
+
+The fundamental classification of a ledger account, which fixes its normal balance and where it lands in the financial statements.
+
+**Grain:** One row per account type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| account_type_code | string | yes | Code value; referenced by account_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** account_type_code
 
 ## Appetite Effect (`reference.appetite_effect`)
 
@@ -15,6 +29,20 @@ What a matching appetite rule does to a risk. Appetite lives as data, not as cod
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** appetite_effect_code
+
+## Asset Class (`reference.asset_class`)
+
+Investment asset classes held to back liabilities and capital, aligned to Solvency II asset categories at a working level.
+
+**Grain:** One row per asset class code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| asset_class_code | string | yes | Code value; referenced by asset_class_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** asset_class_code
 
 ## Assumption Status (`reference.assumption_status`)
 
@@ -222,6 +250,20 @@ Kinds of cover that can be granted under a policy. A policy bundles one or more 
 
 **Primary key:** coverage_type_code
 
+## CSM Movement Type (`reference.csm_movement_type`)
+
+Steps in the IFRS 17 contractual service margin roll-forward. The closing CSM is the signed sum of these movements over the opening balance - a balance derived from movements, never overwritten.
+
+**Grain:** One row per csm movement type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| csm_movement_type_code | string | yes | Code value; referenced by csm_movement_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** csm_movement_type_code
+
 ## Currency (`reference.currency`)
 
 Transaction currencies used by the group, as ISO 4217 alphabetic codes. This is deliberately a governed subset, not the full ISO list: a currency is added here when the business starts writing in it.
@@ -338,20 +380,6 @@ Kinds of fraud indicator on a claim. Signals inform investigation; they never au
 
 **Primary key:** fraud_signal_type_code
 
-## GL Account (`reference.gl_account`)
-
-Ledger accounts the model posts to - the thin, auditable bridge between operational transactions and finance. Every posting cites its source row.
-
-**Grain:** One row per gl account code.
-
-| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
-|---|---|---|---|---|---|---|
-| gl_account_code | string | yes | Code value; referenced by gl_account_code columns across the model. |  |  |  |
-| label | string | yes | Short human-readable name for the code. |  |  |  |
-| description | string | yes | Business definition of the code. |  |  |  |
-
-**Primary key:** gl_account_code
-
 ## Insured Object Type (`reference.insured_object_type`)
 
 Kinds of object or exposure a policy can insure. Extend with new codes as new lines of business are written (vessels, livestock, cyber estates...).
@@ -367,6 +395,34 @@ Kinds of object or exposure a policy can insure. Extend with new codes as new li
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** insured_object_type_code
+
+## Investment Transaction Type (`reference.investment_transaction_type`)
+
+Movements on investment holdings. Income and gains flow to the income statement; purchases and sales move the balance sheet.
+
+**Grain:** One row per investment transaction type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| investment_transaction_type_code | string | yes | Code value; referenced by investment_transaction_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** investment_transaction_type_code
+
+## Legal Entity Type (`reference.legal_entity_type`)
+
+The role a legal entity plays in the group's reporting structure. The group holding consolidates its subsidiaries; each subsidiary reports solo.
+
+**Grain:** One row per legal entity type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| legal_entity_type_code | string | yes | Code value; referenced by legal_entity_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** legal_entity_type_code
 
 ## Line of Business (`reference.line_of_business`)
 
@@ -397,6 +453,20 @@ Whether an event loss figure is modelled or reported. Day-one catastrophe number
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** loss_basis_code
+
+## IFRS 17 Measurement Model (`reference.measurement_model`)
+
+The IFRS 17 measurement model applied to a group of contracts.
+
+**Grain:** One row per ifrs 17 measurement model code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| measurement_model_code | string | yes | Code value; referenced by measurement_model_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** measurement_model_code
 
 ## Party Role Type (`reference.party_role_type`)
 
@@ -429,6 +499,20 @@ Fundamental legal nature of a party. Everything else about a party's place in th
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** party_type_code
+
+## Accounting Period Status (`reference.period_status`)
+
+Lifecycle of an accounting period; postings are only allowed while OPEN.
+
+**Grain:** One row per accounting period status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| period_status_code | string | yes | Code value; referenced by period_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** period_status_code
 
 ## Policy Status (`reference.policy_status`)
 
@@ -506,6 +590,34 @@ Premium billing movements. Outstanding debt is the signed sum - invoices positiv
 
 **Primary key:** receivable_transaction_type_code
 
+## Reporting Level (`reference.reporting_level`)
+
+Whether a figure is a single entity's own return (solo) or the consolidated group position. Solvency II and statutory accounts both require both.
+
+**Grain:** One row per reporting level code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| reporting_level_code | string | yes | Code value; referenced by reporting_level_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** reporting_level_code
+
+## Reporting Regime (`reference.reporting_regime`)
+
+The reporting framework a figure is prepared under. One valuation or statement figure means different things under different regimes; the regime is never assumed.
+
+**Grain:** One row per reporting regime code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| reporting_regime_code | string | yes | Code value; referenced by reporting_regime_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** reporting_regime_code
+
 ## Run Verdict (`reference.run_verdict`)
 
 Quality-gate verdict of a processing or valuation run. RED runs never feed downstream consumption; the verdict is part of the auditable run record.
@@ -548,6 +660,20 @@ Systems of record that feed the data layer. Provenance is part of the model: eve
 
 **Primary key:** source_system_code
 
+## Financial Statement Type (`reference.statement_type`)
+
+The primary financial statement a line belongs to.
+
+**Grain:** One row per financial statement type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| statement_type_code | string | yes | Code value; referenced by statement_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** statement_type_code
+
 ## Submission Status (`reference.submission_status`)
 
 Lifecycle of a reinsurance submission from receipt to bind or decline.
@@ -563,6 +689,20 @@ Lifecycle of a reinsurance submission from receipt to bind or decline.
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** submission_status_code
+
+## Tax Type (`reference.tax_type`)
+
+Kinds of tax the group accounts for.
+
+**Grain:** One row per tax type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| tax_type_code | string | yes | Code value; referenced by tax_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** tax_type_code
 
 ## Treaty Type (`reference.treaty_type`)
 
@@ -806,6 +946,76 @@ The canonical form of an inbound premium bordereau line, as reported by a coverh
 
 **Primary key:** bordereau_line_id
 
+## Accounting Period (`finance.accounting_period`)
+
+A financial reporting period for a legal entity, with its open/closed/locked status. Postings are only permitted into open periods; the close process moves periods to locked. The unit the finance calendar runs on.
+
+**Grain:** One row per period per legal entity.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| accounting_period_id | string | yes | Identifier for the period. | internal |  |  |
+| legal_entity_id | string | yes | The entity whose books this period governs. | internal |  |  |
+| period_label | string | yes | Human label, e.g. 2026-Q2. |  |  |  |
+| start_date | date | yes | First day of the period. |  |  |  |
+| end_date | date | yes | Last day of the period. |  |  |  |
+| period_status_code | string | yes | Open, closed or locked. |  |  |  |
+
+**Primary key:** accounting_period_id
+
+## Chart of Account (`finance.chart_of_account`)
+
+The chart of accounts: every ledger account with its type (which fixes its normal balance) and its parent, forming the account hierarchy that statements roll up. This is what turns classified postings into a real general ledger.
+
+**Grain:** One row per ledger account.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| account_id | string | yes | Identifier for the account. | internal |  |  |
+| account_number | string | yes | Ledger account number. |  |  |  |
+| name | string | yes | Account name. |  |  |  |
+| account_type_code | string | yes | Asset, liability, equity, income or expense - fixes the normal balance. |  |  |  |
+| parent_account_id | string |  | Parent account for roll-up; empty at the top of the hierarchy. | internal |  |  |
+| statement_type_code | string | yes | Which primary statement the account belongs to. |  |  |  |
+
+**Primary key:** account_id
+**Natural key:** account_number
+
+## Contract Group (IFRS 17) (`finance.contract_group`)
+
+An IFRS 17 group of contracts - the unit of account for the standard: contracts of similar risk, managed together, issued within a year, split by onerous status. Carries the measurement model and links to the entity and line. The CSM roll-forward and the LRC/LIC split hang off this.
+
+**Grain:** One row per group of contracts.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| contract_group_id | string | yes | Identifier for the group of contracts. | internal |  |  |
+| legal_entity_id | string | yes | The carrier holding the group. | internal |  |  |
+| line_of_business_code | string | yes | Line of business of the group. |  |  |  |
+| cohort_year | integer | yes | Annual cohort (issue year) - contracts more than a year apart cannot share a group. |  |  |  |
+| measurement_model_code | string | yes | IFRS 17 model applied (GMM, PAA, VFA). |  |  |  |
+| onerous | boolean | yes | Whether the group is onerous at initial recognition. |  |  |  |
+| currency_code | string | yes | Currency of the group's measurement. |  |  |  |
+
+**Primary key:** contract_group_id
+
+## CSM Movement (IFRS 17) (`finance.csm_movement`)
+
+A step in the contractual service margin roll-forward for a group of contracts in a period: opening, new business, interest accretion, experience adjustments and release to profit. The closing CSM is the signed sum over the opening - a balance derived from movements, never overwritten, and produced by an auditable valuation run.
+
+**Grain:** One row per movement type per contract group per period.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| csm_movement_id | string | yes | Identifier for the movement. | internal |  |  |
+| contract_group_id | string | yes | The group of contracts. | internal |  |  |
+| valuation_run_id | string | yes | The run that produced this movement - the audit anchor. | internal |  |  |
+| csm_movement_type_code | string | yes | Which step of the roll-forward this is. |  |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the group currency; release is negative. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+
+**Primary key:** csm_movement_id
+
 ## Expense Transaction (`finance.expense_transaction`)
 
 An operating expense allocated to a line of business - the missing half of the combined ratio, transactional like all money in the model.
@@ -815,6 +1025,7 @@ An operating expense allocated to a line of business - the missing half of the c
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | expense_transaction_id | string | yes | Identifier for the expense movement. | internal |  |  |
+| legal_entity_id | string |  | The entity the expense is booked in. | internal |  |  |
 | expense_type_code | string | yes | Kind of expense. |  |  |  |
 | line_of_business_code | string | yes | Line the expense is allocated to. |  |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
@@ -824,25 +1035,78 @@ An operating expense allocated to a line of business - the missing half of the c
 
 **Primary key:** expense_transaction_id
 
-## GL Posting (`finance.gl_posting`)
+## Financial Plan (`finance.financial_plan`)
 
-A ledger posting derived from an operational transaction - the thin, auditable bridge to finance. Every posting cites its source policy or claim, so ledger totals reconcile to operational sums by construction.
+A budgeted or forecast figure for a legal entity, line and measure in a period - the plan side of budget-versus-actual. FP&A cannot function without it; pairing it with the actuals metric views is the variance story.
 
-**Grain:** One row per posting per source transaction.
+**Grain:** One row per plan version per entity per line per measure per period.
 
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
-| gl_posting_id | string | yes | Identifier for the posting. | internal |  |  |
-| journal_reference | string | yes | Journal the posting belongs to. | internal |  |  |
-| gl_account_code | string | yes | Ledger account posted to. |  |  |  |
-| amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| posting_date | date | yes | Ledger posting date. |  |  |  |
-| policy_id | string |  | Source policy, where the posting derives from policy money. | internal |  |  |
-| claim_id | string |  | Source claim, where the posting derives from claim money. | internal |  |  |
-| source_system_code | string | yes | System of record. | internal |  |  |
+| financial_plan_id | string | yes | Identifier for the plan figure. | internal |  |  |
+| legal_entity_id | string | yes | The entity the plan is for. | internal |  |  |
+| plan_version | string | yes | Plan version, e.g. 2026 Budget v1. |  |  |  |
+| line_of_business_code | string |  | Line of business, where the plan is at line level. |  |  |  |
+| plan_measure | string | yes | What is planned, e.g. gross_written_premium or combined_ratio. |  |  |  |
+| period_label | string | yes | Period the figure applies to, e.g. 2026-Q3. |  |  |  |
+| amount | decimal(18,2) | yes | Planned value in the stated currency (or a ratio, per plan_measure). | confidential |  |  |
+| currency_code | string |  | Currency, for monetary plan measures. |  |  |  |
 
-**Primary key:** gl_posting_id
+**Primary key:** financial_plan_id
+
+## FX Rate (`finance.fx_rate`)
+
+A foreign-exchange rate to the group presentation currency at a date - what makes group consolidation across multi-currency subsidiaries a real number instead of a per-currency caveat.
+
+**Grain:** One row per from-currency per rate date.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| fx_rate_id | string | yes | Identifier for the rate. | internal |  |  |
+| from_currency_code | string | yes | Currency being translated. |  |  |  |
+| to_currency_code | string | yes | Presentation currency translated to. |  |  |  |
+| rate_date | date | yes | Date the rate applies. |  |  |  |
+| rate | decimal(18,8) | yes | Units of to-currency per one unit of from-currency. |  |  |  |
+
+**Primary key:** fx_rate_id
+**Natural key:** from_currency_code, to_currency_code, rate_date
+
+## Journal (`finance.journal`)
+
+A journal entry header: a balanced set of debit and credit lines posted to one legal entity in one period. Every journal's lines sum to zero - that invariant is what makes this a real double-entry ledger rather than a pile of classified amounts.
+
+**Grain:** One row per journal entry.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| journal_id | string | yes | Identifier for the journal. | internal |  |  |
+| journal_reference | string | yes | Human reference for the journal. |  |  |  |
+| legal_entity_id | string | yes | The entity whose ledger this posts to. | internal |  |  |
+| accounting_period_id | string | yes | The period the journal posts into; must be open at posting time. | internal |  |  |
+| posting_date | date | yes | Ledger date of the entry. |  |  |  |
+| description | string |  | What the entry records. |  |  |  |
+| source_system_code | string | yes | System that raised the journal. | internal |  |  |
+
+**Primary key:** journal_id
+**Quality — journal_balances:** `sum(journal_line.amount) per journal_id = 0` — Debits and credits within a journal must net to zero.
+
+## Journal Line (`finance.journal_line`)
+
+A single debit or credit line of a journal, posted to one ledger account and carrying a signed amount (debits positive, credits negative) plus its source operational transaction. Trial balance and financial statements are sums over these lines; the link to source rows makes the ledger reconcile to the sub-ledgers by construction.
+
+**Grain:** One row per posting line.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| journal_line_id | string | yes | Identifier for the line. | internal |  |  |
+| journal_id | string | yes | The journal this line belongs to. | internal |  |  |
+| account_id | string | yes | The ledger account posted to. | internal |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the entity's functional currency: debits positive, credits negative. Lines within a journal sum to zero. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| source_entity | string |  | Entity name of the originating operational row (e.g. premium_transaction). |  |  |  |
+| source_id | string |  | Identifier of the originating operational row, for reconciliation. | internal |  |  |
+
+**Primary key:** journal_line_id
 
 ## Receivable Transaction (`finance.receivable_transaction`)
 
@@ -854,6 +1118,7 @@ Premium billing and collection movements on a policy. Written premium is earned 
 |---|---|---|---|---|---|---|
 | receivable_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
 | policy_id | string | yes | Policy billed. | internal |  |  |
+| legal_entity_id | string |  | The entity carrying the receivable. | internal |  |  |
 | receivable_transaction_type_code | string | yes | Kind of movement; invoices positive, receipts negative. |  |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
 | currency_code | string | yes | Currency of the amount. |  |  |  |
@@ -862,6 +1127,43 @@ Premium billing and collection movements on a policy. Written premium is earned 
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** receivable_transaction_id
+
+## Statement Line (`finance.statement_line`)
+
+The mapping from ledger accounts to financial-statement line items - how the chart of accounts becomes a balance sheet, income statement and cash flow. Different regimes present differently, so a line carries its regime; this is what lets the same ledger produce a Solvency II balance sheet and an IFRS/statutory one.
+
+**Grain:** One row per statement line item per account per regime.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| statement_line_id | string | yes | Identifier for the mapping row. | internal |  |  |
+| statement_type_code | string | yes | Which primary statement the line belongs to. |  |  |  |
+| reporting_regime_code | string | yes | Presentation regime this mapping is for. |  |  |  |
+| line_label | string | yes | The statement line item, e.g. 'Net earned premium' or 'Total assets'. |  |  |  |
+| line_order | integer | yes | Presentation order within the statement. |  |  |  |
+| account_id | string | yes | The ledger account that rolls up into this line. | internal |  |  |
+| sign | integer | yes | +1 or -1 applied to the account balance for presentation. |  |  |  |
+
+**Primary key:** statement_line_id
+
+## Tax Transaction (`finance.tax_transaction`)
+
+A tax movement for a legal entity - insurance premium tax, corporation tax, deferred tax. IPT in particular is a real line on every premium; this makes the tax position queryable rather than buried.
+
+**Grain:** One row per tax movement per entity.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| tax_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
+| legal_entity_id | string | yes | The entity the tax relates to. | internal |  |  |
+| tax_type_code | string | yes | Kind of tax. |  |  |  |
+| policy_id | string |  | Source policy, for premium tax. | internal |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| transaction_date | date | yes | Booking date. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** tax_transaction_id
 
 ## Valuation Result (`finance.valuation_result`)
 
@@ -880,6 +1182,45 @@ A published valuation figure: one measure (BEL, technical provision, IBNR, SCR, 
 | currency_code | string | yes | Currency of the amount. |  |  |  |
 
 **Primary key:** valuation_result_id
+
+## Investment Holding (`investment.investment_holding`)
+
+An investment asset held by a legal entity - the asset side of the balance sheet. Book cost and market value are carried here; income and revaluations are transactional. Without this domain there is no balance sheet and no asset-liability conversation.
+
+**Grain:** One row per holding per legal entity.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| investment_holding_id | string | yes | Identifier for the holding. | internal |  |  |
+| legal_entity_id | string | yes | The entity that owns the asset. | internal |  |  |
+| asset_class_code | string | yes | Asset class of the holding. |  |  |  |
+| instrument_name | string | yes | Name or description of the instrument. |  |  |  |
+| isin | string |  | ISIN where the instrument is a listed security. |  |  |  |
+| book_cost | decimal(18,2) | yes | Acquisition cost in the entity's functional currency. | confidential |  |  |
+| market_value | decimal(18,2) | yes | Current market value in the entity's functional currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the amounts. |  |  |  |
+| valuation_date | date | yes | Date the market value was struck. |  |  |  |
+| source_system_code | string | yes | System of record (typically an investment/custody system). | internal |  |  |
+
+**Primary key:** investment_holding_id
+
+## Investment Transaction (`investment.investment_transaction`)
+
+A movement on an investment holding - purchase, sale, coupon, dividend or fair-value revaluation. Investment income and gains (the P&L line) and the movement in asset values (the balance sheet) are both derived from these.
+
+**Grain:** One row per investment movement.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| investment_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
+| investment_holding_id | string | yes | The holding moved. | internal |  |  |
+| investment_transaction_type_code | string | yes | Kind of movement. |  |  |  |
+| amount | decimal(18,2) | yes | Signed amount in the holding currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the amount. |  |  |  |
+| transaction_date | date | yes | Date of the movement. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** investment_transaction_id
 
 ## Assumption Set (`life.assumption_set`)
 
@@ -949,6 +1290,9 @@ One execution of a valuation process: which valuation date, which approved assum
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | valuation_run_id | string | yes | Identifier for the run. | internal |  |  |
+| legal_entity_id | string |  | The legal entity the run values. With reporting_level this is what distinguishes a subsidiary's solo run from the group consolidated run. | internal |  |  |
+| reporting_level_code | string |  | Solo (this entity) or group (consolidated). |  |  |  |
+| reporting_regime_code | string |  | Regime the run is prepared under (Solvency II, IFRS 17...). |  |  |  |
 | valuation_date | date | yes | Valuation date the run values the book at. |  |  |  |
 | run_timestamp | timestamp | yes | When the run executed. |  |  |  |
 | scenario_set_id | string |  | Scenario set the run used, for stochastic runs. | internal |  |  |
@@ -971,6 +1315,25 @@ Which assumption sets a valuation run used - one row per assumption set, typical
 | assumption_set_id | string | yes | An assumption set the run used. | internal |  |  |
 
 **Primary key:** valuation_run_id, assumption_set_id
+
+## Legal Entity (`org.legal_entity`)
+
+A legal entity in the group's structure and the reporting hierarchy that connects them. This is the spine of the whole system: policies, valuations, ledgers and statements all belong to a legal entity, and every entity rolls up to the group holding via parent_legal_entity_id. Solo reporting is one entity; group reporting is the consolidation up this tree.
+
+**Grain:** One row per legal entity.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| legal_entity_id | string | yes | Identifier for the legal entity. | internal |  |  |
+| name | string | yes | Registered name of the entity. |  |  |  |
+| legal_entity_type_code | string | yes | Role in the reporting structure (holding, insurance subsidiary...). |  |  |  |
+| parent_legal_entity_id | string |  | The consolidating parent; empty only for the top group holding. This self-reference is the consolidation tree. | internal |  |  |
+| country_code | string | yes | Country of incorporation and primary supervision. |  |  |  |
+| functional_currency_code | string | yes | The entity's functional currency; group presentation currency is the holding's. |  |  |  |
+| lei | string |  | Legal Entity Identifier (ISO 17442), where registered. |  |  |  |
+| source_system_code | string | yes | System of record. | internal |  |  |
+
+**Primary key:** legal_entity_id
 
 ## Consent (`party.consent`)
 
@@ -1138,6 +1501,7 @@ A contract of insurance between an insurer and one or more policyholders, under 
 |---|---|---|---|---|---|---|
 | policy_id | string | yes | Stable, source-agnostic identifier for the policy. A surrogate key owned by the data layer, not by any policy administration system. | internal |  |  |
 | policy_number | string | yes | Policy number as issued to the policyholder. Unique within a source system, not globally - always interpret together with source_system_code. | confidential | PolicyNumber | Contract reference |
+| legal_entity_id | string |  | The carrier that wrote the policy - which subsidiary owns it. The anchor for solo-vs-group reporting of the underwriting book. | internal |  |  |
 | source_system_code | string | yes | System of record this policy originates from. Provenance is part of the model, not an afterthought. | internal |  |  |
 | line_of_business_code | string | yes | Line of business written under this policy. |  | LOBCd | Class of business |
 | policy_status_code | string | yes | Current lifecycle status of the policy. |  | PolicyStatusCd |  |

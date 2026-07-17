@@ -1,0 +1,14 @@
+kind: code_set
+name: measurement_model
+title: IFRS 17 Measurement Model
+description: The IFRS 17 measurement model applied to a group of contracts.
+codes:
+  - code: GMM
+    label: General Measurement Model
+    description: Building block approach; the default model.
+  - code: PAA
+    label: Premium Allocation Approach
+    description: Simplified model for short-duration contracts.
+  - code: VFA
+    label: Variable Fee Approach
+    description: For contracts with direct participation features.

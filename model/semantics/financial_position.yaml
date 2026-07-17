@@ -1,0 +1,37 @@
+kind: metric_view
+name: financial_position
+domain: semantics
+title: Financial Position
+description: >
+  Financial-statement line items assembled from the ledger via the statement
+  mapping - the balance sheet and income statement in business language, by
+  legal entity and regime. Query MEASURE(line_amount) grouped by statement and
+  line; constrain currency_code and reporting_regime.
+source: finance.journal_line
+joins:
+  - name: statement_line
+    source: finance.statement_line
+    condition: source.account_id = statement_line.account_id
+  - name: journal
+    source: finance.journal
+    condition: source.journal_id = journal.journal_id
+dimensions:
+  - name: statement_type
+    expr: statement_line.statement_type_code
+    description: Balance sheet, income statement or cash flow.
+  - name: reporting_regime
+    expr: statement_line.reporting_regime_code
+    description: Presentation regime; constrain this.
+  - name: line_label
+    expr: statement_line.line_label
+    description: The statement line item, e.g. 'Net earned premium'.
+  - name: legal_entity_id
+    expr: journal.legal_entity_id
+    description: Posting entity - filter for a solo statement.
+  - name: currency_code
+    expr: source.currency_code
+    description: Currency. Always constrain.
+measures:
+  - name: line_amount
+    expr: SUM(amount * statement_line.sign)
+    description: The statement line value, sign-adjusted for presentation.

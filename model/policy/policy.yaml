@@ -33,6 +33,14 @@ attributes:
     standards:
       acord: PolicyNumber
       lloyds_cdr: Contract reference
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: false
+    description: >
+      The carrier that wrote the policy - which subsidiary owns it. The anchor
+      for solo-vs-group reporting of the underwriting book.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true

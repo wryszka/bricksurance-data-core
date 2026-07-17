@@ -1,0 +1,18 @@
+kind: function
+name: fn_csm_closing
+domain: finance
+description: >
+  The closing contractual service margin for a group of contracts, derived
+  live as the signed sum of its CSM roll-forward movements - never a stored
+  balance. The IFRS 17 reproducibility story in one call.
+inputs:
+  - name: in_contract_group_id
+    type: string
+    description: Contract group id, e.g. cg_0001.
+returns:
+  type: decimal(18,2)
+  description: Closing CSM in the group currency.
+sql: |
+  (SELECT COALESCE(SUM(amount), 0)
+   FROM {finance.csm_movement}
+   WHERE contract_group_id = in_contract_group_id)

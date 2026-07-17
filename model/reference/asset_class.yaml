@@ -1,0 +1,25 @@
+kind: code_set
+name: asset_class
+title: Asset Class
+description: >
+  Investment asset classes held to back liabilities and capital, aligned to
+  Solvency II asset categories at a working level.
+codes:
+  - code: GOVERNMENT_BOND
+    label: Government Bond
+    description: Sovereign debt securities.
+  - code: CORPORATE_BOND
+    label: Corporate Bond
+    description: Corporate debt securities.
+  - code: EQUITY
+    label: Equity
+    description: Listed equity holdings.
+  - code: PROPERTY
+    label: Property
+    description: Direct or indirect real-estate holdings.
+  - code: CASH_AND_DEPOSITS
+    label: Cash & Deposits
+    description: Cash and short-term deposits.
+  - code: COLLECTIVE_INVESTMENT
+    label: Collective Investment
+    description: Funds and collective investment undertakings.

@@ -1,0 +1,22 @@
+kind: code_set
+name: investment_transaction_type
+title: Investment Transaction Type
+description: >
+  Movements on investment holdings. Income and gains flow to the income
+  statement; purchases and sales move the balance sheet.
+codes:
+  - code: PURCHASE
+    label: Purchase
+    description: Acquisition of a holding; positive cost.
+  - code: SALE
+    label: Sale
+    description: Disposal of a holding; proceeds.
+  - code: COUPON
+    label: Coupon / Interest
+    description: Interest income received.
+  - code: DIVIDEND
+    label: Dividend
+    description: Dividend income received.
+  - code: FAIR_VALUE_MOVEMENT
+    label: Fair Value Movement
+    description: Unrealised revaluation to market value.

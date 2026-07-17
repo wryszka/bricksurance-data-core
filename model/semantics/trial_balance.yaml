@@ -1,0 +1,48 @@
+kind: metric_view
+name: trial_balance
+domain: semantics
+title: Trial Balance
+description: >
+  The trial balance: net movement by ledger account, entity and period, from
+  the journal lines. Because every journal balances, the total across all
+  accounts nets to zero - the controller's first check. Query with
+  MEASURE(net_movement); always constrain currency_code.
+source: finance.journal_line
+joins:
+  - name: account
+    source: finance.chart_of_account
+    condition: source.account_id = account.account_id
+  - name: journal
+    source: finance.journal
+    condition: source.journal_id = journal.journal_id
+dimensions:
+  - name: account_number
+    expr: account.account_number
+    description: Ledger account number.
+  - name: account_name
+    expr: account.name
+    description: Ledger account name.
+  - name: account_type
+    expr: account.account_type_code
+    description: Asset, liability, equity, income or expense.
+  - name: statement_type
+    expr: account.statement_type_code
+    description: Which primary statement the account belongs to.
+  - name: legal_entity_id
+    expr: journal.legal_entity_id
+    description: The posting legal entity - filter for solo, omit for all entities.
+  - name: currency_code
+    expr: source.currency_code
+    description: Currency. Always constrain before summing.
+measures:
+  - name: net_movement
+    expr: SUM(amount)
+    description: >
+      Net signed movement (debits positive, credits negative). Summed across
+      all accounts this is zero - the balancing check.
+  - name: total_debits
+    expr: SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END)
+    description: Sum of debit lines.
+  - name: total_credits
+    expr: SUM(CASE WHEN amount < 0 THEN -amount ELSE 0 END)
+    description: Sum of credit lines.

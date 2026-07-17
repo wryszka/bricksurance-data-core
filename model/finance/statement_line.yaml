@@ -1,0 +1,47 @@
+kind: entity
+name: statement_line
+domain: finance
+title: Statement Line
+description: >
+  The mapping from ledger accounts to financial-statement line items - how the
+  chart of accounts becomes a balance sheet, income statement and cash flow.
+  Different regimes present differently, so a line carries its regime; this is
+  what lets the same ledger produce a Solvency II balance sheet and an
+  IFRS/statutory one.
+grain: One row per statement line item per account per regime.
+tags:
+  maturity: draft
+attributes:
+  - name: statement_line_id
+    type: string
+    required: true
+    description: Identifier for the mapping row.
+    classification: internal
+  - name: statement_type_code
+    code_set: statement_type
+    required: true
+    description: Which primary statement the line belongs to.
+  - name: reporting_regime_code
+    code_set: reporting_regime
+    required: true
+    description: Presentation regime this mapping is for.
+  - name: line_label
+    type: string
+    required: true
+    description: The statement line item, e.g. 'Net earned premium' or 'Total assets'.
+  - name: line_order
+    type: integer
+    required: true
+    description: Presentation order within the statement.
+  - name: account_id
+    references: chart_of_account
+    type: string
+    required: true
+    description: The ledger account that rolls up into this line.
+    classification: internal
+  - name: sign
+    type: integer
+    required: true
+    description: +1 or -1 applied to the account balance for presentation.
+keys:
+  primary: [statement_line_id]

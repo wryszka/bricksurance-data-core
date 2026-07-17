@@ -2,13 +2,25 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with a Lloyd's Core Data Record crosswalk. Element names are cited as a crosswalk only; licensed standards are not reproduced.",
   "domains": [
     {
       "name": "reference",
       "description": "Shared code sets and classifications used across all domains, plus the generated data dictionary. Reference data is versioned with the model: allowed values live in the specs, not in anyone's head.\n"
+    },
+    {
+      "name": "org",
+      "description": "The group's own legal-entity structure - the reporting hierarchy every other domain hangs off. Solvency II, IFRS 17 and statutory accounts all report at solo (subsidiary) and group (consolidated) level; this domain is what makes that distinction real rather than assumed.\n"
+    },
+    {
+      "name": "finance",
+      "description": "The finance function proper - a real double-entry general ledger (chart of accounts, balanced journals, accounting periods), the operational sub-ledgers (premium, claims, commission, expense, receivables), regulatory and actuarial measures (Solvency II, IFRS 17), financial-statement structure, budget and FX. Everything a CFO org runs on.\n"
+    },
+    {
+      "name": "investment",
+      "description": "The asset side of the balance sheet - investment holdings, valuations and income. Roughly half an insurer's balance sheet; without it there is no balance sheet and no ALM conversation.\n"
     },
     {
       "name": "party",
@@ -51,10 +63,6 @@
       "description": "Life business - grouped model points, governed assumption sets, economic scenario sets and valuation runs. Life policies themselves are ordinary policies with life lines of business.\n"
     },
     {
-      "name": "finance",
-      "description": "Financial and regulatory measures - valuation results across regimes (Solvency II, IFRS 17) and lines of business, always tied to an auditable valuation run.\n"
-    },
-    {
       "name": "exchange",
       "description": "Canonical data-exchange objects (bordereau lines, submissions) and the landing zone for inbound counterparty data before mapping to the canonical model.\n"
     },
@@ -64,6 +72,39 @@
     }
   ],
   "code_sets": [
+    {
+      "kind": "code_set",
+      "name": "account_type",
+      "title": "Account Type",
+      "description": "The fundamental classification of a ledger account, which fixes its normal balance and where it lands in the financial statements.\n",
+      "codes": [
+        {
+          "code": "ASSET",
+          "label": "Asset",
+          "description": "Resources controlled by the entity; normal debit balance."
+        },
+        {
+          "code": "LIABILITY",
+          "label": "Liability",
+          "description": "Obligations of the entity; normal credit balance."
+        },
+        {
+          "code": "EQUITY",
+          "label": "Equity",
+          "description": "Residual interest of owners; normal credit balance."
+        },
+        {
+          "code": "INCOME",
+          "label": "Income",
+          "description": "Revenue and gains; normal credit balance."
+        },
+        {
+          "code": "EXPENSE",
+          "label": "Expense",
+          "description": "Costs and losses; normal debit balance."
+        }
+      ]
+    },
     {
       "kind": "code_set",
       "name": "appetite_effect",
@@ -84,6 +125,44 @@
           "code": "OUT_OF_APPETITE",
           "label": "Out of Appetite",
           "description": "Decline automatically."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "asset_class",
+      "title": "Asset Class",
+      "description": "Investment asset classes held to back liabilities and capital, aligned to Solvency II asset categories at a working level.\n",
+      "codes": [
+        {
+          "code": "GOVERNMENT_BOND",
+          "label": "Government Bond",
+          "description": "Sovereign debt securities."
+        },
+        {
+          "code": "CORPORATE_BOND",
+          "label": "Corporate Bond",
+          "description": "Corporate debt securities."
+        },
+        {
+          "code": "EQUITY",
+          "label": "Equity",
+          "description": "Listed equity holdings."
+        },
+        {
+          "code": "PROPERTY",
+          "label": "Property",
+          "description": "Direct or indirect real-estate holdings."
+        },
+        {
+          "code": "CASH_AND_DEPOSITS",
+          "label": "Cash & Deposits",
+          "description": "Cash and short-term deposits."
+        },
+        {
+          "code": "COLLECTIVE_INVESTMENT",
+          "label": "Collective Investment",
+          "description": "Funds and collective investment undertakings."
         }
       ]
     },
@@ -537,6 +616,39 @@
     },
     {
       "kind": "code_set",
+      "name": "csm_movement_type",
+      "title": "CSM Movement Type",
+      "description": "Steps in the IFRS 17 contractual service margin roll-forward. The closing CSM is the signed sum of these movements over the opening balance - a balance derived from movements, never overwritten.\n",
+      "codes": [
+        {
+          "code": "OPENING",
+          "label": "Opening Balance",
+          "description": "CSM brought forward."
+        },
+        {
+          "code": "NEW_BUSINESS",
+          "label": "New Business",
+          "description": "CSM recognised on contracts added in the period."
+        },
+        {
+          "code": "INTEREST_ACCRETION",
+          "label": "Interest Accretion",
+          "description": "Interest accreted on the CSM at locked-in rates."
+        },
+        {
+          "code": "EXPERIENCE_ADJUSTMENT",
+          "label": "Experience Adjustment",
+          "description": "Changes in estimates that adjust the CSM."
+        },
+        {
+          "code": "RELEASE",
+          "label": "Release to P&L",
+          "description": "CSM released as insurance revenue for services provided; negative."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "currency",
       "title": "Currency",
       "description": "Transaction currencies used by the group, as ISO 4217 alphabetic codes. This is deliberately a governed subset, not the full ISO list: a currency is added here when the business starts writing in it.\n",
@@ -783,39 +895,6 @@
     },
     {
       "kind": "code_set",
-      "name": "gl_account",
-      "title": "GL Account",
-      "description": "Ledger accounts the model posts to - the thin, auditable bridge between operational transactions and finance. Every posting cites its source row.\n",
-      "codes": [
-        {
-          "code": "PREMIUM_WRITTEN",
-          "label": "Premium Written",
-          "description": "Gross written premium income."
-        },
-        {
-          "code": "CLAIMS_PAID",
-          "label": "Claims Paid",
-          "description": "Indemnity and expense payments on claims."
-        },
-        {
-          "code": "CLAIMS_RESERVE_MOVEMENT",
-          "label": "Claims Reserve Movement",
-          "description": "Movement in outstanding case reserves."
-        },
-        {
-          "code": "COMMISSION_EXPENSE",
-          "label": "Commission Expense",
-          "description": "Intermediary remuneration."
-        },
-        {
-          "code": "OPERATING_EXPENSE",
-          "label": "Operating Expense",
-          "description": "Allocated operating and acquisition expenses."
-        }
-      ]
-    },
-    {
-      "kind": "code_set",
       "name": "insured_object_type",
       "title": "Insured Object Type",
       "description": "Kinds of object or exposure a policy can insure. Extend with new codes as new lines of business are written (vessels, livestock, cyber estates...).\n",
@@ -842,6 +921,67 @@
           "code": "LIABILITY_EXPOSURE",
           "label": "Liability Exposure",
           "description": "An abstract exposure unit for liability covers, such as a set of business operations at a location.\n"
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "investment_transaction_type",
+      "title": "Investment Transaction Type",
+      "description": "Movements on investment holdings. Income and gains flow to the income statement; purchases and sales move the balance sheet.\n",
+      "codes": [
+        {
+          "code": "PURCHASE",
+          "label": "Purchase",
+          "description": "Acquisition of a holding; positive cost."
+        },
+        {
+          "code": "SALE",
+          "label": "Sale",
+          "description": "Disposal of a holding; proceeds."
+        },
+        {
+          "code": "COUPON",
+          "label": "Coupon / Interest",
+          "description": "Interest income received."
+        },
+        {
+          "code": "DIVIDEND",
+          "label": "Dividend",
+          "description": "Dividend income received."
+        },
+        {
+          "code": "FAIR_VALUE_MOVEMENT",
+          "label": "Fair Value Movement",
+          "description": "Unrealised revaluation to market value."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "legal_entity_type",
+      "title": "Legal Entity Type",
+      "description": "The role a legal entity plays in the group's reporting structure. The group holding consolidates its subsidiaries; each subsidiary reports solo.\n",
+      "codes": [
+        {
+          "code": "GROUP_HOLDING",
+          "label": "Group Holding Company",
+          "description": "The top consolidating entity; reports at group level only."
+        },
+        {
+          "code": "INSURANCE_SUBSIDIARY",
+          "label": "Insurance Subsidiary",
+          "description": "A regulated carrier reporting solo and consolidated into the group."
+        },
+        {
+          "code": "REINSURANCE_SUBSIDIARY",
+          "label": "Reinsurance Subsidiary",
+          "description": "A regulated reinsurer reporting solo and consolidated into the group."
+        },
+        {
+          "code": "SERVICE_COMPANY",
+          "label": "Service Company",
+          "description": "A non-regulated intra-group service or holding entity."
         }
       ]
     },
@@ -922,6 +1062,29 @@
     },
     {
       "kind": "code_set",
+      "name": "measurement_model",
+      "title": "IFRS 17 Measurement Model",
+      "description": "The IFRS 17 measurement model applied to a group of contracts.",
+      "codes": [
+        {
+          "code": "GMM",
+          "label": "General Measurement Model",
+          "description": "Building block approach; the default model."
+        },
+        {
+          "code": "PAA",
+          "label": "Premium Allocation Approach",
+          "description": "Simplified model for short-duration contracts."
+        },
+        {
+          "code": "VFA",
+          "label": "Variable Fee Approach",
+          "description": "For contracts with direct participation features."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "party_role_type",
       "title": "Party Role Type",
       "description": "The roles a party can play in the business. This code set is the model's number-one extension point: a new kind of counterparty is a new code here, not a new table.\n",
@@ -994,6 +1157,29 @@
           "code": "MACHINE_AGENT",
           "label": "Machine Agent",
           "description": "An autonomous software agent acting on behalf of a person or organisation - a first-class counterparty with its own identity and audited decisions.\n"
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "period_status",
+      "title": "Accounting Period Status",
+      "description": "Lifecycle of an accounting period; postings are only allowed while OPEN.",
+      "codes": [
+        {
+          "code": "OPEN",
+          "label": "Open",
+          "description": "Postings permitted."
+        },
+        {
+          "code": "CLOSED",
+          "label": "Closed",
+          "description": "Soft-closed; reopenable by finance with control."
+        },
+        {
+          "code": "LOCKED",
+          "label": "Locked",
+          "description": "Hard-locked after reporting; no further postings."
         }
       ]
     },
@@ -1163,6 +1349,52 @@
     },
     {
       "kind": "code_set",
+      "name": "reporting_level",
+      "title": "Reporting Level",
+      "description": "Whether a figure is a single entity's own return (solo) or the consolidated group position. Solvency II and statutory accounts both require both.\n",
+      "codes": [
+        {
+          "code": "SOLO",
+          "label": "Solo",
+          "description": "A single legal entity's own reporting."
+        },
+        {
+          "code": "GROUP",
+          "label": "Group",
+          "description": "Consolidated across the group, after eliminations."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "reporting_regime",
+      "title": "Reporting Regime",
+      "description": "The reporting framework a figure is prepared under. One valuation or statement figure means different things under different regimes; the regime is never assumed.\n",
+      "codes": [
+        {
+          "code": "SOLVENCY_II",
+          "label": "Solvency II",
+          "description": "EIOPA Solvency II prudential regime."
+        },
+        {
+          "code": "IFRS_17",
+          "label": "IFRS 17",
+          "description": "IFRS 17 insurance contracts accounting standard."
+        },
+        {
+          "code": "STATUTORY",
+          "label": "Statutory / Local GAAP",
+          "description": "Local statutory accounting basis."
+        },
+        {
+          "code": "MANAGEMENT",
+          "label": "Management",
+          "description": "Internal management-reporting basis."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "run_verdict",
       "title": "Run Verdict",
       "description": "Quality-gate verdict of a processing or valuation run. RED runs never feed downstream consumption; the verdict is part of the auditable run record.\n",
@@ -1247,6 +1479,29 @@
     },
     {
       "kind": "code_set",
+      "name": "statement_type",
+      "title": "Financial Statement Type",
+      "description": "The primary financial statement a line belongs to.",
+      "codes": [
+        {
+          "code": "BALANCE_SHEET",
+          "label": "Balance Sheet",
+          "description": "Statement of financial position."
+        },
+        {
+          "code": "INCOME_STATEMENT",
+          "label": "Income Statement",
+          "description": "Statement of profit or loss."
+        },
+        {
+          "code": "CASH_FLOW",
+          "label": "Cash Flow Statement",
+          "description": "Statement of cash flows."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "submission_status",
       "title": "Submission Status",
       "description": "Lifecycle of a reinsurance submission from receipt to bind or decline.\n",
@@ -1283,6 +1538,29 @@
           "code": "WITHDRAWN",
           "label": "Withdrawn",
           "description": "Withdrawn by the cedant or broker before a decision."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "tax_type",
+      "title": "Tax Type",
+      "description": "Kinds of tax the group accounts for.",
+      "codes": [
+        {
+          "code": "IPT",
+          "label": "Insurance Premium Tax",
+          "description": "Premium tax collected on policies and remitted to the authority."
+        },
+        {
+          "code": "CORPORATION_TAX",
+          "label": "Corporation Tax",
+          "description": "Tax on taxable profits."
+        },
+        {
+          "code": "DEFERRED_TAX",
+          "label": "Deferred Tax",
+          "description": "Deferred tax on timing differences."
         }
       ]
     },
@@ -1393,6 +1671,41 @@
           "code": "RISK_ADJUSTMENT",
           "label": "Risk Adjustment",
           "description": "IFRS 17 risk adjustment for non-financial risk."
+        },
+        {
+          "code": "MCR",
+          "label": "Minimum Capital Requirement",
+          "description": "Solvency II minimum capital requirement."
+        },
+        {
+          "code": "ELIGIBLE_OWN_FUNDS_T1",
+          "label": "Eligible Own Funds - Tier 1",
+          "description": "Tier 1 eligible own funds under Solvency II."
+        },
+        {
+          "code": "SCR_COVERAGE_RATIO",
+          "label": "SCR Coverage Ratio",
+          "description": "Eligible own funds over SCR, expressed as a ratio."
+        },
+        {
+          "code": "LRC",
+          "label": "Liability for Remaining Coverage",
+          "description": "IFRS 17 liability for remaining coverage."
+        },
+        {
+          "code": "LIC",
+          "label": "Liability for Incurred Claims",
+          "description": "IFRS 17 liability for incurred claims."
+        },
+        {
+          "code": "DAC",
+          "label": "Deferred Acquisition Costs",
+          "description": "Acquisition costs deferred and amortised over the cover period."
+        },
+        {
+          "code": "UPR",
+          "label": "Unearned Premium Reserve",
+          "description": "Premium received but not yet earned."
         }
       ]
     }
@@ -2126,6 +2439,246 @@
     },
     {
       "kind": "entity",
+      "name": "accounting_period",
+      "domain": "finance",
+      "title": "Accounting Period",
+      "description": "A financial reporting period for a legal entity, with its open/closed/locked status. Postings are only permitted into open periods; the close process moves periods to locked. The unit the finance calendar runs on.\n",
+      "grain": "One row per period per legal entity.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "accounting_period_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the period.",
+          "classification": "internal"
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": true,
+          "description": "The entity whose books this period governs.",
+          "classification": "internal"
+        },
+        {
+          "name": "period_label",
+          "type": "string",
+          "required": true,
+          "description": "Human label, e.g. 2026-Q2."
+        },
+        {
+          "name": "start_date",
+          "type": "date",
+          "required": true,
+          "description": "First day of the period."
+        },
+        {
+          "name": "end_date",
+          "type": "date",
+          "required": true,
+          "description": "Last day of the period."
+        },
+        {
+          "name": "period_status_code",
+          "code_set": "period_status",
+          "required": true,
+          "description": "Open, closed or locked."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "accounting_period_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "chart_of_account",
+      "domain": "finance",
+      "title": "Chart of Account",
+      "description": "The chart of accounts: every ledger account with its type (which fixes its normal balance) and its parent, forming the account hierarchy that statements roll up. This is what turns classified postings into a real general ledger.\n",
+      "grain": "One row per ledger account.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "account_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the account.",
+          "classification": "internal"
+        },
+        {
+          "name": "account_number",
+          "type": "string",
+          "required": true,
+          "description": "Ledger account number."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Account name."
+        },
+        {
+          "name": "account_type_code",
+          "code_set": "account_type",
+          "required": true,
+          "description": "Asset, liability, equity, income or expense - fixes the normal balance."
+        },
+        {
+          "name": "parent_account_id",
+          "references": "chart_of_account",
+          "type": "string",
+          "required": false,
+          "description": "Parent account for roll-up; empty at the top of the hierarchy.",
+          "classification": "internal"
+        },
+        {
+          "name": "statement_type_code",
+          "code_set": "statement_type",
+          "required": true,
+          "description": "Which primary statement the account belongs to."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "account_id"
+        ],
+        "natural": [
+          "account_number"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "contract_group",
+      "domain": "finance",
+      "title": "Contract Group (IFRS 17)",
+      "description": "An IFRS 17 group of contracts - the unit of account for the standard: contracts of similar risk, managed together, issued within a year, split by onerous status. Carries the measurement model and links to the entity and line. The CSM roll-forward and the LRC/LIC split hang off this.\n",
+      "grain": "One row per group of contracts.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "contract_group_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the group of contracts.",
+          "classification": "internal"
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": true,
+          "description": "The carrier holding the group.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business of the group."
+        },
+        {
+          "name": "cohort_year",
+          "type": "integer",
+          "required": true,
+          "description": "Annual cohort (issue year) - contracts more than a year apart cannot share a group."
+        },
+        {
+          "name": "measurement_model_code",
+          "code_set": "measurement_model",
+          "required": true,
+          "description": "IFRS 17 model applied (GMM, PAA, VFA)."
+        },
+        {
+          "name": "onerous",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the group is onerous at initial recognition."
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the group's measurement."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "contract_group_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "csm_movement",
+      "domain": "finance",
+      "title": "CSM Movement (IFRS 17)",
+      "description": "A step in the contractual service margin roll-forward for a group of contracts in a period: opening, new business, interest accretion, experience adjustments and release to profit. The closing CSM is the signed sum over the opening - a balance derived from movements, never overwritten, and produced by an auditable valuation run.\n",
+      "grain": "One row per movement type per contract group per period.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "csm_movement_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the movement.",
+          "classification": "internal"
+        },
+        {
+          "name": "contract_group_id",
+          "references": "contract_group",
+          "type": "string",
+          "required": true,
+          "description": "The group of contracts.",
+          "classification": "internal"
+        },
+        {
+          "name": "valuation_run_id",
+          "references": "valuation_run",
+          "type": "string",
+          "required": true,
+          "description": "The run that produced this movement - the audit anchor.",
+          "classification": "internal"
+        },
+        {
+          "name": "csm_movement_type_code",
+          "code_set": "csm_movement_type",
+          "required": true,
+          "description": "Which step of the roll-forward this is."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount in the group currency; release is negative.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "csm_movement_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
       "name": "expense_transaction",
       "domain": "finance",
       "title": "Expense Transaction",
@@ -2140,6 +2693,14 @@
           "type": "string",
           "required": true,
           "description": "Identifier for the expense movement.",
+          "classification": "internal"
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": false,
+          "description": "The entity the expense is booked in.",
           "classification": "internal"
         },
         {
@@ -2189,40 +2750,240 @@
     },
     {
       "kind": "entity",
-      "name": "gl_posting",
+      "name": "financial_plan",
       "domain": "finance",
-      "title": "GL Posting",
-      "description": "A ledger posting derived from an operational transaction - the thin, auditable bridge to finance. Every posting cites its source policy or claim, so ledger totals reconcile to operational sums by construction.\n",
-      "grain": "One row per posting per source transaction.",
+      "title": "Financial Plan",
+      "description": "A budgeted or forecast figure for a legal entity, line and measure in a period - the plan side of budget-versus-actual. FP&A cannot function without it; pairing it with the actuals metric views is the variance story.\n",
+      "grain": "One row per plan version per entity per line per measure per period.",
       "tags": {
         "maturity": "draft"
       },
       "attributes": [
         {
-          "name": "gl_posting_id",
+          "name": "financial_plan_id",
           "type": "string",
           "required": true,
-          "description": "Identifier for the posting.",
+          "description": "Identifier for the plan figure.",
+          "classification": "internal"
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": true,
+          "description": "The entity the plan is for.",
+          "classification": "internal"
+        },
+        {
+          "name": "plan_version",
+          "type": "string",
+          "required": true,
+          "description": "Plan version, e.g. 2026 Budget v1."
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": false,
+          "description": "Line of business, where the plan is at line level."
+        },
+        {
+          "name": "plan_measure",
+          "type": "string",
+          "required": true,
+          "description": "What is planned, e.g. gross_written_premium or combined_ratio."
+        },
+        {
+          "name": "period_label",
+          "type": "string",
+          "required": true,
+          "description": "Period the figure applies to, e.g. 2026-Q3."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Planned value in the stated currency (or a ratio, per plan_measure).",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": false,
+          "description": "Currency, for monetary plan measures."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "financial_plan_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "fx_rate",
+      "domain": "finance",
+      "title": "FX Rate",
+      "description": "A foreign-exchange rate to the group presentation currency at a date - what makes group consolidation across multi-currency subsidiaries a real number instead of a per-currency caveat.\n",
+      "grain": "One row per from-currency per rate date.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "fx_rate_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the rate.",
+          "classification": "internal"
+        },
+        {
+          "name": "from_currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency being translated."
+        },
+        {
+          "name": "to_currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Presentation currency translated to."
+        },
+        {
+          "name": "rate_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the rate applies."
+        },
+        {
+          "name": "rate",
+          "type": "decimal(18,8)",
+          "required": true,
+          "description": "Units of to-currency per one unit of from-currency."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "fx_rate_id"
+        ],
+        "natural": [
+          "from_currency_code",
+          "to_currency_code",
+          "rate_date"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "journal",
+      "domain": "finance",
+      "title": "Journal",
+      "description": "A journal entry header: a balanced set of debit and credit lines posted to one legal entity in one period. Every journal's lines sum to zero - that invariant is what makes this a real double-entry ledger rather than a pile of classified amounts.\n",
+      "grain": "One row per journal entry.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "journal_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the journal.",
           "classification": "internal"
         },
         {
           "name": "journal_reference",
           "type": "string",
           "required": true,
-          "description": "Journal the posting belongs to.",
+          "description": "Human reference for the journal."
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": true,
+          "description": "The entity whose ledger this posts to.",
           "classification": "internal"
         },
         {
-          "name": "gl_account_code",
-          "code_set": "gl_account",
+          "name": "accounting_period_id",
+          "references": "accounting_period",
+          "type": "string",
           "required": true,
-          "description": "Ledger account posted to."
+          "description": "The period the journal posts into; must be open at posting time.",
+          "classification": "internal"
+        },
+        {
+          "name": "posting_date",
+          "type": "date",
+          "required": true,
+          "description": "Ledger date of the entry."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "What the entry records."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System that raised the journal.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "journal_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "journal_balances",
+          "rule": "sum(journal_line.amount) per journal_id = 0",
+          "description": "Debits and credits within a journal must net to zero."
+        }
+      ]
+    },
+    {
+      "kind": "entity",
+      "name": "journal_line",
+      "domain": "finance",
+      "title": "Journal Line",
+      "description": "A single debit or credit line of a journal, posted to one ledger account and carrying a signed amount (debits positive, credits negative) plus its source operational transaction. Trial balance and financial statements are sums over these lines; the link to source rows makes the ledger reconcile to the sub-ledgers by construction.\n",
+      "grain": "One row per posting line.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "journal_line_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the line.",
+          "classification": "internal"
+        },
+        {
+          "name": "journal_id",
+          "references": "journal",
+          "type": "string",
+          "required": true,
+          "description": "The journal this line belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "account_id",
+          "references": "chart_of_account",
+          "type": "string",
+          "required": true,
+          "description": "The ledger account posted to.",
+          "classification": "internal"
         },
         {
           "name": "amount",
           "type": "decimal(18,2)",
           "required": true,
-          "description": "Signed amount in the stated currency.",
+          "description": "Signed amount in the entity's functional currency: debits positive, credits negative. Lines within a journal sum to zero.\n",
           "classification": "confidential"
         },
         {
@@ -2232,38 +2993,22 @@
           "description": "Currency of the amount."
         },
         {
-          "name": "posting_date",
-          "type": "date",
-          "required": true,
-          "description": "Ledger posting date."
-        },
-        {
-          "name": "policy_id",
-          "references": "policy",
+          "name": "source_entity",
           "type": "string",
           "required": false,
-          "description": "Source policy, where the posting derives from policy money.",
-          "classification": "internal"
+          "description": "Entity name of the originating operational row (e.g. premium_transaction)."
         },
         {
-          "name": "claim_id",
-          "references": "claim",
+          "name": "source_id",
           "type": "string",
           "required": false,
-          "description": "Source claim, where the posting derives from claim money.",
-          "classification": "internal"
-        },
-        {
-          "name": "source_system_code",
-          "code_set": "source_system",
-          "required": true,
-          "description": "System of record.",
+          "description": "Identifier of the originating operational row, for reconciliation.",
           "classification": "internal"
         }
       ],
       "keys": {
         "primary": [
-          "gl_posting_id"
+          "journal_line_id"
         ]
       }
     },
@@ -2291,6 +3036,14 @@
           "type": "string",
           "required": true,
           "description": "Policy billed.",
+          "classification": "internal"
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": false,
+          "description": "The entity carrying the receivable.",
           "classification": "internal"
         },
         {
@@ -2335,6 +3088,142 @@
       "keys": {
         "primary": [
           "receivable_transaction_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "statement_line",
+      "domain": "finance",
+      "title": "Statement Line",
+      "description": "The mapping from ledger accounts to financial-statement line items - how the chart of accounts becomes a balance sheet, income statement and cash flow. Different regimes present differently, so a line carries its regime; this is what lets the same ledger produce a Solvency II balance sheet and an IFRS/statutory one.\n",
+      "grain": "One row per statement line item per account per regime.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "statement_line_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the mapping row.",
+          "classification": "internal"
+        },
+        {
+          "name": "statement_type_code",
+          "code_set": "statement_type",
+          "required": true,
+          "description": "Which primary statement the line belongs to."
+        },
+        {
+          "name": "reporting_regime_code",
+          "code_set": "reporting_regime",
+          "required": true,
+          "description": "Presentation regime this mapping is for."
+        },
+        {
+          "name": "line_label",
+          "type": "string",
+          "required": true,
+          "description": "The statement line item, e.g. 'Net earned premium' or 'Total assets'."
+        },
+        {
+          "name": "line_order",
+          "type": "integer",
+          "required": true,
+          "description": "Presentation order within the statement."
+        },
+        {
+          "name": "account_id",
+          "references": "chart_of_account",
+          "type": "string",
+          "required": true,
+          "description": "The ledger account that rolls up into this line.",
+          "classification": "internal"
+        },
+        {
+          "name": "sign",
+          "type": "integer",
+          "required": true,
+          "description": "+1 or -1 applied to the account balance for presentation."
+        }
+      ],
+      "keys": {
+        "primary": [
+          "statement_line_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "tax_transaction",
+      "domain": "finance",
+      "title": "Tax Transaction",
+      "description": "A tax movement for a legal entity - insurance premium tax, corporation tax, deferred tax. IPT in particular is a real line on every premium; this makes the tax position queryable rather than buried.\n",
+      "grain": "One row per tax movement per entity.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "tax_transaction_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the movement.",
+          "classification": "internal"
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": true,
+          "description": "The entity the tax relates to.",
+          "classification": "internal"
+        },
+        {
+          "name": "tax_type_code",
+          "code_set": "tax_type",
+          "required": true,
+          "description": "Kind of tax."
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "Source policy, for premium tax.",
+          "classification": "internal"
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount in the stated currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "description": "Booking date."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "tax_transaction_id"
         ]
       }
     },
@@ -2399,6 +3288,155 @@
       "keys": {
         "primary": [
           "valuation_result_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "investment_holding",
+      "domain": "investment",
+      "title": "Investment Holding",
+      "description": "An investment asset held by a legal entity - the asset side of the balance sheet. Book cost and market value are carried here; income and revaluations are transactional. Without this domain there is no balance sheet and no asset-liability conversation.\n",
+      "grain": "One row per holding per legal entity.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "investment_holding_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the holding.",
+          "classification": "internal"
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": true,
+          "description": "The entity that owns the asset.",
+          "classification": "internal"
+        },
+        {
+          "name": "asset_class_code",
+          "code_set": "asset_class",
+          "required": true,
+          "description": "Asset class of the holding."
+        },
+        {
+          "name": "instrument_name",
+          "type": "string",
+          "required": true,
+          "description": "Name or description of the instrument."
+        },
+        {
+          "name": "isin",
+          "type": "string",
+          "required": false,
+          "description": "ISIN where the instrument is a listed security."
+        },
+        {
+          "name": "book_cost",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Acquisition cost in the entity's functional currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "market_value",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Current market value in the entity's functional currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amounts."
+        },
+        {
+          "name": "valuation_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the market value was struck."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record (typically an investment/custody system).",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "investment_holding_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "investment_transaction",
+      "domain": "investment",
+      "title": "Investment Transaction",
+      "description": "A movement on an investment holding - purchase, sale, coupon, dividend or fair-value revaluation. Investment income and gains (the P&L line) and the movement in asset values (the balance sheet) are both derived from these.\n",
+      "grain": "One row per investment movement.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "investment_transaction_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the movement.",
+          "classification": "internal"
+        },
+        {
+          "name": "investment_holding_id",
+          "references": "investment_holding",
+          "type": "string",
+          "required": true,
+          "description": "The holding moved.",
+          "classification": "internal"
+        },
+        {
+          "name": "investment_transaction_type_code",
+          "code_set": "investment_transaction_type",
+          "required": true,
+          "description": "Kind of movement."
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Signed amount in the holding currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amount."
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "description": "Date of the movement."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "investment_transaction_id"
         ]
       }
     },
@@ -2641,6 +3679,26 @@
           "classification": "internal"
         },
         {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": false,
+          "description": "The legal entity the run values. With reporting_level this is what distinguishes a subsidiary's solo run from the group consolidated run.\n",
+          "classification": "internal"
+        },
+        {
+          "name": "reporting_level_code",
+          "code_set": "reporting_level",
+          "required": false,
+          "description": "Solo (this entity) or group (consolidated)."
+        },
+        {
+          "name": "reporting_regime_code",
+          "code_set": "reporting_regime",
+          "required": false,
+          "description": "Regime the run is prepared under (Solvency II, IFRS 17...)."
+        },
+        {
           "name": "valuation_date",
           "type": "date",
           "required": true,
@@ -2725,6 +3783,76 @@
         "primary": [
           "valuation_run_id",
           "assumption_set_id"
+        ]
+      }
+    },
+    {
+      "kind": "entity",
+      "name": "legal_entity",
+      "domain": "org",
+      "title": "Legal Entity",
+      "description": "A legal entity in the group's structure and the reporting hierarchy that connects them. This is the spine of the whole system: policies, valuations, ledgers and statements all belong to a legal entity, and every entity rolls up to the group holding via parent_legal_entity_id. Solo reporting is one entity; group reporting is the consolidation up this tree.\n",
+      "grain": "One row per legal entity.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "legal_entity_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the legal entity.",
+          "classification": "internal"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Registered name of the entity."
+        },
+        {
+          "name": "legal_entity_type_code",
+          "code_set": "legal_entity_type",
+          "required": true,
+          "description": "Role in the reporting structure (holding, insurance subsidiary...)."
+        },
+        {
+          "name": "parent_legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": false,
+          "description": "The consolidating parent; empty only for the top group holding. This self-reference is the consolidation tree.\n",
+          "classification": "internal"
+        },
+        {
+          "name": "country_code",
+          "code_set": "country",
+          "required": true,
+          "description": "Country of incorporation and primary supervision."
+        },
+        {
+          "name": "functional_currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "The entity's functional currency; group presentation currency is the holding's."
+        },
+        {
+          "name": "lei",
+          "type": "string",
+          "required": false,
+          "description": "Legal Entity Identifier (ISO 17442), where registered."
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "legal_entity_id"
         ]
       }
     },
@@ -3320,6 +4448,14 @@
             "acord": "PolicyNumber",
             "lloyds_cdr": "Contract reference"
           }
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": false,
+          "description": "The carrier that wrote the policy - which subsidiary owns it. The anchor for solo-vs-group reporting of the underwriting book.\n",
+          "classification": "internal"
         },
         {
           "name": "source_system_code",
@@ -4594,6 +5730,119 @@
     },
     {
       "kind": "metric_view",
+      "name": "financial_position",
+      "domain": "semantics",
+      "title": "Financial Position",
+      "description": "Financial-statement line items assembled from the ledger via the statement mapping - the balance sheet and income statement in business language, by legal entity and regime. Query MEASURE(line_amount) grouped by statement and line; constrain currency_code and reporting_regime.\n",
+      "source": "finance.journal_line",
+      "joins": [
+        {
+          "name": "statement_line",
+          "source": "finance.statement_line",
+          "condition": "source.account_id = statement_line.account_id"
+        },
+        {
+          "name": "journal",
+          "source": "finance.journal",
+          "condition": "source.journal_id = journal.journal_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "statement_type",
+          "expr": "statement_line.statement_type_code",
+          "description": "Balance sheet, income statement or cash flow."
+        },
+        {
+          "name": "reporting_regime",
+          "expr": "statement_line.reporting_regime_code",
+          "description": "Presentation regime; constrain this."
+        },
+        {
+          "name": "line_label",
+          "expr": "statement_line.line_label",
+          "description": "The statement line item, e.g. 'Net earned premium'."
+        },
+        {
+          "name": "legal_entity_id",
+          "expr": "journal.legal_entity_id",
+          "description": "Posting entity - filter for a solo statement."
+        },
+        {
+          "name": "currency_code",
+          "expr": "source.currency_code",
+          "description": "Currency. Always constrain."
+        }
+      ],
+      "measures": [
+        {
+          "name": "line_amount",
+          "expr": "SUM(amount * statement_line.sign)",
+          "description": "The statement line value, sign-adjusted for presentation."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "investment_metrics",
+      "domain": "semantics",
+      "title": "Investment Metrics",
+      "description": "The asset side: market value, book cost, unrealised gain and investment income by asset class and legal entity. Query with MEASURE(); constrain currency_code.\n",
+      "source": "investment.investment_holding",
+      "joins": [
+        {
+          "name": "asset_class_ref",
+          "source": "reference.asset_class",
+          "condition": "source.asset_class_code = asset_class_ref.asset_class_code"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "asset_class",
+          "expr": "asset_class_ref.label",
+          "description": "Asset class as its business label."
+        },
+        {
+          "name": "asset_class_code",
+          "expr": "source.asset_class_code",
+          "description": "Asset class code."
+        },
+        {
+          "name": "legal_entity_id",
+          "expr": "legal_entity_id",
+          "description": "Owning legal entity."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Currency. Always constrain."
+        }
+      ],
+      "measures": [
+        {
+          "name": "market_value",
+          "expr": "SUM(market_value)",
+          "description": "Total market value of holdings."
+        },
+        {
+          "name": "book_cost",
+          "expr": "SUM(book_cost)",
+          "description": "Total acquisition cost of holdings."
+        },
+        {
+          "name": "unrealised_gain",
+          "expr": "SUM(market_value) - SUM(book_cost)",
+          "description": "Market value less book cost."
+        },
+        {
+          "name": "holding_count",
+          "expr": "COUNT(*)",
+          "description": "Number of holdings."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
       "name": "performance_metrics",
       "domain": "semantics",
       "title": "Performance Metrics",
@@ -4727,6 +5976,75 @@
           "name": "requested_limit_total",
           "expr": "SUM(requested_limit)",
           "description": "Total limit requested, in original currency."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "trial_balance",
+      "domain": "semantics",
+      "title": "Trial Balance",
+      "description": "The trial balance: net movement by ledger account, entity and period, from the journal lines. Because every journal balances, the total across all accounts nets to zero - the controller's first check. Query with MEASURE(net_movement); always constrain currency_code.\n",
+      "source": "finance.journal_line",
+      "joins": [
+        {
+          "name": "account",
+          "source": "finance.chart_of_account",
+          "condition": "source.account_id = account.account_id"
+        },
+        {
+          "name": "journal",
+          "source": "finance.journal",
+          "condition": "source.journal_id = journal.journal_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "account_number",
+          "expr": "account.account_number",
+          "description": "Ledger account number."
+        },
+        {
+          "name": "account_name",
+          "expr": "account.name",
+          "description": "Ledger account name."
+        },
+        {
+          "name": "account_type",
+          "expr": "account.account_type_code",
+          "description": "Asset, liability, equity, income or expense."
+        },
+        {
+          "name": "statement_type",
+          "expr": "account.statement_type_code",
+          "description": "Which primary statement the account belongs to."
+        },
+        {
+          "name": "legal_entity_id",
+          "expr": "journal.legal_entity_id",
+          "description": "The posting legal entity - filter for solo, omit for all entities."
+        },
+        {
+          "name": "currency_code",
+          "expr": "source.currency_code",
+          "description": "Currency. Always constrain before summing."
+        }
+      ],
+      "measures": [
+        {
+          "name": "net_movement",
+          "expr": "SUM(amount)",
+          "description": "Net signed movement (debits positive, credits negative). Summed across all accounts this is zero - the balancing check.\n"
+        },
+        {
+          "name": "total_debits",
+          "expr": "SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END)",
+          "description": "Sum of debit lines."
+        },
+        {
+          "name": "total_credits",
+          "expr": "SUM(CASE WHEN amount < 0 THEN -amount ELSE 0 END)",
+          "description": "Sum of credit lines."
         }
       ]
     },
@@ -4920,6 +6238,42 @@
         "description": "Outstanding reserve in the claim currency; 0 when fully released."
       },
       "sql": "(SELECT COALESCE(SUM(ct.amount), 0)\n FROM {claim.claim_transaction} ct\n JOIN {claim.claim} c ON c.claim_id = ct.claim_id\n WHERE c.claim_number = in_claim_number\n   AND ct.claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT')\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_csm_closing",
+      "domain": "finance",
+      "description": "The closing contractual service margin for a group of contracts, derived live as the signed sum of its CSM roll-forward movements - never a stored balance. The IFRS 17 reproducibility story in one call.\n",
+      "inputs": [
+        {
+          "name": "in_contract_group_id",
+          "type": "string",
+          "description": "Contract group id, e.g. cg_0001."
+        }
+      ],
+      "returns": {
+        "type": "decimal(18,2)",
+        "description": "Closing CSM in the group currency."
+      },
+      "sql": "(SELECT COALESCE(SUM(amount), 0)\n FROM {finance.csm_movement}\n WHERE contract_group_id = in_contract_group_id)\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_trial_balance_check",
+      "domain": "finance",
+      "description": "The controller's first question, answered: does the ledger balance for a legal entity? Returns the net of all journal-line amounts - zero means debits equal credits.\n",
+      "inputs": [
+        {
+          "name": "in_legal_entity_id",
+          "type": "string",
+          "description": "Legal entity id, e.g. le_0002."
+        }
+      ],
+      "returns": {
+        "type": "decimal(18,2)",
+        "description": "Net of all posting lines for the entity; 0.00 when the ledger balances."
+      },
+      "sql": "(SELECT COALESCE(SUM(jl.amount), 0)\n FROM {finance.journal_line} jl\n JOIN {finance.journal} j ON j.journal_id = jl.journal_id\n WHERE j.legal_entity_id = in_legal_entity_id)\n"
     },
     {
       "kind": "function",
@@ -5288,6 +6642,104 @@
       "to_attribute": "source_system_code"
     },
     {
+      "from_entity": "accounting_period",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
+      "from_entity": "accounting_period",
+      "attribute": "period_status_code",
+      "to": "period_status",
+      "to_kind": "code_set",
+      "to_attribute": "period_status_code"
+    },
+    {
+      "from_entity": "chart_of_account",
+      "attribute": "account_type_code",
+      "to": "account_type",
+      "to_kind": "code_set",
+      "to_attribute": "account_type_code"
+    },
+    {
+      "from_entity": "chart_of_account",
+      "attribute": "parent_account_id",
+      "to": "chart_of_account",
+      "to_kind": "entity",
+      "to_attribute": "account_id"
+    },
+    {
+      "from_entity": "chart_of_account",
+      "attribute": "statement_type_code",
+      "to": "statement_type",
+      "to_kind": "code_set",
+      "to_attribute": "statement_type_code"
+    },
+    {
+      "from_entity": "contract_group",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
+      "from_entity": "contract_group",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "contract_group",
+      "attribute": "measurement_model_code",
+      "to": "measurement_model",
+      "to_kind": "code_set",
+      "to_attribute": "measurement_model_code"
+    },
+    {
+      "from_entity": "contract_group",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "csm_movement",
+      "attribute": "contract_group_id",
+      "to": "contract_group",
+      "to_kind": "entity",
+      "to_attribute": "contract_group_id"
+    },
+    {
+      "from_entity": "csm_movement",
+      "attribute": "valuation_run_id",
+      "to": "valuation_run",
+      "to_kind": "entity",
+      "to_attribute": "valuation_run_id"
+    },
+    {
+      "from_entity": "csm_movement",
+      "attribute": "csm_movement_type_code",
+      "to": "csm_movement_type",
+      "to_kind": "code_set",
+      "to_attribute": "csm_movement_type_code"
+    },
+    {
+      "from_entity": "csm_movement",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "expense_transaction",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
       "from_entity": "expense_transaction",
       "attribute": "expense_type_code",
       "to": "expense_type",
@@ -5316,39 +6768,81 @@
       "to_attribute": "source_system_code"
     },
     {
-      "from_entity": "gl_posting",
-      "attribute": "gl_account_code",
-      "to": "gl_account",
-      "to_kind": "code_set",
-      "to_attribute": "gl_account_code"
+      "from_entity": "financial_plan",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
     },
     {
-      "from_entity": "gl_posting",
+      "from_entity": "financial_plan",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "financial_plan",
       "attribute": "currency_code",
       "to": "currency",
       "to_kind": "code_set",
       "to_attribute": "currency_code"
     },
     {
-      "from_entity": "gl_posting",
-      "attribute": "policy_id",
-      "to": "policy",
-      "to_kind": "entity",
-      "to_attribute": "policy_id"
+      "from_entity": "fx_rate",
+      "attribute": "from_currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
     },
     {
-      "from_entity": "gl_posting",
-      "attribute": "claim_id",
-      "to": "claim",
-      "to_kind": "entity",
-      "to_attribute": "claim_id"
+      "from_entity": "fx_rate",
+      "attribute": "to_currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
     },
     {
-      "from_entity": "gl_posting",
+      "from_entity": "journal",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
+      "from_entity": "journal",
+      "attribute": "accounting_period_id",
+      "to": "accounting_period",
+      "to_kind": "entity",
+      "to_attribute": "accounting_period_id"
+    },
+    {
+      "from_entity": "journal",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",
       "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "journal_line",
+      "attribute": "journal_id",
+      "to": "journal",
+      "to_kind": "entity",
+      "to_attribute": "journal_id"
+    },
+    {
+      "from_entity": "journal_line",
+      "attribute": "account_id",
+      "to": "chart_of_account",
+      "to_kind": "entity",
+      "to_attribute": "account_id"
+    },
+    {
+      "from_entity": "journal_line",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
     },
     {
       "from_entity": "receivable_transaction",
@@ -5356,6 +6850,13 @@
       "to": "policy",
       "to_kind": "entity",
       "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "receivable_transaction",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
     },
     {
       "from_entity": "receivable_transaction",
@@ -5373,6 +6874,62 @@
     },
     {
       "from_entity": "receivable_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "statement_line",
+      "attribute": "statement_type_code",
+      "to": "statement_type",
+      "to_kind": "code_set",
+      "to_attribute": "statement_type_code"
+    },
+    {
+      "from_entity": "statement_line",
+      "attribute": "reporting_regime_code",
+      "to": "reporting_regime",
+      "to_kind": "code_set",
+      "to_attribute": "reporting_regime_code"
+    },
+    {
+      "from_entity": "statement_line",
+      "attribute": "account_id",
+      "to": "chart_of_account",
+      "to_kind": "entity",
+      "to_attribute": "account_id"
+    },
+    {
+      "from_entity": "tax_transaction",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
+      "from_entity": "tax_transaction",
+      "attribute": "tax_type_code",
+      "to": "tax_type",
+      "to_kind": "code_set",
+      "to_attribute": "tax_type_code"
+    },
+    {
+      "from_entity": "tax_transaction",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "tax_transaction",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "tax_transaction",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",
@@ -5405,6 +6962,62 @@
       "to": "currency",
       "to_kind": "code_set",
       "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "investment_holding",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
+      "from_entity": "investment_holding",
+      "attribute": "asset_class_code",
+      "to": "asset_class",
+      "to_kind": "code_set",
+      "to_attribute": "asset_class_code"
+    },
+    {
+      "from_entity": "investment_holding",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "investment_holding",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "investment_transaction",
+      "attribute": "investment_holding_id",
+      "to": "investment_holding",
+      "to_kind": "entity",
+      "to_attribute": "investment_holding_id"
+    },
+    {
+      "from_entity": "investment_transaction",
+      "attribute": "investment_transaction_type_code",
+      "to": "investment_transaction_type",
+      "to_kind": "code_set",
+      "to_attribute": "investment_transaction_type_code"
+    },
+    {
+      "from_entity": "investment_transaction",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "investment_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
     },
     {
       "from_entity": "assumption_set",
@@ -5464,6 +7077,27 @@
     },
     {
       "from_entity": "valuation_run",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
+      "from_entity": "valuation_run",
+      "attribute": "reporting_level_code",
+      "to": "reporting_level",
+      "to_kind": "code_set",
+      "to_attribute": "reporting_level_code"
+    },
+    {
+      "from_entity": "valuation_run",
+      "attribute": "reporting_regime_code",
+      "to": "reporting_regime",
+      "to_kind": "code_set",
+      "to_attribute": "reporting_regime_code"
+    },
+    {
+      "from_entity": "valuation_run",
       "attribute": "scenario_set_id",
       "to": "scenario_set",
       "to_kind": "entity",
@@ -5496,6 +7130,41 @@
       "to": "assumption_set",
       "to_kind": "entity",
       "to_attribute": "assumption_set_id"
+    },
+    {
+      "from_entity": "legal_entity",
+      "attribute": "legal_entity_type_code",
+      "to": "legal_entity_type",
+      "to_kind": "code_set",
+      "to_attribute": "legal_entity_type_code"
+    },
+    {
+      "from_entity": "legal_entity",
+      "attribute": "parent_legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
+      "from_entity": "legal_entity",
+      "attribute": "country_code",
+      "to": "country",
+      "to_kind": "code_set",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "legal_entity",
+      "attribute": "functional_currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "legal_entity",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
     },
     {
       "from_entity": "consent",
@@ -5685,6 +7354,13 @@
       "to": "country",
       "to_kind": "code_set",
       "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "policy",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
     },
     {
       "from_entity": "policy",

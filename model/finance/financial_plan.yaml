@@ -1,0 +1,50 @@
+kind: entity
+name: financial_plan
+domain: finance
+title: Financial Plan
+description: >
+  A budgeted or forecast figure for a legal entity, line and measure in a
+  period - the plan side of budget-versus-actual. FP&A cannot function without
+  it; pairing it with the actuals metric views is the variance story.
+grain: One row per plan version per entity per line per measure per period.
+tags:
+  maturity: draft
+attributes:
+  - name: financial_plan_id
+    type: string
+    required: true
+    description: Identifier for the plan figure.
+    classification: internal
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: true
+    description: The entity the plan is for.
+    classification: internal
+  - name: plan_version
+    type: string
+    required: true
+    description: Plan version, e.g. 2026 Budget v1.
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: false
+    description: Line of business, where the plan is at line level.
+  - name: plan_measure
+    type: string
+    required: true
+    description: What is planned, e.g. gross_written_premium or combined_ratio.
+  - name: period_label
+    type: string
+    required: true
+    description: Period the figure applies to, e.g. 2026-Q3.
+  - name: amount
+    type: decimal(18,2)
+    required: true
+    description: Planned value in the stated currency (or a ratio, per plan_measure).
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: false
+    description: Currency, for monetary plan measures.
+keys:
+  primary: [financial_plan_id]

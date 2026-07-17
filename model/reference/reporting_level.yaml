@@ -1,0 +1,13 @@
+kind: code_set
+name: reporting_level
+title: Reporting Level
+description: >
+  Whether a figure is a single entity's own return (solo) or the consolidated
+  group position. Solvency II and statutory accounts both require both.
+codes:
+  - code: SOLO
+    label: Solo
+    description: A single legal entity's own reporting.
+  - code: GROUP
+    label: Group
+    description: Consolidated across the group, after eliminations.

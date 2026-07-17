@@ -1,0 +1,41 @@
+kind: entity
+name: accounting_period
+domain: finance
+title: Accounting Period
+description: >
+  A financial reporting period for a legal entity, with its open/closed/locked
+  status. Postings are only permitted into open periods; the close process
+  moves periods to locked. The unit the finance calendar runs on.
+grain: One row per period per legal entity.
+tags:
+  maturity: draft
+attributes:
+  - name: accounting_period_id
+    type: string
+    required: true
+    description: Identifier for the period.
+    classification: internal
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: true
+    description: The entity whose books this period governs.
+    classification: internal
+  - name: period_label
+    type: string
+    required: true
+    description: Human label, e.g. 2026-Q2.
+  - name: start_date
+    type: date
+    required: true
+    description: First day of the period.
+  - name: end_date
+    type: date
+    required: true
+    description: Last day of the period.
+  - name: period_status_code
+    code_set: period_status
+    required: true
+    description: Open, closed or locked.
+keys:
+  primary: [accounting_period_id]

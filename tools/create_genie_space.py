@@ -206,6 +206,98 @@ def spaces_config(t):
                  f"ORDER BY outstanding DESC"),
             ],
         },
+        "finance": {
+            "title": "Bricksurance — Finance & Controllership",
+            "description": ("The finance function: a real double-entry ledger (chart of "
+                            "accounts, balanced journals, periods), trial balance and "
+                            "financial statements by legal entity and regime, receivables, "
+                            "expenses, tax and budget-vs-actual. Solo and group. "
+                            f"{DISCLAIMER}"),
+            "objects": [("org", "legal_entity"), ("finance", "chart_of_account"),
+                        ("finance", "accounting_period"), ("finance", "journal"),
+                        ("finance", "journal_line"), ("finance", "statement_line"),
+                        ("finance", "receivable_transaction"), ("finance", "expense_transaction"),
+                        ("finance", "tax_transaction"), ("finance", "financial_plan"),
+                        ("finance", "fx_rate"), ("semantics", "trial_balance"),
+                        ("semantics", "financial_position"), ("semantics", "performance_metrics"),
+                        ("reference", "data_dictionary")],
+            "examples": [
+                ("Trial balance for a legal entity (nets to zero)",
+                 f"SELECT account_name, MEASURE(net_movement) AS movement "
+                 f"FROM {t('semantics', 'trial_balance')} WHERE currency_code = 'GBP' "
+                 f"GROUP BY account_name ORDER BY account_name",
+                 "Sum of net_movement across all accounts is zero - the balancing check."),
+                ("Income statement (Solvency II presentation)",
+                 f"SELECT line_label, MEASURE(line_amount) AS amount "
+                 f"FROM {t('semantics', 'financial_position')} "
+                 f"WHERE statement_type = 'INCOME_STATEMENT' AND reporting_regime = 'SOLVENCY_II' "
+                 f"AND currency_code = 'GBP' GROUP BY line_label",
+                 "Statements are the ledger rolled up through the statement mapping."),
+            ],
+            "benchmarks": [
+                ("Does the general ledger balance in GBP?",
+                 f"SELECT ROUND(SUM(amount), 2) AS trial_balance FROM {t('finance', 'journal_line')} "
+                 f"WHERE currency_code = 'GBP'"),
+                ("Show the income statement lines under Solvency II in GBP",
+                 f"SELECT line_label, MEASURE(line_amount) AS amount "
+                 f"FROM {t('semantics', 'financial_position')} "
+                 f"WHERE statement_type = 'INCOME_STATEMENT' AND reporting_regime = 'SOLVENCY_II' "
+                 f"AND currency_code = 'GBP' GROUP BY line_label"),
+                ("How much insurance premium tax have we booked?",
+                 f"SELECT tax_type_code, SUM(amount) AS tax FROM {t('finance', 'tax_transaction')} "
+                 f"WHERE tax_type_code = 'IPT' GROUP BY tax_type_code"),
+                ("Budget vs actual gross written premium by line for 2026 (GBP)",
+                 f"SELECT fp.line_of_business_code, fp.amount AS plan_gwp, "
+                 f"MEASURE(m.gross_written_premium) AS actual_gwp "
+                 f"FROM {t('finance', 'financial_plan')} fp "
+                 f"JOIN {t('semantics', 'underwriting_metrics')} m "
+                 f"ON m.line_of_business_code = fp.line_of_business_code AND m.currency_code = 'GBP' "
+                 f"WHERE fp.plan_measure = 'gross_written_premium' GROUP BY fp.line_of_business_code, fp.amount"),
+            ],
+        },
+        "capital": {
+            "title": "Bricksurance — Capital, Investments & IFRS 17 (Group)",
+            "description": ("The group CRO/CFO view: Solvency II capital solo and consolidated "
+                            "(SCR, MCR, own funds, coverage ratio), the investment portfolio, "
+                            "and IFRS 17 contract groups with the CSM roll-forward. "
+                            f"{DISCLAIMER}"),
+            "objects": [("org", "legal_entity"), ("life", "valuation_run"),
+                        ("finance", "valuation_result"), ("finance", "contract_group"),
+                        ("finance", "csm_movement"), ("investment", "investment_holding"),
+                        ("investment", "investment_transaction"),
+                        ("semantics", "valuation_metrics"), ("semantics", "investment_metrics"),
+                        ("reference", "valuation_measure"), ("reference", "data_dictionary")],
+            "examples": [
+                ("Solvency II coverage ratio, solo vs group",
+                 f"SELECT le.name, r.reporting_level_code, vr.amount AS coverage_ratio "
+                 f"FROM {t('finance', 'valuation_result')} vr "
+                 f"JOIN {t('life', 'valuation_run')} r ON r.valuation_run_id = vr.valuation_run_id "
+                 f"JOIN {t('org', 'legal_entity')} le ON le.legal_entity_id = r.legal_entity_id "
+                 f"WHERE vr.valuation_measure_code = 'SCR_COVERAGE_RATIO'",
+                 "The group is not the sum of solos - diversification reduces group SCR."),
+                ("CSM roll-forward for a contract group",
+                 f"SELECT cm.csm_movement_type_code, cm.amount FROM {t('finance', 'csm_movement')} cm "
+                 f"JOIN {t('finance', 'contract_group')} cg ON cg.contract_group_id = cm.contract_group_id "
+                 f"WHERE cg.cohort_year = 2025 AND cg.line_of_business_code = 'TERM_LIFE'",
+                 "Closing CSM is the signed sum of the movements - derived, never stored."),
+            ],
+            "benchmarks": [
+                ("What is our Solvency II SCR coverage ratio at group level?",
+                 f"SELECT vr.amount FROM {t('finance', 'valuation_result')} vr "
+                 f"JOIN {t('life', 'valuation_run')} r ON r.valuation_run_id = vr.valuation_run_id "
+                 f"WHERE r.reporting_level_code = 'GROUP' AND vr.valuation_measure_code = 'SCR_COVERAGE_RATIO'"),
+                ("What is the market value of our investment portfolio by asset class (EUR)?",
+                 f"SELECT asset_class, MEASURE(market_value) AS mv FROM {t('semantics', 'investment_metrics')} "
+                 f"WHERE currency_code = 'EUR' GROUP BY asset_class ORDER BY mv DESC"),
+                ("Show the CSM roll-forward for the 2025 term life cohort",
+                 f"SELECT cm.csm_movement_type_code, cm.amount FROM {t('finance', 'csm_movement')} cm "
+                 f"JOIN {t('finance', 'contract_group')} cg ON cg.contract_group_id = cm.contract_group_id "
+                 f"WHERE cg.cohort_year = 2025 AND cg.line_of_business_code = 'TERM_LIFE'"),
+                ("Which contract groups are onerous?",
+                 f"SELECT line_of_business_code, cohort_year, measurement_model_code "
+                 f"FROM {t('finance', 'contract_group')} WHERE onerous = true"),
+            ],
+        },
         "governance": {
             "title": "Bricksurance — Data Governance",
             "description": ("The model explaining itself: every entity and attribute with its "
@@ -287,7 +379,7 @@ def uid():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--space", required=True, choices=["pnc", "reinsurance", "life", "distribution", "governance", "customer"])
+    ap.add_argument("--space", required=True, choices=["pnc", "reinsurance", "life", "distribution", "governance", "customer", "finance", "capital"])
     ap.add_argument("--profile", default="DEFAULT")
     ap.add_argument("--warehouse-id")
     ap.add_argument("--space-id", help="Patch this space instead of creating a new one")

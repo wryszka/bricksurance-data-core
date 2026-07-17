@@ -1,0 +1,36 @@
+kind: entity
+name: fx_rate
+domain: finance
+title: FX Rate
+description: >
+  A foreign-exchange rate to the group presentation currency at a date - what
+  makes group consolidation across multi-currency subsidiaries a real number
+  instead of a per-currency caveat.
+grain: One row per from-currency per rate date.
+tags:
+  maturity: draft
+attributes:
+  - name: fx_rate_id
+    type: string
+    required: true
+    description: Identifier for the rate.
+    classification: internal
+  - name: from_currency_code
+    code_set: currency
+    required: true
+    description: Currency being translated.
+  - name: to_currency_code
+    code_set: currency
+    required: true
+    description: Presentation currency translated to.
+  - name: rate_date
+    type: date
+    required: true
+    description: Date the rate applies.
+  - name: rate
+    type: decimal(18,8)
+    required: true
+    description: Units of to-currency per one unit of from-currency.
+keys:
+  primary: [fx_rate_id]
+  natural: [from_currency_code, to_currency_code, rate_date]

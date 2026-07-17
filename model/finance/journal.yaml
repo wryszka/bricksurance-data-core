@@ -1,0 +1,53 @@
+kind: entity
+name: journal
+domain: finance
+title: Journal
+description: >
+  A journal entry header: a balanced set of debit and credit lines posted to
+  one legal entity in one period. Every journal's lines sum to zero - that
+  invariant is what makes this a real double-entry ledger rather than a pile
+  of classified amounts.
+grain: One row per journal entry.
+tags:
+  maturity: draft
+attributes:
+  - name: journal_id
+    type: string
+    required: true
+    description: Identifier for the journal.
+    classification: internal
+  - name: journal_reference
+    type: string
+    required: true
+    description: Human reference for the journal.
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: true
+    description: The entity whose ledger this posts to.
+    classification: internal
+  - name: accounting_period_id
+    references: accounting_period
+    type: string
+    required: true
+    description: The period the journal posts into; must be open at posting time.
+    classification: internal
+  - name: posting_date
+    type: date
+    required: true
+    description: Ledger date of the entry.
+  - name: description
+    type: string
+    required: false
+    description: What the entry records.
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System that raised the journal.
+    classification: internal
+keys:
+  primary: [journal_id]
+quality:
+  - name: journal_balances
+    rule: sum(journal_line.amount) per journal_id = 0
+    description: Debits and credits within a journal must net to zero.

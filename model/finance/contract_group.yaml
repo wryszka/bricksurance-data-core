@@ -1,0 +1,46 @@
+kind: entity
+name: contract_group
+domain: finance
+title: Contract Group (IFRS 17)
+description: >
+  An IFRS 17 group of contracts - the unit of account for the standard:
+  contracts of similar risk, managed together, issued within a year, split by
+  onerous status. Carries the measurement model and links to the entity and
+  line. The CSM roll-forward and the LRC/LIC split hang off this.
+grain: One row per group of contracts.
+tags:
+  maturity: draft
+attributes:
+  - name: contract_group_id
+    type: string
+    required: true
+    description: Identifier for the group of contracts.
+    classification: internal
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: true
+    description: The carrier holding the group.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business of the group.
+  - name: cohort_year
+    type: integer
+    required: true
+    description: Annual cohort (issue year) - contracts more than a year apart cannot share a group.
+  - name: measurement_model_code
+    code_set: measurement_model
+    required: true
+    description: IFRS 17 model applied (GMM, PAA, VFA).
+  - name: onerous
+    type: boolean
+    required: true
+    description: Whether the group is onerous at initial recognition.
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the group's measurement.
+keys:
+  primary: [contract_group_id]

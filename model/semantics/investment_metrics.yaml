@@ -1,0 +1,39 @@
+kind: metric_view
+name: investment_metrics
+domain: semantics
+title: Investment Metrics
+description: >
+  The asset side: market value, book cost, unrealised gain and investment
+  income by asset class and legal entity. Query with MEASURE(); constrain
+  currency_code.
+source: investment.investment_holding
+joins:
+  - name: asset_class_ref
+    source: reference.asset_class
+    condition: source.asset_class_code = asset_class_ref.asset_class_code
+dimensions:
+  - name: asset_class
+    expr: asset_class_ref.label
+    description: Asset class as its business label.
+  - name: asset_class_code
+    expr: source.asset_class_code
+    description: Asset class code.
+  - name: legal_entity_id
+    expr: legal_entity_id
+    description: Owning legal entity.
+  - name: currency_code
+    expr: currency_code
+    description: Currency. Always constrain.
+measures:
+  - name: market_value
+    expr: SUM(market_value)
+    description: Total market value of holdings.
+  - name: book_cost
+    expr: SUM(book_cost)
+    description: Total acquisition cost of holdings.
+  - name: unrealised_gain
+    expr: SUM(market_value) - SUM(book_cost)
+    description: Market value less book cost.
+  - name: holding_count
+    expr: COUNT(*)
+    description: Number of holdings.

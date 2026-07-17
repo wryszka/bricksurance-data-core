@@ -1,0 +1,22 @@
+kind: code_set
+name: account_type
+title: Account Type
+description: >
+  The fundamental classification of a ledger account, which fixes its normal
+  balance and where it lands in the financial statements.
+codes:
+  - code: ASSET
+    label: Asset
+    description: Resources controlled by the entity; normal debit balance.
+  - code: LIABILITY
+    label: Liability
+    description: Obligations of the entity; normal credit balance.
+  - code: EQUITY
+    label: Equity
+    description: Residual interest of owners; normal credit balance.
+  - code: INCOME
+    label: Income
+    description: Revenue and gains; normal credit balance.
+  - code: EXPENSE
+    label: Expense
+    description: Costs and losses; normal debit balance.

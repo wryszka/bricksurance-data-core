@@ -1,0 +1,46 @@
+kind: entity
+name: csm_movement
+domain: finance
+title: CSM Movement (IFRS 17)
+description: >
+  A step in the contractual service margin roll-forward for a group of
+  contracts in a period: opening, new business, interest accretion,
+  experience adjustments and release to profit. The closing CSM is the signed
+  sum over the opening - a balance derived from movements, never overwritten,
+  and produced by an auditable valuation run.
+grain: One row per movement type per contract group per period.
+tags:
+  maturity: draft
+attributes:
+  - name: csm_movement_id
+    type: string
+    required: true
+    description: Identifier for the movement.
+    classification: internal
+  - name: contract_group_id
+    references: contract_group
+    type: string
+    required: true
+    description: The group of contracts.
+    classification: internal
+  - name: valuation_run_id
+    references: valuation_run
+    type: string
+    required: true
+    description: The run that produced this movement - the audit anchor.
+    classification: internal
+  - name: csm_movement_type_code
+    code_set: csm_movement_type
+    required: true
+    description: Which step of the roll-forward this is.
+  - name: amount
+    type: decimal(18,2)
+    required: true
+    description: Signed amount in the group currency; release is negative.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the amount.
+keys:
+  primary: [csm_movement_id]

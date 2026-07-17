@@ -1,0 +1,47 @@
+kind: entity
+name: investment_transaction
+domain: investment
+title: Investment Transaction
+description: >
+  A movement on an investment holding - purchase, sale, coupon, dividend or
+  fair-value revaluation. Investment income and gains (the P&L line) and the
+  movement in asset values (the balance sheet) are both derived from these.
+grain: One row per investment movement.
+tags:
+  maturity: draft
+attributes:
+  - name: investment_transaction_id
+    type: string
+    required: true
+    description: Identifier for the movement.
+    classification: internal
+  - name: investment_holding_id
+    references: investment_holding
+    type: string
+    required: true
+    description: The holding moved.
+    classification: internal
+  - name: investment_transaction_type_code
+    code_set: investment_transaction_type
+    required: true
+    description: Kind of movement.
+  - name: amount
+    type: decimal(18,2)
+    required: true
+    description: Signed amount in the holding currency.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the amount.
+  - name: transaction_date
+    type: date
+    required: true
+    description: Date of the movement.
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record.
+    classification: internal
+keys:
+  primary: [investment_transaction_id]

@@ -1,0 +1,14 @@
+kind: code_set
+name: period_status
+title: Accounting Period Status
+description: Lifecycle of an accounting period; postings are only allowed while OPEN.
+codes:
+  - code: OPEN
+    label: Open
+    description: Postings permitted.
+  - code: CLOSED
+    label: Closed
+    description: Soft-closed; reopenable by finance with control.
+  - code: LOCKED
+    label: Locked
+    description: Hard-locked after reporting; no further postings.

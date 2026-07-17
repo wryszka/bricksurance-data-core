@@ -1,5 +1,0 @@
-# Meridian Mutual Insurance — a second adopter of the same ontology.
-platform: databricks
-catalog: lr_serverless_aws_us_catalog
-schema_pattern: "meridian_{domain}"
-tag_prefix: "mm_"

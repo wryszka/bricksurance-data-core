@@ -128,7 +128,11 @@ class World:
                      "underwriting_question", "appetite_rule", "underwriting_decision",
                      "commission_transaction", "complaint", "document", "business_event",
                      "contact_point", "consent", "data_subject_request", "fraud_signal",
-                     "expense_transaction", "receivable_transaction", "gl_posting"):
+                     "expense_transaction", "receivable_transaction",
+                     "legal_entity", "chart_of_account", "accounting_period", "statement_line",
+                     "journal", "journal_line", "investment_holding", "investment_transaction",
+                     "tax_transaction", "financial_plan", "fx_rate",
+                     "contract_group", "csm_movement"):
             self.t[name] = []
 
     def n(self, base):
@@ -170,6 +174,25 @@ def build_world(scale):
     pid[AGENT_NAME] = key
     w.add("party", party_id=key, party_type_code="MACHINE_AGENT", name=AGENT_NAME,
           country_code="GB", source_system_code="DATA_CORE")
+
+    # ------------------------------------------------------ legal-entity structure
+    # Group holding consolidates three regulated subsidiaries. Presentation
+    # currency (group) is EUR; subsidiaries have their own functional currency.
+    w.add("legal_entity", legal_entity_id="le_group", name="Bricksurance Group NV",
+          legal_entity_type_code="GROUP_HOLDING", parent_legal_entity_id=None,
+          country_code="DE", functional_currency_code="EUR",
+          lei="5299000BRICKGROUP0001", source_system_code="DATA_CORE")
+    ENTITIES = [
+        ("le_se", "Bricksurance SE", "INSURANCE_SUBSIDIARY", "DE", "EUR", "5299000BRICKSE00001"),
+        ("le_re", "Bricksurance Re AG", "REINSURANCE_SUBSIDIARY", "CH", "CHF", "5299000BRICKRE00001"),
+        ("le_life", "Bricksurance Life Ltd", "INSURANCE_SUBSIDIARY", "GB", "GBP", "5299000BRICKLIFE001"),
+    ]
+    for leid, nm, typ, ctry, ccy, lei in ENTITIES:
+        w.add("legal_entity", legal_entity_id=leid, name=nm, legal_entity_type_code=typ,
+              parent_legal_entity_id="le_group", country_code=ctry,
+              functional_currency_code=ccy, lei=lei, source_system_code="DATA_CORE")
+    # the direct P&C book is written by Bricksurance SE
+    CARRIER = "le_se"
 
     # ------------------------------------------------------ product catalog
     PRODUCTS = [
@@ -279,7 +302,7 @@ def build_world(scale):
                            source_system_code="PAS_CORE", line_of_business_code=lob,
                            policy_status_code=status, inception_date=inception,
                            expiry_date=expiry, underwriting_year=uwy, currency_code=ccy,
-                           renews_policy_id=renews)
+                           renews_policy_id=renews, legal_entity_id=CARRIER)
         last_policy_by_key[(org, lob)] = policy_row
 
         written = 120000.00 if hero else round(BASE_PREMIUM[lob] * rng.uniform(0.7, 1.3), 2)
@@ -733,29 +756,161 @@ def build_world(scale):
                   amount=round(written * factor, 2), currency_code=ccy,
                   transaction_date=when, source_system_code="PAS_CORE")
 
-    # ledger postings derived from operational money - reconcile by construction
-    def post(account, amount, ccy, when, policy_id=None, claim_id=None):
-        w.add("gl_posting", gl_posting_id=w.nid("glp"),
-              journal_reference=f"JRN-{when.strftime('%Y%m')}",
-              gl_account_code=account, amount=amount, currency_code=ccy,
-              posting_date=when, policy_id=policy_id, claim_id=claim_id,
-              source_system_code="PAS_CORE")
+    # ---------------------------------------------------------- chart of accounts
+    # (number, name, type, statement, parent) - a working insurer CoA
+    COA = [
+        ("1000", "Cash and bank", "ASSET", "BALANCE_SHEET", None),
+        ("1100", "Investments", "ASSET", "BALANCE_SHEET", None),
+        ("1200", "Premium receivable", "ASSET", "BALANCE_SHEET", None),
+        ("1300", "Deferred acquisition costs", "ASSET", "BALANCE_SHEET", None),
+        ("2000", "Claims reserves", "LIABILITY", "BALANCE_SHEET", None),
+        ("2100", "Unearned premium reserve", "LIABILITY", "BALANCE_SHEET", None),
+        ("2200", "Commission payable", "LIABILITY", "BALANCE_SHEET", None),
+        ("2300", "Tax payable", "LIABILITY", "BALANCE_SHEET", None),
+        ("3000", "Retained earnings", "EQUITY", "BALANCE_SHEET", None),
+        ("4000", "Gross written premium", "INCOME", "INCOME_STATEMENT", None),
+        ("4100", "Investment income", "INCOME", "INCOME_STATEMENT", None),
+        ("5000", "Claims incurred", "EXPENSE", "INCOME_STATEMENT", None),
+        ("5100", "Commission expense", "EXPENSE", "INCOME_STATEMENT", None),
+        ("5200", "Operating expenses", "EXPENSE", "INCOME_STATEMENT", None),
+        ("5300", "Insurance premium tax", "EXPENSE", "INCOME_STATEMENT", None),
+    ]
+    acct_id = {}
+    for num, nm, typ, stmt, parent in COA:
+        aid = w.nid("acc")
+        acct_id[num] = aid
+        w.add("chart_of_account", account_id=aid, account_number=num, name=nm,
+              account_type_code=typ, parent_account_id=None, statement_type_code=stmt)
 
+    # accounting periods for the carrier (Q1, Q2 2026)
+    period_id = {}
+    for lbl, s, e, st in (("2026-Q1", date(2026, 1, 1), date(2026, 3, 31), "LOCKED"),
+                          ("2026-Q2", date(2026, 4, 1), date(2026, 6, 30), "OPEN")):
+        pid_ = w.nid("per")
+        period_id[lbl] = pid_
+        w.add("accounting_period", accounting_period_id=pid_, legal_entity_id=CARRIER,
+              period_label=lbl, start_date=s, end_date=e, period_status_code=st)
+
+    def period_for(d):
+        return period_id["2026-Q1"] if d <= date(2026, 3, 31) else period_id["2026-Q2"]
+
+    # statement-line mapping (Solvency II presentation, one account -> one line)
+    STMT_MAP = [
+        ("BALANCE_SHEET", "Investments", "1100", 1, 3),
+        ("BALANCE_SHEET", "Cash and equivalents", "1000", 1, 4),
+        ("BALANCE_SHEET", "Premium receivable", "1200", 1, 5),
+        ("BALANCE_SHEET", "Deferred acquisition costs", "1300", 1, 6),
+        ("BALANCE_SHEET", "Technical provisions", "2000", -1, 10),
+        ("BALANCE_SHEET", "Unearned premium reserve", "2100", -1, 11),
+        ("BALANCE_SHEET", "Payables", "2200", -1, 12),
+        ("BALANCE_SHEET", "Tax payable", "2300", -1, 13),
+        ("INCOME_STATEMENT", "Gross written premium", "4000", -1, 1),
+        ("INCOME_STATEMENT", "Investment income", "4100", -1, 2),
+        ("INCOME_STATEMENT", "Claims incurred", "5000", 1, 3),
+        ("INCOME_STATEMENT", "Commission expense", "5100", 1, 4),
+        ("INCOME_STATEMENT", "Operating expenses", "5200", 1, 5),
+        ("INCOME_STATEMENT", "Insurance premium tax", "5300", 1, 6),
+    ]
+    for stmt, label, num, sign, order in STMT_MAP:
+        w.add("statement_line", statement_line_id=w.nid("stl"), statement_type_code=stmt,
+              reporting_regime_code="SOLVENCY_II", line_label=label, line_order=order,
+              account_id=acct_id[num], sign=sign)
+
+    # double-entry journals derived from operational money. Convention:
+    # debit positive, credit negative; every journal's two lines net to zero.
+    def journal(ref, when, desc, debit_acct, credit_acct, amount, ccy,
+                src_entity=None, src_id=None):
+        jid = w.nid("jnl")
+        w.add("journal", journal_id=jid, journal_reference=ref,
+              legal_entity_id=CARRIER, accounting_period_id=period_for(when),
+              posting_date=when, description=desc, source_system_code="PAS_CORE")
+        w.add("journal_line", journal_line_id=w.nid("jll"), journal_id=jid,
+              account_id=acct_id[debit_acct], amount=amount, currency_code=ccy,
+              source_entity=src_entity, source_id=src_id)
+        w.add("journal_line", journal_line_id=w.nid("jll"), journal_id=jid,
+              account_id=acct_id[credit_acct], amount=round(-amount, 2), currency_code=ccy,
+              source_entity=src_entity, source_id=src_id)
+
+    # premium written: Dr receivable, Cr premium income
     for pt in w.t["premium_transaction"]:
-        post("PREMIUM_WRITTEN", pt["amount"], pt["currency_code"],
-             pt["transaction_date"], policy_id=pt["policy_id"])
+        journal("PREM", pt["transaction_date"], "Premium written",
+                "1200", "4000", pt["amount"], pt["currency_code"],
+                "premium_transaction", pt["premium_transaction_id"])
+    # claim movements: reserve -> Dr claims incurred / Cr reserves; payment -> Dr incurred / Cr cash
     for ct in w.t["claim_transaction"]:
-        acct = ("CLAIMS_RESERVE_MOVEMENT"
-                if ct["claim_transaction_type_code"] == "CASE_RESERVE_MOVEMENT"
-                else "CLAIMS_PAID")
-        post(acct, ct["amount"], ct["currency_code"], ct["transaction_date"],
-             claim_id=ct["claim_id"])
+        credit = "2000" if ct["claim_transaction_type_code"] == "CASE_RESERVE_MOVEMENT" else "1000"
+        journal("CLM", ct["transaction_date"], "Claim movement",
+                "5000", credit, ct["amount"], ct["currency_code"],
+                "claim_transaction", ct["claim_transaction_id"])
+    # commission: Dr commission expense, Cr payable
     for cm in w.t["commission_transaction"]:
-        post("COMMISSION_EXPENSE", cm["amount"], cm["currency_code"],
-             cm["transaction_date"], policy_id=cm["policy_id"])
+        journal("COMM", cm["transaction_date"], "Commission",
+                "5100", "2200", cm["amount"], cm["currency_code"],
+                "commission_transaction", cm["commission_transaction_id"])
+    # expenses: Dr operating expense, Cr cash
     for ex in w.t["expense_transaction"]:
-        post("OPERATING_EXPENSE", ex["amount"], ex["currency_code"],
-             ex["transaction_date"])
+        journal("EXP", ex["transaction_date"], "Operating expense",
+                "5200", "1000", ex["amount"], ex["currency_code"],
+                "expense_transaction", ex["expense_transaction_id"])
+
+    # ---------------------------------------------------------- investments
+    INVEST = [("GOVERNMENT_BOND", "UK Gilt 1.5% 2031", "GB00BMBL1D50", 42000000, 40950000),
+              ("GOVERNMENT_BOND", "Bund 0.5% 2030", "DE0001102481", 28000000, 27600000),
+              ("CORPORATE_BOND", "Investment-grade credit fund", None, 31000000, 31620000),
+              ("EQUITY", "European equity portfolio", None, 18000000, 20430000),
+              ("PROPERTY", "Commercial property fund", None, 12000000, 12180000),
+              ("CASH_AND_DEPOSITS", "Money-market deposits", None, 15000000, 15000000)]
+    for ac, nm, isin, cost, mv in INVEST:
+        h = w.add("investment_holding", investment_holding_id=w.nid("inv"),
+                  legal_entity_id=CARRIER, asset_class_code=ac, instrument_name=nm,
+                  isin=isin, book_cost=float(cost), market_value=float(mv),
+                  currency_code="EUR", valuation_date=date(2026, 6, 30),
+                  source_system_code="RI_CORE")
+        # income + revaluation as transactions
+        if ac in ("GOVERNMENT_BOND", "CORPORATE_BOND"):
+            inc = round(cost * 0.011, 2)
+            w.add("investment_transaction", investment_transaction_id=w.nid("ivt"),
+                  investment_holding_id=h["investment_holding_id"],
+                  investment_transaction_type_code="COUPON", amount=inc,
+                  currency_code="EUR", transaction_date=date(2026, 6, 30),
+                  source_system_code="RI_CORE")
+            journal("INV", date(2026, 6, 30), "Investment income",
+                    "1000", "4100", inc, "EUR", "investment_holding", h["investment_holding_id"])
+        if mv != cost:
+            w.add("investment_transaction", investment_transaction_id=w.nid("ivt"),
+                  investment_holding_id=h["investment_holding_id"],
+                  investment_transaction_type_code="FAIR_VALUE_MOVEMENT",
+                  amount=round(mv - cost, 2), currency_code="EUR",
+                  transaction_date=date(2026, 6, 30), source_system_code="RI_CORE")
+
+    # tax: IPT on GB premium (12%)
+    for pt in [x for x in w.t["premium_transaction"]
+               if x["premium_transaction_type_code"] == "WRITTEN"
+               and policy_lob_ccy.get(x["policy_id"], (None, "X"))[1] == "GBP"]:
+        ipt = round(pt["amount"] * 0.12, 2)
+        w.add("tax_transaction", tax_transaction_id=w.nid("tax"), legal_entity_id=CARRIER,
+              tax_type_code="IPT", policy_id=pt["policy_id"], amount=ipt,
+              currency_code="GBP", transaction_date=pt["transaction_date"],
+              source_system_code="PAS_CORE")
+        journal("IPT", pt["transaction_date"], "Insurance premium tax",
+                "5300", "2300", ipt, "GBP", "tax_transaction", pt["policy_id"])
+
+    # financial plan: 2026 budget vs the actuals metric views
+    for lob, gwp_plan, cor_plan in (("COMMERCIAL_PROPERTY", 1350000, 0.95),
+                                    ("MOTOR", 420000, 1.02),
+                                    ("GENERAL_LIABILITY", 260000, 0.88),
+                                    ("MARINE_CARGO", 180000, 0.91)):
+        for measure, amount, ccyp in (("gross_written_premium", gwp_plan, "GBP"),
+                                      ("combined_ratio", cor_plan, None)):
+            w.add("financial_plan", financial_plan_id=w.nid("pln"), legal_entity_id=CARRIER,
+                  plan_version="2026 Budget v1", line_of_business_code=lob,
+                  plan_measure=measure, period_label="2026-FY", amount=float(amount),
+                  currency_code=ccyp)
+
+    # FX rates to the group presentation currency (EUR)
+    for frm, rate in (("EUR", 1.0), ("GBP", 1.1750), ("CHF", 1.0420), ("USD", 0.9180)):
+        w.add("fx_rate", fx_rate_id=w.nid("fx"), from_currency_code=frm,
+              to_currency_code="EUR", rate_date=date(2026, 6, 30), rate=rate)
 
     # ---------------------------------------------------------- life & finance
     def add_assumption(atype, version, status, effective, approved):
@@ -805,11 +960,13 @@ def build_world(scale):
                           annual_premium=round(count * avg_sa * 0.011 * rng.uniform(0.9, 1.1), 2),
                           currency_code="GBP", source_system_code="LIFE_CORE")
 
-    def add_run(val_date, ts, verdict, scenario, source, model_version, sets=()):
+    def add_run(val_date, ts, verdict, scenario, source, model_version, sets=(),
+                legal_entity=None, level=None, regime=None):
         run = w.add("valuation_run", valuation_run_id=w.nid("run"), valuation_date=val_date,
                     run_timestamp=ts, scenario_set_id=scenario, model_version=model_version,
                     run_verdict_code=verdict, run_by="svc-valuation",
-                    source_system_code=source)
+                    source_system_code=source, legal_entity_id=legal_entity,
+                    reporting_level_code=level, reporting_regime_code=regime)
         for s in sets:
             w.add("valuation_run_assumption", valuation_run_id=run["valuation_run_id"],
                   assumption_set_id=s["assumption_set_id"])
@@ -817,15 +974,23 @@ def build_world(scale):
 
     run_q1 = add_run(date(2026, 3, 31), datetime(2026, 4, 2, 3, 10), "GREEN",
                      scn_q1["scenario_set_id"], "LIFE_CORE", "engine v2.0",
-                     (mort_v1, lapse_v1, exp_v1, econ_v1))
+                     (mort_v1, lapse_v1, exp_v1, econ_v1),
+                     legal_entity="le_life", level="SOLO", regime="SOLVENCY_II")
     add_run(date(2026, 6, 30), datetime(2026, 7, 1, 22, 40), "RED",
             scn_q2["scenario_set_id"], "LIFE_CORE", "engine v2.1",
-            (mort_v2, lapse_v1, exp_v1, econ_v1))          # gate blocked; no results
+            (mort_v2, lapse_v1, exp_v1, econ_v1),
+            legal_entity="le_life", level="SOLO", regime="SOLVENCY_II")  # gate blocked; no results
     run_q2 = add_run(date(2026, 6, 30), datetime(2026, 7, 2, 3, 5), "GREEN",
                      scn_q2["scenario_set_id"], "LIFE_CORE", "engine v2.1",
-                     (mort_v2, lapse_v1, exp_v1, econ_v1))
+                     (mort_v2, lapse_v1, exp_v1, econ_v1),
+                     legal_entity="le_life", level="SOLO", regime="SOLVENCY_II")
     run_pnc = add_run(date(2026, 6, 30), datetime(2026, 7, 3, 6, 15), "GREEN",
-                      None, "CLM_CORE", "chain-ladder v1")
+                      None, "CLM_CORE", "chain-ladder v1",
+                      legal_entity="le_se", level="SOLO", regime="SOLVENCY_II")
+    # the GROUP consolidated Solvency II run - what a group CRO reports
+    run_group = add_run(date(2026, 6, 30), datetime(2026, 7, 4, 8, 0), "GREEN",
+                        None, "DATA_CORE", "consolidation v1",
+                        legal_entity="le_group", level="GROUP", regime="SOLVENCY_II")
 
     BEL = {(run_q1["valuation_run_id"], "TERM_LIFE"): -23150000.00,
            (run_q1["valuation_run_id"], "CREDIT_LIFE"): 3180000.00,
@@ -858,6 +1023,46 @@ def build_world(scale):
         add_result(run_pnc, lob, "CASE_RESERVE_TOTAL", amount, ccy)
         add_result(run_pnc, lob, "IBNR", round(amount * 0.4, 2), ccy)
 
+    # Solvency II capital - solo (SE) and consolidated (group). The group is
+    # NOT the sum of solos: diversification benefit reduces group SCR.
+    def add_capital(run, scr, own_funds, mcr, ccy):
+        add_result(run, "COMMERCIAL_PROPERTY", "SCR", scr, ccy)      # line is nominal at capital level
+        add_result(run, "COMMERCIAL_PROPERTY", "MCR", mcr, ccy)
+        add_result(run, "COMMERCIAL_PROPERTY", "OWN_FUNDS", own_funds, ccy)
+        add_result(run, "COMMERCIAL_PROPERTY", "ELIGIBLE_OWN_FUNDS_T1", round(own_funds * 0.92, 2), ccy)
+        add_result(run, "COMMERCIAL_PROPERTY", "SCR_COVERAGE_RATIO",
+                   round(own_funds / scr, 4), ccy)
+    add_capital(run_pnc, 210000000.00, 388500000.00, 94500000.00, "EUR")   # SE solo
+    add_capital(run_group, 402000000.00, 690000000.00, 181000000.00, "EUR")  # group, diversified
+
+    # IFRS 17: contract groups + CSM roll-forward (life term book, GMM)
+    for cohort in (2025, 2026):
+        cg = w.add("contract_group", contract_group_id=w.nid("cg"),
+                   legal_entity_id="le_life", line_of_business_code="TERM_LIFE",
+                   cohort_year=cohort, measurement_model_code="GMM",
+                   onerous=False, currency_code="GBP")
+        opening = 8400000.00 if cohort == 2025 else 0.00
+        movements = [("OPENING", opening),
+                     ("NEW_BUSINESS", 0.00 if cohort == 2025 else 6200000.00),
+                     ("INTEREST_ACCRETION", round((opening or 6200000.00) * 0.021, 2)),
+                     ("EXPERIENCE_ADJUSTMENT", 180000.00 if cohort == 2025 else -90000.00),
+                     ("RELEASE", -740000.00 if cohort == 2025 else -310000.00)]
+        for mtype, amt in movements:
+            w.add("csm_movement", csm_movement_id=w.nid("csm"),
+                  contract_group_id=cg["contract_group_id"],
+                  valuation_run_id=run_q2["valuation_run_id"],
+                  csm_movement_type_code=mtype, amount=amt, currency_code="GBP")
+    # an onerous PAA group (motor) - the loss-component story
+    cg_on = w.add("contract_group", contract_group_id=w.nid("cg"),
+                  legal_entity_id="le_se", line_of_business_code="MOTOR",
+                  cohort_year=2026, measurement_model_code="PAA",
+                  onerous=True, currency_code="GBP")
+    for mtype, amt in (("OPENING", 0.00), ("NEW_BUSINESS", 0.00)):
+        w.add("csm_movement", csm_movement_id=w.nid("csm"),
+              contract_group_id=cg_on["contract_group_id"],
+              valuation_run_id=run_q2["valuation_run_id"],
+              csm_movement_type_code=mtype, amount=amt, currency_code="GBP")
+
     return w
 
 
@@ -871,16 +1076,19 @@ def main():
     binding = load_binding()
     w = build_world(args.scale)
 
-    order = ["party", "product", "product_coverage", "underwriting_question",
+    order = ["legal_entity", "party", "product", "product_coverage", "underwriting_question",
              "appetite_rule", "policy", "quote", "underwriting_decision", "coverage",
              "insured_object", "vehicle", "premium_transaction", "endorsement",
              "commission_transaction", "claim", "claim_transaction", "complaint",
              "treaty", "treaty_layer", "submission", "cession", "cat_event", "event_loss",
              "document", "business_event", "contact_point", "consent",
              "data_subject_request", "fraud_signal", "expense_transaction",
-             "receivable_transaction", "gl_posting", "assumption_set", "scenario_set",
+             "receivable_transaction", "chart_of_account", "accounting_period",
+             "statement_line", "journal", "journal_line", "investment_holding",
+             "investment_transaction", "tax_transaction", "financial_plan", "fx_rate",
+             "assumption_set", "scenario_set",
              "valuation_run", "valuation_run_assumption", "valuation_result",
-             "model_point", "party_role"]
+             "contract_group", "csm_movement", "model_point", "party_role"]
     missing = set(order) - set(entities)
     assert not missing, f"world emits unknown entities: {missing}"
 

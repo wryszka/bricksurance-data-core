@@ -1,0 +1,19 @@
+kind: code_set
+name: legal_entity_type
+title: Legal Entity Type
+description: >
+  The role a legal entity plays in the group's reporting structure. The group
+  holding consolidates its subsidiaries; each subsidiary reports solo.
+codes:
+  - code: GROUP_HOLDING
+    label: Group Holding Company
+    description: The top consolidating entity; reports at group level only.
+  - code: INSURANCE_SUBSIDIARY
+    label: Insurance Subsidiary
+    description: A regulated carrier reporting solo and consolidated into the group.
+  - code: REINSURANCE_SUBSIDIARY
+    label: Reinsurance Subsidiary
+    description: A regulated reinsurer reporting solo and consolidated into the group.
+  - code: SERVICE_COMPANY
+    label: Service Company
+    description: A non-regulated intra-group service or holding entity.

@@ -1,0 +1,19 @@
+kind: function
+name: fn_trial_balance_check
+domain: finance
+description: >
+  The controller's first question, answered: does the ledger balance for a
+  legal entity? Returns the net of all journal-line amounts - zero means
+  debits equal credits.
+inputs:
+  - name: in_legal_entity_id
+    type: string
+    description: Legal entity id, e.g. le_0002.
+returns:
+  type: decimal(18,2)
+  description: Net of all posting lines for the entity; 0.00 when the ledger balances.
+sql: |
+  (SELECT COALESCE(SUM(jl.amount), 0)
+   FROM {finance.journal_line} jl
+   JOIN {finance.journal} j ON j.journal_id = jl.journal_id
+   WHERE j.legal_entity_id = in_legal_entity_id)

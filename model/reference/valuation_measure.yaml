@@ -35,3 +35,24 @@ codes:
   - code: RISK_ADJUSTMENT
     label: Risk Adjustment
     description: IFRS 17 risk adjustment for non-financial risk.
+  - code: MCR
+    label: Minimum Capital Requirement
+    description: Solvency II minimum capital requirement.
+  - code: ELIGIBLE_OWN_FUNDS_T1
+    label: Eligible Own Funds - Tier 1
+    description: Tier 1 eligible own funds under Solvency II.
+  - code: SCR_COVERAGE_RATIO
+    label: SCR Coverage Ratio
+    description: Eligible own funds over SCR, expressed as a ratio.
+  - code: LRC
+    label: Liability for Remaining Coverage
+    description: IFRS 17 liability for remaining coverage.
+  - code: LIC
+    label: Liability for Incurred Claims
+    description: IFRS 17 liability for incurred claims.
+  - code: DAC
+    label: Deferred Acquisition Costs
+    description: Acquisition costs deferred and amortised over the cover period.
+  - code: UPR
+    label: Unearned Premium Reserve
+    description: Premium received but not yet earned.

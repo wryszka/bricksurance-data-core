@@ -1,0 +1,23 @@
+kind: code_set
+name: csm_movement_type
+title: CSM Movement Type
+description: >
+  Steps in the IFRS 17 contractual service margin roll-forward. The closing
+  CSM is the signed sum of these movements over the opening balance - a
+  balance derived from movements, never overwritten.
+codes:
+  - code: OPENING
+    label: Opening Balance
+    description: CSM brought forward.
+  - code: NEW_BUSINESS
+    label: New Business
+    description: CSM recognised on contracts added in the period.
+  - code: INTEREST_ACCRETION
+    label: Interest Accretion
+    description: Interest accreted on the CSM at locked-in rates.
+  - code: EXPERIENCE_ADJUSTMENT
+    label: Experience Adjustment
+    description: Changes in estimates that adjust the CSM.
+  - code: RELEASE
+    label: Release to P&L
+    description: CSM released as insurance revenue for services provided; negative.

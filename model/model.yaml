@@ -1,6 +1,6 @@
 model: bricksurance-data-core
 title: Bricksurance Data Core
-version: 0.7.0
+version: 0.8.0
 description: >
   An open, business-first semantic data model for insurance, aligned to ACORD
   terminology with a crosswalk to the Lloyd's Core Data Record. Platform
@@ -11,6 +11,24 @@ domains:
       Shared code sets and classifications used across all domains, plus the
       generated data dictionary. Reference data is versioned with the model:
       allowed values live in the specs, not in anyone's head.
+  - name: org
+    description: >
+      The group's own legal-entity structure - the reporting hierarchy every
+      other domain hangs off. Solvency II, IFRS 17 and statutory accounts all
+      report at solo (subsidiary) and group (consolidated) level; this domain
+      is what makes that distinction real rather than assumed.
+  - name: finance
+    description: >
+      The finance function proper - a real double-entry general ledger
+      (chart of accounts, balanced journals, accounting periods), the
+      operational sub-ledgers (premium, claims, commission, expense,
+      receivables), regulatory and actuarial measures (Solvency II, IFRS 17),
+      financial-statement structure, budget and FX. Everything a CFO org runs on.
+  - name: investment
+    description: >
+      The asset side of the balance sheet - investment holdings, valuations
+      and income. Roughly half an insurer's balance sheet; without it there is
+      no balance sheet and no ALM conversation.
   - name: party
     description: >
       People and organisations, and the roles they play in the business
@@ -54,11 +72,6 @@ domains:
       Life business - grouped model points, governed assumption sets,
       economic scenario sets and valuation runs. Life policies themselves are
       ordinary policies with life lines of business.
-  - name: finance
-    description: >
-      Financial and regulatory measures - valuation results across regimes
-      (Solvency II, IFRS 17) and lines of business, always tied to an
-      auditable valuation run.
   - name: exchange
     description: >
       Canonical data-exchange objects (bordereau lines, submissions) and the

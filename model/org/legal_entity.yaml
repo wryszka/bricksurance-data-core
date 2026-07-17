@@ -1,0 +1,54 @@
+kind: entity
+name: legal_entity
+domain: org
+title: Legal Entity
+description: >
+  A legal entity in the group's structure and the reporting hierarchy that
+  connects them. This is the spine of the whole system: policies, valuations,
+  ledgers and statements all belong to a legal entity, and every entity rolls
+  up to the group holding via parent_legal_entity_id. Solo reporting is one
+  entity; group reporting is the consolidation up this tree.
+grain: One row per legal entity.
+tags:
+  maturity: draft
+attributes:
+  - name: legal_entity_id
+    type: string
+    required: true
+    description: Identifier for the legal entity.
+    classification: internal
+  - name: name
+    type: string
+    required: true
+    description: Registered name of the entity.
+  - name: legal_entity_type_code
+    code_set: legal_entity_type
+    required: true
+    description: Role in the reporting structure (holding, insurance subsidiary...).
+  - name: parent_legal_entity_id
+    references: legal_entity
+    type: string
+    required: false
+    description: >
+      The consolidating parent; empty only for the top group holding. This
+      self-reference is the consolidation tree.
+    classification: internal
+  - name: country_code
+    code_set: country
+    required: true
+    description: Country of incorporation and primary supervision.
+  - name: functional_currency_code
+    code_set: currency
+    required: true
+    description: The entity's functional currency; group presentation currency is the holding's.
+  - name: lei
+    type: string
+    required: false
+    description: Legal Entity Identifier (ISO 17442), where registered.
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record.
+    classification: internal
+keys:
+  primary: [legal_entity_id]

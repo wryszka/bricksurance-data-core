@@ -21,6 +21,12 @@ attributes:
     required: true
     description: Policy billed.
     classification: internal
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: false
+    description: The entity carrying the receivable.
+    classification: internal
   - name: receivable_transaction_type_code
     code_set: receivable_transaction_type
     required: true

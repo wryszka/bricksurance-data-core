@@ -1,0 +1,20 @@
+kind: code_set
+name: reporting_regime
+title: Reporting Regime
+description: >
+  The reporting framework a figure is prepared under. One valuation or
+  statement figure means different things under different regimes; the regime
+  is never assumed.
+codes:
+  - code: SOLVENCY_II
+    label: Solvency II
+    description: EIOPA Solvency II prudential regime.
+  - code: IFRS_17
+    label: IFRS 17
+    description: IFRS 17 insurance contracts accounting standard.
+  - code: STATUTORY
+    label: Statutory / Local GAAP
+    description: Local statutory accounting basis.
+  - code: MANAGEMENT
+    label: Management
+    description: Internal management-reporting basis.
