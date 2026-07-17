@@ -262,3 +262,26 @@ notable MISSING items are deliberate scope calls (people/ops), heavier builds
 or Phase 8–9 outward work (broker open sharing, regulator share, second
 adopter) — all named, none unknown. A sixth Genie space
 (Customer & Privacy) now serves the customer-360 and privacy-office topics.
+
+---
+
+## Finance & organizational depth — v0.8.0 (2026-07-13)
+
+The CFO org is now first-class, and every figure carries a legal entity so
+solo/group reporting is real (not assumed):
+
+| Was missing/partial | Now | Verified live |
+|---|---|---|
+| Double-entry general ledger | chart_of_account, journal, journal_line (balances), accounting_period, `fn_trial_balance_check` | Genie: SII income statement from the ledger; smoke: trial balance = 0.00 |
+| Financial statements | statement_line + `financial_position` + `trial_balance` metric views | Genie finance space returns balance sheet & income statement |
+| The asset side | investment_holding, investment_transaction, `investment_metrics` | in Capital space |
+| Group vs solo (Solvency II) | legal_entity hierarchy + reporting_level/regime on valuation_run | Genie: SCR coverage solo 1.85 vs group 1.72 |
+| IFRS 17 CSM roll-forward | contract_group, csm_movement, `fn_csm_closing` | smoke: CSM derives from movements |
+| Tax / budget / FX | tax_transaction (IPT), financial_plan, fx_rate | budget-vs-actual benchmark in finance space |
+
+Two new Genie rooms (Finance & Controllership; Capital, Investments & IFRS 17)
+bring the estate to **8 live spaces**. Every existing and anticipated demo now
+has a legal entity to belong to and a finance layer to report through — see
+[GENIE_ROOM_MAP.md](GENIE_ROOM_MAP.md) and [FINANCE_REVIEW.md](FINANCE_REVIEW.md).
+Model now: 52 entities, 51 code sets, 4 views, 8 metric views, 9 functions;
+smoke 33/33.

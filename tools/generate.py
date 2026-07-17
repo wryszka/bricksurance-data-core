@@ -515,14 +515,12 @@ def generate_genie(binding, manifest, entities, code_sets, views=(), metric_view
         table = fqn(binding, e["domain"], e["name"])
         lines.append(f"- `{table}` — {' '.join(str(e['description']).split())} "
                      f"Grain: {' '.join(str(e['grain']).split())}")
-    lines += ["", "## Join hints", ""]
-    entity_index = {e["name"]: e for e in ref_entities + [DICTIONARY_ENTITY] + entities}
-    for e in entities:
-        for attr, ref_domain, ref_table, ref_col in fk_targets(e, entity_index):
-            lines.append(
-                f"- `{fqn(binding, e['domain'], e['name'])}.{attr}` joins to "
-                f"`{fqn(binding, ref_domain, ref_table)}.{ref_col}`."
-            )
+    # Joins are declared as PRIMARY KEY / FOREIGN KEY constraints in Unity
+    # Catalog, so Genie infers them from the catalog - no need to list every
+    # FK here (and doing so overflows the 65k instruction limit at this scale).
+    lines += ["", "Foreign-key relationships are declared on the tables; use "
+              "them for joins. Resolve any *_id column to a business name by "
+              "joining its referenced table.", ""]
     if metric_views:
         lines += ["", "## Metrics", ""]
         lines.append(
