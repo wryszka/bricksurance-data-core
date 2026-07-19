@@ -271,9 +271,190 @@ def network():
     }
 
 
+# --------------------------------------------------------------------------- #
+# Atlas — search, detail, lineage, governance (served from the bundled ontology)
+# --------------------------------------------------------------------------- #
+from . import atlas  # noqa: E402
+
+# A pre-filled Genie question per metric, so "Ask in Genie" lands on a real,
+# reconciling question rather than an empty box.
+GENIE_QUESTIONS = {
+    "underwriting_metrics": "What is our loss ratio by line of business for underwriting year 2026 in GBP?",
+    "performance_metrics": "What is our net earned premium and expense ratio by line of business in GBP?",
+    "cession_metrics": "What gross and ceded premium did we cede by treaty this year?",
+    "valuation_metrics": "What is our SCR and best-estimate liability by line of business at the latest valuation?",
+    "trial_balance": "Does the trial balance net to zero by legal entity for the current period?",
+    "financial_position": "What is our balance-sheet position by statement line for the group?",
+    "submission_metrics": "How many reinsurance submissions are in each status?",
+    "investment_metrics": "What is the market value of our investment holdings by asset class?",
+}
+
+
+@app.get("/api/atlas/meta")
+def atlas_meta():
+    m = atlas.meta()
+    m["provenance"] = {"version": m["version"], "source": "bundled ontology export"}
+    return m
+
+
+@app.get("/api/atlas/search")
+def atlas_search(q: str = "", limit: int = 30):
+    return atlas.search(q, limit=limit)
+
+
+@app.get("/api/atlas/entity/{name}")
+def atlas_entity(name: str):
+    d = atlas.entity_detail(name)
+    if not d:
+        raise HTTPException(404, f"No entity '{name}'")
+    return d
+
+
+@app.get("/api/atlas/metric/{name}")
+def atlas_metric(name: str):
+    d = atlas.metric_detail(name)
+    if not d:
+        raise HTTPException(404, f"No metric '{name}'")
+    d["genie_question"] = GENIE_QUESTIONS.get(name)
+    d["genie_space_url"] = GENIE_SPACE_URL
+    return d
+
+
+@app.get("/api/atlas/code_set/{name}")
+def atlas_code_set(name: str):
+    d = atlas.code_set_detail(name)
+    if not d:
+        raise HTTPException(404, f"No code set '{name}'")
+    return d
+
+
+@app.get("/api/atlas/function/{name}")
+def atlas_function(name: str):
+    d = atlas.function_detail(name)
+    if not d:
+        raise HTTPException(404, f"No function '{name}'")
+    return d
+
+
+@app.get("/api/atlas/lineage/{kind}/{name}")
+def atlas_lineage(kind: str, name: str, depth: int = 1):
+    return atlas.lineage(kind, name, depth=depth)
+
+
+@app.get("/api/atlas/golden-thread")
+def atlas_golden_thread():
+    return atlas.golden_thread()
+
+
+@app.get("/api/atlas/governance")
+def atlas_governance():
+    return atlas.governance()
+
+
+@app.get("/api/atlas/regulatory/{regime}")
+def atlas_regulatory(regime: str):
+    d = atlas.regulatory(regime)
+    if not d:
+        raise HTTPException(404, f"No regime '{regime}'")
+    return d
+
+
+@app.get("/api/atlas/prove/{name}")
+def atlas_prove(name: str):
+    """Prove a metric live: run its MEASURE() against the warehouse and, where
+    we can, show the bare-tables view of the same question so the semantic
+    layer's value is visible. Degrades gracefully if the warehouse is cold."""
+    d = atlas.metric_detail(name)
+    if not d:
+        raise HTTPException(404, f"No metric '{name}'")
+    mv = q("semantics", name)
+    measures = [m["name"] for m in d["measures"]][:4]
+    result = {"metric": name, "ok": False, "measures": [], "error": None,
+              "sql": None, "genie_question": GENIE_QUESTIONS.get(name),
+              "genie_space_url": GENIE_SPACE_URL}
+    select = ", ".join(f"CAST(MEASURE({m}) AS DECIMAL(18,4))" for m in measures)
+    sql = f"SELECT {select} FROM {mv}"
+    result["sql"] = sql
+    try:
+        rows = run_sql(sql)
+        vals = rows[0] if rows else [None] * len(measures)
+        result["ok"] = True
+        result["measures"] = [
+            {"name": measures[i],
+             "value": float(vals[i]) if vals[i] is not None else None,
+             "formula": next((m["expr"] for m in d["measures"] if m["name"] == measures[i]), None)}
+            for i in range(len(measures))]
+    except Exception as e:  # noqa: BLE001
+        result["error"] = str(e)
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# Governance record layer — capture-only (proposals + issue flags)
+# --------------------------------------------------------------------------- #
+from . import governance_store  # noqa: E402
+
+
+class ProposalRequest(BaseModel):
+    element: str
+    element_kind: str = "entity"
+    field: str
+    proposed_value: str
+    rationale: str = ""
+    raised_by: str = "steward"
+    current_value: str = ""
+
+
+class IssueRequest(BaseModel):
+    element: str
+    element_kind: str = "entity"
+    rationale: str
+    raised_by: str = "steward"
+
+
+@app.get("/api/atlas/governance/actions")
+def governance_actions():
+    try:
+        return {"actions": governance_store.list_actions()}
+    except Exception as e:  # noqa: BLE001
+        return {"actions": [], "error": str(e)}
+
+
+@app.post("/api/atlas/governance/propose")
+def governance_propose(p: ProposalRequest):
+    try:
+        return governance_store.propose(
+            p.element, p.element_kind, p.field, p.proposed_value,
+            p.rationale, p.raised_by, p.current_value)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(500, f"Could not capture proposal: {e}")
+
+
+@app.post("/api/atlas/governance/issue")
+def governance_issue(p: IssueRequest):
+    try:
+        return governance_store.raise_issue(
+            p.element, p.element_kind, p.rationale, p.raised_by)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(500, f"Could not capture issue: {e}")
+
+
+@app.get("/api/atlas/genie-health")
+def atlas_genie_health():
+    """Is the Genie loop demonstrable right now? Checks the warehouse is warm.
+    The frontend uses this to decide between the live 'Ask in Genie' button and
+    the inline-SQL fallback, so a cold workspace never becomes an on-stage 404."""
+    try:
+        run_sql("SELECT 1")
+        return {"warehouse": "warm", "genie_space_url": GENIE_SPACE_URL, "ready": True}
+    except Exception as e:  # noqa: BLE001
+        return {"warehouse": "cold", "genie_space_url": GENIE_SPACE_URL,
+                "ready": False, "detail": str(e)}
+
+
 @app.get("/api/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": atlas.meta()["version"]}
 
 
 # --------------------------------------------------------------------------- #

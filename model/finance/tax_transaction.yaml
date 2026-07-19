@@ -25,6 +25,7 @@ attributes:
     code_set: tax_type
     required: true
     description: Kind of tax.
+    classification: internal
   - name: policy_id
     references: policy
     type: string
@@ -40,10 +41,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
   - name: transaction_date
     type: date
     required: true
     description: Booking date.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -51,3 +54,4 @@ attributes:
     classification: internal
 keys:
   primary: [tax_transaction_id]
+owner: Financial Controller

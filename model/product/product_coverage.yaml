@@ -24,17 +24,22 @@ attributes:
     code_set: coverage_type
     required: true
     description: Kind of cover offered.
+    classification: internal
   - name: default_limit_amount
     type: decimal(18,2)
     required: false
     description: Default limit offered, in the product currency.
+    classification: confidential
   - name: default_deductible_amount
     type: decimal(18,2)
     required: false
     description: Default deductible, in the product currency.
+    classification: confidential
   - name: optional
     type: boolean
     required: true
     description: Whether the coverage is optional (true) or core to the product (false).
+    classification: internal
 keys:
   primary: [product_coverage_id]
+owner: Chief Underwriting Officer

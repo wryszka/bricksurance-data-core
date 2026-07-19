@@ -22,6 +22,7 @@ attributes:
     type: date
     required: true
     description: First day of the calendar month the bordereau reports on.
+    classification: internal
   - name: coverholder_name
     type: string
     required: true
@@ -41,18 +42,22 @@ attributes:
     code_set: line_of_business
     required: true
     description: Line of business, mapped from the coverholder's own class descriptions to the canonical code set.
+    classification: internal
   - name: inception_date
     type: date
     required: true
     description: Cover inception as reported.
+    classification: internal
   - name: expiry_date
     type: date
     required: false
     description: Cover expiry as reported.
+    classification: internal
   - name: currency_code
     code_set: currency
     required: true
     description: Currency of the reported amounts.
+    classification: internal
   - name: gross_premium
     type: decimal(18,2)
     required: true
@@ -67,6 +72,7 @@ attributes:
     code_set: country
     required: false
     description: Country of the risk location, where reported.
+    classification: internal
   - name: risk_postcode
     type: string
     required: false
@@ -79,3 +85,4 @@ attributes:
     classification: internal
 keys:
   primary: [bordereau_line_id]
+owner: Head of Reinsurance

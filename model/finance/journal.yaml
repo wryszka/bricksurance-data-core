@@ -20,6 +20,7 @@ attributes:
     type: string
     required: true
     description: Human reference for the journal.
+    classification: internal
   - name: legal_entity_id
     references: legal_entity
     type: string
@@ -36,10 +37,12 @@ attributes:
     type: date
     required: true
     description: Ledger date of the entry.
+    classification: internal
   - name: description
     type: string
     required: false
     description: What the entry records.
+    classification: confidential
   - name: source_system_code
     code_set: source_system
     required: true
@@ -51,3 +54,4 @@ quality:
   - name: journal_balances
     rule: sum(journal_line.amount) per journal_id = 0
     description: Debits and credits within a journal must net to zero.
+owner: Financial Controller

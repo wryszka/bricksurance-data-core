@@ -26,14 +26,17 @@ attributes:
     code_set: asset_class
     required: true
     description: Asset class of the holding.
+    classification: internal
   - name: instrument_name
     type: string
     required: true
     description: Name or description of the instrument.
+    classification: internal
   - name: isin
     type: string
     required: false
     description: ISIN where the instrument is a listed security.
+    classification: internal
   - name: book_cost
     type: decimal(18,2)
     required: true
@@ -48,10 +51,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amounts.
+    classification: internal
   - name: valuation_date
     type: date
     required: true
     description: Date the market value was struck.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -59,3 +64,4 @@ attributes:
     classification: internal
 keys:
   primary: [investment_holding_id]
+owner: Chief Investment Officer

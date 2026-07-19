@@ -14,7 +14,7 @@ standards:
   acord: Policy (ACORD Information Model, P&C)
   lloyds_cdr: Contract-level attributes of the Lloyd's Core Data Record (indicative)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: policy_id
     type: string
@@ -55,12 +55,14 @@ attributes:
     standards:
       acord: LOBCd
       lloyds_cdr: Class of business
+    classification: internal
   - name: policy_status_code
     code_set: policy_status
     required: true
     description: Current lifecycle status of the policy.
     standards:
       acord: PolicyStatusCd
+    classification: internal
   - name: inception_date
     type: date
     required: true
@@ -68,6 +70,7 @@ attributes:
     standards:
       acord: EffectiveDt
       lloyds_cdr: Inception date
+    classification: internal
   - name: expiry_date
     type: date
     required: true
@@ -76,6 +79,7 @@ attributes:
     standards:
       acord: ExpirationDt
       lloyds_cdr: Expiry date
+    classification: internal
   - name: underwriting_year
     type: integer
     required: true
@@ -84,6 +88,7 @@ attributes:
       cession and market reporting.
     standards:
       lloyds_cdr: Year of account
+    classification: internal
   - name: currency_code
     code_set: currency
     required: true
@@ -93,6 +98,7 @@ attributes:
     standards:
       acord: CurCd
       lloyds_cdr: Settlement currency
+    classification: internal
   - name: renews_policy_id
     references: policy
     type: string
@@ -108,3 +114,4 @@ quality:
   - name: cover_period_valid
     rule: expiry_date >= inception_date
     description: Cover cannot end before it begins.
+owner: Chief Underwriting Officer

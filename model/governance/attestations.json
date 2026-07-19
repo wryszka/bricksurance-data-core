@@ -1,0 +1,169 @@
+{
+  "attestation_format": "bricksurance-data-core/attestations-v1",
+  "as_of": "2026-07-19",
+  "note": "Dated certification attestations. An element is certified only if it appears here; all other entities remain draft. Roles, not people — evidence-linked.",
+  "attestations": [
+    {
+      "element": "cession",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Head of Reinsurance",
+      "attested_by": "Head of Reinsurance",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "claim",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Claims Officer",
+      "attested_by": "Chief Claims Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "claim_transaction",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Claims Officer",
+      "attested_by": "Chief Claims Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "coverage",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Underwriting Officer",
+      "attested_by": "Chief Underwriting Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "legal_entity",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Financial Officer",
+      "attested_by": "Chief Financial Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "party",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Data Officer",
+      "attested_by": "Chief Data Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "party_role",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Data Officer",
+      "attested_by": "Chief Data Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "policy",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Underwriting Officer",
+      "attested_by": "Chief Underwriting Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "premium_transaction",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Underwriting Officer",
+      "attested_by": "Chief Underwriting Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "submission",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Head of Reinsurance",
+      "attested_by": "Head of Reinsurance",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "treaty",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Head of Reinsurance",
+      "attested_by": "Head of Reinsurance",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "treaty_layer",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Head of Reinsurance",
+      "attested_by": "Head of Reinsurance",
+      "attested_on": "2026-07-19",
+      "evidence": "Core P&C golden-thread slice; reconciles under smoke_test tie-outs."
+    },
+    {
+      "element": "cession_metrics",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Head of Reinsurance",
+      "attested_by": "Head of Reinsurance",
+      "attested_on": "2026-07-19",
+      "evidence": "Benchmark-backed metric; MEASURE() reconciles to source transactions."
+    },
+    {
+      "element": "financial_position",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Financial Controller",
+      "attested_by": "Financial Controller",
+      "attested_on": "2026-07-19",
+      "evidence": "Benchmark-backed metric; MEASURE() reconciles to source transactions."
+    },
+    {
+      "element": "performance_metrics",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Chief Financial Officer",
+      "attested_by": "Chief Financial Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Benchmark-backed metric; MEASURE() reconciles to source transactions."
+    },
+    {
+      "element": "trial_balance",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Financial Controller",
+      "attested_by": "Financial Controller",
+      "attested_on": "2026-07-19",
+      "evidence": "Benchmark-backed metric; MEASURE() reconciles to source transactions."
+    },
+    {
+      "element": "underwriting_metrics",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Chief Underwriting Officer",
+      "attested_by": "Chief Underwriting Officer",
+      "attested_on": "2026-07-19",
+      "evidence": "Benchmark-backed metric; MEASURE() reconciles to source transactions."
+    },
+    {
+      "element": "valuation_metrics",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Chief Actuary",
+      "attested_by": "Chief Actuary",
+      "attested_on": "2026-07-19",
+      "evidence": "Benchmark-backed metric; MEASURE() reconciles to source transactions."
+    }
+  ]
+}

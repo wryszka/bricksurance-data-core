@@ -20,10 +20,12 @@ attributes:
     code_set: document_type
     required: true
     description: Kind of document.
+    classification: internal
   - name: title
     type: string
     required: true
     description: Document title.
+    classification: internal
   - name: product_id
     references: product
     type: string
@@ -62,6 +64,7 @@ attributes:
     type: date
     required: true
     description: Date the document version was created.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -73,3 +76,4 @@ quality:
   - name: exactly_one_context
     rule: exactly one of product_id, policy_id, claim_id, submission_id is not null
     description: A document belongs to exactly one business context.
+owner: Chief Data Officer

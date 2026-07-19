@@ -24,10 +24,12 @@ attributes:
     code_set: expense_type
     required: true
     description: Kind of expense.
+    classification: internal
   - name: line_of_business_code
     code_set: line_of_business
     required: true
     description: Line the expense is allocated to.
+    classification: internal
   - name: amount
     type: decimal(18,2)
     required: true
@@ -37,10 +39,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
   - name: transaction_date
     type: date
     required: true
     description: Booking date.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -48,3 +52,4 @@ attributes:
     classification: internal
 keys:
   primary: [expense_transaction_id]
+owner: Financial Controller

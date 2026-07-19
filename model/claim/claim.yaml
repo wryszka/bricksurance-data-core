@@ -11,7 +11,7 @@ standards:
   acord: Claim (ACORD Information Model)
   lloyds_cdr: Claim-level attributes (indicative)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: claim_id
     type: string
@@ -46,6 +46,7 @@ attributes:
     description: Current handling status of the claim.
     standards:
       acord: ClaimStatusCd
+    classification: internal
   - name: cause_of_loss_code
     code_set: cause_of_loss
     required: true
@@ -53,6 +54,7 @@ attributes:
     standards:
       acord: LossCauseCd
       lloyds_cdr: Cause of loss
+    classification: internal
   - name: loss_date
     type: date
     required: true
@@ -60,12 +62,14 @@ attributes:
     standards:
       acord: LossDt
       lloyds_cdr: Date of loss
+    classification: internal
   - name: reported_date
     type: date
     required: true
     description: Date the loss was first reported to the insurer. Must be on or after loss_date.
     standards:
       acord: ReportedDt
+    classification: internal
   - name: description
     type: string
     required: false
@@ -83,3 +87,4 @@ quality:
   - name: reported_after_loss
     rule: reported_date >= loss_date
     description: A loss cannot be reported before it happens.
+owner: Chief Claims Officer

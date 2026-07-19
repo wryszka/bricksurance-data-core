@@ -1,8 +1,26 @@
 # Demo Cookbook
 
-Ten runnable set pieces. Each shows one claim the project makes; together they
+Runnable set pieces. Each shows one claim the project makes; together they
 make the argument: **give LLM agents governed semantics and everything gets
 better.** Every demo runs against the live estate; nothing is staged footage.
+
+The front door for most of these is the **Data Core Atlas** app — a search-first
+explainer over the model. Open it, type a business term, and everything that
+makes it real is one screen away: definition, owner, exact metric SQL, the
+datasets feeding it, a focused lineage graph, and a one-click "Ask in Genie".
+
+## 0. Search a term, see the whole machine (the Atlas opener)
+**Claim:** the catalog, the semantic layer and the AI cannot disagree — they are
+compiled from one file.
+**Do:** In the **Data Core Atlas**, type `loss ratio`. Open the metric: read the
+definition (and its honest caveat), the owner and certification badge, the exact
+`MEASURE()` formula, and the tables that feed it. Click **Prove it live** for the
+reconciling number; click **Ask in Genie** for the same question answered in
+natural language.
+**Expect:** one business term unfolds into its governed definition, its lineage
+and its live answer — the whole thesis in thirty seconds. The Governance tab then
+shows the honest state behind it: owners on every entity, 12/52 entities and 6/8
+metrics certified with dated attestations, every attribute classified.
 
 ## 1. The LLM difference (the headline)
 **Claim:** LLM value is a semantics problem, not a model problem.
@@ -21,7 +39,7 @@ better.** Every demo runs against the live estate; nothing is staged footage.
 
 ## 4. Killing the bordereau
 **Claim:** Exchange without middleware.
-**Do:** In the [Console](https://data-core-console-7474659673789953.aws.databricksapps.com) Exchange tab: load the sample coverholder CSV (title rows, DD/MM dates, "Prop - Commercial"), click **Map with Claude**, review the mapping report and validation, then load.
+**Do:** In the **Data Core Atlas** Exchange view: load the sample coverholder CSV (title rows, DD/MM dates, "Prop - Commercial"), click **Map with Claude**, review the mapping report and validation, then load.
 **Expect:** The dictionary acted as the contract; every record validated against it before landing; the loaded total matches the file's own TOTAL row.
 
 ## 5. Semantics that travel
@@ -66,5 +84,5 @@ better.** Every demo runs against the live estate; nothing is staged footage.
 
 ---
 *Bricksurance is fictional; all data synthetic. Before customer sessions:
-warehouse warm, share status checked (Console → Network), and never present a
+warehouse warm, share status checked (Atlas → Network), and never present a
 real customer's estate shape — anonymize past recognition.*

@@ -27,6 +27,7 @@ attributes:
     code_set: insured_object_type
     required: true
     description: Kind of object or exposure insured.
+    classification: internal
   - name: description
     type: string
     required: false
@@ -36,6 +37,7 @@ attributes:
     code_set: country
     required: true
     description: Country where the object is located or the exposure arises.
+    classification: internal
   - name: postcode
     type: string
     required: false
@@ -55,3 +57,4 @@ attributes:
     classification: confidential
 keys:
   primary: [insured_object_id]
+owner: Chief Underwriting Officer

@@ -25,17 +25,22 @@ attributes:
     type: integer
     required: true
     description: Presentation order.
+    classification: internal
   - name: question_text
     type: string
     required: true
     description: The question as asked.
+    classification: internal
   - name: answer_type
     type: string
     required: true
     description: Expected answer type - boolean, number, text or a code.
+    classification: internal
   - name: required
     type: boolean
     required: true
     description: Whether an answer is mandatory to quote.
+    classification: internal
 keys:
   primary: [underwriting_question_id]
+owner: Chief Underwriting Officer

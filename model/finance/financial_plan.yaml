@@ -25,18 +25,22 @@ attributes:
     type: string
     required: true
     description: Plan version, e.g. 2026 Budget v1.
+    classification: internal
   - name: line_of_business_code
     code_set: line_of_business
     required: false
     description: Line of business, where the plan is at line level.
+    classification: internal
   - name: plan_measure
     type: string
     required: true
     description: What is planned, e.g. gross_written_premium or combined_ratio.
+    classification: internal
   - name: period_label
     type: string
     required: true
     description: Period the figure applies to, e.g. 2026-Q3.
+    classification: confidential
   - name: amount
     type: decimal(18,2)
     required: true
@@ -46,5 +50,7 @@ attributes:
     code_set: currency
     required: false
     description: Currency, for monetary plan measures.
+    classification: internal
 keys:
   primary: [financial_plan_id]
+owner: Financial Controller

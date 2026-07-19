@@ -25,6 +25,7 @@ attributes:
     code_set: contact_point_type
     required: true
     description: Kind of contact point.
+    classification: internal
   - name: value
     type: string
     required: true
@@ -34,5 +35,7 @@ attributes:
     type: boolean
     required: true
     description: Whether this is the party's preferred contact point of its kind.
+    classification: internal
 keys:
   primary: [contact_point_id]
+owner: Chief Data Officer

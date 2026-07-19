@@ -20,14 +20,17 @@ attributes:
     type: string
     required: true
     description: Ledger account number.
+    classification: confidential
   - name: name
     type: string
     required: true
     description: Account name.
+    classification: internal
   - name: account_type_code
     code_set: account_type
     required: true
     description: Asset, liability, equity, income or expense - fixes the normal balance.
+    classification: internal
   - name: parent_account_id
     references: chart_of_account
     type: string
@@ -38,6 +41,8 @@ attributes:
     code_set: statement_type
     required: true
     description: Which primary statement the account belongs to.
+    classification: internal
 keys:
   primary: [account_id]
   natural: [account_number]
+owner: Financial Controller

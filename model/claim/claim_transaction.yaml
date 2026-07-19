@@ -10,7 +10,7 @@ grain: One row per financial movement per claim.
 standards:
   acord: Claim payment / reserve patterns of the ACORD Information Model
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: claim_transaction_id
     type: string
@@ -27,6 +27,7 @@ attributes:
     code_set: claim_transaction_type
     required: true
     description: Kind of financial movement.
+    classification: internal
   - name: amount
     type: decimal(18,2)
     required: true
@@ -39,10 +40,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
   - name: transaction_date
     type: date
     required: true
     description: Date the movement was booked.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -50,3 +53,4 @@ attributes:
     classification: internal
 keys:
   primary: [claim_transaction_id]
+owner: Chief Claims Officer

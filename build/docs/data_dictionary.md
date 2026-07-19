@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.8.0. Do not edit.*
+*Generated from model v0.9.0. Do not edit.*
 
 ## Account Type (`reference.account_type`)
 
@@ -766,6 +766,8 @@ Machine-readable dictionary of every entity and attribute in the model, generate
 | data_classification | string |  | Data classification: public, internal, confidential or pii. |  |  |  |
 | acord_ref | string |  | ACORD vocabulary crosswalk reference. |  |  |  |
 | lloyds_cdr_ref | string |  | Lloyd's Core Data Record crosswalk reference. |  |  |  |
+| entity_owner | string |  | Accountable business owner of the entity, as an org role. |  |  |  |
+| entity_maturity | string |  | Certification maturity of the entity: draft or certified. |  |  |  |
 | model_version | string | yes | Version of bricksurance-data-core this row was generated from. |  |  |  |
 
 **Primary key:** entity_name, attribute_name, model_version
@@ -784,10 +786,10 @@ A demand for indemnity under a policy arising from a loss event. The claim recor
 | policy_id | string | yes | Policy the claim is made under. | internal |  |  |
 | coverage_id | string |  | Coverage the claim attaches to, where the source provides it. | internal |  |  |
 | claim_number | string | yes | Claim number as issued by the claims system. Unique within a source system - always interpret together with source_system_code. | confidential | ClaimNumber | Claim reference |
-| claim_status_code | string | yes | Current handling status of the claim. |  | ClaimStatusCd |  |
-| cause_of_loss_code | string | yes | Primary peril or event that gave rise to the claim. |  | LossCauseCd | Cause of loss |
-| loss_date | date | yes | Date the loss occurred. |  | LossDt | Date of loss |
-| reported_date | date | yes | Date the loss was first reported to the insurer. Must be on or after loss_date. |  | ReportedDt |  |
+| claim_status_code | string | yes | Current handling status of the claim. | internal | ClaimStatusCd |  |
+| cause_of_loss_code | string | yes | Primary peril or event that gave rise to the claim. | internal | LossCauseCd | Cause of loss |
+| loss_date | date | yes | Date the loss occurred. | internal | LossDt | Date of loss |
+| reported_date | date | yes | Date the loss was first reported to the insurer. Must be on or after loss_date. | internal | ReportedDt |  |
 | description | string |  | Free-text description of the loss circumstances. | confidential |  |  |
 | source_system_code | string | yes | System of record the claim originates from. | internal |  |  |
 
@@ -807,10 +809,10 @@ A signed financial movement on a claim: case reserve movements, indemnity and ex
 |---|---|---|---|---|---|---|
 | claim_transaction_id | string | yes | Identifier for the claim transaction. | internal |  |  |
 | claim_id | string | yes | Claim the movement belongs to. | internal |  |  |
-| claim_transaction_type_code | string | yes | Kind of financial movement. |  |  |  |
+| claim_transaction_type_code | string | yes | Kind of financial movement. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the transaction currency. Reserve increases positive, reserve releases negative; payments positive; recoveries negative from the insurer's cost perspective. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| transaction_date | date | yes | Date the movement was booked. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
+| transaction_date | date | yes | Date the movement was booked. | internal |  |  |
 | source_system_code | string | yes | System of record the movement originates from. | internal |  |  |
 
 **Primary key:** claim_transaction_id
@@ -825,9 +827,9 @@ A fraud indicator raised on a claim, with its score and provenance. Signals info
 |---|---|---|---|---|---|---|
 | fraud_signal_id | string | yes | Identifier for the signal. | internal |  |  |
 | claim_id | string | yes | Claim the signal concerns. | internal |  |  |
-| fraud_signal_type_code | string | yes | Kind of indicator. |  |  |  |
+| fraud_signal_type_code | string | yes | Kind of indicator. | internal |  |  |
 | score | integer | yes | Signal strength 0-100. | confidential |  |  |
-| detected_at | timestamp | yes | When the signal was raised. |  |  |  |
+| detected_at | timestamp | yes | When the signal was raised. | internal |  |  |
 | detail | string |  | What was observed, in business language. | confidential |  |  |
 | source_system_code | string | yes | Detecting system. | internal |  |  |
 
@@ -846,12 +848,12 @@ A customer complaint, categorised per UK FCA reporting groupings and tracked thr
 | complainant_party_id | string | yes | The complaining party. | internal |  |  |
 | policy_id | string |  | Policy concerned, where applicable. | internal |  |  |
 | claim_id | string |  | Claim concerned, where applicable. | internal |  |  |
-| complaint_category_code | string | yes | Root category. |  |  |  |
-| complaint_status_code | string | yes | Handling status. |  |  |  |
-| received_date | date | yes | Date received. |  |  |  |
-| closed_date | date |  | Date resolved or referred; empty while open. |  |  |  |
+| complaint_category_code | string | yes | Root category. | internal |  |  |
+| complaint_status_code | string | yes | Handling status. | internal |  |  |
+| received_date | date | yes | Date received. | internal |  |  |
+| closed_date | date |  | Date resolved or referred; empty while open. | internal |  |  |
 | redress_amount | decimal(18,2) |  | Redress paid, where upheld, in the stated currency. | confidential |  |  |
-| currency_code | string |  | Currency of any redress. |  |  |  |
+| currency_code | string |  | Currency of any redress. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** complaint_id
@@ -866,15 +868,15 @@ Governed unstructured content: policy wordings, schedules, claim evidence, surve
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | document_id | string | yes | Identifier for the document. | internal |  |  |
-| document_type_code | string | yes | Kind of document. |  |  |  |
-| title | string | yes | Document title. |  |  |  |
+| document_type_code | string | yes | Kind of document. | internal |  |  |
+| title | string | yes | Document title. | internal |  |  |
 | product_id | string |  | Product context (wordings attach here). | internal |  |  |
 | policy_id | string |  | Policy context (schedules attach here). | internal |  |  |
 | claim_id | string |  | Claim context (evidence attaches here). | internal |  |  |
 | submission_id | string |  | Submission context (slips attach here). | internal |  |  |
 | extracted_text | string |  | Full extracted text, indexed for semantic search. | confidential |  |  |
 | volume_path | string |  | Path to the binary original in a governed Volume, where one exists. | internal |  |  |
-| created_date | date | yes | Date the document version was created. |  |  |  |
+| created_date | date | yes | Date the document version was created. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** document_id
@@ -891,11 +893,11 @@ A signed intermediary remuneration movement on a policy. Transactional like all 
 | commission_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
 | policy_id | string | yes | The policy the commission relates to. | internal |  |  |
 | party_id | string | yes | The intermediary earning (or repaying) the commission. | internal |  |  |
-| commission_type_code | string | yes | Kind of remuneration. |  |  |  |
+| commission_type_code | string | yes | Kind of remuneration. | internal |  |  |
 | rate | decimal(5,4) |  | Commission rate applied, as a fraction of premium. | confidential |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the transaction currency; clawbacks negative. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| transaction_date | date | yes | Date the movement was booked. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
+| transaction_date | date | yes | Date the movement was booked. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** commission_transaction_id
@@ -909,11 +911,11 @@ The event stream: business moments (quote requested, loss notified, payment made
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | business_event_id | string | yes | Identifier for the event. | internal |  |  |
-| business_event_type_code | string | yes | Kind of event. |  |  |  |
-| subject_entity | string | yes | Entity name of the subject (e.g. quote, claim). |  |  |  |
+| business_event_type_code | string | yes | Kind of event. | internal |  |  |
+| subject_entity | string | yes | Entity name of the subject (e.g. quote, claim). | internal |  |  |
 | subject_id | string | yes | Identifier of the subject row. | internal |  |  |
-| occurred_at | timestamp | yes | When the event occurred. |  |  |  |
-| channel_code | string |  | Channel the event arrived through, where relevant. |  |  |  |
+| occurred_at | timestamp | yes | When the event occurred. | internal |  |  |
+| channel_code | string |  | Channel the event arrived through, where relevant. | internal |  |  |
 | payload | string |  | Event payload as JSON, schema per event type. | confidential |  |  |
 | source_system_code | string | yes | Emitting system. | internal |  |  |
 
@@ -930,17 +932,17 @@ The canonical form of an inbound premium bordereau line, as reported by a coverh
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | bordereau_line_id | string | yes | Identifier for the bordereau line, assigned on ingestion. | internal |  |  |
-| reporting_month | date | yes | First day of the calendar month the bordereau reports on. |  |  |  |
+| reporting_month | date | yes | First day of the calendar month the bordereau reports on. | internal |  |  |
 | coverholder_name | string | yes | Name of the coverholder or broker submitting the bordereau. | confidential |  |  |
 | policy_number | string | yes | Policy reference as reported by the coverholder; matched to the core model downstream. | confidential |  |  |
 | insured_name | string |  | Name of the insured as reported. | pii |  |  |
-| line_of_business_code | string | yes | Line of business, mapped from the coverholder's own class descriptions to the canonical code set. |  |  |  |
-| inception_date | date | yes | Cover inception as reported. |  |  |  |
-| expiry_date | date |  | Cover expiry as reported. |  |  |  |
-| currency_code | string | yes | Currency of the reported amounts. |  |  |  |
+| line_of_business_code | string | yes | Line of business, mapped from the coverholder's own class descriptions to the canonical code set. | internal |  |  |
+| inception_date | date | yes | Cover inception as reported. | internal |  |  |
+| expiry_date | date |  | Cover expiry as reported. | internal |  |  |
+| currency_code | string | yes | Currency of the reported amounts. | internal |  |  |
 | gross_premium | decimal(18,2) | yes | Gross written premium reported for the line. | confidential |  |  |
 | commission_amount | decimal(18,2) |  | Coverholder commission reported for the line. | confidential |  |  |
-| risk_country_code | string |  | Country of the risk location, where reported. |  |  |  |
+| risk_country_code | string |  | Country of the risk location, where reported. | internal |  |  |
 | risk_postcode | string |  | Postal code of the risk location, where reported. | confidential |  |  |
 | source_system_code | string | yes | Provenance of the line; coverholder bordereaux use COVERHOLDER_BDX. | internal |  |  |
 
@@ -956,10 +958,10 @@ A financial reporting period for a legal entity, with its open/closed/locked sta
 |---|---|---|---|---|---|---|
 | accounting_period_id | string | yes | Identifier for the period. | internal |  |  |
 | legal_entity_id | string | yes | The entity whose books this period governs. | internal |  |  |
-| period_label | string | yes | Human label, e.g. 2026-Q2. |  |  |  |
-| start_date | date | yes | First day of the period. |  |  |  |
-| end_date | date | yes | Last day of the period. |  |  |  |
-| period_status_code | string | yes | Open, closed or locked. |  |  |  |
+| period_label | string | yes | Human label, e.g. 2026-Q2. | confidential |  |  |
+| start_date | date | yes | First day of the period. | internal |  |  |
+| end_date | date | yes | Last day of the period. | internal |  |  |
+| period_status_code | string | yes | Open, closed or locked. | internal |  |  |
 
 **Primary key:** accounting_period_id
 
@@ -972,11 +974,11 @@ The chart of accounts: every ledger account with its type (which fixes its norma
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | account_id | string | yes | Identifier for the account. | internal |  |  |
-| account_number | string | yes | Ledger account number. |  |  |  |
-| name | string | yes | Account name. |  |  |  |
-| account_type_code | string | yes | Asset, liability, equity, income or expense - fixes the normal balance. |  |  |  |
+| account_number | string | yes | Ledger account number. | confidential |  |  |
+| name | string | yes | Account name. | internal |  |  |
+| account_type_code | string | yes | Asset, liability, equity, income or expense - fixes the normal balance. | internal |  |  |
 | parent_account_id | string |  | Parent account for roll-up; empty at the top of the hierarchy. | internal |  |  |
-| statement_type_code | string | yes | Which primary statement the account belongs to. |  |  |  |
+| statement_type_code | string | yes | Which primary statement the account belongs to. | internal |  |  |
 
 **Primary key:** account_id
 **Natural key:** account_number
@@ -991,11 +993,11 @@ An IFRS 17 group of contracts - the unit of account for the standard: contracts 
 |---|---|---|---|---|---|---|
 | contract_group_id | string | yes | Identifier for the group of contracts. | internal |  |  |
 | legal_entity_id | string | yes | The carrier holding the group. | internal |  |  |
-| line_of_business_code | string | yes | Line of business of the group. |  |  |  |
-| cohort_year | integer | yes | Annual cohort (issue year) - contracts more than a year apart cannot share a group. |  |  |  |
-| measurement_model_code | string | yes | IFRS 17 model applied (GMM, PAA, VFA). |  |  |  |
-| onerous | boolean | yes | Whether the group is onerous at initial recognition. |  |  |  |
-| currency_code | string | yes | Currency of the group's measurement. |  |  |  |
+| line_of_business_code | string | yes | Line of business of the group. | internal |  |  |
+| cohort_year | integer | yes | Annual cohort (issue year) - contracts more than a year apart cannot share a group. | internal |  |  |
+| measurement_model_code | string | yes | IFRS 17 model applied (GMM, PAA, VFA). | internal |  |  |
+| onerous | boolean | yes | Whether the group is onerous at initial recognition. | internal |  |  |
+| currency_code | string | yes | Currency of the group's measurement. | internal |  |  |
 
 **Primary key:** contract_group_id
 
@@ -1010,9 +1012,9 @@ A step in the contractual service margin roll-forward for a group of contracts i
 | csm_movement_id | string | yes | Identifier for the movement. | internal |  |  |
 | contract_group_id | string | yes | The group of contracts. | internal |  |  |
 | valuation_run_id | string | yes | The run that produced this movement - the audit anchor. | internal |  |  |
-| csm_movement_type_code | string | yes | Which step of the roll-forward this is. |  |  |  |
+| csm_movement_type_code | string | yes | Which step of the roll-forward this is. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the group currency; release is negative. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
 
 **Primary key:** csm_movement_id
 
@@ -1026,11 +1028,11 @@ An operating expense allocated to a line of business - the missing half of the c
 |---|---|---|---|---|---|---|
 | expense_transaction_id | string | yes | Identifier for the expense movement. | internal |  |  |
 | legal_entity_id | string |  | The entity the expense is booked in. | internal |  |  |
-| expense_type_code | string | yes | Kind of expense. |  |  |  |
-| line_of_business_code | string | yes | Line the expense is allocated to. |  |  |  |
+| expense_type_code | string | yes | Kind of expense. | internal |  |  |
+| line_of_business_code | string | yes | Line the expense is allocated to. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| transaction_date | date | yes | Booking date. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
+| transaction_date | date | yes | Booking date. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** expense_transaction_id
@@ -1045,12 +1047,12 @@ A budgeted or forecast figure for a legal entity, line and measure in a period -
 |---|---|---|---|---|---|---|
 | financial_plan_id | string | yes | Identifier for the plan figure. | internal |  |  |
 | legal_entity_id | string | yes | The entity the plan is for. | internal |  |  |
-| plan_version | string | yes | Plan version, e.g. 2026 Budget v1. |  |  |  |
-| line_of_business_code | string |  | Line of business, where the plan is at line level. |  |  |  |
-| plan_measure | string | yes | What is planned, e.g. gross_written_premium or combined_ratio. |  |  |  |
-| period_label | string | yes | Period the figure applies to, e.g. 2026-Q3. |  |  |  |
+| plan_version | string | yes | Plan version, e.g. 2026 Budget v1. | internal |  |  |
+| line_of_business_code | string |  | Line of business, where the plan is at line level. | internal |  |  |
+| plan_measure | string | yes | What is planned, e.g. gross_written_premium or combined_ratio. | internal |  |  |
+| period_label | string | yes | Period the figure applies to, e.g. 2026-Q3. | confidential |  |  |
 | amount | decimal(18,2) | yes | Planned value in the stated currency (or a ratio, per plan_measure). | confidential |  |  |
-| currency_code | string |  | Currency, for monetary plan measures. |  |  |  |
+| currency_code | string |  | Currency, for monetary plan measures. | internal |  |  |
 
 **Primary key:** financial_plan_id
 
@@ -1063,10 +1065,10 @@ A foreign-exchange rate to the group presentation currency at a date - what make
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | fx_rate_id | string | yes | Identifier for the rate. | internal |  |  |
-| from_currency_code | string | yes | Currency being translated. |  |  |  |
-| to_currency_code | string | yes | Presentation currency translated to. |  |  |  |
-| rate_date | date | yes | Date the rate applies. |  |  |  |
-| rate | decimal(18,8) | yes | Units of to-currency per one unit of from-currency. |  |  |  |
+| from_currency_code | string | yes | Currency being translated. | internal |  |  |
+| to_currency_code | string | yes | Presentation currency translated to. | internal |  |  |
+| rate_date | date | yes | Date the rate applies. | confidential |  |  |
+| rate | decimal(18,8) | yes | Units of to-currency per one unit of from-currency. | confidential |  |  |
 
 **Primary key:** fx_rate_id
 **Natural key:** from_currency_code, to_currency_code, rate_date
@@ -1080,11 +1082,11 @@ A journal entry header: a balanced set of debit and credit lines posted to one l
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | journal_id | string | yes | Identifier for the journal. | internal |  |  |
-| journal_reference | string | yes | Human reference for the journal. |  |  |  |
+| journal_reference | string | yes | Human reference for the journal. | internal |  |  |
 | legal_entity_id | string | yes | The entity whose ledger this posts to. | internal |  |  |
 | accounting_period_id | string | yes | The period the journal posts into; must be open at posting time. | internal |  |  |
-| posting_date | date | yes | Ledger date of the entry. |  |  |  |
-| description | string |  | What the entry records. |  |  |  |
+| posting_date | date | yes | Ledger date of the entry. | internal |  |  |
+| description | string |  | What the entry records. | confidential |  |  |
 | source_system_code | string | yes | System that raised the journal. | internal |  |  |
 
 **Primary key:** journal_id
@@ -1102,8 +1104,8 @@ A single debit or credit line of a journal, posted to one ledger account and car
 | journal_id | string | yes | The journal this line belongs to. | internal |  |  |
 | account_id | string | yes | The ledger account posted to. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the entity's functional currency: debits positive, credits negative. Lines within a journal sum to zero. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| source_entity | string |  | Entity name of the originating operational row (e.g. premium_transaction). |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
+| source_entity | string |  | Entity name of the originating operational row (e.g. premium_transaction). | internal |  |  |
 | source_id | string |  | Identifier of the originating operational row, for reconciliation. | internal |  |  |
 
 **Primary key:** journal_line_id
@@ -1119,11 +1121,11 @@ Premium billing and collection movements on a policy. Written premium is earned 
 | receivable_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
 | policy_id | string | yes | Policy billed. | internal |  |  |
 | legal_entity_id | string |  | The entity carrying the receivable. | internal |  |  |
-| receivable_transaction_type_code | string | yes | Kind of movement; invoices positive, receipts negative. |  |  |  |
+| receivable_transaction_type_code | string | yes | Kind of movement; invoices positive, receipts negative. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| transaction_date | date | yes | Booking date. |  |  |  |
-| due_date | date |  | Payment due date, for invoices - the anchor for ageing. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
+| transaction_date | date | yes | Booking date. | internal |  |  |
+| due_date | date |  | Payment due date, for invoices - the anchor for ageing. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** receivable_transaction_id
@@ -1137,12 +1139,12 @@ The mapping from ledger accounts to financial-statement line items - how the cha
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | statement_line_id | string | yes | Identifier for the mapping row. | internal |  |  |
-| statement_type_code | string | yes | Which primary statement the line belongs to. |  |  |  |
-| reporting_regime_code | string | yes | Presentation regime this mapping is for. |  |  |  |
-| line_label | string | yes | The statement line item, e.g. 'Net earned premium' or 'Total assets'. |  |  |  |
-| line_order | integer | yes | Presentation order within the statement. |  |  |  |
+| statement_type_code | string | yes | Which primary statement the line belongs to. | internal |  |  |
+| reporting_regime_code | string | yes | Presentation regime this mapping is for. | internal |  |  |
+| line_label | string | yes | The statement line item, e.g. 'Net earned premium' or 'Total assets'. | confidential |  |  |
+| line_order | integer | yes | Presentation order within the statement. | internal |  |  |
 | account_id | string | yes | The ledger account that rolls up into this line. | internal |  |  |
-| sign | integer | yes | +1 or -1 applied to the account balance for presentation. |  |  |  |
+| sign | integer | yes | +1 or -1 applied to the account balance for presentation. | internal |  |  |
 
 **Primary key:** statement_line_id
 
@@ -1156,11 +1158,11 @@ A tax movement for a legal entity - insurance premium tax, corporation tax, defe
 |---|---|---|---|---|---|---|
 | tax_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
 | legal_entity_id | string | yes | The entity the tax relates to. | internal |  |  |
-| tax_type_code | string | yes | Kind of tax. |  |  |  |
+| tax_type_code | string | yes | Kind of tax. | internal |  |  |
 | policy_id | string |  | Source policy, for premium tax. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the stated currency. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| transaction_date | date | yes | Booking date. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
+| transaction_date | date | yes | Booking date. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** tax_transaction_id
@@ -1175,11 +1177,11 @@ A published valuation figure: one measure (BEL, technical provision, IBNR, SCR, 
 |---|---|---|---|---|---|---|
 | valuation_result_id | string | yes | Identifier for the result row. | internal |  |  |
 | valuation_run_id | string | yes | The run that produced this figure. | internal |  |  |
-| line_of_business_code | string | yes | Line of business the figure relates to. |  |  |  |
-| valuation_measure_code | string | yes | Which defined measure this figure is. |  |  |  |
-| cohort | string |  | Optional sub-division (e.g. an age-by-term band or underwriting-year cohort). |  |  |  |
+| line_of_business_code | string | yes | Line of business the figure relates to. | internal |  |  |
+| valuation_measure_code | string | yes | Which defined measure this figure is. | internal |  |  |
+| cohort | string |  | Optional sub-division (e.g. an age-by-term band or underwriting-year cohort). | internal |  |  |
 | amount | decimal(18,2) | yes | The figure, in the stated currency. Sign follows the measure's own convention. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
 
 **Primary key:** valuation_result_id
 
@@ -1193,13 +1195,13 @@ An investment asset held by a legal entity - the asset side of the balance sheet
 |---|---|---|---|---|---|---|
 | investment_holding_id | string | yes | Identifier for the holding. | internal |  |  |
 | legal_entity_id | string | yes | The entity that owns the asset. | internal |  |  |
-| asset_class_code | string | yes | Asset class of the holding. |  |  |  |
-| instrument_name | string | yes | Name or description of the instrument. |  |  |  |
-| isin | string |  | ISIN where the instrument is a listed security. |  |  |  |
+| asset_class_code | string | yes | Asset class of the holding. | internal |  |  |
+| instrument_name | string | yes | Name or description of the instrument. | internal |  |  |
+| isin | string |  | ISIN where the instrument is a listed security. | internal |  |  |
 | book_cost | decimal(18,2) | yes | Acquisition cost in the entity's functional currency. | confidential |  |  |
 | market_value | decimal(18,2) | yes | Current market value in the entity's functional currency. | confidential |  |  |
-| currency_code | string | yes | Currency of the amounts. |  |  |  |
-| valuation_date | date | yes | Date the market value was struck. |  |  |  |
+| currency_code | string | yes | Currency of the amounts. | internal |  |  |
+| valuation_date | date | yes | Date the market value was struck. | internal |  |  |
 | source_system_code | string | yes | System of record (typically an investment/custody system). | internal |  |  |
 
 **Primary key:** investment_holding_id
@@ -1214,10 +1216,10 @@ A movement on an investment holding - purchase, sale, coupon, dividend or fair-v
 |---|---|---|---|---|---|---|
 | investment_transaction_id | string | yes | Identifier for the movement. | internal |  |  |
 | investment_holding_id | string | yes | The holding moved. | internal |  |  |
-| investment_transaction_type_code | string | yes | Kind of movement. |  |  |  |
+| investment_transaction_type_code | string | yes | Kind of movement. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount in the holding currency. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| transaction_date | date | yes | Date of the movement. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
+| transaction_date | date | yes | Date of the movement. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** investment_transaction_id
@@ -1231,13 +1233,13 @@ A versioned, governed set of actuarial assumptions (mortality, lapse, expense, e
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | assumption_set_id | string | yes | Identifier for the assumption set version. | internal |  |  |
-| assumption_type_code | string | yes | Kind of assumption governed by this set. |  |  |  |
-| assumption_status_code | string | yes | Maker/checker lifecycle status. |  |  |  |
-| version | integer | yes | Monotonic version number within the assumption type. |  |  |  |
-| description | string |  | What changed in this version and why. |  |  |  |
-| effective_from | date |  | First valuation date this set applies to, once approved. |  |  |  |
+| assumption_type_code | string | yes | Kind of assumption governed by this set. | internal |  |  |
+| assumption_status_code | string | yes | Maker/checker lifecycle status. | internal |  |  |
+| version | integer | yes | Monotonic version number within the assumption type. | internal |  |  |
+| description | string |  | What changed in this version and why. | confidential |  |  |
+| effective_from | date |  | First valuation date this set applies to, once approved. | internal |  |  |
 | approved_by | string |  | Checker who approved or rejected the set. | internal |  |  |
-| approved_at | timestamp |  | When the approval decision was made. |  |  |  |
+| approved_at | timestamp |  | When the approval decision was made. | internal |  |  |
 | source_system_code | string | yes | System of record the assumption set originates from. | internal |  |  |
 
 **Primary key:** assumption_set_id
@@ -1251,14 +1253,14 @@ A grouped model point for life valuation: policies compressed into cohorts (atta
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | model_point_id | string | yes | Identifier for the model point. | internal |  |  |
-| valuation_date | date | yes | Valuation date the model point file was cut at. |  |  |  |
-| line_of_business_code | string | yes | Life line of business the cohort belongs to. |  |  |  |
-| age_attained | integer | yes | Attained age of the cohort at the valuation date. |  |  |  |
-| outstanding_term_years | integer | yes | Remaining policy term of the cohort in whole years. |  |  |  |
-| policy_count | integer | yes | Number of in-force policies grouped into this model point. |  |  |  |
+| valuation_date | date | yes | Valuation date the model point file was cut at. | internal |  |  |
+| line_of_business_code | string | yes | Life line of business the cohort belongs to. | internal |  |  |
+| age_attained | integer | yes | Attained age of the cohort at the valuation date. | internal |  |  |
+| outstanding_term_years | integer | yes | Remaining policy term of the cohort in whole years. | internal |  |  |
+| policy_count | integer | yes | Number of in-force policies grouped into this model point. | internal |  |  |
 | sum_assured | decimal(18,2) | yes | Total sum assured of the cohort, in the cohort currency. | confidential |  |  |
 | annual_premium | decimal(18,2) |  | Total annualised premium of the cohort. | confidential |  |  |
-| currency_code | string | yes | Currency of the monetary amounts. |  |  |  |
+| currency_code | string | yes | Currency of the monetary amounts. | internal |  |  |
 | source_system_code | string | yes | System of record the model point file originates from. | internal |  |  |
 
 **Primary key:** model_point_id
@@ -1273,10 +1275,10 @@ A delivered economic scenario set (risk-free curves, equity paths) used by stoch
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | scenario_set_id | string | yes | Identifier for the scenario set. | internal |  |  |
-| name | string | yes | Human-readable name of the set, including its calibration reference. |  |  |  |
-| scenario_status_code | string | yes | Lifecycle status; exactly one set is ACTIVE for production. |  |  |  |
-| scenario_count | integer |  | Number of stochastic paths in the set. |  |  |  |
-| calibration_date | date |  | Market date the set was calibrated to. |  |  |  |
+| name | string | yes | Human-readable name of the set, including its calibration reference. | internal |  |  |
+| scenario_status_code | string | yes | Lifecycle status; exactly one set is ACTIVE for production. | internal |  |  |
+| scenario_count | integer |  | Number of stochastic paths in the set. | internal |  |  |
+| calibration_date | date |  | Market date the set was calibrated to. | internal |  |  |
 | source_system_code | string | yes | Provenance of the set (vendor delivery or internal generation). | internal |  |  |
 
 **Primary key:** scenario_set_id
@@ -1291,13 +1293,13 @@ One execution of a valuation process: which valuation date, which approved assum
 |---|---|---|---|---|---|---|
 | valuation_run_id | string | yes | Identifier for the run. | internal |  |  |
 | legal_entity_id | string |  | The legal entity the run values. With reporting_level this is what distinguishes a subsidiary's solo run from the group consolidated run. | internal |  |  |
-| reporting_level_code | string |  | Solo (this entity) or group (consolidated). |  |  |  |
-| reporting_regime_code | string |  | Regime the run is prepared under (Solvency II, IFRS 17...). |  |  |  |
-| valuation_date | date | yes | Valuation date the run values the book at. |  |  |  |
-| run_timestamp | timestamp | yes | When the run executed. |  |  |  |
+| reporting_level_code | string |  | Solo (this entity) or group (consolidated). | internal |  |  |
+| reporting_regime_code | string |  | Regime the run is prepared under (Solvency II, IFRS 17...). | internal |  |  |
+| valuation_date | date | yes | Valuation date the run values the book at. | internal |  |  |
+| run_timestamp | timestamp | yes | When the run executed. | internal |  |  |
 | scenario_set_id | string |  | Scenario set the run used, for stochastic runs. | internal |  |  |
-| model_version | string |  | Version of the valuation model/engine used (e.g. a Unity Catalog model version). |  |  |  |
-| run_verdict_code | string | yes | Quality-gate verdict; RED runs never feed published results. |  |  |  |
+| model_version | string |  | Version of the valuation model/engine used (e.g. a Unity Catalog model version). | internal |  |  |
+| run_verdict_code | string | yes | Quality-gate verdict; RED runs never feed published results. | internal |  |  |
 | run_by | string |  | Operator or service principal that executed the run. | internal |  |  |
 | source_system_code | string | yes | System that executed the run. | internal |  |  |
 
@@ -1325,12 +1327,12 @@ A legal entity in the group's structure and the reporting hierarchy that connect
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | legal_entity_id | string | yes | Identifier for the legal entity. | internal |  |  |
-| name | string | yes | Registered name of the entity. |  |  |  |
-| legal_entity_type_code | string | yes | Role in the reporting structure (holding, insurance subsidiary...). |  |  |  |
+| name | string | yes | Registered name of the entity. | internal |  |  |
+| legal_entity_type_code | string | yes | Role in the reporting structure (holding, insurance subsidiary...). | internal |  |  |
 | parent_legal_entity_id | string |  | The consolidating parent; empty only for the top group holding. This self-reference is the consolidation tree. | internal |  |  |
-| country_code | string | yes | Country of incorporation and primary supervision. |  |  |  |
-| functional_currency_code | string | yes | The entity's functional currency; group presentation currency is the holding's. |  |  |  |
-| lei | string |  | Legal Entity Identifier (ISO 17442), where registered. |  |  |  |
+| country_code | string | yes | Country of incorporation and primary supervision. | internal |  |  |
+| functional_currency_code | string | yes | The entity's functional currency; group presentation currency is the holding's. | internal |  |  |
+| lei | string |  | Legal Entity Identifier (ISO 17442), where registered. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** legal_entity_id
@@ -1345,11 +1347,11 @@ A data subject's consent for a processing purpose. Withdrawal is a state change 
 |---|---|---|---|---|---|---|
 | consent_id | string | yes | Identifier for the consent record. | internal |  |  |
 | party_id | string | yes | The consenting data subject. | internal |  |  |
-| consent_purpose_code | string | yes | Purpose consented to. |  |  |  |
-| consent_status_code | string | yes | Current state of the consent. |  |  |  |
-| granted_at | timestamp | yes | When consent was given. |  |  |  |
-| withdrawn_at | timestamp |  | When consent was withdrawn, where it was. |  |  |  |
-| channel_code | string |  | Channel the consent was captured through. |  |  |  |
+| consent_purpose_code | string | yes | Purpose consented to. | internal |  |  |
+| consent_status_code | string | yes | Current state of the consent. | internal |  |  |
+| granted_at | timestamp | yes | When consent was given. | internal |  |  |
+| withdrawn_at | timestamp |  | When consent was withdrawn, where it was. | internal |  |  |
+| channel_code | string |  | Channel the consent was captured through. | internal |  |  |
 
 **Primary key:** consent_id
 
@@ -1363,9 +1365,9 @@ A contact point for a party. PII is deliberately concentrated here and on party 
 |---|---|---|---|---|---|---|
 | contact_point_id | string | yes | Identifier for the contact point. | internal |  |  |
 | party_id | string | yes | The party contactable here. | internal |  |  |
-| contact_point_type_code | string | yes | Kind of contact point. |  |  |  |
+| contact_point_type_code | string | yes | Kind of contact point. | internal |  |  |
 | value | string | yes | The address, number or email itself. | pii |  |  |
-| preferred | boolean | yes | Whether this is the party's preferred contact point of its kind. |  |  |  |
+| preferred | boolean | yes | Whether this is the party's preferred contact point of its kind. | internal |  |  |
 
 **Primary key:** contact_point_id
 
@@ -1379,10 +1381,10 @@ A GDPR data subject request (access, erasure, rectification, portability) tracke
 |---|---|---|---|---|---|---|
 | data_subject_request_id | string | yes | Identifier for the request. | internal |  |  |
 | party_id | string | yes | The requesting data subject. | internal |  |  |
-| dsr_type_code | string | yes | Kind of request. |  |  |  |
-| dsr_status_code | string | yes | Handling status. |  |  |  |
-| received_date | date | yes | Date received; the statutory window starts here. |  |  |  |
-| completed_date | date |  | Date fulfilled or refused. |  |  |  |
+| dsr_type_code | string | yes | Kind of request. | internal |  |  |
+| dsr_status_code | string | yes | Handling status. | internal |  |  |
+| received_date | date | yes | Date received; the statutory window starts here. | internal |  |  |
+| completed_date | date |  | Date fulfilled or refused. | internal |  |  |
 | notes | string |  | Handling notes, including refusal grounds where applicable. | confidential |  |  |
 
 **Primary key:** data_subject_request_id
@@ -1399,7 +1401,7 @@ A person or organisation the group deals with. A party exists exactly once regar
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | party_id | string | yes | Stable, source-agnostic identifier for the party, owned by the data layer. | internal |  |  |
-| party_type_code | string | yes | Whether the party is a natural person or a legal entity. |  |  |  |
+| party_type_code | string | yes | Whether the party is a natural person or a legal entity. | internal |  |  |
 | name | string | yes | Full legal name of the party. | pii | CommercialName / PersonName |  |
 | country_code | string | yes | Country of residence or registration. | pii | CountryCd |  |
 | source_system_code | string | yes | System of record this party was mastered from. | internal |  |  |
@@ -1418,14 +1420,14 @@ A role a party plays in a specific business context - on a policy, a claim or a 
 |---|---|---|---|---|---|---|
 | party_role_id | string | yes | Identifier for this role assignment. | internal |  |  |
 | party_id | string | yes | The party playing the role. | internal |  |  |
-| party_role_type_code | string | yes | Which role the party plays in the context. |  |  |  |
+| party_role_type_code | string | yes | Which role the party plays in the context. | internal |  |  |
 | policy_id | string |  | Policy context of the role, when the role is played on a policy. | internal |  |  |
 | claim_id | string |  | Claim context of the role, when the role is played on a claim. | internal |  |  |
 | treaty_id | string |  | Treaty context of the role, when the role is played on a treaty. | internal |  |  |
 | quote_id | string |  | Quote context of the role, when the role is played on a quotation. | internal |  |  |
 | submission_id | string |  | Submission context of the role, when the role is played on a reinsurance submission. | internal |  |  |
-| start_date | date | yes | Date from which the role applies (inclusive). |  |  |  |
-| end_date | date |  | Date on which the role ceased (inclusive); empty while the role is current. |  |  |  |
+| start_date | date | yes | Date from which the role applies (inclusive). | internal |  |  |
+| end_date | date |  | Date on which the role ceased (inclusive); empty while the role is current. | internal |  |  |
 
 **Primary key:** party_role_id
 **Quality — exactly_one_context:** `exactly one of policy_id, claim_id, treaty_id, quote_id, submission_id is not null` — A role is always played in exactly one business context.
@@ -1442,10 +1444,10 @@ A specific cover granted under a policy, with its own limit and deductible. A po
 |---|---|---|---|---|---|---|
 | coverage_id | string | yes | Identifier for the coverage. | internal |  |  |
 | policy_id | string | yes | Policy the coverage is granted under. | internal |  |  |
-| coverage_type_code | string | yes | Kind of cover granted. |  | CoverageCd |  |
-| limit_amount | decimal(18,2) |  | Maximum amount payable under this coverage, in the policy currency; empty where unlimited or not applicable. |  | Limit | Limit of liability |
-| deductible_amount | decimal(18,2) |  | Amount borne by the insured before this coverage responds, in the policy currency. |  | Deductible | Deductible / excess |
-| sum_insured_amount | decimal(18,2) |  | Declared value insured under this coverage, in the policy currency. |  |  |  |
+| coverage_type_code | string | yes | Kind of cover granted. | internal | CoverageCd |  |
+| limit_amount | decimal(18,2) |  | Maximum amount payable under this coverage, in the policy currency; empty where unlimited or not applicable. | confidential | Limit | Limit of liability |
+| deductible_amount | decimal(18,2) |  | Amount borne by the insured before this coverage responds, in the policy currency. | confidential | Deductible | Deductible / excess |
+| sum_insured_amount | decimal(18,2) |  | Declared value insured under this coverage, in the policy currency. | confidential |  |  |
 
 **Primary key:** coverage_id
 
@@ -1461,8 +1463,8 @@ A mid-term change to a policy contract. The endorsement records the contractual 
 |---|---|---|---|---|---|---|
 | endorsement_id | string | yes | Identifier for the endorsement. | internal |  |  |
 | policy_id | string | yes | Policy being endorsed. | internal |  |  |
-| endorsement_type_code | string | yes | Kind of contractual change. |  |  |  |
-| effective_date | date | yes | Date the change takes effect (inclusive). |  |  |  |
+| endorsement_type_code | string | yes | Kind of contractual change. | internal |  |  |
+| effective_date | date | yes | Date the change takes effect (inclusive). | internal |  |  |
 | description | string |  | Free-text description of the change as recorded. | confidential |  |  |
 | source_system_code | string | yes | System of record the endorsement originates from. | internal |  |  |
 
@@ -1480,9 +1482,9 @@ A concrete object or exposure insured under a policy - a building, a vehicle, a 
 |---|---|---|---|---|---|---|
 | insured_object_id | string | yes | Identifier for the insured object. | internal |  |  |
 | policy_id | string | yes | Policy the object is insured under. | internal |  |  |
-| insured_object_type_code | string | yes | Kind of object or exposure insured. |  |  |  |
+| insured_object_type_code | string | yes | Kind of object or exposure insured. | internal |  |  |
 | description | string |  | Human-readable description of the object, as declared. | confidential |  |  |
-| country_code | string | yes | Country where the object is located or the exposure arises. |  |  |  |
+| country_code | string | yes | Country where the object is located or the exposure arises. | internal |  |  |
 | postcode | string |  | Postal code of the object's location, where applicable; drives geographic accumulation. | confidential |  | Risk location |
 | latitude | decimal(9,6) |  | Latitude of the object's location, where geocoded. | confidential |  |  |
 | longitude | decimal(9,6) |  | Longitude of the object's location, where geocoded. | confidential |  |  |
@@ -1503,12 +1505,12 @@ A contract of insurance between an insurer and one or more policyholders, under 
 | policy_number | string | yes | Policy number as issued to the policyholder. Unique within a source system, not globally - always interpret together with source_system_code. | confidential | PolicyNumber | Contract reference |
 | legal_entity_id | string |  | The carrier that wrote the policy - which subsidiary owns it. The anchor for solo-vs-group reporting of the underwriting book. | internal |  |  |
 | source_system_code | string | yes | System of record this policy originates from. Provenance is part of the model, not an afterthought. | internal |  |  |
-| line_of_business_code | string | yes | Line of business written under this policy. |  | LOBCd | Class of business |
-| policy_status_code | string | yes | Current lifecycle status of the policy. |  | PolicyStatusCd |  |
-| inception_date | date | yes | Date on which cover begins (inclusive). |  | EffectiveDt | Inception date |
-| expiry_date | date | yes | Date on which cover ends (inclusive). Must be on or after inception_date. |  | ExpirationDt | Expiry date |
-| underwriting_year | integer | yes | Year of account to which the policy is allocated; drives reinsurance cession and market reporting. |  |  | Year of account |
-| currency_code | string | yes | Original currency of the policy. Monetary amounts on child entities are expressed in this currency unless explicitly stated otherwise. |  | CurCd | Settlement currency |
+| line_of_business_code | string | yes | Line of business written under this policy. | internal | LOBCd | Class of business |
+| policy_status_code | string | yes | Current lifecycle status of the policy. | internal | PolicyStatusCd |  |
+| inception_date | date | yes | Date on which cover begins (inclusive). | internal | EffectiveDt | Inception date |
+| expiry_date | date | yes | Date on which cover ends (inclusive). Must be on or after inception_date. | internal | ExpirationDt | Expiry date |
+| underwriting_year | integer | yes | Year of account to which the policy is allocated; drives reinsurance cession and market reporting. | internal |  | Year of account |
+| currency_code | string | yes | Original currency of the policy. Monetary amounts on child entities are expressed in this currency unless explicitly stated otherwise. | internal | CurCd | Settlement currency |
 | renews_policy_id | string |  | The expiring policy this one renews, closing the retention chain; empty for new business. | internal |  |  |
 
 **Primary key:** policy_id
@@ -1528,10 +1530,10 @@ A signed premium movement on a policy. Premium is transactional by design: figur
 | premium_transaction_id | string | yes | Identifier for the premium transaction. | internal |  |  |
 | policy_id | string | yes | Policy the premium movement belongs to. | internal |  |  |
 | coverage_id | string |  | Coverage the movement is allocated to, where the source provides that split. | internal |  |  |
-| premium_transaction_type_code | string | yes | Kind of premium movement. |  |  |  |
+| premium_transaction_type_code | string | yes | Kind of premium movement. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount of the movement in the transaction currency: written and positive adjustments positive, returns negative. | confidential |  |  |
-| currency_code | string | yes | Currency of the amount. |  |  |  |
-| transaction_date | date | yes | Date the movement was booked. |  |  |  |
+| currency_code | string | yes | Currency of the amount. | internal |  |  |
+| transaction_date | date | yes | Date the movement was booked. | internal |  |  |
 | source_system_code | string | yes | System of record the movement originates from. | internal |  |  |
 
 **Primary key:** premium_transaction_id
@@ -1549,15 +1551,15 @@ A quotation for insurance cover. Quotes live upstream of policies: a converted q
 | quote_id | string | yes | Stable, source-agnostic identifier for the quote, owned by the data layer. | internal |  |  |
 | quote_number | string | yes | Quote reference as issued; unique within a source system. | confidential |  |  |
 | policy_id | string |  | Policy issued from this quote; populated only when the quote converted. | internal |  |  |
-| line_of_business_code | string | yes | Line of business quoted. |  |  |  |
-| quote_status_code | string | yes | Lifecycle status of the quote. |  |  |  |
-| quote_date | date | yes | Date the quotation was produced. |  |  |  |
-| requested_inception_date | date |  | Cover start date requested by the prospect. |  |  |  |
+| line_of_business_code | string | yes | Line of business quoted. | internal |  |  |
+| quote_status_code | string | yes | Lifecycle status of the quote. | internal |  |  |
+| quote_date | date | yes | Date the quotation was produced. | internal |  |  |
+| requested_inception_date | date |  | Cover start date requested by the prospect. | internal |  |  |
 | quoted_gross_premium | decimal(18,2) |  | Gross premium quoted, in the quote currency; empty while the quote is open. | confidential |  |  |
-| currency_code | string | yes | Currency of the quoted premium. |  |  |  |
+| currency_code | string | yes | Currency of the quoted premium. | internal |  |  |
 | source_system_code | string | yes | System of record the quote originates from. | internal |  |  |
 | product_id | string |  | The product quoted, where the product catalog applies. | internal |  |  |
-| distribution_channel_code | string |  | Channel the quote was requested through. |  |  |  |
+| distribution_channel_code | string |  | Channel the quote was requested through. | internal |  |  |
 
 **Primary key:** quote_id
 **Natural key:** source_system_code, quote_number
@@ -1572,11 +1574,11 @@ A recorded underwriting decision on a quote: the outcome, who or what decided (h
 |---|---|---|---|---|---|---|
 | underwriting_decision_id | string | yes | Identifier for the decision. | internal |  |  |
 | quote_id | string | yes | The quote decided on. | internal |  |  |
-| underwriting_decision_type_code | string | yes | The outcome. |  |  |  |
+| underwriting_decision_type_code | string | yes | The outcome. | internal |  |  |
 | appetite_rule_id | string |  | The appetite rule the decision applied, where rule-driven. | internal |  |  |
 | decided_by | string | yes | The human underwriter or named agent/system that decided. | internal |  |  |
-| decided_by_agent | boolean | yes | True when the decision was taken autonomously by software. |  |  |  |
-| decided_at | timestamp | yes | When the decision was taken. |  |  |  |
+| decided_by_agent | boolean | yes | True when the decision was taken autonomously by software. | internal |  |  |
+| decided_at | timestamp | yes | When the decision was taken. | internal |  |  |
 | rationale | string |  | Free-text rationale, human- or agent-written. | confidential |  |  |
 
 **Primary key:** underwriting_decision_id
@@ -1594,9 +1596,9 @@ Motor-specific detail for an insured object of type VEHICLE. This is the model's
 | vehicle_id | string | yes | Identifier for the vehicle record. | internal |  |  |
 | insured_object_id | string | yes | The insured object this vehicle detail belongs to (object type VEHICLE). | internal |  |  |
 | registration_number | string |  | Vehicle registration mark. | pii | VehIdentificationNumber / registration |  |
-| make | string |  | Manufacturer. |  |  |  |
-| model | string |  | Model designation. |  |  |  |
-| year_of_manufacture | integer |  | Year of manufacture. |  |  |  |
+| make | string |  | Manufacturer. | internal |  |  |
+| model | string |  | Model designation. | internal |  |  |
+| year_of_manufacture | integer |  | Year of manufacture. | internal |  |  |
 
 **Primary key:** vehicle_id
 
@@ -1610,14 +1612,14 @@ An underwriting appetite statement as data: for a product (or a whole line), a b
 |---|---|---|---|---|---|---|
 | appetite_rule_id | string | yes | Identifier for the rule. | internal |  |  |
 | product_id | string |  | Product the rule scopes to; empty when the rule applies to the whole line. | internal |  |  |
-| line_of_business_code | string | yes | Line of business the rule applies to. |  |  |  |
-| rule_order | integer | yes | Evaluation order; first matching terminal effect wins. |  |  |  |
-| description | string | yes | The rule in business language - what it checks and why it exists. |  |  |  |
-| max_sum_insured | decimal(18,2) |  | Upper sum-insured bound for the effect to apply, in the product currency. |  |  |  |
-| country_code | string |  | Country the rule scopes to, where geographic. |  |  |  |
-| appetite_effect_code | string | yes | What happens when the rule matches. |  |  |  |
-| effective_from | date | yes | First date the rule applies. |  |  |  |
-| effective_to | date |  | Last date the rule applies; empty while current. |  |  |  |
+| line_of_business_code | string | yes | Line of business the rule applies to. | internal |  |  |
+| rule_order | integer | yes | Evaluation order; first matching terminal effect wins. | internal |  |  |
+| description | string | yes | The rule in business language - what it checks and why it exists. | confidential |  |  |
+| max_sum_insured | decimal(18,2) |  | Upper sum-insured bound for the effect to apply, in the product currency. | confidential |  |  |
+| country_code | string |  | Country the rule scopes to, where geographic. | internal |  |  |
+| appetite_effect_code | string | yes | What happens when the rule matches. | internal |  |  |
+| effective_from | date | yes | First date the rule applies. | internal |  |  |
+| effective_to | date |  | Last date the rule applies; empty while current. | internal |  |  |
 
 **Primary key:** appetite_rule_id
 
@@ -1632,12 +1634,12 @@ A machine-readable insurance product: what is offered, under which line of busin
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | product_id | string | yes | Identifier for the product. | internal |  |  |
-| product_code | string | yes | Marketing/product code, unique within the source system. |  |  |  |
-| name | string | yes | Product name as marketed. |  |  |  |
-| line_of_business_code | string | yes | Line of business the product is written under. |  |  |  |
-| product_status_code | string | yes | Lifecycle status. |  |  |  |
+| product_code | string | yes | Marketing/product code, unique within the source system. | internal |  |  |
+| name | string | yes | Product name as marketed. | internal |  |  |
+| line_of_business_code | string | yes | Line of business the product is written under. | internal |  |  |
+| product_status_code | string | yes | Lifecycle status. | internal |  |  |
 | base_rate | decimal(10,6) |  | Indicative base rate per unit of sum insured, used for indicative quotes only. | confidential |  |  |
-| currency_code | string | yes | Default currency of the product. |  |  |  |
+| currency_code | string | yes | Default currency of the product. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** product_id
@@ -1653,10 +1655,10 @@ A coverage the product offers, with its default limits. Policy coverages are ins
 |---|---|---|---|---|---|---|
 | product_coverage_id | string | yes | Identifier for the offered coverage. | internal |  |  |
 | product_id | string | yes | The offering product. | internal |  |  |
-| coverage_type_code | string | yes | Kind of cover offered. |  |  |  |
-| default_limit_amount | decimal(18,2) |  | Default limit offered, in the product currency. |  |  |  |
-| default_deductible_amount | decimal(18,2) |  | Default deductible, in the product currency. |  |  |  |
-| optional | boolean | yes | Whether the coverage is optional (true) or core to the product (false). |  |  |  |
+| coverage_type_code | string | yes | Kind of cover offered. | internal |  |  |
+| default_limit_amount | decimal(18,2) |  | Default limit offered, in the product currency. | confidential |  |  |
+| default_deductible_amount | decimal(18,2) |  | Default deductible, in the product currency. | confidential |  |  |
+| optional | boolean | yes | Whether the coverage is optional (true) or core to the product (false). | internal |  |  |
 
 **Primary key:** product_coverage_id
 
@@ -1670,10 +1672,10 @@ A question the product asks at quotation. The question set is data, so any chann
 |---|---|---|---|---|---|---|
 | underwriting_question_id | string | yes | Identifier for the question. | internal |  |  |
 | product_id | string | yes | The product asking the question. | internal |  |  |
-| question_order | integer | yes | Presentation order. |  |  |  |
-| question_text | string | yes | The question as asked. |  |  |  |
-| answer_type | string | yes | Expected answer type - boolean, number, text or a code. |  |  |  |
-| required | boolean | yes | Whether an answer is mandatory to quote. |  |  |  |
+| question_order | integer | yes | Presentation order. | internal |  |  |
+| question_text | string | yes | The question as asked. | internal |  |  |
+| answer_type | string | yes | Expected answer type - boolean, number, text or a code. | internal |  |  |
+| required | boolean | yes | Whether an answer is mandatory to quote. | internal |  |  |
 
 **Primary key:** underwriting_question_id
 
@@ -1688,12 +1690,12 @@ A named catastrophe event (windstorm, flood...) that losses accumulate against, 
 | Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
 |---|---|---|---|---|---|---|
 | cat_event_id | string | yes | Identifier for the event. | internal |  |  |
-| event_name | string | yes | Market name of the event (e.g. a named windstorm). |  |  |  |
-| cause_of_loss_code | string | yes | Primary peril of the event. |  |  |  |
-| event_date | date | yes | Date of the event (first landfall or onset). |  |  |  |
-| country_code | string |  | Primary country affected, where a single country applies. |  |  |  |
-| industry_loss_estimate | decimal(18,2) |  | Market-wide insured loss estimate, in the stated currency. |  |  |  |
-| currency_code | string |  | Currency of the industry loss estimate. |  |  |  |
+| event_name | string | yes | Market name of the event (e.g. a named windstorm). | internal |  |  |
+| cause_of_loss_code | string | yes | Primary peril of the event. | internal |  |  |
+| event_date | date | yes | Date of the event (first landfall or onset). | internal |  |  |
+| country_code | string |  | Primary country affected, where a single country applies. | internal |  |  |
+| industry_loss_estimate | decimal(18,2) |  | Market-wide insured loss estimate, in the stated currency. | internal |  |  |
+| currency_code | string |  | Currency of the industry loss estimate. | internal |  |  |
 | source_system_code | string | yes | System of record the event was registered in. | internal |  |  |
 
 **Primary key:** cat_event_id
@@ -1728,11 +1730,11 @@ A loss figure attributed to a catastrophe event - against a treaty (assumed book
 | cat_event_id | string | yes | The catastrophe event the loss belongs to. | internal |  |  |
 | treaty_id | string |  | Treaty the loss attaches to, for the assumed book. | internal |  |  |
 | policy_id | string |  | Policy the loss attaches to, for the direct book. | internal |  |  |
-| loss_basis_code | string | yes | Whether the figure is modelled or reported. |  |  |  |
+| loss_basis_code | string | yes | Whether the figure is modelled or reported. | internal |  |  |
 | gross_loss_amount | decimal(18,2) | yes | Gross loss to the contract, in the stated currency. | confidential |  |  |
 | ceded_loss_amount | decimal(18,2) |  | Portion ceded onward under outward protections, where computed. | confidential |  |  |
-| currency_code | string | yes | Currency of the amounts. |  |  |  |
-| as_of_date | date | yes | Snapshot date of the figure. |  |  |  |
+| currency_code | string | yes | Currency of the amounts. | internal |  |  |
+| as_of_date | date | yes | Snapshot date of the figure. | internal |  |  |
 
 **Primary key:** event_loss_id
 **Quality — exactly_one_book:** `exactly one of treaty_id, policy_id is not null` — A loss row belongs to either the assumed or the direct book, never both.
@@ -1750,14 +1752,14 @@ A reinsurance submission: a cedant's (or broker's) request for treaty cover, fro
 | submission_id | string | yes | Stable identifier for the submission, owned by the data layer. | internal |  |  |
 | submission_reference | string | yes | Submission reference as received; unique within a source system. | confidential |  |  |
 | treaty_id | string |  | Treaty bound from this submission; populated only when BOUND. | internal |  |  |
-| submission_status_code | string | yes | Lifecycle status from receipt to bind or decline. |  |  |  |
-| treaty_type_code | string | yes | Form of treaty requested. |  |  |  |
-| line_of_business_code | string | yes | Class of business the cover is requested for. |  |  |  |
-| underwriting_year | integer | yes | Underwriting year the cover would attach to. |  |  |  |
+| submission_status_code | string | yes | Lifecycle status from receipt to bind or decline. | internal |  |  |
+| treaty_type_code | string | yes | Form of treaty requested. | internal |  |  |
+| line_of_business_code | string | yes | Class of business the cover is requested for. | internal |  |  |
+| underwriting_year | integer | yes | Underwriting year the cover would attach to. | internal |  |  |
 | requested_limit | decimal(18,2) |  | Limit requested, in the submission currency. | confidential |  |  |
 | requested_attachment | decimal(18,2) |  | Attachment point requested, for non-proportional forms. | confidential |  |  |
-| currency_code | string | yes | Currency of the requested terms. |  |  |  |
-| received_date | date | yes | Date the submission was received. |  |  |  |
+| currency_code | string | yes | Currency of the requested terms. | internal |  |  |
+| received_date | date | yes | Date the submission was received. | internal |  |  |
 | source_system_code | string | yes | System of record the submission originates from. | internal |  |  |
 
 **Primary key:** submission_id
@@ -1775,13 +1777,13 @@ A treaty reinsurance contract under which risks are ceded to or assumed from rei
 |---|---|---|---|---|---|---|
 | treaty_id | string | yes | Stable identifier for the treaty, owned by the data layer. | internal |  |  |
 | treaty_reference | string | yes | Treaty reference as agreed between the parties. | confidential |  |  |
-| treaty_type_code | string | yes | Form of the treaty. |  |  |  |
-| line_of_business_code | string | yes | Class of business the treaty covers. |  |  |  |
-| underwriting_year | integer | yes | Underwriting year of account of the treaty. |  |  | Year of account |
-| inception_date | date | yes | Date treaty cover begins (inclusive). |  |  |  |
-| expiry_date | date | yes | Date treaty cover ends (inclusive). Must be on or after inception_date. |  |  |  |
+| treaty_type_code | string | yes | Form of the treaty. | internal |  |  |
+| line_of_business_code | string | yes | Class of business the treaty covers. | internal |  |  |
+| underwriting_year | integer | yes | Underwriting year of account of the treaty. | internal |  | Year of account |
+| inception_date | date | yes | Date treaty cover begins (inclusive). | internal |  |  |
+| expiry_date | date | yes | Date treaty cover ends (inclusive). Must be on or after inception_date. | internal |  |  |
 | cession_rate | decimal(5,4) |  | Contractual ceded share for proportional treaties, as a fraction between 0 and 1; empty for non-proportional forms. | confidential |  |  |
-| currency_code | string | yes | Currency of the treaty. |  |  |  |
+| currency_code | string | yes | Currency of the treaty. | internal |  |  |
 | source_system_code | string | yes | System of record the treaty originates from. | internal |  |  |
 
 **Primary key:** treaty_id
@@ -1799,10 +1801,10 @@ A layer of a treaty programme: limit and attachment for non-proportional forms, 
 |---|---|---|---|---|---|---|
 | treaty_layer_id | string | yes | Identifier for the layer. | internal |  |  |
 | treaty_id | string | yes | Treaty the layer belongs to. | internal |  |  |
-| layer_number | integer | yes | Position of the layer in the programme, 1 = lowest attachment. |  |  |  |
+| layer_number | integer | yes | Position of the layer in the programme, 1 = lowest attachment. | internal |  |  |
 | limit_amount | decimal(18,2) | yes | Limit of the layer, in the treaty currency. | confidential |  |  |
 | attachment_amount | decimal(18,2) |  | Attachment point of the layer; empty for proportional forms. | confidential |  |  |
-| reinstatement_count | integer |  | Number of reinstatements available, where applicable. |  |  |  |
+| reinstatement_count | integer |  | Number of reinstatements available, where applicable. | internal |  |  |
 | reinstatement_premium_rate | decimal(5,4) |  | Reinstatement premium as a fraction of the layer premium. | confidential |  |  |
 
 **Primary key:** treaty_layer_id

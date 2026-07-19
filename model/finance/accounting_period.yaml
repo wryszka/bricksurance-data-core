@@ -25,17 +25,22 @@ attributes:
     type: string
     required: true
     description: Human label, e.g. 2026-Q2.
+    classification: confidential
   - name: start_date
     type: date
     required: true
     description: First day of the period.
+    classification: internal
   - name: end_date
     type: date
     required: true
     description: Last day of the period.
+    classification: internal
   - name: period_status_code
     code_set: period_status
     required: true
     description: Open, closed or locked.
+    classification: internal
 keys:
   primary: [accounting_period_id]
+owner: Financial Controller

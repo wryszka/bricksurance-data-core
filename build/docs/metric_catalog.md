@@ -1,6 +1,6 @@
 # Bricksurance Data Core - Metric Catalog
 
-*Generated from model v0.8.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+*Generated from model v0.9.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
 
 ## Cession Metrics (`semantics.cession_metrics`)
 

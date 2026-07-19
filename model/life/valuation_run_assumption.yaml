@@ -25,3 +25,4 @@ attributes:
     classification: internal
 keys:
   primary: [valuation_run_id, assumption_set_id]
+owner: Chief Actuary

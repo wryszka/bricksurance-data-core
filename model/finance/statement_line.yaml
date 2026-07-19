@@ -21,18 +21,22 @@ attributes:
     code_set: statement_type
     required: true
     description: Which primary statement the line belongs to.
+    classification: internal
   - name: reporting_regime_code
     code_set: reporting_regime
     required: true
     description: Presentation regime this mapping is for.
+    classification: internal
   - name: line_label
     type: string
     required: true
     description: The statement line item, e.g. 'Net earned premium' or 'Total assets'.
+    classification: confidential
   - name: line_order
     type: integer
     required: true
     description: Presentation order within the statement.
+    classification: internal
   - name: account_id
     references: chart_of_account
     type: string
@@ -43,5 +47,7 @@ attributes:
     type: integer
     required: true
     description: +1 or -1 applied to the account balance for presentation.
+    classification: internal
 keys:
   primary: [statement_line_id]
+owner: Financial Controller

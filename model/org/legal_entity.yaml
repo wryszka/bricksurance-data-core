@@ -10,7 +10,7 @@ description: >
   entity; group reporting is the consolidation up this tree.
 grain: One row per legal entity.
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: legal_entity_id
     type: string
@@ -21,10 +21,12 @@ attributes:
     type: string
     required: true
     description: Registered name of the entity.
+    classification: internal
   - name: legal_entity_type_code
     code_set: legal_entity_type
     required: true
     description: Role in the reporting structure (holding, insurance subsidiary...).
+    classification: internal
   - name: parent_legal_entity_id
     references: legal_entity
     type: string
@@ -37,14 +39,17 @@ attributes:
     code_set: country
     required: true
     description: Country of incorporation and primary supervision.
+    classification: internal
   - name: functional_currency_code
     code_set: currency
     required: true
     description: The entity's functional currency; group presentation currency is the holding's.
+    classification: internal
   - name: lei
     type: string
     required: false
     description: Legal Entity Identifier (ISO 17442), where registered.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -52,3 +57,4 @@ attributes:
     classification: internal
 keys:
   primary: [legal_entity_id]
+owner: Chief Financial Officer

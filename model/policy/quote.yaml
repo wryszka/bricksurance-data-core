@@ -33,18 +33,22 @@ attributes:
     code_set: line_of_business
     required: true
     description: Line of business quoted.
+    classification: internal
   - name: quote_status_code
     code_set: quote_status
     required: true
     description: Lifecycle status of the quote.
+    classification: internal
   - name: quote_date
     type: date
     required: true
     description: Date the quotation was produced.
+    classification: internal
   - name: requested_inception_date
     type: date
     required: false
     description: Cover start date requested by the prospect.
+    classification: internal
   - name: quoted_gross_premium
     type: decimal(18,2)
     required: false
@@ -54,6 +58,7 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the quoted premium.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -69,6 +74,8 @@ attributes:
     code_set: distribution_channel
     required: false
     description: Channel the quote was requested through.
+    classification: internal
 keys:
   primary: [quote_id]
   natural: [source_system_code, quote_number]
+owner: Chief Underwriting Officer

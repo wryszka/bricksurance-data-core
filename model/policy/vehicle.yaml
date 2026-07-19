@@ -35,13 +35,17 @@ attributes:
     type: string
     required: false
     description: Manufacturer.
+    classification: internal
   - name: model
     type: string
     required: false
     description: Model designation.
+    classification: internal
   - name: year_of_manufacture
     type: integer
     required: false
     description: Year of manufacture.
+    classification: internal
 keys:
   primary: [vehicle_id]
+owner: Chief Underwriting Officer

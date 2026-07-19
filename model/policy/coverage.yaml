@@ -10,7 +10,7 @@ grain: One row per coverage granted under a policy.
 standards:
   acord: Coverage (ACORD Information Model)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: coverage_id
     type: string
@@ -29,6 +29,7 @@ attributes:
     description: Kind of cover granted.
     standards:
       acord: CoverageCd
+    classification: internal
   - name: limit_amount
     type: decimal(18,2)
     required: false
@@ -38,6 +39,7 @@ attributes:
     standards:
       acord: Limit
       lloyds_cdr: Limit of liability
+    classification: confidential
   - name: deductible_amount
     type: decimal(18,2)
     required: false
@@ -45,9 +47,12 @@ attributes:
     standards:
       acord: Deductible
       lloyds_cdr: Deductible / excess
+    classification: confidential
   - name: sum_insured_amount
     type: decimal(18,2)
     required: false
     description: Declared value insured under this coverage, in the policy currency.
+    classification: confidential
 keys:
   primary: [coverage_id]
+owner: Chief Underwriting Officer

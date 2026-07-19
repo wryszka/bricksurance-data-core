@@ -25,6 +25,7 @@ attributes:
     code_set: investment_transaction_type
     required: true
     description: Kind of movement.
+    classification: internal
   - name: amount
     type: decimal(18,2)
     required: true
@@ -34,10 +35,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
   - name: transaction_date
     type: date
     required: true
     description: Date of the movement.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -45,3 +48,4 @@ attributes:
     classification: internal
 keys:
   primary: [investment_transaction_id]
+owner: Chief Investment Officer

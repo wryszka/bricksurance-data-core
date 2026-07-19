@@ -29,18 +29,22 @@ attributes:
     code_set: reporting_level
     required: false
     description: Solo (this entity) or group (consolidated).
+    classification: internal
   - name: reporting_regime_code
     code_set: reporting_regime
     required: false
     description: Regime the run is prepared under (Solvency II, IFRS 17...).
+    classification: internal
   - name: valuation_date
     type: date
     required: true
     description: Valuation date the run values the book at.
+    classification: internal
   - name: run_timestamp
     type: timestamp
     required: true
     description: When the run executed.
+    classification: internal
   - name: scenario_set_id
     references: scenario_set
     type: string
@@ -51,10 +55,12 @@ attributes:
     type: string
     required: false
     description: Version of the valuation model/engine used (e.g. a Unity Catalog model version).
+    classification: internal
   - name: run_verdict_code
     code_set: run_verdict
     required: true
     description: Quality-gate verdict; RED runs never feed published results.
+    classification: internal
   - name: run_by
     type: string
     required: false
@@ -67,3 +73,4 @@ attributes:
     classification: internal
 keys:
   primary: [valuation_run_id]
+owner: Chief Actuary

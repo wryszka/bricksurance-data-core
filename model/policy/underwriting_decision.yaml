@@ -26,6 +26,7 @@ attributes:
     code_set: underwriting_decision_type
     required: true
     description: The outcome.
+    classification: internal
   - name: appetite_rule_id
     references: appetite_rule
     type: string
@@ -41,10 +42,12 @@ attributes:
     type: boolean
     required: true
     description: True when the decision was taken autonomously by software.
+    classification: internal
   - name: decided_at
     type: timestamp
     required: true
     description: When the decision was taken.
+    classification: internal
   - name: rationale
     type: string
     required: false
@@ -52,3 +55,4 @@ attributes:
     classification: confidential
 keys:
   primary: [underwriting_decision_id]
+owner: Chief Underwriting Officer

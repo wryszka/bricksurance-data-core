@@ -10,7 +10,7 @@ grain: One row per policy (or coverage, where the split exists) per treaty.
 standards:
   acord: Cession patterns (ACORD GRLC)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: cession_id
     type: string
@@ -42,3 +42,4 @@ attributes:
     classification: confidential
 keys:
   primary: [cession_id]
+owner: Head of Reinsurance

@@ -33,6 +33,7 @@ attributes:
     code_set: csm_movement_type
     required: true
     description: Which step of the roll-forward this is.
+    classification: internal
   - name: amount
     type: decimal(18,2)
     required: true
@@ -42,5 +43,7 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
 keys:
   primary: [csm_movement_id]
+owner: Financial Controller

@@ -19,18 +19,22 @@ attributes:
     type: string
     required: true
     description: Human-readable name of the set, including its calibration reference.
+    classification: internal
   - name: scenario_status_code
     code_set: scenario_status
     required: true
     description: Lifecycle status; exactly one set is ACTIVE for production.
+    classification: internal
   - name: scenario_count
     type: integer
     required: false
     description: Number of stochastic paths in the set.
+    classification: internal
   - name: calibration_date
     type: date
     required: false
     description: Market date the set was calibrated to.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -38,3 +42,4 @@ attributes:
     classification: internal
 keys:
   primary: [scenario_set_id]
+owner: Chief Actuary

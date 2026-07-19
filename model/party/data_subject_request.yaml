@@ -25,18 +25,22 @@ attributes:
     code_set: dsr_type
     required: true
     description: Kind of request.
+    classification: internal
   - name: dsr_status_code
     code_set: dsr_status
     required: true
     description: Handling status.
+    classification: internal
   - name: received_date
     type: date
     required: true
     description: Date received; the statutory window starts here.
+    classification: internal
   - name: completed_date
     type: date
     required: false
     description: Date fulfilled or refused.
+    classification: internal
   - name: notes
     type: string
     required: false
@@ -48,3 +52,4 @@ quality:
   - name: completed_after_received
     rule: completed_date >= received_date
     description: A request cannot complete before it is received.
+owner: Chief Data Officer

@@ -13,7 +13,7 @@ grain: >
 standards:
   acord: Party (ACORD Information Model)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: party_id
     type: string
@@ -24,6 +24,7 @@ attributes:
     code_set: party_type
     required: true
     description: Whether the party is a natural person or a legal entity.
+    classification: internal
   - name: name
     type: string
     required: true
@@ -45,3 +46,4 @@ attributes:
     classification: internal
 keys:
   primary: [party_id]
+owner: Chief Data Officer

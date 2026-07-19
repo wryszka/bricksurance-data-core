@@ -10,7 +10,7 @@ grain: One row per treaty contract per underwriting year.
 standards:
   acord: Reinsurance agreement patterns (ACORD GRLC)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: treaty_id
     type: string
@@ -26,24 +26,29 @@ attributes:
     code_set: treaty_type
     required: true
     description: Form of the treaty.
+    classification: internal
   - name: line_of_business_code
     code_set: line_of_business
     required: true
     description: Class of business the treaty covers.
+    classification: internal
   - name: underwriting_year
     type: integer
     required: true
     description: Underwriting year of account of the treaty.
     standards:
       lloyds_cdr: Year of account
+    classification: internal
   - name: inception_date
     type: date
     required: true
     description: Date treaty cover begins (inclusive).
+    classification: internal
   - name: expiry_date
     type: date
     required: true
     description: Date treaty cover ends (inclusive). Must be on or after inception_date.
+    classification: internal
   - name: cession_rate
     type: decimal(5,4)
     required: false
@@ -55,6 +60,7 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the treaty.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -66,3 +72,4 @@ quality:
   - name: cover_period_valid
     rule: expiry_date >= inception_date
     description: Treaty cover cannot end before it begins.
+owner: Head of Reinsurance

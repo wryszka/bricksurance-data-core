@@ -31,6 +31,7 @@ attributes:
     code_set: receivable_transaction_type
     required: true
     description: Kind of movement; invoices positive, receipts negative.
+    classification: internal
   - name: amount
     type: decimal(18,2)
     required: true
@@ -40,14 +41,17 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
   - name: transaction_date
     type: date
     required: true
     description: Booking date.
+    classification: internal
   - name: due_date
     type: date
     required: false
     description: Payment due date, for invoices - the anchor for ageing.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -55,3 +59,4 @@ attributes:
     classification: internal
 keys:
   primary: [receivable_transaction_id]
+owner: Financial Controller

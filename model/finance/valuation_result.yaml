@@ -26,14 +26,17 @@ attributes:
     code_set: line_of_business
     required: true
     description: Line of business the figure relates to.
+    classification: internal
   - name: valuation_measure_code
     code_set: valuation_measure
     required: true
     description: Which defined measure this figure is.
+    classification: internal
   - name: cohort
     type: string
     required: false
     description: Optional sub-division (e.g. an age-by-term band or underwriting-year cohort).
+    classification: internal
   - name: amount
     type: decimal(18,2)
     required: true
@@ -43,5 +46,7 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
 keys:
   primary: [valuation_result_id]
+owner: Financial Controller

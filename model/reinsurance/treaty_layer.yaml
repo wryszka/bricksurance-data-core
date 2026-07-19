@@ -11,7 +11,7 @@ grain: One row per layer per treaty.
 standards:
   acord: Layer / section patterns (ACORD GRLC)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: treaty_layer_id
     type: string
@@ -28,6 +28,7 @@ attributes:
     type: integer
     required: true
     description: Position of the layer in the programme, 1 = lowest attachment.
+    classification: internal
   - name: limit_amount
     type: decimal(18,2)
     required: true
@@ -42,6 +43,7 @@ attributes:
     type: integer
     required: false
     description: Number of reinstatements available, where applicable.
+    classification: internal
   - name: reinstatement_premium_rate
     type: decimal(5,4)
     required: false
@@ -49,3 +51,4 @@ attributes:
     classification: confidential
 keys:
   primary: [treaty_layer_id]
+owner: Head of Reinsurance

@@ -46,7 +46,9 @@ def main():
     # expected physical objects, derived from the model specs
     specs = [yaml.safe_load(p.read_text()) for p in sorted((ROOT / "model").rglob("*.yaml"))
              if p.name != "model.yaml"]
-    n_tables = sum(1 for s in specs if s["kind"] in ("entity", "code_set")) + 1
+    # + 2 generated reference tables that are not spec files: the data
+    # dictionary and the certification-attestation record.
+    n_tables = sum(1 for s in specs if s["kind"] in ("entity", "code_set")) + 2
     n_views = sum(1 for s in specs if s["kind"] in ("view", "metric_view"))
     n_fks = sum(1 for s in specs for a in s.get("attributes", [])
                 if a.get("code_set") or a.get("references"))

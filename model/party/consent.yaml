@@ -25,21 +25,27 @@ attributes:
     code_set: consent_purpose
     required: true
     description: Purpose consented to.
+    classification: internal
   - name: consent_status_code
     code_set: consent_status
     required: true
     description: Current state of the consent.
+    classification: internal
   - name: granted_at
     type: timestamp
     required: true
     description: When consent was given.
+    classification: internal
   - name: withdrawn_at
     type: timestamp
     required: false
     description: When consent was withdrawn, where it was.
+    classification: internal
   - name: channel_code
     code_set: distribution_channel
     required: false
     description: Channel the consent was captured through.
+    classification: internal
 keys:
   primary: [consent_id]
+owner: Chief Data Officer

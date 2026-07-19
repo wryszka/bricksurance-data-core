@@ -42,18 +42,22 @@ attributes:
     code_set: complaint_category
     required: true
     description: Root category.
+    classification: internal
   - name: complaint_status_code
     code_set: complaint_status
     required: true
     description: Handling status.
+    classification: internal
   - name: received_date
     type: date
     required: true
     description: Date received.
+    classification: internal
   - name: closed_date
     type: date
     required: false
     description: Date resolved or referred; empty while open.
+    classification: internal
   - name: redress_amount
     type: decimal(18,2)
     required: false
@@ -63,6 +67,7 @@ attributes:
     code_set: currency
     required: false
     description: Currency of any redress.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -74,3 +79,4 @@ quality:
   - name: closed_after_received
     rule: closed_date >= received_date
     description: A complaint cannot close before it is received.
+owner: Chief Conduct Officer

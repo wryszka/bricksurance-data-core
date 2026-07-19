@@ -11,7 +11,7 @@ standards:
   acord: Premium / MoneyProvision patterns of the ACORD Information Model
   lloyds_cdr: Premium attributes (indicative)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: premium_transaction_id
     type: string
@@ -34,6 +34,7 @@ attributes:
     code_set: premium_transaction_type
     required: true
     description: Kind of premium movement.
+    classification: internal
   - name: amount
     type: decimal(18,2)
     required: true
@@ -45,10 +46,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
   - name: transaction_date
     type: date
     required: true
     description: Date the movement was booked.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -56,3 +59,4 @@ attributes:
     classification: internal
 keys:
   primary: [premium_transaction_id]
+owner: Chief Underwriting Officer

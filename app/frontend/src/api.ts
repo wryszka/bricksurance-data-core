@@ -83,6 +83,264 @@ export interface NetworkResponse {
   nodes: NetworkNode[];
 }
 
+// ---------------------------------------------------------------------------
+// Atlas types (frozen contract — app/API_CONTRACT.md)
+// ---------------------------------------------------------------------------
+
+export type AtlasKind = 'metric' | 'entity' | 'code_set' | 'function' | 'view';
+export type Certification = 'certified' | 'draft' | string;
+
+export interface MetaResponse {
+  name: string;
+  title: string;
+  version: string;
+  standards_basis: string;
+  counts: {
+    domains: number;
+    entities: number;
+    code_sets: number;
+    metric_views: number;
+    functions: number;
+    relationships: number;
+  };
+  domains: { name: string; description: string }[];
+  provenance: { version: string; source: string };
+}
+
+export interface SearchResult {
+  kind: AtlasKind;
+  name: string;
+  title: string;
+  domain: string;
+  score: number;
+  summary: string;
+  owner?: string;
+  certification?: Certification;
+  measure_names?: string[];
+}
+export interface SearchResponse {
+  query: string;
+  roadmap: null | { term: string; note: string };
+  results: SearchResult[];
+}
+
+export interface MetricJoin {
+  name: string;
+  source: string;
+  condition: string;
+}
+export interface MetricMember {
+  name: string;
+  expr: string;
+  description: string;
+}
+export interface FeedsFrom {
+  ref: string;
+  role: string;
+  entity: string;
+  exists: boolean;
+  join_name?: string;
+}
+export interface MetricResponse {
+  name: string;
+  title: string;
+  domain: string;
+  description: string;
+  owner: string;
+  certification: Certification;
+  source: string;
+  joins: MetricJoin[];
+  dimensions: MetricMember[];
+  measures: MetricMember[];
+  feeds_from: FeedsFrom[];
+  genie_question: string;
+  genie_space_url: string;
+}
+
+export interface EntityAttribute {
+  name: string;
+  type: string;
+  required: boolean;
+  description: string;
+  classification: string | null;
+  standards?: Record<string, string> | null;
+}
+export interface EntityReference {
+  attribute: string;
+  to: string;
+  to_kind: string;
+}
+export interface EntityQuality {
+  name: string;
+  rule: string;
+  description: string;
+}
+export interface EntityResponse {
+  name: string;
+  title: string;
+  domain: string;
+  description: string;
+  grain: string;
+  owner: string;
+  standards?: Record<string, string> | null;
+  tags: { maturity?: string } | null;
+  attributes: EntityAttribute[];
+  keys: { primary: string[]; natural?: string[] };
+  quality: EntityQuality[];
+  references: EntityReference[];
+  referenced_by: { from: string; attribute: string }[];
+}
+
+export interface CodeSetResponse {
+  name: string;
+  title: string;
+  description: string;
+  codes: { code: string; label: string; description: string }[];
+}
+
+export interface FunctionResponse {
+  name: string;
+  title: string;
+  domain: string;
+  description: string;
+  inputs: { name: string; type: string }[] | string[] | string;
+  returns: string;
+  sql: string;
+}
+
+export interface LineageNode {
+  id: string;
+  kind: string;
+  name: string;
+  label: string;
+  domain: string;
+  certification?: Certification;
+  owner?: string;
+}
+export interface LineageEdge {
+  source: string;
+  target: string;
+  label: string;
+}
+export interface LineageResponse {
+  center: string;
+  nodes: LineageNode[];
+  edges: LineageEdge[];
+  narrative?: string;
+}
+
+export interface GovernanceResponse {
+  entities: {
+    total: number;
+    certified: number;
+    draft: number;
+    with_owner: number;
+    with_standards: number;
+    with_quality: number;
+  };
+  metrics: { total: number; certified: number; draft: number; with_owner: number };
+  attributes: {
+    total: number;
+    classification: {
+      internal?: number;
+      confidential?: number;
+      pii?: number;
+      unassessed?: number;
+    };
+    unassessed: number;
+  };
+  ownership_board: {
+    owner: string;
+    count: number;
+    elements: { name: string; domain: string; certification: Certification }[];
+  }[];
+  attestations: {
+    element: string;
+    element_kind: string;
+    certification: Certification;
+    owner: string;
+    attested_by: string;
+    attested_on: string;
+    evidence: string;
+  }[];
+}
+
+export interface RegulatoryResponse {
+  regime: string;
+  title: string;
+  blurb: string;
+  consumed_by: string;
+  resolved: {
+    kind: AtlasKind;
+    name: string;
+    title: string;
+    domain: string;
+    owner?: string;
+    certification?: Certification;
+  }[];
+}
+
+export interface ProveResponse {
+  metric: string;
+  ok: boolean;
+  error: string | null;
+  sql: string;
+  measures: { name: string; value: number | null; formula: string }[];
+  genie_question: string;
+  genie_space_url: string;
+}
+
+export interface GenieHealthResponse {
+  warehouse: 'warm' | 'cold';
+  genie_space_url: string;
+  ready: boolean;
+  detail?: string;
+}
+
+export interface GovernanceAction {
+  action_id: string;
+  action_type: 'proposal' | 'issue';
+  element: string;
+  element_kind: string;
+  field?: string;
+  current_value?: string;
+  proposed_value?: string;
+  rationale: string;
+  raised_by: string;
+  raised_on: string;
+  status: string;
+  spec_diff?: string;
+}
+export interface GovernanceActionsResponse {
+  actions: GovernanceAction[];
+  error?: string;
+}
+export interface ProposeBody {
+  element: string;
+  element_kind: 'entity' | 'metric' | 'attribute';
+  field: string;
+  proposed_value: string;
+  rationale: string;
+  raised_by: string;
+  current_value: string;
+}
+export interface ProposeResponse {
+  action_id: string;
+  status: string;
+  spec_diff: string;
+  note: string;
+}
+export interface IssueBody {
+  element: string;
+  element_kind: string;
+  rationale: string;
+  raised_by: string;
+}
+export interface IssueResponse {
+  action_id: string;
+  status: string;
+}
+
 async function getJSON<T>(url: string): Promise<T> {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
@@ -122,7 +380,67 @@ export const api = {
     if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
     return r.json();
   },
+
+  // ---- Atlas -----------------------------------------------------------
+  meta: () => getJSON<MetaResponse>('/api/atlas/meta'),
+  search: (q: string, limit = 30) =>
+    getJSON<SearchResponse>(
+      `/api/atlas/search?q=${encodeURIComponent(q)}&limit=${limit}`,
+    ),
+  metric: (name: string) =>
+    getJSON<MetricResponse>(`/api/atlas/metric/${encodeURIComponent(name)}`),
+  entity: (name: string) =>
+    getJSON<EntityResponse>(`/api/atlas/entity/${encodeURIComponent(name)}`),
+  codeSet: (name: string) =>
+    getJSON<CodeSetResponse>(`/api/atlas/code_set/${encodeURIComponent(name)}`),
+  atlasFunction: (name: string) =>
+    getJSON<FunctionResponse>(`/api/atlas/function/${encodeURIComponent(name)}`),
+  lineage: (kind: string, name: string, depth = 1) =>
+    getJSON<LineageResponse>(
+      `/api/atlas/lineage/${encodeURIComponent(kind)}/${encodeURIComponent(
+        name,
+      )}?depth=${depth}`,
+    ),
+  goldenThread: () => getJSON<LineageResponse>('/api/atlas/golden-thread'),
+  governance: () => getJSON<GovernanceResponse>('/api/atlas/governance'),
+  regulatory: (regime: string) =>
+    getJSON<RegulatoryResponse>(
+      `/api/atlas/regulatory/${encodeURIComponent(regime)}`,
+    ),
+  prove: (name: string) =>
+    getJSON<ProveResponse>(`/api/atlas/prove/${encodeURIComponent(name)}`),
+  genieHealth: () => getJSON<GenieHealthResponse>('/api/atlas/genie-health'),
+  governanceActions: () =>
+    getJSON<GovernanceActionsResponse>('/api/atlas/governance/actions'),
+  propose: async (body: ProposeBody): Promise<ProposeResponse> => {
+    const r = await fetch('/api/atlas/governance/propose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+    return r.json();
+  },
+  raiseIssue: async (body: IssueBody): Promise<IssueResponse> => {
+    const r = await fetch('/api/atlas/governance/issue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+    return r.json();
+  },
 };
+
+export function num(n: number | null | undefined): string {
+  if (n === null || n === undefined || Number.isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  const opts: Intl.NumberFormatOptions =
+    abs > 0 && abs < 10 && !Number.isInteger(n)
+      ? { maximumFractionDigits: 4 }
+      : { maximumFractionDigits: 0 };
+  return new Intl.NumberFormat('en-GB', opts).format(n);
+}
 
 export function money(n: number, currency: string): string {
   try {

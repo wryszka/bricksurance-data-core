@@ -24,6 +24,7 @@ attributes:
     code_set: fraud_signal_type
     required: true
     description: Kind of indicator.
+    classification: internal
   - name: score
     type: integer
     required: true
@@ -33,6 +34,7 @@ attributes:
     type: timestamp
     required: true
     description: When the signal was raised.
+    classification: internal
   - name: detail
     type: string
     required: false
@@ -45,3 +47,4 @@ attributes:
     classification: internal
 keys:
   primary: [fraud_signal_id]
+owner: Chief Claims Officer

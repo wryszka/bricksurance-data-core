@@ -27,10 +27,12 @@ attributes:
     code_set: endorsement_type
     required: true
     description: Kind of contractual change.
+    classification: internal
   - name: effective_date
     type: date
     required: true
     description: Date the change takes effect (inclusive).
+    classification: internal
   - name: description
     type: string
     required: false
@@ -43,3 +45,4 @@ attributes:
     classification: internal
 keys:
   primary: [endorsement_id]
+owner: Chief Underwriting Officer

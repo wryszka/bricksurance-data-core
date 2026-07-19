@@ -20,22 +20,27 @@ attributes:
     code_set: assumption_type
     required: true
     description: Kind of assumption governed by this set.
+    classification: internal
   - name: assumption_status_code
     code_set: assumption_status
     required: true
     description: Maker/checker lifecycle status.
+    classification: internal
   - name: version
     type: integer
     required: true
     description: Monotonic version number within the assumption type.
+    classification: internal
   - name: description
     type: string
     required: false
     description: What changed in this version and why.
+    classification: confidential
   - name: effective_from
     type: date
     required: false
     description: First valuation date this set applies to, once approved.
+    classification: internal
   - name: approved_by
     type: string
     required: false
@@ -45,6 +50,7 @@ attributes:
     type: timestamp
     required: false
     description: When the approval decision was made.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -52,3 +58,4 @@ attributes:
     classification: internal
 keys:
   primary: [assumption_set_id]
+owner: Chief Actuary

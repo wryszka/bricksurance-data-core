@@ -38,6 +38,7 @@ attributes:
     code_set: loss_basis
     required: true
     description: Whether the figure is modelled or reported.
+    classification: internal
   - name: gross_loss_amount
     type: decimal(18,2)
     required: true
@@ -52,13 +53,16 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amounts.
+    classification: internal
   - name: as_of_date
     type: date
     required: true
     description: Snapshot date of the figure.
+    classification: internal
 keys:
   primary: [event_loss_id]
 quality:
   - name: exactly_one_book
     rule: exactly one of treaty_id, policy_id is not null
     description: A loss row belongs to either the assumed or the direct book, never both.
+owner: Head of Reinsurance

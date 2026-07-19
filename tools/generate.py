@@ -144,12 +144,78 @@ DICTIONARY_ENTITY = {
          "description": "ACORD vocabulary crosswalk reference."},
         {"name": "lloyds_cdr_ref", "type": "string", "required": False,
          "description": "Lloyd's Core Data Record crosswalk reference."},
+        {"name": "entity_owner", "type": "string", "required": False,
+         "description": "Accountable business owner of the entity, as an org role."},
+        {"name": "entity_maturity", "type": "string", "required": False,
+         "description": "Certification maturity of the entity: draft or certified."},
         {"name": "model_version", "type": "string", "required": True,
          "description": "Version of bricksurance-data-core this row was generated from."},
     ],
     "keys": {"primary": ["entity_name", "attribute_name", "model_version"]},
     "_is_dictionary": True,
 }
+
+
+# Certification attestations — the dated human act behind every 'certified'
+# badge. Generated from model/governance/attestations.json so the app can back
+# certification with evidence, not just a tag value.
+ATTESTATION_ENTITY = {
+    "kind": "entity",
+    "name": "certification_attestation",
+    "domain": "reference",
+    "title": "Certification Attestation",
+    "description": (
+        "The dated attestation behind each certified model element. An element "
+        "is certified only if it has a row here; the badge is evidence, not a "
+        "tag. Roles, not people."
+    ),
+    "grain": "One row per certified element per model version.",
+    "owner": "Chief Data Officer",
+    "tags": {"maturity": "certified"},
+    "standards": {},
+    "attributes": [
+        {"name": "element", "type": "string", "required": True,
+         "description": "Model element (entity or metric) that is certified."},
+        {"name": "element_kind", "type": "string", "required": True,
+         "description": "Kind of element: entity or metric_view."},
+        {"name": "certification", "type": "string", "required": True,
+         "description": "Certification level attested."},
+        {"name": "owner", "type": "string", "required": True,
+         "description": "Accountable business owner (org role)."},
+        {"name": "attested_by", "type": "string", "required": True,
+         "description": "Role that made the attestation."},
+        {"name": "attested_on", "type": "string", "required": True,
+         "description": "Date of the attestation."},
+        {"name": "evidence", "type": "string", "required": False,
+         "description": "Evidence backing the certification."},
+        {"name": "model_version", "type": "string", "required": True,
+         "description": "Model version this attestation was recorded against."},
+    ],
+    "keys": {"primary": ["element", "element_kind", "model_version"]},
+    "_is_attestation": True,
+}
+
+
+def load_attestations():
+    """Load the dated attestation record (empty if the model has none yet)."""
+    import json
+    path = ROOT / "model" / "governance" / "attestations.json"
+    if not path.exists():
+        return []
+    return json.loads(path.read_text()).get("attestations", [])
+
+
+def attestation_seed(binding, manifest):
+    table = fqn(binding, "reference", "certification_attestation")
+    cols = ["element", "element_kind", "certification", "owner",
+            "attested_by", "attested_on", "evidence"]
+    rows = []
+    for a in load_attestations():
+        vals = [esc(str(a.get(c, ""))) for c in cols] + [manifest["version"]]
+        rows.append("  (" + ", ".join(f"'{v}'" for v in vals) + ")")
+    if not rows:
+        return None
+    return f"{insert_overwrite(binding['platform'], table)}\n" + ",\n".join(rows) + ";"
 
 
 def schema_name(binding, domain):
@@ -317,12 +383,14 @@ def semantic_dictionary_rows(manifest, views, metric_views):
     """Dictionary rows for semantic assets, so their definitions travel too."""
     rows = []
     for mv in metric_views:
+        owner = mv.get("owner", "")
+        maturity = mv.get("certification", "")
         for d in mv["dimensions"]:
             rows.append((mv["name"], d["name"], "dimension", False,
-                         d["description"], "", "", "", manifest["version"]))
+                         d["description"], "", "", "", owner, maturity, manifest["version"]))
         for m in mv["measures"]:
             rows.append((mv["name"], m["name"], "measure", False,
-                         m["description"], "", "", "", manifest["version"]))
+                         m["description"], "", "", "", owner, maturity, manifest["version"]))
     return rows
 
 
@@ -343,6 +411,8 @@ def code_set_seed(binding, cs):
 def dictionary_rows(manifest, all_entities):
     rows = []
     for e in all_entities:
+        owner = e.get("owner", "")
+        maturity = (e.get("tags", {}) or {}).get("maturity", "")
         for a in e["attributes"]:
             std = a.get("standards", {}) or {}
             rows.append(
@@ -355,6 +425,8 @@ def dictionary_rows(manifest, all_entities):
                     a.get("classification", ""),
                     std.get("acord", ""),
                     std.get("lloyds_cdr", ""),
+                    owner,
+                    maturity,
                     manifest["version"],
                 )
             )
@@ -392,13 +464,17 @@ def generate_platform(binding, manifest, entities, code_sets, views, metric_view
         )
     (out / "00_schemas.sql").write_text(header + "\n\n".join(stmts) + "\n")
 
-    # 10 - reference: code sets + data dictionary, with seeds
-    ref_entities = [code_set_as_entity(cs) for cs in code_sets] + [DICTIONARY_ENTITY]
+    # 10 - reference: code sets + data dictionary + attestations, with seeds
+    ref_entities = ([code_set_as_entity(cs) for cs in code_sets]
+                    + [DICTIONARY_ENTITY, ATTESTATION_ENTITY])
     all_entities = ref_entities + entities
     parts = [entity_ddl(binding, manifest, e) for e in ref_entities]
     parts += [code_set_seed(binding, cs) for cs in code_sets]
     parts.append(dictionary_seed(binding, manifest, all_entities,
                                  semantic_dictionary_rows(manifest, views, metric_views)))
+    att_seed = attestation_seed(binding, manifest)
+    if att_seed:
+        parts.append(att_seed)
     (out / "10_reference.sql").write_text(header + "\n\n".join(parts) + "\n")
 
     # 20+ - one file per business entity
@@ -610,6 +686,7 @@ def generate_ontology(manifest, entities, code_sets, views, metric_views, functi
         "metric_views": metric_views,
         "functions": functions,
         "relationships": relationships,
+        "attestations": load_attestations(),
     }
     out = BUILD / "ontology"
     out.mkdir(parents=True, exist_ok=True)

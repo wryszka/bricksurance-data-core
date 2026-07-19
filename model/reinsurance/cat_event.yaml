@@ -22,26 +22,32 @@ attributes:
     type: string
     required: true
     description: Market name of the event (e.g. a named windstorm).
+    classification: internal
   - name: cause_of_loss_code
     code_set: cause_of_loss
     required: true
     description: Primary peril of the event.
+    classification: internal
   - name: event_date
     type: date
     required: true
     description: Date of the event (first landfall or onset).
+    classification: internal
   - name: country_code
     code_set: country
     required: false
     description: Primary country affected, where a single country applies.
+    classification: internal
   - name: industry_loss_estimate
     type: decimal(18,2)
     required: false
     description: Market-wide insured loss estimate, in the stated currency.
+    classification: internal
   - name: currency_code
     code_set: currency
     required: false
     description: Currency of the industry loss estimate.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -49,3 +55,4 @@ attributes:
     classification: internal
 keys:
   primary: [cat_event_id]
+owner: Head of Reinsurance

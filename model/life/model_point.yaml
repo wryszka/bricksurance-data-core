@@ -20,22 +20,27 @@ attributes:
     type: date
     required: true
     description: Valuation date the model point file was cut at.
+    classification: internal
   - name: line_of_business_code
     code_set: line_of_business
     required: true
     description: Life line of business the cohort belongs to.
+    classification: internal
   - name: age_attained
     type: integer
     required: true
     description: Attained age of the cohort at the valuation date.
+    classification: internal
   - name: outstanding_term_years
     type: integer
     required: true
     description: Remaining policy term of the cohort in whole years.
+    classification: internal
   - name: policy_count
     type: integer
     required: true
     description: Number of in-force policies grouped into this model point.
+    classification: internal
   - name: sum_assured
     type: decimal(18,2)
     required: true
@@ -50,6 +55,7 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the monetary amounts.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -61,3 +67,4 @@ quality:
   - name: grouping_proven
     rule: sum(policy_count) per valuation_date equals the in-force policy count it was cut from
     description: Model point grouping must reconcile exactly to the underlying book.
+owner: Chief Actuary

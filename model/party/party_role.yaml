@@ -14,7 +14,7 @@ grain: >
 standards:
   acord: PartyRole patterns of the ACORD Information Model
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: party_role_id
     type: string
@@ -31,6 +31,7 @@ attributes:
     code_set: party_role_type
     required: true
     description: Which role the party plays in the context.
+    classification: internal
   - name: policy_id
     references: policy
     type: string
@@ -65,13 +66,16 @@ attributes:
     type: date
     required: true
     description: Date from which the role applies (inclusive).
+    classification: internal
   - name: end_date
     type: date
     required: false
     description: Date on which the role ceased (inclusive); empty while the role is current.
+    classification: internal
 keys:
   primary: [party_role_id]
 quality:
   - name: exactly_one_context
     rule: exactly one of policy_id, claim_id, treaty_id, quote_id, submission_id is not null
     description: A role is always played in exactly one business context.
+owner: Chief Data Officer

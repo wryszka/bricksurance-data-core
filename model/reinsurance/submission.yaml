@@ -11,7 +11,7 @@ grain: One row per submission per source system.
 standards:
   acord: Placement / submission patterns (ACORD GRLC)
 tags:
-  maturity: draft
+  maturity: certified
 attributes:
   - name: submission_id
     type: string
@@ -33,18 +33,22 @@ attributes:
     code_set: submission_status
     required: true
     description: Lifecycle status from receipt to bind or decline.
+    classification: internal
   - name: treaty_type_code
     code_set: treaty_type
     required: true
     description: Form of treaty requested.
+    classification: internal
   - name: line_of_business_code
     code_set: line_of_business
     required: true
     description: Class of business the cover is requested for.
+    classification: internal
   - name: underwriting_year
     type: integer
     required: true
     description: Underwriting year the cover would attach to.
+    classification: internal
   - name: requested_limit
     type: decimal(18,2)
     required: false
@@ -59,10 +63,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the requested terms.
+    classification: internal
   - name: received_date
     type: date
     required: true
     description: Date the submission was received.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -71,3 +77,4 @@ attributes:
 keys:
   primary: [submission_id]
   natural: [source_system_code, submission_reference]
+owner: Head of Reinsurance

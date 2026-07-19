@@ -22,18 +22,22 @@ attributes:
     type: string
     required: true
     description: Marketing/product code, unique within the source system.
+    classification: internal
   - name: name
     type: string
     required: true
     description: Product name as marketed.
+    classification: internal
   - name: line_of_business_code
     code_set: line_of_business
     required: true
     description: Line of business the product is written under.
+    classification: internal
   - name: product_status_code
     code_set: product_status
     required: true
     description: Lifecycle status.
+    classification: internal
   - name: base_rate
     type: decimal(10,6)
     required: false
@@ -43,6 +47,7 @@ attributes:
     code_set: currency
     required: true
     description: Default currency of the product.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -51,3 +56,4 @@ attributes:
 keys:
   primary: [product_id]
   natural: [source_system_code, product_code]
+owner: Chief Underwriting Officer

@@ -26,33 +26,42 @@ attributes:
     code_set: line_of_business
     required: true
     description: Line of business the rule applies to.
+    classification: internal
   - name: rule_order
     type: integer
     required: true
     description: Evaluation order; first matching terminal effect wins.
+    classification: internal
   - name: description
     type: string
     required: true
     description: The rule in business language - what it checks and why it exists.
+    classification: confidential
   - name: max_sum_insured
     type: decimal(18,2)
     required: false
     description: Upper sum-insured bound for the effect to apply, in the product currency.
+    classification: confidential
   - name: country_code
     code_set: country
     required: false
     description: Country the rule scopes to, where geographic.
+    classification: internal
   - name: appetite_effect_code
     code_set: appetite_effect
     required: true
     description: What happens when the rule matches.
+    classification: internal
   - name: effective_from
     type: date
     required: true
     description: First date the rule applies.
+    classification: internal
   - name: effective_to
     type: date
     required: false
     description: Last date the rule applies; empty while current.
+    classification: internal
 keys:
   primary: [appetite_rule_id]
+owner: Chief Underwriting Officer

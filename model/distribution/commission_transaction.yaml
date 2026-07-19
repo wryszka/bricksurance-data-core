@@ -30,6 +30,7 @@ attributes:
     code_set: commission_type
     required: true
     description: Kind of remuneration.
+    classification: internal
   - name: rate
     type: decimal(5,4)
     required: false
@@ -44,10 +45,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
   - name: transaction_date
     type: date
     required: true
     description: Date the movement was booked.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
@@ -55,3 +58,4 @@ attributes:
     classification: internal
 keys:
   primary: [commission_transaction_id]
+owner: Chief Distribution Officer

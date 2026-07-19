@@ -19,18 +19,23 @@ attributes:
     code_set: currency
     required: true
     description: Currency being translated.
+    classification: internal
   - name: to_currency_code
     code_set: currency
     required: true
     description: Presentation currency translated to.
+    classification: internal
   - name: rate_date
     type: date
     required: true
     description: Date the rate applies.
+    classification: confidential
   - name: rate
     type: decimal(18,8)
     required: true
     description: Units of to-currency per one unit of from-currency.
+    classification: confidential
 keys:
   primary: [fx_rate_id]
   natural: [from_currency_code, to_currency_code, rate_date]
+owner: Financial Controller

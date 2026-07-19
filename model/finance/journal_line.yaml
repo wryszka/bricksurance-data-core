@@ -40,10 +40,12 @@ attributes:
     code_set: currency
     required: true
     description: Currency of the amount.
+    classification: internal
   - name: source_entity
     type: string
     required: false
     description: Entity name of the originating operational row (e.g. premium_transaction).
+    classification: internal
   - name: source_id
     type: string
     required: false
@@ -51,3 +53,4 @@ attributes:
     classification: internal
 keys:
   primary: [journal_line_id]
+owner: Financial Controller
