@@ -1,4 +1,4 @@
-"""Bricksurance Data Core Console — FastAPI backend.
+"""Bricksurance Data Core Atlas — FastAPI backend.
 
 Serves a governance-and-exchange console over the deployed semantic model.
 Everything shown is read live from the model on Databricks: the data
@@ -27,7 +27,7 @@ MODEL_REPO_URL = os.environ.get(
     "MODEL_REPO_URL", "https://github.com/wryszka/bricksurance-data-core/tree/main/model")
 SHARE_NAME = os.environ.get("EXCHANGE_SHARE_NAME", "bricksurance_re_exchange")
 
-app = FastAPI(title="Bricksurance Data Core Console")
+app = FastAPI(title="Bricksurance Data Core Atlas")
 
 
 def as_bool(v) -> bool:

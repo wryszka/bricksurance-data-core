@@ -1,4 +1,4 @@
-"""Databricks access for the Data Core Console.
+"""Databricks access for the Data Core Atlas.
 
 Ambient app auth in the Databricks Apps runtime (WorkspaceClient() reads the
 injected service-principal credentials); locally it falls back to the CLI
