@@ -53,11 +53,15 @@ measures:
   - name: claims_incurred
     expr: SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END)
     description: Paid plus outstanding net of recoveries - total claims incurred.
-  - name: loss_ratio
+  - name: loss_ratio_written
     expr: SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN transaction_kind = 'PREMIUM' THEN amount ELSE 0 END), 0)
     description: >
-      Claims incurred divided by gross written premium. Meaningful within a
-      single currency; not premium-earned-adjusted in this version.
+      Written-basis loss ratio: claims incurred over gross WRITTEN premium -
+      the quick operational view, before premium is earned. The canonical,
+      earned-basis loss ratio is performance_metrics.loss_ratio. Meaningful
+      within a single currency and only over a cohort (underwriting year or
+      the whole book) - never by calendar month, where premium and claims are
+      out of phase.
   - name: policy_count
     expr: COUNT(DISTINCT CASE WHEN transaction_kind = 'PREMIUM' THEN policy_id END)
     description: Number of distinct policies with premium activity.

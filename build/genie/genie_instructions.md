@@ -149,7 +149,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - MEASURE(earned_premium): Premium earned to date, straight-line daily basis.
   - MEASURE(claims_incurred): Paid plus outstanding net of recoveries.
   - MEASURE(expenses): Operating, acquisition and claims-handling expenses allocated to the line.
-  - MEASURE(loss_ratio_earned): Claims incurred over earned premium.
+  - MEASURE(loss_ratio): The loss ratio: claims incurred over EARNED premium. This is the canonical, reporting-basis definition. (underwriting_metrics.loss_ratio_written is the quick written-basis view.) Meaningful within a single currency.
   - MEASURE(expense_ratio): Expenses over earned premium.
   - MEASURE(combined_ratio): Loss ratio plus expense ratio; below 1.0 is an underwriting profit.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.submission_metrics` — Reinsurance submission funnel KPIs: volumes and requested capacity by status, form and year. Amounts are in original submission currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
@@ -185,7 +185,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - MEASURE(recoveries): Subrogation, salvage and contribution recoveries (negative amounts).
   - MEASURE(outstanding_reserve): Current case reserves - the sum of all signed reserve movements.
   - MEASURE(claims_incurred): Paid plus outstanding net of recoveries - total claims incurred.
-  - MEASURE(loss_ratio): Claims incurred divided by gross written premium. Meaningful within a single currency; not premium-earned-adjusted in this version.
+  - MEASURE(loss_ratio_written): Written-basis loss ratio: claims incurred over gross WRITTEN premium - the quick operational view, before premium is earned. The canonical, earned-basis loss ratio is performance_metrics.loss_ratio. Meaningful within a single currency and only over a cohort (underwriting year or the whole book) - never by calendar month, where premium and claims are out of phase.
   - MEASURE(policy_count): Number of distinct policies with premium activity.
   - MEASURE(claim_count): Number of distinct claims with financial activity.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.valuation_metrics` — Published valuation figures (BEL, technical provisions, SCR, CSM...) by run, measure and line of business - one semantic surface across life and non-life, Solvency II and IFRS 17. Amounts are in original currency; group by or filter on currency_code and valuation_measure_code before summing. Query measures with MEASURE(name).

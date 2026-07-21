@@ -57,7 +57,7 @@ The underwriting result: earned premium, incurred claims, expenses and the loss 
 | `earned_premium` | Premium earned to date, straight-line daily basis. | `SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END)` |
 | `claims_incurred` | Paid plus outstanding net of recoveries. | `SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END)` |
 | `expenses` | Operating, acquisition and claims-handling expenses allocated to the line. | `SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)` |
-| `loss_ratio_earned` | Claims incurred over earned premium. | `SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
+| `loss_ratio` | The loss ratio: claims incurred over EARNED premium. This is the canonical, reporting-basis definition. (underwriting_metrics.loss_ratio_written is the quick written-basis view.) Meaningful within a single currency. | `SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
 | `expense_ratio` | Expenses over earned premium. | `SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
 | `combined_ratio` | Loss ratio plus expense ratio; below 1.0 is an underwriting profit. | `(SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) + SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
 
@@ -105,7 +105,7 @@ Certified underwriting KPIs - premium, claims development and loss ratio - defin
 | `recoveries` | Subrogation, salvage and contribution recoveries (negative amounts). | `SUM(CASE WHEN transaction_type_code = 'RECOVERY' THEN amount ELSE 0 END)` |
 | `outstanding_reserve` | Current case reserves - the sum of all signed reserve movements. | `SUM(CASE WHEN transaction_type_code = 'CASE_RESERVE_MOVEMENT' THEN amount ELSE 0 END)` |
 | `claims_incurred` | Paid plus outstanding net of recoveries - total claims incurred. | `SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END)` |
-| `loss_ratio` | Claims incurred divided by gross written premium. Meaningful within a single currency; not premium-earned-adjusted in this version. | `SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN transaction_kind = 'PREMIUM' THEN amount ELSE 0 END), 0)` |
+| `loss_ratio_written` | Written-basis loss ratio: claims incurred over gross WRITTEN premium - the quick operational view, before premium is earned. The canonical, earned-basis loss ratio is performance_metrics.loss_ratio. Meaningful within a single currency and only over a cohort (underwriting year or the whole book) - never by calendar month, where premium and claims are out of phase. | `SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN transaction_kind = 'PREMIUM' THEN amount ELSE 0 END), 0)` |
 | `policy_count` | Number of distinct policies with premium activity. | `COUNT(DISTINCT CASE WHEN transaction_kind = 'PREMIUM' THEN policy_id END)` |
 | `claim_count` | Number of distinct claims with financial activity. | `COUNT(DISTINCT claim_id)` |
 

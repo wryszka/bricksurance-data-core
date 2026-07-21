@@ -50,11 +50,11 @@ def spaces_config(t):
                         ("claim", "fraud_signal"),
                         ("reference", "data_dictionary")],
             "examples": [
-                ("Gross written premium and loss ratio by line of business (GBP, UWY 2026)",
+                ("Gross written premium and written-basis loss ratio by line of business (GBP, UWY 2026)",
                  f"SELECT line_of_business, MEASURE(gross_written_premium) AS gwp, "
-                 f"MEASURE(loss_ratio) AS loss_ratio FROM {t('semantics', 'underwriting_metrics')} "
+                 f"MEASURE(loss_ratio_written) AS loss_ratio_written FROM {t('semantics', 'underwriting_metrics')} "
                  f"WHERE currency_code = 'GBP' AND underwriting_year = 2026 GROUP BY line_of_business",
-                 "KPI questions use the metric view with MEASURE(); constrain currency_code before summing money."),
+                 "KPI questions use the metric view with MEASURE(); constrain currency_code before summing money. The canonical (earned-basis) loss ratio is MEASURE(loss_ratio) on performance_metrics."),
                 ("Outstanding reserve per claim (derived from movements)",
                  f"SELECT c.claim_number, SUM(ct.amount) AS outstanding_reserve "
                  f"FROM {t('claim', 'claim_transaction')} ct "

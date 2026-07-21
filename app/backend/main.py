@@ -107,7 +107,7 @@ def get_metrics(currency: str = "GBP", underwriting_year: int | None = None):
         f"SELECT CAST(MEASURE(gross_written_premium) AS DECIMAL(18,2)), "
         f"CAST(MEASURE(claims_incurred) AS DECIMAL(18,2)), "
         f"CAST(MEASURE(outstanding_reserve) AS DECIMAL(18,2)), "
-        f"CAST(MEASURE(loss_ratio) AS DECIMAL(10,4)), "
+        f"CAST(MEASURE(loss_ratio_written) AS DECIMAL(10,4)), "
         f"MEASURE(policy_count), MEASURE(claim_count) FROM {mv} {where}")
     row = kpis[0] if kpis else [None] * 6
 
@@ -279,8 +279,8 @@ from . import atlas  # noqa: E402
 # A pre-filled Genie question per metric, so "Ask in Genie" lands on a real,
 # reconciling question rather than an empty box.
 GENIE_QUESTIONS = {
-    "underwriting_metrics": "What is our loss ratio by line of business for underwriting year 2026 in GBP?",
-    "performance_metrics": "What is our net earned premium and expense ratio by line of business in GBP?",
+    "underwriting_metrics": "What is our gross written premium and written-basis loss ratio by line of business for underwriting year 2026 in GBP?",
+    "performance_metrics": "What is our loss ratio, expense ratio and combined ratio by line of business in GBP?",
     "cession_metrics": "What gross and ceded premium did we cede by treaty this year?",
     "valuation_metrics": "What is our SCR and best-estimate liability by line of business at the latest valuation?",
     "trial_balance": "Does the trial balance net to zero by legal entity for the current period?",

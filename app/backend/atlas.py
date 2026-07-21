@@ -32,8 +32,10 @@ SYNONYMS = {
     "gwp": ["gross_written_premium", "gross written premium", "premium"],
     "gross written premium": ["gross_written_premium"],
     "nep": ["net_earned_premium", "earned premium"],
-    "loss ratio": ["loss_ratio", "underwriting_metrics"],
-    "combined ratio": ["combined_ratio", "underwriting_metrics"],
+    "loss ratio": ["loss_ratio", "performance_metrics", "loss_ratio_written", "underwriting_metrics"],
+    "combined ratio": ["combined_ratio", "performance_metrics"],
+    "expense ratio": ["expense_ratio", "performance_metrics"],
+    "earned premium": ["earned_premium", "performance_metrics"],
     "incurred": ["claims_incurred", "incurred", "claim_transaction"],
     "outstanding": ["outstanding_reserve", "reserve"],
     "reserve": ["outstanding_reserve", "claim_transaction"],
@@ -72,8 +74,6 @@ SYNONYMS = {
 # Known-but-absent terms — answered honestly rather than with a blank. Keeps
 # the actuary's trust: "we don't have that yet, here's why / what's near it".
 ROADMAP = {
-    "combined ratio": "Defined via loss_ratio + expense_ratio; expense allocation is on the roadmap. See underwriting_metrics and performance_metrics.",
-    "expense ratio": "Partial — expense_transaction exists; a certified expense_ratio measure is on the roadmap.",
     "reserving triangle": "On the roadmap — a development-triangle view over claim_transaction.",
     "ecl": "Not modelled — expected credit loss is out of current scope.",
 }

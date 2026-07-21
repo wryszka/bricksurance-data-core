@@ -30,7 +30,7 @@ measures:
     expr: SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END)
   - name: expenses
     expr: SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)
-  - name: loss_ratio_earned
+  - name: loss_ratio
     expr: SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)
   - name: expense_ratio
     expr: SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)

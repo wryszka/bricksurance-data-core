@@ -40,7 +40,7 @@ measures:
     expr: SUM(CASE WHEN transaction_type_code = 'CASE_RESERVE_MOVEMENT' THEN amount ELSE 0 END)
   - name: claims_incurred
     expr: SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END)
-  - name: loss_ratio
+  - name: loss_ratio_written
     expr: SUM(CASE WHEN transaction_kind = 'CLAIM' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN transaction_kind = 'PREMIUM' THEN amount ELSE 0 END), 0)
   - name: policy_count
     expr: COUNT(DISTINCT CASE WHEN transaction_kind = 'PREMIUM' THEN policy_id END)

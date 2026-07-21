@@ -63,7 +63,7 @@ def main():
         (f"{n_tables} model tables deployed (migration log excluded)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
          f"WHERE table_schema LIKE '{prefix}%' AND table_schema NOT LIKE '%partner\\_re' "
-         f"AND table_type = 'MANAGED' AND table_name <> 'schema_migration'", str(n_tables)),
+         f"AND table_type = 'MANAGED' AND table_name NOT IN ('schema_migration', 'governance_action')", str(n_tables)),
         (f"{n_views} semantic views deployed (vector indexes excluded)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.tables "
          f"WHERE table_schema LIKE '{prefix}%' AND table_schema NOT LIKE '%partner\\_re' "
