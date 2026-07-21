@@ -185,8 +185,8 @@ export interface EntityResponse {
   standards?: Record<string, string> | null;
   tags: { maturity?: string } | null;
   attributes: EntityAttribute[];
-  keys: { primary: string[]; natural?: string[] };
-  quality: EntityQuality[];
+  keys: { primary: string[]; natural?: string[] | null };
+  quality?: EntityQuality[] | null;
   references: EntityReference[];
   referenced_by: { from: string; attribute: string }[];
 }

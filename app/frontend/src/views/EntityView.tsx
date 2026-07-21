@@ -119,7 +119,7 @@ export default function EntityView({ name }: { name: string }) {
       </section>
 
       {/* Quality */}
-      {data.quality.length > 0 && (
+      {(data.quality?.length ?? 0) > 0 && (
         <section className="detail-section">
           <h3 className="detail-h3">Quality rules</h3>
           <div className="card scroll-x">
@@ -132,7 +132,7 @@ export default function EntityView({ name }: { name: string }) {
                 </tr>
               </thead>
               <tbody>
-                {data.quality.map((q) => (
+                {data.quality!.map((q) => (
                   <tr key={q.name}>
                     <td className="mono">{q.name}</td>
                     <td className="mono">{q.rule}</td>
