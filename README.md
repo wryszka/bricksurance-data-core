@@ -108,10 +108,12 @@ repository deploys.
 ## Standards note
 
 ACORD standards are licensed to ACORD members. This project **aligns to ACORD
-terminology and cites ACORD element names** as a crosswalk; it does not reproduce or
-redistribute the ACORD Information Model itself. The same applies to Lloyd's Core
-Data Record references. If you are an ACORD member, the crosswalk columns in the
-specs tell you exactly where to attach your licensed artifacts.
+terminology and cites ACORD element names** as an **indicative crosswalk** — a
+hand-authored, best-knowledge mapping, not a verified extract from the licensed
+models. It does not reproduce or redistribute the ACORD Information Model itself.
+The same applies to Lloyd's Core Data Record references. If you are an ACORD
+member, treat the crosswalk columns as a starting point to reconcile against your
+licensed artifacts, and correct any element name that has moved on.
 
 ## About this demo
 

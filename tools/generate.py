@@ -675,9 +675,11 @@ def generate_ontology(manifest, entities, code_sets, views, metric_views, functi
         "version": manifest["version"],
         "description": " ".join(str(manifest["description"]).split()),
         "standards_basis": (
-            "Aligned to ACORD terminology with a Lloyd's Core Data Record "
-            "crosswalk. Element names are cited as a crosswalk only; licensed "
-            "standards are not reproduced."
+            "Aligned to ACORD terminology with an indicative Lloyd's Core Data "
+            "Record crosswalk. The crosswalk is a hand-authored, best-knowledge "
+            "mapping to ACORD / Lloyd's CDR element names, not a verified extract "
+            "from the licensed models; element names are cited only, and the "
+            "licensed standards are not reproduced."
         ),
         "domains": manifest["domains"],
         "code_sets": code_sets,

@@ -46,7 +46,7 @@ export default function EntityView({ name }: { name: string }) {
         <p className="detail-desc">{data.description}</p>
         {crosswalk.length > 0 && (
           <div className="crosswalk">
-            <span className="crosswalk-label">Standards crosswalk:</span>
+            <span className="crosswalk-label" title="Hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names — not a verified extract from the licensed models.">Indicative standards crosswalk:</span>
             {crosswalk.map(([k, v]) => (
               <span key={k} className="chip trust">
                 {k}: {v}
