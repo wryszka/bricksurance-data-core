@@ -695,3 +695,8 @@ table.triangle .tri-ult.ibnr { color: var(--accent); background: #fff; }
 @media (max-width: 760px) { .ms-contract-points { grid-template-columns: 1fr; } }
 .ms-contract-points > div { font-size: 12.5px; color: var(--ink); line-height: 1.5; }
 .ms-cp-h { display: block; font-weight: 700; color: var(--teal); margin-bottom: 3px; }
+
+/* Documents panel — grouped sections */
+.docs-group-head { font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
+.docs-group-head:first-child { margin-top: 0; }

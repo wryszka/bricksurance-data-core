@@ -81,6 +81,31 @@ export const DOCS: Record<string, DocLink> = {
     url: 'https://docs.google.com/document/d/1yEqIIpeByhbHhLpWdBBb-hZlnw7oG9_3gKpZuL5w8Gw/edit',
     description: '100 client topics stress-tested: 52 covered, 22 partial, 26 missing.',
   },
+  // ---- Demo run-throughs (presenter-facing, per workbench / audience) ----
+  leadersDemo: {
+    key: 'leadersDemo',
+    title: 'Demo — The Context Is the Moat (Databricks leaders)',
+    url: 'https://docs.google.com/document/d/1iHVKfRhunS2UAjX0qhKQzbkxAn0FC8IB16FiDstYsUo/edit',
+    description: 'The platform pitch: context is the moat, the model is a dial. Regulatory + lock-in + the wide Genie question.',
+  },
+  underwritingDemo: {
+    key: 'underwritingDemo',
+    title: 'Demo — Underwriting on the layer',
+    url: 'https://docs.google.com/document/d/1j5GMQaRnC3Efn-OeKgQkzZutPB2TOI3XosrhSpLdUkc/edit',
+    description: 'One agentic decision that grows up: submission → team → enterprise. With the pitch vs the Excel bolt-on.',
+  },
+  reservingDemo: {
+    key: 'reservingDemo',
+    title: 'Demo — Reserving on the layer',
+    url: 'https://docs.google.com/document/d/1ZdNydA36ABBKbnqiw-76L42vCpObsbOmAi9D6swpm3M/edit',
+    description: 'The living loss-development triangle, governed and reconciling. Plus the vs-Claude-for-Excel framing.',
+  },
+  atlasDemo: {
+    key: 'atlasDemo',
+    title: 'Demo — Insurance Ontology (App + Workspace)',
+    url: 'https://docs.google.com/document/d/1wQoDuRBpgVd3FM1AIV7MwWpm5PNH1WJ2c9LQZ4l23og/edit',
+    description: 'The search-first Atlas run: search a term, prove a number live, ask Genie. The front-door demo.',
+  },
 };
 
 export const REPO = {
@@ -89,7 +114,15 @@ export const REPO = {
   description: 'The full open-source project: model specs, pipelines, tools and this app.',
 };
 
-// Ordered list for the Documents panel.
+// Demo run-throughs — presenter-facing scripts, shown first in the panel.
+export const DEMO_ORDER: DocLink[] = [
+  DOCS.leadersDemo,
+  DOCS.atlasDemo,
+  DOCS.underwritingDemo,
+  DOCS.reservingDemo,
+];
+
+// Reference docs — the full write-up behind Data Core.
 export const DOC_ORDER: DocLink[] = [
   DOCS.overview,
   DOCS.gettingStarted,
