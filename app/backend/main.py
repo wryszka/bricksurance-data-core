@@ -439,6 +439,113 @@ def governance_issue(p: IssueRequest):
         raise HTTPException(500, f"Could not capture issue: {e}")
 
 
+# --------------------------------------------------------------------------- #
+# Reserving workbench — the living loss-development triangle over the layer
+# --------------------------------------------------------------------------- #
+RESERVING_LOBS = ["COMMERCIAL_PROPERTY", "MOTOR", "GENERAL_LIABILITY", "MARINE_CARGO"]
+RESERVING_GENIE = (
+    "https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/"
+    "01f1878ac9df10aaa7ca6e31873f47ea")
+
+
+def _num(v):
+    try:
+        return float(v) if v is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+@app.get("/api/atlas/reserving")
+def atlas_reserving(line_of_business: str = "COMMERCIAL_PROPERTY",
+                    currency: str = "GBP", method: str = "CHAIN_LADDER"):
+    """The reserving workbench: the governed loss-development triangle, the
+    chain-ladder / BF reserve estimates, and the penny-perfect reconciliation
+    to the claims ledger. Everything derived live from the semantic layer."""
+    lob = line_of_business if line_of_business in RESERVING_LOBS else "COMMERCIAL_PROPERTY"
+    cur = currency.replace("'", "")[:3] or "GBP"
+    meth = method if method in ("CHAIN_LADDER", "BORNHUETTER_FERGUSON") else "CHAIN_LADDER"
+    dev = q("reserving", "loss_development")
+    est = q("reserving", "reserve_estimate")
+
+    # the triangle (cumulative paid + incurred by accident year x development lag)
+    tri = run_sql(
+        f"SELECT accident_year, development_lag, "
+        f"CAST(cumulative_paid AS DECIMAL(18,2)), CAST(cumulative_incurred AS DECIMAL(18,2)) "
+        f"FROM {dev} WHERE line_of_business_code = '{lob}' AND currency_code = '{cur}' "
+        f"ORDER BY accident_year, development_lag")
+    cells = [{"accident_year": int(r[0]), "development_lag": int(r[1]),
+              "cumulative_paid": _num(r[2]), "cumulative_incurred": _num(r[3])}
+             for r in tri]
+    years = sorted({c["accident_year"] for c in cells})
+    max_lag = max((c["development_lag"] for c in cells), default=0)
+    # the latest observed diagonal per accident year = the actual/projected frontier
+    latest_lag = {}
+    for c in cells:
+        ay = c["accident_year"]
+        latest_lag[ay] = max(latest_lag.get(ay, -1), c["development_lag"])
+
+    # published reserve estimates for the chosen method
+    est_rows = run_sql(
+        f"SELECT accident_year, CAST(paid_to_date AS DECIMAL(18,2)), "
+        f"CAST(case_reserves AS DECIMAL(18,2)), CAST(ultimate_loss AS DECIMAL(18,2)), "
+        f"CAST(ibnr AS DECIMAL(18,2)), CAST(outstanding AS DECIMAL(18,2)) "
+        f"FROM {est} WHERE line_of_business_code = '{lob}' AND currency_code = '{cur}' "
+        f"AND reserving_method_code = '{meth}' ORDER BY accident_year")
+    estimates = [{"accident_year": int(r[0]), "paid_to_date": _num(r[1]),
+                  "case_reserves": _num(r[2]), "ultimate_loss": _num(r[3]),
+                  "ibnr": _num(r[4]), "outstanding": _num(r[5])} for r in est_rows]
+
+    def total(k):
+        return round(sum(e[k] or 0 for e in estimates), 2)
+
+    # which methods are actually available for this LOB
+    methods = [r[0] for r in run_sql(
+        f"SELECT DISTINCT reserving_method_code FROM {est} "
+        f"WHERE line_of_business_code = '{lob}' AND currency_code = '{cur}'")]
+
+    # the money shot: triangle paid must equal the claims ledger paid
+    recon = run_sql(
+        f"SELECT CAST((SELECT SUM(incremental_paid) FROM {dev} "
+        f"WHERE line_of_business_code = '{lob}' AND currency_code = '{cur}') AS DECIMAL(18,2)), "
+        f"CAST((SELECT SUM(amount) FROM {q('claim','claim_transaction')} ct "
+        f"JOIN {q('claim','claim')} c ON c.claim_id = ct.claim_id "
+        f"JOIN {q('policy','policy')} p ON p.policy_id = c.policy_id "
+        f"WHERE p.line_of_business_code = '{lob}' AND ct.currency_code = '{cur}' "
+        f"AND ct.claim_transaction_type_code IN "
+        f"('INDEMNITY_PAYMENT','EXPENSE_PAYMENT','RECOVERY')) AS DECIMAL(18,2))")
+    tri_paid, ledger_paid = (_num(recon[0][0]), _num(recon[0][1])) if recon else (None, None)
+
+    return {
+        "line_of_business": lob,
+        "currency": cur,
+        "method": meth,
+        "methods_available": methods,
+        "lines_available": RESERVING_LOBS,
+        "accident_years": years,
+        "max_lag": max_lag,
+        "latest_lag": latest_lag,
+        "triangle": cells,
+        "estimates": estimates,
+        "reserve_walk": {
+            "paid_to_date": total("paid_to_date"),
+            "case_reserves": total("case_reserves"),
+            "ibnr": total("ibnr"),
+            "ultimate_loss": total("ultimate_loss"),
+            "outstanding": total("outstanding"),
+        },
+        "reconciliation": {
+            "triangle_paid": tri_paid, "ledger_paid": ledger_paid,
+            "reconciles": (tri_paid is not None and ledger_paid is not None
+                           and abs(tri_paid - ledger_paid) < 0.01),
+        },
+        "genie_url": RESERVING_GENIE,
+        "genie_question": (
+            f"What is the total IBNR across accident years for "
+            f"{lob.replace('_',' ').title()} in {cur}, chain-ladder basis?"),
+        "provenance": "reserving.loss_development · reserving.reserve_estimate (v0.9.0)",
+    }
+
+
 @app.get("/api/atlas/genie-health")
 def atlas_genie_health():
     """Is the Genie loop demonstrable right now? Checks the warehouse is warm.

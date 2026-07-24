@@ -347,6 +347,48 @@ async function getJSON<T>(url: string): Promise<T> {
   return r.json();
 }
 
+export interface TriangleCell {
+  accident_year: number;
+  development_lag: number;
+  cumulative_paid: number | null;
+  cumulative_incurred: number | null;
+}
+export interface ReserveEstimate {
+  accident_year: number;
+  paid_to_date: number | null;
+  case_reserves: number | null;
+  ultimate_loss: number | null;
+  ibnr: number | null;
+  outstanding: number | null;
+}
+export interface ReservingResponse {
+  line_of_business: string;
+  currency: string;
+  method: string;
+  methods_available: string[];
+  lines_available: string[];
+  accident_years: number[];
+  max_lag: number;
+  latest_lag: Record<string, number>;
+  triangle: TriangleCell[];
+  estimates: ReserveEstimate[];
+  reserve_walk: {
+    paid_to_date: number;
+    case_reserves: number;
+    ibnr: number;
+    ultimate_loss: number;
+    outstanding: number;
+  };
+  reconciliation: {
+    triangle_paid: number | null;
+    ledger_paid: number | null;
+    reconciles: boolean;
+  };
+  genie_url: string;
+  genie_question: string;
+  provenance: string;
+}
+
 export const api = {
   model: () => getJSON<ModelResponse>('/api/model'),
   metrics: (currency: string, year?: number | null) =>
@@ -410,6 +452,11 @@ export const api = {
   prove: (name: string) =>
     getJSON<ProveResponse>(`/api/atlas/prove/${encodeURIComponent(name)}`),
   genieHealth: () => getJSON<GenieHealthResponse>('/api/atlas/genie-health'),
+  reserving: (lob: string, currency: string, method: string) =>
+    getJSON<ReservingResponse>(
+      `/api/atlas/reserving?line_of_business=${encodeURIComponent(lob)}` +
+        `&currency=${encodeURIComponent(currency)}&method=${encodeURIComponent(method)}`,
+    ),
   governanceActions: () =>
     getJSON<GovernanceActionsResponse>('/api/atlas/governance/actions'),
   propose: async (body: ProposeBody): Promise<ProposeResponse> => {
