@@ -71,8 +71,10 @@ def main():
         (f"{n_fks} foreign-key relationships (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.table_constraints "
          f"WHERE constraint_schema LIKE '{prefix}%' AND constraint_schema NOT LIKE '%partner\\_re' AND constraint_type = 'FOREIGN KEY'", str(n_fks)),
-        ("60 policies", f"SELECT COUNT(*) FROM {q('policy', 'policy')}", "60"),
-        ("18 claims", f"SELECT COUNT(*) FROM {q('claim', 'claim')}", "18"),
+        ("172 policies (60 core book + 112 reserving-history)",
+         f"SELECT COUNT(*) FROM {q('policy', 'policy')}", "172"),
+        ("130 claims (18 core + reserving development history)",
+         f"SELECT COUNT(*) FROM {q('claim', 'claim')}", "130"),
         ("dictionary covers every deployed column",
          f"SELECT COUNT(*) FROM {q('reference', 'data_dictionary')} d "
          f"JOIN {cat}.information_schema.columns c "
@@ -94,8 +96,9 @@ def main():
         ("outbound cession bordereau derives lines with correct ceded premium",
          f"SELECT COUNT(*) > 0 AND SUM(ABS(ceded_premium - ROUND(gross_premium * ceded_share, 2))) = 0 "
          f"FROM {q('exchange', 'cession_bordereau_line')}", "true"),
-        ("every policy converted from exactly one quote",
-         f"SELECT COUNT(*) = (SELECT COUNT(*) FROM {q('policy', 'policy')}) "
+        ("every core-book policy converted from exactly one quote",
+         f"SELECT COUNT(*) = (SELECT COUNT(*) FROM {q('policy', 'policy')} "
+         f"WHERE policy_number NOT LIKE 'POL-%-9%') "
          f"AND COUNT(DISTINCT policy_id) = COUNT(*) "
          f"FROM {q('policy', 'quote')} WHERE quote_status_code = 'CONVERTED'", "true"),
         ("bound submission thread resolves to the golden-thread treaty",

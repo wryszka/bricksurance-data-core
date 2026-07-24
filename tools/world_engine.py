@@ -531,6 +531,109 @@ def build_world(scale):
                   datetime(2026, 6, 24, 9, 41), channel="MACHINE_AGENT",
                   payload=f'{{"sum_insured": {si}, "requested_by": "{AGENT_NAME}"}}')
 
+    # ------------------------------------------------ reserving development
+    # A credible claim-development history for reserving: enough claims across
+    # accident years 2019-2026, each developing over time (reserve set at
+    # report, payments stepping down the reserve across development lags), so
+    # paid/incurred triangles actually develop. Every movement is an ordinary
+    # claim_transaction - the reserving triangle is a pure semantic layer over
+    # these, reconciling by construction, and the ledger auto-posts them.
+    #
+    # Reserving lines and their expected ultimate severity + development speed.
+    # dev_pattern = cumulative-paid fraction by development year (year 0..5);
+    # slower-developing lines (liability) pay out over more years than property.
+    RSV_LINES = {
+        "COMMERCIAL_PROPERTY": (95000, [0.35, 0.70, 0.88, 0.96, 1.00, 1.00]),
+        "GENERAL_LIABILITY":   (60000, [0.10, 0.30, 0.55, 0.75, 0.90, 1.00]),
+        "MOTOR":               (14000, [0.55, 0.85, 0.95, 0.99, 1.00, 1.00]),
+        "MARINE_CARGO":        (40000, [0.45, 0.80, 0.93, 0.99, 1.00, 1.00]),
+    }
+    RSV_CARRIER = CARRIER
+    rsv_org, rsv_country = ORGS[0]
+    # ~n_dev claims per accident year 2019..2026; older years are fully/near
+    # developed, recent years still developing - exactly what a triangle shows.
+    for ay in range(2019, 2027):
+        n_ay = w.n(14)
+        for k in range(n_ay):
+            lob = list(RSV_LINES)[(ay + k) % len(RSV_LINES)]
+            sev, pattern = RSV_LINES[lob]
+            ccy = "GBP"
+            # a light historical policy so the claim has a real parent
+            hpid = w.nid("pol")
+            hnum = f"POL-{ay}-{900000 + k:06d}"
+            inc = date(ay, 1 + (k % 12), 1 + (k % 28))
+            w.add("policy", policy_id=hpid, policy_number=hnum,
+                  source_system_code="PAS_CORE", line_of_business_code=lob,
+                  policy_status_code="EXPIRED", inception_date=inc,
+                  expiry_date=inc + timedelta(days=364), underwriting_year=ay,
+                  currency_code=ccy, renews_policy_id=None, legal_entity_id=RSV_CARRIER)
+            add_role("POLICYHOLDER", rsv_org, inc, policy_id=hpid)
+            # the claim: loss in the accident year, reported with a short lag
+            ult = round(sev * rng.uniform(0.5, 2.2), 2)          # ultimate incurred
+            # written premium sized so the historical book runs at a realistic
+            # loss ratio (~55-70%): premium = ultimate / target LR. Without this
+            # the reserving claims would dwarf earned premium and blow up the
+            # combined ratio. Booked once at inception, as real written premium.
+            target_lr = rng.uniform(0.55, 0.70)
+            w.add("premium_transaction", premium_transaction_id=w.nid("prm"),
+                  policy_id=hpid, coverage_id=None,
+                  premium_transaction_type_code="WRITTEN",
+                  amount=round(ult / target_lr, 2), currency_code=ccy,
+                  transaction_date=inc, source_system_code="PAS_CORE")
+            loss = date(ay, 1 + ((k * 7) % 12), 1 + ((k * 5) % 28))
+            reported = loss + timedelta(days=rng.randint(5, 60))
+            years_dev = 2026 - ay
+            fully = years_dev >= 5 or (k % 6 != 0)   # most claims closed by now
+            cstatus = "CLOSED" if (fully and years_dev >= 1) else "OPEN"
+            c = len(w.t["claim"]) + 1
+            claim_id = w.nid("clm")
+            w.add("claim", claim_id=claim_id, policy_id=hpid, coverage_id=None,
+                  claim_number=f"CLM-{ay}-{c:06d}", claim_status_code=cstatus,
+                  cause_of_loss_code=rng.choice(COL_BY_LOB[lob]),
+                  loss_date=loss, reported_date=reported, description=None,
+                  source_system_code="CLM_CORE")
+
+            def rctx(ttype, amount, when):
+                w.add("claim_transaction", claim_transaction_id=w.nid("ctx"),
+                      claim_id=claim_id, claim_transaction_type_code=ttype,
+                      amount=round(amount, 2), currency_code=ccy,
+                      transaction_date=when, source_system_code="CLM_CORE")
+
+            # initial case reserve at the ultimate estimate, at report date
+            rctx("CASE_RESERVE_MOVEMENT", ult, reported)
+            # pay down across development years per the pattern, up to 'now'
+            prev_cum = 0.0
+            for dy, cum_frac in enumerate(pattern):
+                pay_date = date(min(ay + dy, 2026),
+                                ((loss.month - 1 + (dy * 2)) % 12) + 1, 15)
+                if pay_date > TODAY:
+                    break
+                cum_paid = ult * cum_frac
+                step = cum_paid - prev_cum
+                if step <= 0:
+                    continue
+                indem = round(step * 0.92, 2)
+                expense = round(step * 0.08, 2)
+                rctx("INDEMNITY_PAYMENT", indem, pay_date)
+                rctx("EXPENSE_PAYMENT", expense, pay_date)
+                # release reserve by the indemnity paid this step
+                rctx("CASE_RESERVE_MOVEMENT", -indem, pay_date)
+                prev_cum = cum_paid
+                # occasional subrogation recovery on property/motor
+                if lob in ("COMMERCIAL_PROPERTY", "MOTOR") and dy == 1 and k % 5 == 0:
+                    rctx("RECOVERY", -round(indem * 0.12, 2),
+                         pay_date + timedelta(days=45))
+            # if fully developed and closed, release any residual reserve
+            if cstatus == "CLOSED":
+                paid_indem = sum(t["amount"] for t in w.t["claim_transaction"]
+                                 if t["claim_id"] == claim_id
+                                 and t["claim_transaction_type_code"] == "INDEMNITY_PAYMENT")
+                residual = ult - paid_indem
+                if residual > 0.01:
+                    last_pay = date(min(ay + len(pattern) - 1, 2026), 12, 1)
+                    rctx("CASE_RESERVE_MOVEMENT", -round(residual, 2),
+                         min(last_pay, TODAY))
+
     # ---------------------------------------------------------- reinsurance
     qs = w.add("treaty", treaty_id=w.nid("trt"), treaty_reference="TR-QS-PROP-2026",
                treaty_type_code="QUOTA_SHARE", line_of_business_code="COMMERCIAL_PROPERTY",

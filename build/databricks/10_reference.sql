@@ -463,6 +463,17 @@ ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.reporting_regime
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.reporting_regime SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.9.0', 'bxc_domain' = 'reference');
 
+CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.reserving_method (
+  reserving_method_code STRING NOT NULL COMMENT 'Code value; referenced by reserving_method_code columns across the model.',
+  label STRING NOT NULL COMMENT 'Short human-readable name for the code.',
+  description STRING NOT NULL COMMENT 'Business definition of the code.'
+)
+COMMENT 'Actuarial methods for projecting ultimate losses from a development triangle. The method is a governed, attestable choice: swapping it produces a new reserve estimate row, never an overwrite, so bases are comparable and the sign-off records which method set the reserves. Grain: One row per reserving method code.';
+
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.reserving_method ADD CONSTRAINT pk_reserving_method PRIMARY KEY (reserving_method_code);
+
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_reference.reserving_method SET TAGS ('bxc_model' = 'bricksurance-data-core', 'bxc_model_version' = '0.9.0', 'bxc_domain' = 'reference', 'bxc_acord_ref' = 'n/a — actuarial method terminology');
+
 CREATE TABLE IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reference.run_verdict (
   run_verdict_code STRING NOT NULL COMMENT 'Code value; referenced by run_verdict_code columns across the model.',
   label STRING NOT NULL COMMENT 'Short human-readable name for the code.',
@@ -869,6 +880,12 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.reporting_r
   ('STATUTORY', 'Statutory / Local GAAP', 'Local statutory accounting basis.'),
   ('MANAGEMENT', 'Management', 'Internal management-reporting basis.');
 
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.reserving_method VALUES
+  ('CHAIN_LADDER', 'Chain-Ladder', 'Volume-weighted age-to-age development factors applied to the latest diagonal; the standard deterministic method for mature, stable lines.'),
+  ('BORNHUETTER_FERGUSON', 'Bornhuetter-Ferguson', 'Blends the chain-ladder projection with an a-priori expected loss ratio, weighting toward the prior for immature accident years.'),
+  ('EXPECTED_LOSS_RATIO', 'Expected Loss Ratio', 'Ultimate set from an a-priori loss ratio times earned premium, ignoring emerged experience; used for the greenest accident years.'),
+  ('CAPE_COD', 'Cape Cod', 'A Bornhuetter-Ferguson variant that derives the expected loss ratio from the triangle itself rather than taking it as given.');
+
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.run_verdict VALUES
   ('GREEN', 'Green', 'All quality checks passed; results released downstream.'),
   ('AMBER', 'Amber', 'Passed with warnings; released with commentary.'),
@@ -1061,6 +1078,9 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.data_dictio
   ('reporting_regime', 'reporting_regime_code', 'string', TRUE, 'Code value; referenced by reporting_regime_code columns across the model.', '', '', '', '', '', '0.9.0'),
   ('reporting_regime', 'label', 'string', TRUE, 'Short human-readable name for the code.', '', '', '', '', '', '0.9.0'),
   ('reporting_regime', 'description', 'string', TRUE, 'Business definition of the code.', '', '', '', '', '', '0.9.0'),
+  ('reserving_method', 'reserving_method_code', 'string', TRUE, 'Code value; referenced by reserving_method_code columns across the model.', '', '', '', '', '', '0.9.0'),
+  ('reserving_method', 'label', 'string', TRUE, 'Short human-readable name for the code.', '', '', '', '', '', '0.9.0'),
+  ('reserving_method', 'description', 'string', TRUE, 'Business definition of the code.', '', '', '', '', '', '0.9.0'),
   ('run_verdict', 'run_verdict_code', 'string', TRUE, 'Code value; referenced by run_verdict_code columns across the model.', '', '', '', '', '', '0.9.0'),
   ('run_verdict', 'label', 'string', TRUE, 'Short human-readable name for the code.', '', '', '', '', '', '0.9.0'),
   ('run_verdict', 'description', 'string', TRUE, 'Business definition of the code.', '', '', '', '', '', '0.9.0'),
@@ -1519,6 +1539,27 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.data_dictio
   ('treaty_layer', 'attachment_amount', 'decimal(18,2)', FALSE, 'Attachment point of the layer; empty for proportional forms.', 'confidential', '', '', 'Head of Reinsurance', 'certified', '0.9.0'),
   ('treaty_layer', 'reinstatement_count', 'integer', FALSE, 'Number of reinstatements available, where applicable.', 'internal', '', '', 'Head of Reinsurance', 'certified', '0.9.0'),
   ('treaty_layer', 'reinstatement_premium_rate', 'decimal(5,4)', FALSE, 'Reinstatement premium as a fraction of the layer premium.', 'confidential', '', '', 'Head of Reinsurance', 'certified', '0.9.0'),
+  ('reserve_estimate', 'reserve_estimate_id', 'string', TRUE, 'Identifier for the reserve estimate row.', 'internal', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'valuation_date', 'date', TRUE, 'The as-at date of the triangle this estimate was produced from.', 'internal', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'accident_year', 'integer', TRUE, 'Accident year the estimate is for.', 'internal', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'line_of_business_code', 'string', TRUE, 'Line of business the estimate is for.', 'internal', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'reserving_method_code', 'string', TRUE, 'The actuarial method used to project the ultimate.', 'internal', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'currency_code', 'string', TRUE, 'Currency of the amounts.', 'internal', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'paid_to_date', 'decimal(18,2)', TRUE, 'Cumulative paid on the latest diagonal for this accident year.', 'confidential', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'case_reserves', 'decimal(18,2)', TRUE, 'Current case reserves (incurred minus paid) on the latest diagonal.', 'confidential', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'ultimate_loss', 'decimal(18,2)', TRUE, 'The projected ultimate loss under the chosen method.', 'confidential', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'ibnr', 'decimal(18,2)', TRUE, 'Incurred but not reported - ultimate loss minus incurred to date. Ties to the IBNR figure published in finance.valuation_result.', 'confidential', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'outstanding', 'decimal(18,2)', TRUE, 'Total outstanding - ultimate loss minus paid to date (case reserves plus IBNR).', 'confidential', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserve_estimate', 'source_system_code', 'string', TRUE, 'The reserving engine that produced the estimate.', 'internal', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'accident_year', 'dimension', FALSE, 'Accident year - the year the loss occurred. The rows of the triangle.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'development_lag', 'dimension', FALSE, 'Development lag in years (transaction year minus accident year). The columns of the triangle.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'line_of_business', 'dimension', FALSE, 'Line of business as its business label, e.g. ''Commercial Property''. Filter with labels; use line_of_business_code for codes.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'line_of_business_code', 'dimension', FALSE, 'Line of business as its code, e.g. COMMERCIAL_PROPERTY.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'currency_code', 'dimension', FALSE, 'Original currency of the amounts. Group by this before summing money.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'paid_to_date', 'measure', FALSE, 'Cumulative paid (indemnity plus expense, net of recoveries) for the selected accident years and development lags, in original currency.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'incurred_to_date', 'measure', FALSE, 'Cumulative incurred (paid plus case reserves) for the selection, in original currency - the latest diagonal is the current best estimate before IBNR.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'paid_ratio', 'measure', FALSE, 'Paid over incurred - how far the selected cohort has run off. Low early, approaching 1.0 as an accident year matures.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
+  ('reserving_metrics', 'accident_year_count', 'measure', FALSE, 'Number of distinct accident years in the selection.', '', '', '', 'Chief Actuary', 'certified', '0.9.0'),
   ('cession_metrics', 'treaty_reference', 'dimension', FALSE, 'Treaty the premium is ceded to.', '', '', '', 'Head of Reinsurance', 'certified', '0.9.0'),
   ('cession_metrics', 'reporting_month', 'dimension', FALSE, 'Bordereau reporting month.', '', '', '', 'Head of Reinsurance', 'certified', '0.9.0'),
   ('cession_metrics', 'line_of_business', 'dimension', FALSE, 'Line of business as its business label, e.g. ''Commercial Property''. Filter with labels; use line_of_business_code for codes.', '', '', '', 'Head of Reinsurance', 'certified', '0.9.0'),

@@ -618,6 +618,22 @@ The reporting framework a figure is prepared under. One valuation or statement f
 
 **Primary key:** reporting_regime_code
 
+## Reserving Method (`reference.reserving_method`)
+
+Actuarial methods for projecting ultimate losses from a development triangle. The method is a governed, attestable choice: swapping it produces a new reserve estimate row, never an overwrite, so bases are comparable and the sign-off records which method set the reserves.
+
+**Grain:** One row per reserving method code.
+
+**Standards:** Acord: n/a — actuarial method terminology
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| reserving_method_code | string | yes | Code value; referenced by reserving_method_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** reserving_method_code
+
 ## Run Verdict (`reference.run_verdict`)
 
 Quality-gate verdict of a processing or valuation run. RED runs never feed downstream consumption; the verdict is part of the auditable run record.
@@ -1808,3 +1824,30 @@ A layer of a treaty programme: limit and attachment for non-proportional forms, 
 | reinstatement_premium_rate | decimal(5,4) |  | Reinstatement premium as a fraction of the layer premium. | confidential |  |  |
 
 **Primary key:** treaty_layer_id
+
+## Reserve Estimate (`reserving.reserve_estimate`)
+
+A published reserving result: the projected ultimate loss, paid-to-date, case reserves, IBNR and total outstanding for one accident year and line of business, produced by one reserving method (chain-ladder, Bornhuetter-Ferguson) on one dated triangle. The estimate is the actuary's signed output; the method used is a governed, attestable choice, and the IBNR ties back to finance.valuation_result. Swapping method produces a new row, never an overwrite - so every basis and its result is auditable side by side.
+
+**Grain:** One row per accident year per line of business per method per valuation date.
+
+**Standards:** Acord: Reserve / loss-development patterns (indicative)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| reserve_estimate_id | string | yes | Identifier for the reserve estimate row. | internal |  |  |
+| valuation_date | date | yes | The as-at date of the triangle this estimate was produced from. | internal |  |  |
+| accident_year | integer | yes | Accident year the estimate is for. | internal |  |  |
+| line_of_business_code | string | yes | Line of business the estimate is for. | internal |  |  |
+| reserving_method_code | string | yes | The actuarial method used to project the ultimate. | internal |  |  |
+| currency_code | string | yes | Currency of the amounts. | internal |  |  |
+| paid_to_date | decimal(18,2) | yes | Cumulative paid on the latest diagonal for this accident year. | confidential |  |  |
+| case_reserves | decimal(18,2) | yes | Current case reserves (incurred minus paid) on the latest diagonal. | confidential |  |  |
+| ultimate_loss | decimal(18,2) | yes | The projected ultimate loss under the chosen method. | confidential |  |  |
+| ibnr | decimal(18,2) | yes | Incurred but not reported - ultimate loss minus incurred to date. Ties to the IBNR figure published in finance.valuation_result. | confidential |  |  |
+| outstanding | decimal(18,2) | yes | Total outstanding - ultimate loss minus paid to date (case reserves plus IBNR). | confidential |  |  |
+| source_system_code | string | yes | The reserving engine that produced the estimate. | internal |  |  |
+
+**Primary key:** reserve_estimate_id
+**Quality — ibnr_reconciles:** `abs((paid_to_date + case_reserves + ibnr) - ultimate_loss) < 1.0` — Paid plus case reserves plus IBNR must reconcile to the projected ultimate.
+**Quality — ultimate_covers_paid:** `ultimate_loss >= paid_to_date` — A projected ultimate cannot be below what has already been paid.

@@ -25,6 +25,9 @@ COMMENT 'Claims against policies and their financial development - reserves, pay
 CREATE SCHEMA IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reinsurance
 COMMENT 'Outward and inward reinsurance - treaties, cessions and recoveries linking the direct book to reinsurers.';
 
+CREATE SCHEMA IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_reserving
+COMMENT 'Actuarial reserving as a governed semantic layer over claim transactions - loss-development triangles, chain-ladder and Bornhuetter-Ferguson estimates, IBNR and ultimate losses by accident year. Triangles are derived by summation over claim movements, never stored; the method used is a recorded, attestable choice. The spreadsheet workflow, done on the platform: reproducible, reconciling to source, and answerable in Genie.';
+
 CREATE SCHEMA IF NOT EXISTS lr_serverless_aws_us_catalog.bricksurance_product
 COMMENT 'Machine-readable products - offered coverages, underwriting questions and appetite rules as data, so any channel (human, aggregator or buyer agent) can discover, quote and be decided against the same rules.';
 

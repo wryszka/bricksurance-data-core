@@ -46,6 +46,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.receivable_transaction_type` — Premium billing movements. Outstanding debt is the signed sum - invoices positive, cash negative - never a stored balance. Grain: One row per receivable transaction type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.reporting_level` — Whether a figure is a single entity's own return (solo) or the consolidated group position. Solvency II and statutory accounts both require both. Grain: One row per reporting level code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.reporting_regime` — The reporting framework a figure is prepared under. One valuation or statement figure means different things under different regimes; the regime is never assumed. Grain: One row per reporting regime code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.reserving_method` — Actuarial methods for projecting ultimate losses from a development triangle. The method is a governed, attestable choice: swapping it produces a new reserve estimate row, never an overwrite, so bases are comparable and the sign-off records which method set the reserves. Grain: One row per reserving method code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.run_verdict` — Quality-gate verdict of a processing or valuation run. RED runs never feed downstream consumption; the verdict is part of the auditable run record. Grain: One row per run verdict code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.scenario_status` — Lifecycle of an economic scenario set. Exactly one set is ACTIVE for production valuations; others remain AVAILABLE for analysis. Grain: One row per scenario set status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.source_system` — Systems of record that feed the data layer. Provenance is part of the model: every core entity carries a source_system_code, and identifiers are only unique within their source system. Grain: One row per source system code.
@@ -108,6 +109,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reinsurance.submission` — A reinsurance submission: a cedant's (or broker's) request for treaty cover, from receipt through triage, pricing and decision. A bound submission links to the treaty it produced. Cedant and broker are party roles on the submission. Grain: One row per submission per source system.
 - `lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty` — A treaty reinsurance contract under which risks are ceded to or assumed from reinsurers. Cedant and reinsurer are party roles on the treaty; which business it covers is expressed through cessions. Grain: One row per treaty contract per underwriting year.
 - `lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty_layer` — A layer of a treaty programme: limit and attachment for non-proportional forms, with reinstatement terms where they apply. Proportional treaties typically have a single layer carrying the ceded share economics on the treaty itself. Grain: One row per layer per treaty.
+- `lr_serverless_aws_us_catalog.bricksurance_reserving.reserve_estimate` — A published reserving result: the projected ultimate loss, paid-to-date, case reserves, IBNR and total outstanding for one accident year and line of business, produced by one reserving method (chain-ladder, Bornhuetter-Ferguson) on one dated triangle. The estimate is the actuary's signed output; the method used is a governed, attestable choice, and the IBNR ties back to finance.valuation_result. Swapping method produces a new row, never an overwrite - so every basis and its result is auditable side by side. Grain: One row per accident year per line of business per method per valuation date.
 
 Foreign-key relationships are declared on the tables; use them for joins. Resolve any *_id column to a business name by joining its referenced table.
 
@@ -116,6 +118,16 @@ Foreign-key relationships are declared on the tables; use them for joins. Resolv
 
 For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric views below over hand-written aggregations. Query measures with MEASURE(<name>) and GROUP BY dimensions. Amounts are in original currency: always group by or filter on currency_code before summing money.
 
+- `lr_serverless_aws_us_catalog.bricksurance_reserving.reserving_metrics` — Certified reserving KPIs over the loss-development triangle - cumulative paid and incurred by accident year, line of business and development lag - defined once so the reserving actuary, the finance close and Genie all read the same figures. Ultimate, IBNR and the chain-ladder / Bornhuetter-Ferguson projections are computed in the reserving notebook from these same movements and published to finance.valuation_result. Amounts are in original currency: always group by or filter on currency_code before summing. Query measures with MEASURE(name).
+  - dimension accident_year: Accident year - the year the loss occurred. The rows of the triangle.
+  - dimension development_lag: Development lag in years (transaction year minus accident year). The columns of the triangle.
+  - dimension line_of_business: Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.
+  - dimension line_of_business_code: Line of business as its code, e.g. COMMERCIAL_PROPERTY.
+  - dimension currency_code: Original currency of the amounts. Group by this before summing money.
+  - MEASURE(paid_to_date): Cumulative paid (indemnity plus expense, net of recoveries) for the selected accident years and development lags, in original currency.
+  - MEASURE(incurred_to_date): Cumulative incurred (paid plus case reserves) for the selection, in original currency - the latest diagonal is the current best estimate before IBNR.
+  - MEASURE(paid_ratio): Paid over incurred - how far the selected cohort has run off. Low early, approaching 1.0 as an accident year matures.
+  - MEASURE(accident_year_count): Number of distinct accident years in the selection.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.cession_metrics` — Outward reinsurance KPIs over the cession bordereau: gross and ceded premium by treaty and period. Amounts are in original transaction currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
   - dimension treaty_reference: Treaty the premium is ceded to.
   - dimension reporting_month: Bordereau reporting month.
@@ -242,6 +254,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Receivable Transaction Type: INVOICE (Invoice), CASH_RECEIPT (Cash Receipt), WRITE_OFF (Write-off), REFUND (Refund).
 - Reporting Level: SOLO (Solo), GROUP (Group).
 - Reporting Regime: SOLVENCY_II (Solvency II), IFRS_17 (IFRS 17), STATUTORY (Statutory / Local GAAP), MANAGEMENT (Management).
+- Reserving Method: CHAIN_LADDER (Chain-Ladder), BORNHUETTER_FERGUSON (Bornhuetter-Ferguson), EXPECTED_LOSS_RATIO (Expected Loss Ratio), CAPE_COD (Cape Cod).
 - Run Verdict: GREEN (Green), AMBER (Amber), RED (Red).
 - Scenario Set Status: ACTIVE (Active), AVAILABLE (Available), SUPERSEDED (Superseded).
 - Source System: PAS_CORE (Policy Administration (Core)), CLM_CORE (Claims (Core)), RI_CORE (Reinsurance (Core)), DATA_CORE (Data Core (Mastered)), LIFE_CORE (Life Administration (Core)), COVERHOLDER_BDX (Coverholder Bordereau).

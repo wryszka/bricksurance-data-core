@@ -39,6 +39,10 @@
       "description": "Outward and inward reinsurance - treaties, cessions and recoveries linking the direct book to reinsurers.\n"
     },
     {
+      "name": "reserving",
+      "description": "Actuarial reserving as a governed semantic layer over claim transactions - loss-development triangles, chain-ladder and Bornhuetter-Ferguson estimates, IBNR and ultimate losses by accident year. Triangles are derived by summation over claim movements, never stored; the method used is a recorded, attestable choice. The spreadsheet workflow, done on the platform: reproducible, reconciling to source, and answerable in Genie.\n"
+    },
+    {
       "name": "product",
       "description": "Machine-readable products - offered coverages, underwriting questions and appetite rules as data, so any channel (human, aggregator or buyer agent) can discover, quote and be decided against the same rules.\n"
     },
@@ -1390,6 +1394,37 @@
           "code": "MANAGEMENT",
           "label": "Management",
           "description": "Internal management-reporting basis."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "reserving_method",
+      "title": "Reserving Method",
+      "description": "Actuarial methods for projecting ultimate losses from a development triangle. The method is a governed, attestable choice: swapping it produces a new reserve estimate row, never an overwrite, so bases are comparable and the sign-off records which method set the reserves.\n",
+      "standards": {
+        "acord": "n/a — actuarial method terminology"
+      },
+      "codes": [
+        {
+          "code": "CHAIN_LADDER",
+          "label": "Chain-Ladder",
+          "description": "Volume-weighted age-to-age development factors applied to the latest diagonal; the standard deterministic method for mature, stable lines.\n"
+        },
+        {
+          "code": "BORNHUETTER_FERGUSON",
+          "label": "Bornhuetter-Ferguson",
+          "description": "Blends the chain-ladder projection with an a-priori expected loss ratio, weighting toward the prior for immature accident years.\n"
+        },
+        {
+          "code": "EXPECTED_LOSS_RATIO",
+          "label": "Expected Loss Ratio",
+          "description": "Ultimate set from an a-priori loss ratio times earned premium, ignoring emerged experience; used for the greenest accident years.\n"
+        },
+        {
+          "code": "CAPE_COD",
+          "label": "Cape Cod",
+          "description": "A Bornhuetter-Ferguson variant that derives the expected loss ratio from the triangle itself rather than taking it as given.\n"
         }
       ]
     },
@@ -5877,6 +5912,124 @@
         ]
       },
       "owner": "Head of Reinsurance"
+    },
+    {
+      "kind": "entity",
+      "name": "reserve_estimate",
+      "domain": "reserving",
+      "title": "Reserve Estimate",
+      "description": "A published reserving result: the projected ultimate loss, paid-to-date, case reserves, IBNR and total outstanding for one accident year and line of business, produced by one reserving method (chain-ladder, Bornhuetter-Ferguson) on one dated triangle. The estimate is the actuary's signed output; the method used is a governed, attestable choice, and the IBNR ties back to finance.valuation_result. Swapping method produces a new row, never an overwrite - so every basis and its result is auditable side by side.\n",
+      "grain": "One row per accident year per line of business per method per valuation date.",
+      "tags": {
+        "maturity": "certified"
+      },
+      "standards": {
+        "acord": "Reserve / loss-development patterns (indicative)"
+      },
+      "attributes": [
+        {
+          "name": "reserve_estimate_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the reserve estimate row.",
+          "classification": "internal"
+        },
+        {
+          "name": "valuation_date",
+          "type": "date",
+          "required": true,
+          "description": "The as-at date of the triangle this estimate was produced from.",
+          "classification": "internal"
+        },
+        {
+          "name": "accident_year",
+          "type": "integer",
+          "required": true,
+          "description": "Accident year the estimate is for.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business the estimate is for.",
+          "classification": "internal"
+        },
+        {
+          "name": "reserving_method_code",
+          "code_set": "reserving_method",
+          "required": true,
+          "description": "The actuarial method used to project the ultimate.",
+          "classification": "internal"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amounts.",
+          "classification": "internal"
+        },
+        {
+          "name": "paid_to_date",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Cumulative paid on the latest diagonal for this accident year.",
+          "classification": "confidential"
+        },
+        {
+          "name": "case_reserves",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Current case reserves (incurred minus paid) on the latest diagonal.",
+          "classification": "confidential"
+        },
+        {
+          "name": "ultimate_loss",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "The projected ultimate loss under the chosen method.",
+          "classification": "confidential"
+        },
+        {
+          "name": "ibnr",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Incurred but not reported - ultimate loss minus incurred to date. Ties to the IBNR figure published in finance.valuation_result.\n",
+          "classification": "confidential"
+        },
+        {
+          "name": "outstanding",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Total outstanding - ultimate loss minus paid to date (case reserves plus IBNR).",
+          "classification": "confidential"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "The reserving engine that produced the estimate.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "reserve_estimate_id"
+        ]
+      },
+      "owner": "Chief Actuary",
+      "quality": [
+        {
+          "name": "ibnr_reconciles",
+          "rule": "abs((paid_to_date + case_reserves + ibnr) - ultimate_loss) < 1.0",
+          "description": "Paid plus case reserves plus IBNR must reconcile to the projected ultimate."
+        },
+        {
+          "name": "ultimate_covers_paid",
+          "rule": "ultimate_loss >= paid_to_date",
+          "description": "A projected ultimate cannot be below what has already been paid."
+        }
+      ]
     }
   ],
   "views": [
@@ -5888,6 +6041,15 @@
       "description": "The outbound cession bordereau, derived live from the canonical model: one line per policy premium movement ceded to a treaty, with the ceded amount computed from the contractual ceded share. This view - together with the data_dictionary - IS the bordereau: it is shared as a governed table, never exported to a spreadsheet.\n",
       "grain": "One row per ceded premium movement per policy per treaty.",
       "sql": "SELECT\n  tr.treaty_reference,\n  DATE_TRUNC('MONTH', pt.transaction_date) AS reporting_month,\n  p.policy_number,\n  ins.name AS insured_name,\n  p.line_of_business_code,\n  p.inception_date,\n  p.expiry_date,\n  pt.currency_code,\n  pt.amount AS gross_premium,\n  ces.ceded_share,\n  CAST(ROUND(pt.amount * ces.ceded_share, 2) AS DECIMAL(18,2)) AS ceded_premium\nFROM {reinsurance.cession} ces\nJOIN {policy.policy} p ON p.policy_id = ces.policy_id\nJOIN {reinsurance.treaty} tr ON tr.treaty_id = ces.treaty_id\nJOIN {policy.premium_transaction} pt ON pt.policy_id = p.policy_id\nLEFT JOIN {party.party_role} pr\n  ON pr.policy_id = p.policy_id AND pr.party_role_type_code = 'INSURED'\nLEFT JOIN {party.party} ins ON ins.party_id = pr.party_id\n"
+    },
+    {
+      "kind": "view",
+      "name": "loss_development",
+      "domain": "reserving",
+      "title": "Loss Development Triangle",
+      "description": "The loss-development triangle as a governed view: for every accident year and development lag, the incremental and cumulative paid and incurred, derived by summation over claim transactions. Nothing is stored - the triangle is a semantic layer over claim.claim_transaction, so it always reconciles to the penny with the ledger and the claims sub-system. Accident year is the year of loss; development lag is transaction year minus accident year. Amounts are in original currency - group by or filter on currency_code before summing.\n",
+      "grain": "One row per accident year per development lag per line of business per currency.",
+      "sql": "WITH movements AS (\n  SELECT\n    YEAR(c.loss_date)                                   AS accident_year,\n    YEAR(ct.transaction_date) - YEAR(c.loss_date)       AS development_lag,\n    p.line_of_business_code                             AS line_of_business_code,\n    ct.currency_code                                    AS currency_code,\n    ct.claim_transaction_type_code                      AS ttype,\n    ct.amount                                           AS amount\n  FROM {claim.claim_transaction} ct\n  JOIN {claim.claim}  c ON c.claim_id  = ct.claim_id\n  JOIN {policy.policy} p ON p.policy_id = c.policy_id\n  WHERE YEAR(ct.transaction_date) >= YEAR(c.loss_date)\n),\nincremental AS (\n  SELECT\n    accident_year, development_lag, line_of_business_code, currency_code,\n    SUM(CASE WHEN ttype IN ('INDEMNITY_PAYMENT','EXPENSE_PAYMENT') THEN amount\n             WHEN ttype = 'RECOVERY' THEN amount ELSE 0 END)          AS incremental_paid,\n    SUM(CASE WHEN ttype IN ('INDEMNITY_PAYMENT','EXPENSE_PAYMENT','RECOVERY','CASE_RESERVE_MOVEMENT')\n             THEN amount ELSE 0 END)                                  AS incremental_incurred\n  FROM movements\n  GROUP BY accident_year, development_lag, line_of_business_code, currency_code\n)\nSELECT\n  accident_year,\n  development_lag,\n  line_of_business_code,\n  currency_code,\n  incremental_paid,\n  incremental_incurred,\n  SUM(incremental_paid) OVER (\n    PARTITION BY accident_year, line_of_business_code, currency_code\n    ORDER BY development_lag ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS cumulative_paid,\n  SUM(incremental_incurred) OVER (\n    PARTITION BY accident_year, line_of_business_code, currency_code\n    ORDER BY development_lag ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS cumulative_incurred\nFROM incremental\n"
     },
     {
       "kind": "view",
@@ -5918,6 +6080,72 @@
     }
   ],
   "metric_views": [
+    {
+      "kind": "metric_view",
+      "name": "reserving_metrics",
+      "domain": "reserving",
+      "title": "Reserving Metrics",
+      "description": "Certified reserving KPIs over the loss-development triangle - cumulative paid and incurred by accident year, line of business and development lag - defined once so the reserving actuary, the finance close and Genie all read the same figures. Ultimate, IBNR and the chain-ladder / Bornhuetter-Ferguson projections are computed in the reserving notebook from these same movements and published to finance.valuation_result. Amounts are in original currency: always group by or filter on currency_code before summing. Query measures with MEASURE(name).\n",
+      "owner": "Chief Actuary",
+      "certification": "certified",
+      "source": "reserving.loss_development",
+      "joins": [
+        {
+          "name": "line_of_business",
+          "source": "reference.line_of_business",
+          "condition": "source.line_of_business_code = line_of_business.line_of_business_code"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "accident_year",
+          "expr": "accident_year",
+          "description": "Accident year - the year the loss occurred. The rows of the triangle."
+        },
+        {
+          "name": "development_lag",
+          "expr": "development_lag",
+          "description": "Development lag in years (transaction year minus accident year). The columns of the triangle."
+        },
+        {
+          "name": "line_of_business",
+          "expr": "line_of_business.label",
+          "description": "Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.\n"
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "source.line_of_business_code",
+          "description": "Line of business as its code, e.g. COMMERCIAL_PROPERTY."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Original currency of the amounts. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "paid_to_date",
+          "expr": "SUM(incremental_paid)",
+          "description": "Cumulative paid (indemnity plus expense, net of recoveries) for the selected accident years and development lags, in original currency.\n"
+        },
+        {
+          "name": "incurred_to_date",
+          "expr": "SUM(incremental_incurred)",
+          "description": "Cumulative incurred (paid plus case reserves) for the selection, in original currency - the latest diagonal is the current best estimate before IBNR.\n"
+        },
+        {
+          "name": "paid_ratio",
+          "expr": "SUM(incremental_paid) / NULLIF(SUM(incremental_incurred), 0)",
+          "description": "Paid over incurred - how far the selected cohort has run off. Low early, approaching 1.0 as an accident year matures.\n"
+        },
+        {
+          "name": "accident_year_count",
+          "expr": "COUNT(DISTINCT accident_year)",
+          "description": "Number of distinct accident years in the selection."
+        }
+      ]
+    },
     {
       "kind": "metric_view",
       "name": "cession_metrics",
@@ -8016,6 +8244,34 @@
       "to": "treaty",
       "to_kind": "entity",
       "to_attribute": "treaty_id"
+    },
+    {
+      "from_entity": "reserve_estimate",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "reserve_estimate",
+      "attribute": "reserving_method_code",
+      "to": "reserving_method",
+      "to_kind": "code_set",
+      "to_attribute": "reserving_method_code"
+    },
+    {
+      "from_entity": "reserve_estimate",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "reserve_estimate",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
     }
   ],
   "attestations": [

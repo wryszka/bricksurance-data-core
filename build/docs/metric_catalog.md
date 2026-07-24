@@ -2,6 +2,21 @@
 
 *Generated from model v0.9.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
 
+## Reserving Metrics (`reserving.reserving_metrics`)
+
+Certified reserving KPIs over the loss-development triangle - cumulative paid and incurred by accident year, line of business and development lag - defined once so the reserving actuary, the finance close and Genie all read the same figures. Ultimate, IBNR and the chain-ladder / Bornhuetter-Ferguson projections are computed in the reserving notebook from these same movements and published to finance.valuation_result. Amounts are in original currency: always group by or filter on currency_code before summing. Query measures with MEASURE(name).
+
+**Owner:** Chief Actuary · **Certification:** certified · **Source:** `reserving.loss_development`
+
+**Dimensions:** accident_year, development_lag, line_of_business, line_of_business_code, currency_code
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `paid_to_date` | Cumulative paid (indemnity plus expense, net of recoveries) for the selected accident years and development lags, in original currency. | `SUM(incremental_paid)` |
+| `incurred_to_date` | Cumulative incurred (paid plus case reserves) for the selection, in original currency - the latest diagonal is the current best estimate before IBNR. | `SUM(incremental_incurred)` |
+| `paid_ratio` | Paid over incurred - how far the selected cohort has run off. Low early, approaching 1.0 as an accident year matures. | `SUM(incremental_paid) / NULLIF(SUM(incremental_incurred), 0)` |
+| `accident_year_count` | Number of distinct accident years in the selection. | `COUNT(DISTINCT accident_year)` |
+
 ## Cession Metrics (`semantics.cession_metrics`)
 
 Outward reinsurance KPIs over the cession bordereau: gross and ceded premium by treaty and period. Amounts are in original transaction currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).

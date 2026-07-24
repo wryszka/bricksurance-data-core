@@ -209,6 +209,11 @@ erDiagram
         string label
         string description
     }
+    reserving_method {
+        string reserving_method_code PK
+        string label
+        string description
+    }
     run_verdict {
         string run_verdict_code PK
         string label
@@ -783,6 +788,20 @@ erDiagram
         integer reinstatement_count
         decimal reinstatement_premium_rate
     }
+    reserve_estimate {
+        string reserve_estimate_id PK
+        date valuation_date
+        integer accident_year
+        string line_of_business_code
+        string reserving_method_code
+        string currency_code
+        decimal paid_to_date
+        decimal case_reserves
+        decimal ultimate_loss
+        decimal ibnr
+        decimal outstanding
+        string source_system_code
+    }
     claim }o--|| policy : policy_id
     claim }o--|| coverage : coverage_id
     claim }o--|| claim_status : claim_status_code
@@ -978,3 +997,7 @@ erDiagram
     treaty }o--|| currency : currency_code
     treaty }o--|| source_system : source_system_code
     treaty_layer }o--|| treaty : treaty_id
+    reserve_estimate }o--|| line_of_business : line_of_business_code
+    reserve_estimate }o--|| reserving_method : reserving_method_code
+    reserve_estimate }o--|| currency : currency_code
+    reserve_estimate }o--|| source_system : source_system_code

@@ -370,6 +370,44 @@ def spaces_config(t):
                  f"WHERE valuation_date = DATE '2026-06-30'"),
             ],
         },
+        "reserving": {
+            "title": "Bricksurance — Reserving",
+            "description": ("Actuarial reserving over the governed loss-development triangle: "
+                            "paid and incurred by accident year and development lag, IBNR and "
+                            "ultimate losses, chain-ladder and Bornhuetter-Ferguson estimates. "
+                            "The triangle is derived from claim movements and reconciles to the "
+                            f"claims sub-ledger by construction. {DISCLAIMER}"),
+            "objects": [("reserving", "loss_development"),
+                        ("reserving", "reserving_metrics"),
+                        ("reserving", "reserve_estimate"),
+                        ("claim", "claim"), ("claim", "claim_transaction"),
+                        ("reference", "data_dictionary")],
+            "examples": [
+                ("Cumulative paid development for an accident year (the triangle)",
+                 f"SELECT development_lag, MEASURE(paid_to_date) AS cumulative_paid "
+                 f"FROM {t('reserving', 'reserving_metrics')} "
+                 f"WHERE line_of_business = 'Commercial Property' AND currency_code = 'GBP' "
+                 f"AND accident_year = 2022 GROUP BY development_lag ORDER BY development_lag",
+                 "The triangle is a metric view over claim movements; MEASURE(paid_to_date) sums cumulative paid. Constrain currency_code."),
+                ("IBNR and ultimate by accident year and method",
+                 f"SELECT accident_year, reserving_method_code, ultimate_loss, ibnr "
+                 f"FROM {t('reserving', 'reserve_estimate')} "
+                 f"WHERE line_of_business_code = 'COMMERCIAL_PROPERTY' AND currency_code = 'GBP' "
+                 f"ORDER BY accident_year, reserving_method_code",
+                 "reserve_estimate holds one row per method per accident year, so chain-ladder and BF sit side by side; nothing is overwritten."),
+            ],
+            "benchmarks": [
+                ("What is our paid-to-incurred ratio by accident year for commercial property in GBP?",
+                 f"SELECT accident_year, MEASURE(paid_ratio) AS paid_ratio "
+                 f"FROM {t('reserving', 'reserving_metrics')} "
+                 f"WHERE line_of_business = 'Commercial Property' AND currency_code = 'GBP' "
+                 f"GROUP BY accident_year ORDER BY accident_year"),
+                ("What is the total IBNR across accident years for commercial property, chain-ladder basis?",
+                 f"SELECT SUM(ibnr) AS total_ibnr FROM {t('reserving', 'reserve_estimate')} "
+                 f"WHERE line_of_business_code = 'COMMERCIAL_PROPERTY' AND currency_code = 'GBP' "
+                 f"AND reserving_method_code = 'CHAIN_LADDER'"),
+            ],
+        },
     }
 
 
@@ -379,7 +417,7 @@ def uid():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--space", required=True, choices=["pnc", "reinsurance", "life", "distribution", "governance", "customer", "finance", "capital"])
+    ap.add_argument("--space", required=True, choices=["pnc", "reinsurance", "life", "distribution", "governance", "customer", "finance", "capital", "reserving"])
     ap.add_argument("--profile", default="DEFAULT")
     ap.add_argument("--warehouse-id")
     ap.add_argument("--space-id", help="Patch this space instead of creating a new one")

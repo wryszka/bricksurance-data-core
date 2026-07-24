@@ -1,0 +1,31 @@
+kind: code_set
+name: reserving_method
+title: Reserving Method
+description: >
+  Actuarial methods for projecting ultimate losses from a development triangle.
+  The method is a governed, attestable choice: swapping it produces a new
+  reserve estimate row, never an overwrite, so bases are comparable and the
+  sign-off records which method set the reserves.
+standards:
+  acord: n/a — actuarial method terminology
+codes:
+  - code: CHAIN_LADDER
+    label: Chain-Ladder
+    description: >
+      Volume-weighted age-to-age development factors applied to the latest
+      diagonal; the standard deterministic method for mature, stable lines.
+  - code: BORNHUETTER_FERGUSON
+    label: Bornhuetter-Ferguson
+    description: >
+      Blends the chain-ladder projection with an a-priori expected loss ratio,
+      weighting toward the prior for immature accident years.
+  - code: EXPECTED_LOSS_RATIO
+    label: Expected Loss Ratio
+    description: >
+      Ultimate set from an a-priori loss ratio times earned premium, ignoring
+      emerged experience; used for the greenest accident years.
+  - code: CAPE_COD
+    label: Cape Cod
+    description: >
+      A Bornhuetter-Ferguson variant that derives the expected loss ratio from
+      the triangle itself rather than taking it as given.

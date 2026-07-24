@@ -1,0 +1,90 @@
+kind: entity
+name: reserve_estimate
+domain: reserving
+title: Reserve Estimate
+description: >
+  A published reserving result: the projected ultimate loss, paid-to-date, case
+  reserves, IBNR and total outstanding for one accident year and line of
+  business, produced by one reserving method (chain-ladder, Bornhuetter-Ferguson)
+  on one dated triangle. The estimate is the actuary's signed output; the method
+  used is a governed, attestable choice, and the IBNR ties back to
+  finance.valuation_result. Swapping method produces a new row, never an
+  overwrite - so every basis and its result is auditable side by side.
+grain: One row per accident year per line of business per method per valuation date.
+tags:
+  maturity: certified
+standards:
+  acord: Reserve / loss-development patterns (indicative)
+attributes:
+  - name: reserve_estimate_id
+    type: string
+    required: true
+    description: Identifier for the reserve estimate row.
+    classification: internal
+  - name: valuation_date
+    type: date
+    required: true
+    description: The as-at date of the triangle this estimate was produced from.
+    classification: internal
+  - name: accident_year
+    type: integer
+    required: true
+    description: Accident year the estimate is for.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business the estimate is for.
+    classification: internal
+  - name: reserving_method_code
+    code_set: reserving_method
+    required: true
+    description: The actuarial method used to project the ultimate.
+    classification: internal
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the amounts.
+    classification: internal
+  - name: paid_to_date
+    type: decimal(18,2)
+    required: true
+    description: Cumulative paid on the latest diagonal for this accident year.
+    classification: confidential
+  - name: case_reserves
+    type: decimal(18,2)
+    required: true
+    description: Current case reserves (incurred minus paid) on the latest diagonal.
+    classification: confidential
+  - name: ultimate_loss
+    type: decimal(18,2)
+    required: true
+    description: The projected ultimate loss under the chosen method.
+    classification: confidential
+  - name: ibnr
+    type: decimal(18,2)
+    required: true
+    description: >
+      Incurred but not reported - ultimate loss minus incurred to date. Ties to
+      the IBNR figure published in finance.valuation_result.
+    classification: confidential
+  - name: outstanding
+    type: decimal(18,2)
+    required: true
+    description: Total outstanding - ultimate loss minus paid to date (case reserves plus IBNR).
+    classification: confidential
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: The reserving engine that produced the estimate.
+    classification: internal
+keys:
+  primary: [reserve_estimate_id]
+owner: Chief Actuary
+quality:
+  - name: ibnr_reconciles
+    rule: abs((paid_to_date + case_reserves + ibnr) - ultimate_loss) < 1.0
+    description: Paid plus case reserves plus IBNR must reconcile to the projected ultimate.
+  - name: ultimate_covers_paid
+    rule: ultimate_loss >= paid_to_date
+    description: A projected ultimate cannot be below what has already been paid.

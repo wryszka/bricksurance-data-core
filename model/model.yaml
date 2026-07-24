@@ -46,6 +46,14 @@ domains:
     description: >
       Outward and inward reinsurance - treaties, cessions and recoveries
       linking the direct book to reinsurers.
+  - name: reserving
+    description: >
+      Actuarial reserving as a governed semantic layer over claim transactions -
+      loss-development triangles, chain-ladder and Bornhuetter-Ferguson
+      estimates, IBNR and ultimate losses by accident year. Triangles are
+      derived by summation over claim movements, never stored; the method used
+      is a recorded, attestable choice. The spreadsheet workflow, done on the
+      platform: reproducible, reconciling to source, and answerable in Genie.
   - name: product
     description: >
       Machine-readable products - offered coverages, underwriting questions

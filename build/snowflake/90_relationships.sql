@@ -390,3 +390,11 @@ ALTER TABLE BRICKSURANCE.reinsurance.treaty ADD CONSTRAINT fk_treaty_currency_co
 ALTER TABLE BRICKSURANCE.reinsurance.treaty ADD CONSTRAINT fk_treaty_source_system_code FOREIGN KEY (source_system_code) REFERENCES BRICKSURANCE.reference.source_system (source_system_code);
 
 ALTER TABLE BRICKSURANCE.reinsurance.treaty_layer ADD CONSTRAINT fk_treaty_layer_treaty_id FOREIGN KEY (treaty_id) REFERENCES BRICKSURANCE.reinsurance.treaty (treaty_id);
+
+ALTER TABLE BRICKSURANCE.reserving.reserve_estimate ADD CONSTRAINT fk_reserve_estimate_line_of_business_code FOREIGN KEY (line_of_business_code) REFERENCES BRICKSURANCE.reference.line_of_business (line_of_business_code);
+
+ALTER TABLE BRICKSURANCE.reserving.reserve_estimate ADD CONSTRAINT fk_reserve_estimate_reserving_method_code FOREIGN KEY (reserving_method_code) REFERENCES BRICKSURANCE.reference.reserving_method (reserving_method_code);
+
+ALTER TABLE BRICKSURANCE.reserving.reserve_estimate ADD CONSTRAINT fk_reserve_estimate_currency_code FOREIGN KEY (currency_code) REFERENCES BRICKSURANCE.reference.currency (currency_code);
+
+ALTER TABLE BRICKSURANCE.reserving.reserve_estimate ADD CONSTRAINT fk_reserve_estimate_source_system_code FOREIGN KEY (source_system_code) REFERENCES BRICKSURANCE.reference.source_system (source_system_code);
