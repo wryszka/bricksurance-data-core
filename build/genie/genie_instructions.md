@@ -218,7 +218,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Assumption Status: DRAFT (Draft), PENDING_APPROVAL (Pending Approval), APPROVED (Approved), REJECTED (Rejected), SUPERSEDED (Superseded).
 - Assumption Type: MORTALITY (Mortality), LAPSE (Lapse), EXPENSE (Expense), ECONOMIC (Economic).
 - Business Event Type: QUOTE_REQUESTED (Quote Requested), POLICY_BOUND (Policy Bound), FNOL (First Notification of Loss), CLAIM_PAYMENT (Claim Payment), COMPLAINT_RECEIVED (Complaint Received), BORDEREAU_RECEIVED (Bordereau Received).
-- Cause of Loss: FIRE (Fire), FLOOD (Flood), STORM (Storm), WATER_DAMAGE (Water Damage), THEFT (Theft), COLLISION (Collision), LIABILITY_INCIDENT (Liability Incident).
+- Cause of Loss: FIRE (Fire), FLOOD (Flood), STORM (Storm), WATER_DAMAGE (Water Damage), THEFT (Theft), COLLISION (Collision), LIABILITY_INCIDENT (Liability Incident), FREEZE (Freeze).
 - Claim Status: OPEN (Open), CLOSED (Closed), REOPENED (Reopened), DECLINED (Declined).
 - Claim Transaction Type: CASE_RESERVE_MOVEMENT (Case Reserve Movement), INDEMNITY_PAYMENT (Indemnity Payment), EXPENSE_PAYMENT (Expense Payment), RECOVERY (Recovery).
 - Commission Type: NEW_BUSINESS (New Business Commission), RENEWAL (Renewal Commission), PROFIT (Profit Commission), CLAWBACK (Clawback).

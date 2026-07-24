@@ -665,6 +665,194 @@ def atlas_underwriting(currency: str = "GBP"):
 
 
 # --------------------------------------------------------------------------- #
+# Reinsurance workbench — programme, accumulation & recovery, and the two-sided
+# exchange (cedant outbound bordereau == Bricksurance Re received view).
+# --------------------------------------------------------------------------- #
+REINSURANCE_GENIE = (
+    "https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/"
+    "01f17b83371f1d56bba2404ad475e29d")  # Reinsurance & Exchange
+
+
+@app.get("/api/atlas/reinsurance")
+def atlas_reinsurance():
+    """The reinsurance workbench in three moves: the programme (treaties +
+    layers + submission funnel), accumulation & recovery (cat events -> event
+    losses -> XoL layers pierced -> ceded recovery), and the exchange (the
+    outbound cession bordereau the cedant sends == what Bricksurance Re
+    receives, penny-identical, with the dictionary travelling)."""
+    # ---- programme: treaties + layers
+    treaties = run_sql(
+        f"SELECT t.treaty_reference, t.treaty_type_code, t.line_of_business_code, "
+        f"t.cession_rate, t.currency_code FROM {q('reinsurance','treaty')} t "
+        f"ORDER BY t.treaty_reference")
+    tlist = [{"reference": r[0], "type": (r[1] or "").replace("_", " ").title(),
+              "line_of_business": (r[2] or "").replace("_", " ").title(),
+              "cession_rate": _num(r[3]), "currency": r[4]} for r in treaties]
+    layers = run_sql(
+        f"SELECT t.treaty_reference, tl.layer_number, "
+        f"CAST(tl.limit_amount AS DECIMAL(18,2)), CAST(tl.attachment_amount AS DECIMAL(18,2)) "
+        f"FROM {q('reinsurance','treaty_layer')} tl "
+        f"JOIN {q('reinsurance','treaty')} t ON t.treaty_id = tl.treaty_id "
+        f"ORDER BY t.treaty_reference, tl.layer_number")
+    llist = [{"treaty": r[0], "layer": int(r[1]), "limit": _num(r[2]),
+              "attachment": _num(r[3])} for r in layers]
+    # ---- submission funnel
+    funnel = run_sql(
+        f"SELECT submission_status_code, COUNT(*) FROM {q('reinsurance','submission')} "
+        f"GROUP BY 1 ORDER BY 2 DESC")
+    submissions = [{"status": r[0], "count": int(r[1])} for r in funnel]
+
+    # ---- accumulation & recovery: cat events, gross, ceded (the layer pays)
+    cats = run_sql(
+        f"SELECT ce.event_name, ce.cause_of_loss_code, ce.event_date, "
+        f"CAST(SUM(el.gross_loss_amount) AS DECIMAL(18,2)) AS gross, "
+        f"CAST(SUM(COALESCE(el.ceded_loss_amount,0)) AS DECIMAL(18,2)) AS ceded, "
+        f"COUNT(*) AS loss_rows "
+        f"FROM {q('reinsurance','cat_event')} ce "
+        f"JOIN {q('reinsurance','event_loss')} el ON el.cat_event_id = ce.cat_event_id "
+        f"WHERE el.loss_basis_code = 'REPORTED' "
+        f"GROUP BY ce.event_name, ce.cause_of_loss_code, ce.event_date "
+        f"ORDER BY gross DESC")
+    events = [{"event": r[0], "peril": (r[1] or "").replace("_", " ").title(),
+               "date": str(r[2]) if r[2] else None, "gross_loss": _num(r[3]),
+               "ceded_recovery": _num(r[4]), "net_retained": round((_num(r[3]) or 0) - (_num(r[4]) or 0), 2),
+               "loss_rows": int(r[5])} for r in cats]
+
+    # ---- the exchange: outbound bordereau totals (what the cedant sends)
+    outbound = run_sql(
+        f"SELECT COUNT(*), CAST(SUM(gross_premium) AS DECIMAL(18,2)), "
+        f"CAST(SUM(ceded_premium) AS DECIMAL(18,2)) "
+        f"FROM {q('exchange','cession_bordereau_line')}")
+    out_rows, out_gross, out_ceded = (
+        int(outbound[0][0]), _num(outbound[0][1]), _num(outbound[0][2])) if outbound else (0, None, None)
+
+    # what Bricksurance Re receives (partner_re schema, if the local exchange is up)
+    recv_rows = recv_ceded = None
+    exchange_live = False
+    try:
+        recv = run_sql(
+            f"SELECT COUNT(*), CAST(SUM(ceded_premium) AS DECIMAL(18,2)) "
+            f"FROM {CATALOG}.bricksurance_partner_re.cession_bordereau_line")
+        if recv:
+            recv_rows, recv_ceded = int(recv[0][0]), _num(recv[0][1])
+            exchange_live = True
+    except Exception:  # noqa: BLE001 — partner_re not provisioned yet
+        pass
+
+    reconciles = (exchange_live and out_ceded is not None and recv_ceded is not None
+                  and abs(out_ceded - recv_ceded) < 0.01)
+
+    return {
+        "programme": {"treaties": tlist, "layers": llist, "submissions": submissions,
+                      "note": "What protection we bought: quota-share + excess-of-loss layers, "
+                              "and the inward submission funnel."},
+        "accumulation": {"events": events,
+                         "note": "A cat event accumulates losses across the book; where it "
+                                 "pierces the excess-of-loss attachment, the layer pays — the "
+                                 "ceded recovery is derived from the same event losses."},
+        "exchange": {
+            "outbound_rows": out_rows, "outbound_gross": out_gross, "outbound_ceded": out_ceded,
+            "received_rows": recv_rows, "received_ceded": recv_ceded,
+            "exchange_live": exchange_live, "reconciles": reconciles,
+            "note": ("The cedant's outbound cession bordereau is a governed view — and it is "
+                     "exactly what Bricksurance Re receives, penny-identical, with the data "
+                     "dictionary travelling. No spreadsheet, no re-key, no reconciliation call."
+                     if exchange_live else
+                     "The outbound cession bordereau is a governed view, ready to share to "
+                     "Bricksurance Re (run tools/create_local_exchange.py to stand up the "
+                     "receiving view, or the Delta Share when the grant lands).")},
+        "genie_url": REINSURANCE_GENIE,
+        "genie_question": "What gross and ceded premium did we cede by treaty this year?",
+        "provenance": "reinsurance.treaty/treaty_layer/submission/cat_event/event_loss · exchange.cession_bordereau_line",
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Account lens (multipolicy) — the party-role pattern's payoff: a customer 360
+# assembled from the model, no bespoke "customer" table. Every policy across
+# every line, plus claims and complaints, for one governed party.
+# --------------------------------------------------------------------------- #
+@app.get("/api/atlas/accounts")
+def atlas_accounts(top: int = 8):
+    """Customers holding more than one policy — the multipolicy book."""
+    rows = run_sql(
+        f"SELECT pt.party_id, pt.name, "
+        f"COUNT(DISTINCT pr.policy_id) AS policies, "
+        f"COUNT(DISTINCT p.line_of_business_code) AS lines "
+        f"FROM {q('party','party_role')} pr "
+        f"JOIN {q('party','party')} pt ON pt.party_id = pr.party_id "
+        f"JOIN {q('policy','policy')} p ON p.policy_id = pr.policy_id "
+        f"WHERE pr.party_role_type_code = 'POLICYHOLDER' "
+        f"GROUP BY pt.party_id, pt.name HAVING COUNT(DISTINCT pr.policy_id) > 1 "
+        f"ORDER BY policies DESC, lines DESC LIMIT {int(top)}")
+    return {"accounts": [{"party_id": r[0], "name": r[1],
+                          "policies": int(r[2]), "lines": int(r[3])} for r in rows]}
+
+
+@app.get("/api/atlas/account/{party_id}")
+def atlas_account(party_id: str):
+    """One customer's whole relationship, assembled from the party — policies
+    across lines, total premium, claims and complaints. No customer table: the
+    party-role pattern makes this 360 view fall out of the model."""
+    pid = party_id.replace("'", "")
+    who = run_sql(
+        f"SELECT party_id, name, country_code, party_type_code "
+        f"FROM {q('party','party')} WHERE party_id = '{pid}'")
+    if not who:
+        raise HTTPException(404, f"no party '{pid}'")
+    name = who[0][1]
+
+    policies = run_sql(
+        f"SELECT p.policy_number, p.line_of_business_code, p.policy_status_code, "
+        f"p.underwriting_year, p.currency_code, "
+        f"CAST((SELECT SUM(pt.amount) FROM {q('policy','premium_transaction')} pt "
+        f"WHERE pt.policy_id = p.policy_id) AS DECIMAL(18,2)) AS premium "
+        f"FROM {q('policy','policy')} p "
+        f"JOIN {q('party','party_role')} pr ON pr.policy_id = p.policy_id "
+        f"WHERE pr.party_role_type_code = 'POLICYHOLDER' AND pr.party_id = '{pid}' "
+        f"ORDER BY p.underwriting_year DESC, p.line_of_business_code")
+    pols = [{"policy_number": r[0], "line_of_business": (r[1] or "").replace("_", " ").title(),
+             "status": r[2], "underwriting_year": int(r[3]) if r[3] is not None else None,
+             "currency": r[4], "premium": _num(r[5])} for r in policies]
+
+    claims = run_sql(
+        f"SELECT c.claim_number, c.claim_status_code, c.cause_of_loss_code, c.loss_date "
+        f"FROM {q('claim','claim')} c "
+        f"JOIN {q('policy','policy')} p ON p.policy_id = c.policy_id "
+        f"JOIN {q('party','party_role')} pr ON pr.policy_id = p.policy_id "
+        f"WHERE pr.party_role_type_code = 'POLICYHOLDER' AND pr.party_id = '{pid}' "
+        f"ORDER BY c.loss_date DESC")
+    clms = [{"claim_number": r[0], "status": r[1], "cause": (r[2] or "").replace("_", " ").title(),
+             "loss_date": str(r[3]) if r[3] else None} for r in claims]
+
+    complaints = run_sql(
+        f"SELECT complaint_reference, complaint_category_code, complaint_status_code "
+        f"FROM {q('conduct','complaint')} WHERE complainant_party_id = '{pid}'")
+    cmps = [{"reference": r[0], "category": (r[1] or "").replace("_", " ").title(),
+             "status": r[2]} for r in complaints]
+
+    # lines + total premium (group by currency — honest multi-currency)
+    lines = sorted({p["line_of_business"] for p in pols})
+    prem_by_ccy: dict[str, float] = {}
+    for p in pols:
+        if p["premium"]:
+            prem_by_ccy[p["currency"]] = round(prem_by_ccy.get(p["currency"], 0) + p["premium"], 2)
+
+    return {
+        "party_id": pid, "name": name, "country": who[0][2],
+        "lines": lines, "policy_count": len(pols),
+        "claim_count": len(clms), "complaint_count": len(cmps),
+        "premium_by_currency": prem_by_ccy,
+        "policies": pols, "claims": clms, "complaints": cmps,
+        "note": ("One governed party. Every policy across every line, its claims "
+                 "and complaints — assembled by the model from the party-role "
+                 "pattern. Nobody built a customer table; the 360 view falls out "
+                 "of the semantics."),
+        "provenance": "party.party · party.party_role · policy.policy · claim.claim · conduct.complaint",
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Model-swap demonstrator — context is the moat, the model is a dial
 # The governed DECISION is deterministic (fn_appetite_check + recorded
 # underwriting_decision). The LLM only NARRATES it in English — and which LLM

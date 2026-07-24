@@ -656,7 +656,8 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.cause_of_lo
   ('WATER_DAMAGE', 'Water Damage', 'Escape of water from internal systems such as burst pipes.'),
   ('THEFT', 'Theft', 'Theft, attempted theft and malicious damage in connection with it.'),
   ('COLLISION', 'Collision', 'Impact of a vehicle with another vehicle or object.'),
-  ('LIABILITY_INCIDENT', 'Liability Incident', 'An event giving rise to third-party injury or property damage.');
+  ('LIABILITY_INCIDENT', 'Liability Incident', 'An event giving rise to third-party injury or property damage.'),
+  ('FREEZE', 'Freeze', 'Freeze, frost and burst-pipe damage from severe cold weather.');
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.claim_status VALUES
   ('OPEN', 'Open', 'Claim reported and under active handling.'),

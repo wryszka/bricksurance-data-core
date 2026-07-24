@@ -455,6 +455,52 @@ export interface ModelSwapResponse {
   contract: string;
 }
 
+export interface AccountSummary {
+  party_id: string;
+  name: string;
+  policies: number;
+  lines: number;
+}
+export interface AccountDetail {
+  party_id: string;
+  name: string;
+  country: string;
+  lines: string[];
+  policy_count: number;
+  claim_count: number;
+  complaint_count: number;
+  premium_by_currency: Record<string, number>;
+  policies: {
+    policy_number: string; line_of_business: string; status: string;
+    underwriting_year: number | null; currency: string; premium: number | null;
+  }[];
+  claims: { claim_number: string; status: string; cause: string; loss_date: string | null }[];
+  complaints: { reference: string; category: string; status: string }[];
+  note: string;
+  provenance: string;
+}
+
+export interface ReinsuranceResponse {
+  programme: {
+    treaties: { reference: string; type: string; line_of_business: string; cession_rate: number | null; currency: string }[];
+    layers: { treaty: string; layer: number; limit: number | null; attachment: number | null }[];
+    submissions: { status: string; count: number }[];
+    note: string;
+  };
+  accumulation: {
+    events: { event: string; peril: string; date: string | null; gross_loss: number | null; ceded_recovery: number | null; net_retained: number; loss_rows: number }[];
+    note: string;
+  };
+  exchange: {
+    outbound_rows: number; outbound_gross: number | null; outbound_ceded: number | null;
+    received_rows: number | null; received_ceded: number | null;
+    exchange_live: boolean; reconciles: boolean; note: string;
+  };
+  genie_url: string;
+  genie_question: string;
+  provenance: string;
+}
+
 export const api = {
   model: () => getJSON<ModelResponse>('/api/model'),
   metrics: (currency: string, year?: number | null) =>
@@ -533,6 +579,10 @@ export const api = {
     getJSON<ModelSwapResponse>(
       `/api/atlas/model-swap?model=${encodeURIComponent(model)}`,
     ),
+  accounts: () => getJSON<{ accounts: AccountSummary[] }>('/api/atlas/accounts'),
+  account: (partyId: string) =>
+    getJSON<AccountDetail>(`/api/atlas/account/${encodeURIComponent(partyId)}`),
+  reinsurance: () => getJSON<ReinsuranceResponse>('/api/atlas/reinsurance'),
   governanceActions: () =>
     getJSON<GovernanceActionsResponse>('/api/atlas/governance/actions'),
   propose: async (body: ProposeBody): Promise<ProposeResponse> => {

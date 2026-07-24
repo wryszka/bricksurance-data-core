@@ -549,7 +549,10 @@ def build_world(scale):
         "MARINE_CARGO":        (40000, [0.45, 0.80, 0.93, 0.99, 1.00, 1.00]),
     }
     RSV_CARRIER = CARRIER
-    rsv_org, rsv_country = ORGS[0]
+    # Spread the reserving-history policies across the GB commercial orgs so no
+    # single customer holds an unrealistic count (the triangle is a GBP book, so
+    # we keep to GB-domiciled policyholders to avoid fragmenting it by currency).
+    RSV_ORGS = [o for o in ORGS if o[1] == "GB"]
     # ~n_dev claims per accident year 2019..2026; older years are fully/near
     # developed, recent years still developing - exactly what a triangle shows.
     for ay in range(2019, 2027):
@@ -558,6 +561,7 @@ def build_world(scale):
             lob = list(RSV_LINES)[(ay + k) % len(RSV_LINES)]
             sev, pattern = RSV_LINES[lob]
             ccy = "GBP"
+            rsv_org, rsv_country = RSV_ORGS[(ay + k) % len(RSV_ORGS)]
             # a light historical policy so the claim has a real parent
             hpid = w.nid("pol")
             hnum = f"POL-{ay}-{900000 + k:06d}"
@@ -719,6 +723,43 @@ def build_world(scale):
               treaty_id=xl["treaty_id"], policy_id=None, loss_basis_code=basis,
               gross_loss_amount=gross, ceded_loss_amount=ceded,
               currency_code="GBP", as_of_date=as_of)
+
+    # Two more cat events across perils, so the accumulation picture is real and
+    # the XoL recovery story is visible. XoL attaches at 5m (layer 1) / 15m
+    # (layer 2). Flood Brentwood is a mid-size event that grazes the attachment;
+    # Freeze Boreas is a large event that pierces deep into layer 2 and pays.
+    more_cats = [
+        {"name": "Flood Brentwood", "peril": "FLOOD", "date": date(2025, 11, 6),
+         "industry": 420000000.00, "n_hit": w.n(4), "sev": (150000, 700000),
+         # gross to the XoL programme: pierces layer 1 modestly
+         "xl_losses": [("MODELLED", date(2025, 11, 10), 6800000.00, 1800000.00),
+                       ("REPORTED", date(2025, 12, 10), 6300000.00, 1300000.00)]},
+        {"name": "Freeze Boreas", "peril": "FREEZE", "date": date(2024, 1, 15),
+         "industry": 1600000000.00, "n_hit": w.n(6), "sev": (400000, 1500000),
+         # a market-moving freeze: gross 28m pierces both layers; recovery is large
+         "xl_losses": [("MODELLED", date(2024, 1, 20), 28000000.00, 22000000.00),
+                       ("REPORTED", date(2024, 3, 1), 26400000.00, 20400000.00)]},
+    ]
+    for cc in more_cats:
+        ce = w.add("cat_event", cat_event_id=w.nid("cev"), event_name=cc["name"],
+                   cause_of_loss_code=cc["peril"], event_date=cc["date"], country_code="GB",
+                   industry_loss_estimate=cc["industry"], currency_code="GBP",
+                   source_system_code="RI_CORE")
+        hitp = [p for p in w.t["policy"]
+                if p["line_of_business_code"] == "COMMERCIAL_PROPERTY"
+                and p["currency_code"] == "GBP"
+                and p["inception_date"] <= cc["date"] <= p["expiry_date"]][:cc["n_hit"]]
+        for p in hitp:
+            g = round(rng.uniform(*cc["sev"]), 2)
+            w.add("event_loss", event_loss_id=w.nid("evl"), cat_event_id=ce["cat_event_id"],
+                  treaty_id=None, policy_id=p["policy_id"], loss_basis_code="REPORTED",
+                  gross_loss_amount=g, ceded_loss_amount=round(g * 0.3, 2),
+                  currency_code="GBP", as_of_date=cc["date"] + timedelta(days=30))
+        for basis, as_of, gross, ceded in cc["xl_losses"]:
+            w.add("event_loss", event_loss_id=w.nid("evl"), cat_event_id=ce["cat_event_id"],
+                  treaty_id=xl["treaty_id"], policy_id=None, loss_basis_code=basis,
+                  gross_loss_amount=gross, ceded_loss_amount=ceded,
+                  currency_code="GBP", as_of_date=as_of)
 
     # ---------------------------------------------------------- conduct & content
     ph_by_policy = {r["policy_id"]: r["party_id"] for r in w.t["party_role"]

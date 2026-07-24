@@ -29,3 +29,6 @@ codes:
   - code: LIABILITY_INCIDENT
     label: Liability Incident
     description: An event giving rise to third-party injury or property damage.
+  - code: FREEZE
+    label: Freeze
+    description: Freeze, frost and burst-pipe damage from severe cold weather.
