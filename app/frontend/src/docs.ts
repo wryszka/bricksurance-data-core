@@ -100,6 +100,12 @@ export const DOCS: Record<string, DocLink> = {
     url: 'https://docs.google.com/document/d/1ZdNydA36ABBKbnqiw-76L42vCpObsbOmAi9D6swpm3M/edit',
     description: 'The living loss-development triangle, governed and reconciling. Plus the vs-Claude-for-Excel framing.',
   },
+  reinsuranceDemo: {
+    key: 'reinsuranceDemo',
+    title: 'Demo — Reinsurance on the layer',
+    url: 'https://docs.google.com/document/d/1PB_tn3cyc0zRuuzY-IjGeBmru2NdzQPvvJ-WJfrNtUs/edit',
+    description: 'Programme, cat recovery, and the two-sided cession bordereau that reconciles to the penny — kill the bordereau.',
+  },
   atlasDemo: {
     key: 'atlasDemo',
     title: 'Demo — Insurance Ontology (App + Workspace)',
@@ -120,6 +126,7 @@ export const DEMO_ORDER: DocLink[] = [
   DOCS.atlasDemo,
   DOCS.underwritingDemo,
   DOCS.reservingDemo,
+  DOCS.reinsuranceDemo,
 ];
 
 // Reference docs — the full write-up behind Data Core.
