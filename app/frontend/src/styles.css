@@ -649,3 +649,49 @@ table.triangle .tri-ult.ibnr { color: var(--accent); background: #fff; }
 .uw-flow-t-val { display: block; font-size: 21px; font-weight: 700; color: var(--navy); }
 .uw-flow-t-sub { display: block; font-size: 12px; color: var(--muted); }
 .uw-flow-target.ok .uw-flow-t-sub { color: var(--live); font-weight: 600; }
+
+/* --------------------------------------------------------------- Model dial */
+.ms-dial { margin: 4px 0 22px; }
+.ms-dial-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.ms-dial .seg-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.ms-model { display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+  padding: 9px 15px; border: 1px solid var(--line); border-radius: 9px; background: #fff;
+  cursor: pointer; }
+.ms-model:hover { background: var(--teal-soft); }
+.ms-model.active { background: var(--navy); border-color: var(--navy); }
+.ms-model.active .ms-model-label, .ms-model.active .ms-model-tier { color: #fff; }
+.ms-model.tier-none.active { background: var(--internal); border-color: var(--internal); }
+.ms-model-label { font-size: 13.5px; font-weight: 700; color: var(--navy); }
+.ms-model-tier { font-size: 11px; color: var(--muted); }
+
+.ms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+@media (max-width: 760px) { .ms-grid { grid-template-columns: 1fr; } }
+.ms-fact { border: 2px solid var(--navy); border-radius: 12px; padding: 18px; background: #fff; }
+.ms-fact-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  color: var(--navy); margin-bottom: 12px; }
+.ms-fact-row { display: flex; justify-content: space-between; font-size: 13.5px;
+  padding: 5px 0; border-bottom: 1px solid var(--line); color: var(--ink); }
+.ms-fact-row span:first-child { color: var(--muted); }
+.ms-fact-decision { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.ms-decision-badge { font-size: 18px; font-weight: 800; color: #fff; background: var(--live);
+  padding: 6px 18px; border-radius: 8px; letter-spacing: 0.5px; }
+.ms-decision-by { font-size: 12px; color: var(--muted); }
+.ms-fact-note { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+
+.ms-narration { border: 1px dashed var(--line); border-radius: 12px; padding: 18px; background: var(--bg); }
+.ms-narration-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  color: var(--muted); margin-bottom: 12px; }
+.ms-spin { color: var(--accent); font-weight: 600; text-transform: none; letter-spacing: 0; }
+.ms-narration-body { font-size: 14.5px; line-height: 1.6; color: var(--ink); }
+.ms-narration-body.err { color: var(--pii); }
+.ms-none { text-align: center; padding: 20px 10px; color: var(--muted); }
+.ms-none-icon { font-size: 34px; color: var(--internal); }
+.ms-none p { font-size: 14px; line-height: 1.6; margin-top: 8px; }
+
+.ms-contract { border-radius: 10px; background: var(--teal-soft); padding: 16px 18px;
+  font-size: 13.5px; line-height: 1.55; color: var(--navy); }
+.ms-contract-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
+@media (max-width: 760px) { .ms-contract-points { grid-template-columns: 1fr; } }
+.ms-contract-points > div { font-size: 12.5px; color: var(--ink); line-height: 1.5; }
+.ms-cp-h { display: block; font-weight: 700; color: var(--teal); margin-bottom: 3px; }

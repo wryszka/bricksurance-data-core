@@ -664,6 +664,112 @@ def atlas_underwriting(currency: str = "GBP"):
     }
 
 
+# --------------------------------------------------------------------------- #
+# Model-swap demonstrator — context is the moat, the model is a dial
+# The governed DECISION is deterministic (fn_appetite_check + recorded
+# underwriting_decision). The LLM only NARRATES it in English — and which LLM
+# is a swappable choice, or none at all. Proves: (1) regulators get a
+# deterministic, auditable decision, not a black box; (2) no lock-in to any
+# one model; (3) the value is the governed context, not the model.
+# --------------------------------------------------------------------------- #
+
+# The dial: a spectrum from frontier → cheap → open-weight → off. Every one is
+# a real Foundation Model API endpoint on this workspace, model-agnostic.
+NARRATION_MODELS = [
+    {"id": "databricks-claude-sonnet-5", "label": "Claude Sonnet 5",
+     "tier": "frontier", "note": "Anthropic, via Databricks FMAPI"},
+    {"id": "databricks-llama-4-maverick", "label": "Llama 4 Maverick",
+     "tier": "open", "note": "open weights — run it in your own VPC"},
+    {"id": "databricks-gpt-oss-120b", "label": "GPT-OSS 120B",
+     "tier": "open", "note": "open weights, no vendor dependency"},
+    {"id": "databricks-meta-llama-3-1-8b-instruct", "label": "Llama 3.1 8B",
+     "tier": "cheap", "note": "small + cheap — the number is unchanged"},
+    {"id": "none", "label": "None — deterministic only",
+     "tier": "none", "note": "no LLM in the path; the decision still stands"},
+]
+_MODEL_IDS = {m["id"] for m in NARRATION_MODELS}
+
+
+def _narrate(endpoint: str, prompt: str) -> str:
+    w = client()
+    resp = w.api_client.do(
+        "POST", f"/serving-endpoints/{endpoint}/invocations",
+        body={"messages": [{"role": "user", "content": prompt}], "max_tokens": 220})
+    text = resp["choices"][0]["message"]["content"]
+    if isinstance(text, list):
+        text = "".join(b.get("text", "") for b in text if b.get("type") == "text")
+    return text.strip()
+
+
+@app.get("/api/atlas/model-swap/config")
+def atlas_model_swap_config():
+    return {"models": NARRATION_MODELS}
+
+
+@app.get("/api/atlas/model-swap")
+def atlas_model_swap(model: str = "databricks-claude-sonnet-5"):
+    """Run one governed underwriting decision and narrate it with the chosen
+    model. The DECISION and the numbers come from the data (deterministic); only
+    the narration changes with the model — or disappears if model=none."""
+    mdl = model if model in _MODEL_IDS else "databricks-claude-sonnet-5"
+
+    # THE GOVERNED FACT — read from the data, decided by fn_appetite_check, not the LLM.
+    rows = run_sql(
+        f"SELECT q.quote_number, q.line_of_business_code, "
+        f"CAST(q.quoted_gross_premium AS DECIMAL(18,2)), "
+        f"ud.underwriting_decision_type_code, ud.decided_by, ud.decided_by_agent, "
+        f"ud.rationale FROM {q('policy','quote')} q "
+        f"JOIN {q('policy','underwriting_decision')} ud ON ud.quote_id = q.quote_id "
+        f"WHERE q.quote_number = 'QUO-2026-000901'")
+    if not rows:
+        raise HTTPException(404, "governed decision not found")
+    r = rows[0]
+    fact = {
+        "quote_number": r[0],
+        "line_of_business": (r[1] or "").replace("_", " ").title(),
+        "quoted_premium": _num(r[2]),
+        "decision": r[3],
+        "decided_by": r[4],
+        "by_agent": as_bool(r[5]),
+        "rationale": r[6],
+        "decided_by_engine": "fn_appetite_check (governed UC function)",
+    }
+
+    result = {
+        "model": mdl,
+        "model_label": next((m["label"] for m in NARRATION_MODELS if m["id"] == mdl), mdl),
+        "fact": fact,
+        "decision_source": "deterministic — fn_appetite_check + recorded underwriting_decision",
+        "narration": None,
+        "narration_error": None,
+        "contract": ("The decision and the numbers are identical regardless of model — "
+                     "they are governed facts. The LLM only phrases the explanation, and "
+                     "which LLM (or none) is your choice."),
+    }
+    if mdl == "none":
+        result["narration"] = None
+        result["narration_note"] = (
+            "No LLM in the path. The decision (" + fact["decision"] +
+            ") and its recorded rationale still stand — fully auditable, "
+            "regulator-ready, no model involved.")
+        return result
+
+    prompt = (
+        "You are explaining, in two plain-English sentences for an underwriter, a "
+        "decision that has ALREADY been made by a governed rules function. Do not "
+        "change or second-guess the decision. Decision facts:\n"
+        f"- Quote {fact['quote_number']}, {fact['line_of_business']}, premium "
+        f"{fact['quoted_premium']}.\n"
+        f"- Decision: {fact['decision']} (made by {fact['decided_by_engine']}).\n"
+        f"- Recorded rationale: {fact['rationale']}\n"
+        "Write only the two-sentence explanation.")
+    try:
+        result["narration"] = _narrate(mdl, prompt)
+    except Exception as e:  # noqa: BLE001
+        result["narration_error"] = str(e)
+    return result
+
+
 @app.get("/api/atlas/genie-health")
 def atlas_genie_health():
     """Is the Genie loop demonstrable right now? Checks the warehouse is warm.

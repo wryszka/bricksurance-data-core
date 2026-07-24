@@ -429,6 +429,32 @@ export interface UnderwritingResponse {
   provenance: string;
 }
 
+export interface NarrationModel {
+  id: string;
+  label: string;
+  tier: string;
+  note: string;
+}
+export interface ModelSwapResponse {
+  model: string;
+  model_label: string;
+  fact: {
+    quote_number: string;
+    line_of_business: string;
+    quoted_premium: number | null;
+    decision: string;
+    decided_by: string;
+    by_agent: boolean;
+    rationale: string;
+    decided_by_engine: string;
+  };
+  decision_source: string;
+  narration: string | null;
+  narration_error: string | null;
+  narration_note?: string;
+  contract: string;
+}
+
 export const api = {
   model: () => getJSON<ModelResponse>('/api/model'),
   metrics: (currency: string, year?: number | null) =>
@@ -500,6 +526,12 @@ export const api = {
   underwriting: (currency: string) =>
     getJSON<UnderwritingResponse>(
       `/api/atlas/underwriting?currency=${encodeURIComponent(currency)}`,
+    ),
+  modelSwapConfig: () =>
+    getJSON<{ models: NarrationModel[] }>('/api/atlas/model-swap/config'),
+  modelSwap: (model: string) =>
+    getJSON<ModelSwapResponse>(
+      `/api/atlas/model-swap?model=${encodeURIComponent(model)}`,
     ),
   governanceActions: () =>
     getJSON<GovernanceActionsResponse>('/api/atlas/governance/actions'),
