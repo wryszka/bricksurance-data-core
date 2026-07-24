@@ -74,9 +74,65 @@ which basis set the reserves and who signed off.
 - *"Chain-ladder vs Bornhuetter-Ferguson ultimate for motor?"*
 - *"Which method set the current reserves, and who signed off?"*
 
+## When someone is amazed by the Claude-for-Excel reserving demo
+
+Meet them there first — it *is* a great demo. The actuary stays in Excel, Claude
+reads the workbook, flags the hard-coded development factor, drafts the ASOP
+filing narrative. Say so: "Yes — that's exactly the assistant an actuary wants."
+Then move the conversation from *the analyst* to *the system of record*.
+
+| Their demo | This platform |
+|---|---|
+| Claude **validates** the triangle in the sheet | The triangle **is** a view over claim transactions — it reconciles to the claims ledger to the penny, live. Hard-coded factors aren't caught; they're **impossible** — there's nowhere to type one. |
+| Output lives in one analyst's workbook | The IBNR, method and ultimate are a **governed asset in Unity Catalog** — one definition, read by finance, Genie and BI alike. |
+| Audit trail = clickable cell references | **Who chose chain-ladder vs BF, when, on what evidence** is a dated attestation; lineage runs ultimate → triangle → raw claim movements; UC permissions enforced. Auditor-reproducible. |
+| Switching method = rebuilding the sheet | Method is a **toggle**; both bases sit side by side in the data; the change is recorded. |
+| A reserving assistant, in Excel | Reserving as **one domain on a shared insurance semantic layer** — same governance as pricing, claims, Solvency II, IFRS 17. |
+
+**Be honest about where theirs wins:** the last mile *inside Excel* — the actuary
+never leaves the tool, and the Word narrative drafting is slick. Don't pretend to
+replace that. The line that turns it from us-vs-them into an easy yes:
+
+> "Keep Claude in Excel if your team loves it — point it at **our** governed
+> tables through the Databricks connector. Now the spreadsheet reads from a
+> number that can't drift, with the audit trail underneath. We don't kill Excel;
+> we give it a spine."
+
+## The strongest angle: data flows in, and back out, effortlessly
+
+A spreadsheet is a **terminus**. Data goes in, a number comes out, and it dies in
+the file — to reuse it, someone re-keys it, re-pastes it, re-reconciles it. Every
+onward use is a fresh copy and a fresh chance to drift.
+
+On the layer, reserving is a **junction**, not an endpoint:
+
+- **In, effortlessly.** The triangle isn't loaded — it *is* the claim movements,
+  summed. A new claim booked this morning is in the triangle with no ETL, no
+  paste, no refresh job. The same discipline runs at the boundary: a coverholder's
+  messy bordereau maps itself against the model on arrival (the exchange domain),
+  so third-party claims land governed, not in an inbox.
+- **Out, effortlessly.** The IBNR the actuary just set is the *same* IBNR that:
+  posts to the **finance close** (it ties to `finance.valuation_result`); travels
+  to the **reinsurer** in a Delta Share that carries its own definitions, so the
+  cedant and reinsurer reserve off one agreed number without a reconciliation
+  call; answers in **Genie** in plain English; and feeds **capital and IFRS 17**
+  without a single re-key. One number, many consumers, meaning intact at every hop.
+
+That is the thing the spreadsheet can never do and the Excel-assistant demo never
+claims: the output of reserving is **immediately, governed-ly reusable** by the
+next function, and the input arrives the same way. The reserve stops being a
+deliverable someone emails and becomes a live part of the estate.
+
+> "Their demo makes the number inside the file better. Ours makes the number
+> flow — the claims flow *in* with no ETL, and the reserve flows *out* to finance,
+> to the reinsurer, to Genie, to capital, with its meaning intact and nobody
+> re-keying it. The spreadsheet is where data goes to stop. The layer is where it
+> keeps moving."
+
 ## The line to land
 
 > The spreadsheet gave one analyst a number. The platform gives the whole team
 > the number, the method, the lineage and the audit trail — reconciling to the
-> claims system by construction, and answerable in plain English. Reserving
-> stops being a workbook and becomes part of the governed data estate.
+> claims system by construction, answerable in plain English, and reusable by
+> every downstream function without a re-key. Reserving stops being a workbook
+> and becomes part of the governed data estate.
