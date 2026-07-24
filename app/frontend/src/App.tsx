@@ -11,12 +11,14 @@ import LineageView from './views/LineageView';
 import GovernanceView from './views/GovernanceView';
 import RegulatoryView from './views/RegulatoryView';
 import ReservingView from './views/ReservingView';
+import UnderwritingView from './views/UnderwritingView';
 import EngineersView from './views/EngineersView';
 import ExchangeTab from './components/ExchangeTab';
 import NetworkTab from './components/NetworkTab';
 
 const NAV = [
   { to: '#/', label: 'Home', match: (p: string) => p === '' || p.startsWith('search') || p.startsWith('metric') || p.startsWith('entity') || p.startsWith('code_set') || p.startsWith('function') || p.startsWith('lineage') },
+  { to: '#/underwriting', label: 'Underwriting', match: (p: string) => p.startsWith('underwriting') },
   { to: '#/reserving', label: 'Reserving', match: (p: string) => p.startsWith('reserving') },
   { to: '#/governance', label: 'Governance', match: (p: string) => p.startsWith('governance') || p.startsWith('regulatory') },
   { to: '#/exchange', label: 'Exchange', match: (p: string) => p.startsWith('exchange') },
@@ -112,6 +114,8 @@ export default function App() {
             name={parts[2] || ''}
           />
         );
+      case 'underwriting':
+        return <UnderwritingView />;
       case 'reserving':
         return <ReservingView />;
       case 'governance':

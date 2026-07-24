@@ -591,3 +591,61 @@ table.triangle .tri-ult.ibnr { color: var(--accent); background: #fff; }
 .rsv-genie { display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   background: var(--teal-soft); border-radius: 9px; padding: 14px 16px; }
 .rsv-genie-q { font-style: italic; color: var(--navy); font-size: 14px; }
+
+/* ------------------------------------------------------------- Underwriting */
+.uw-scope { display: flex; gap: 0; margin: 6px 0 22px; border: 1px solid var(--line);
+  border-radius: 10px; overflow: hidden; background: #fff; }
+.uw-scope-btn { position: relative; flex: 1; display: flex; flex-direction: column;
+  align-items: flex-start; gap: 2px; padding: 12px 20px; background: #fff; border: none;
+  border-right: 1px solid var(--line); cursor: pointer; text-align: left; }
+.uw-scope-btn:last-child { border-right: none; }
+.uw-scope-btn:hover { background: var(--teal-soft); }
+.uw-scope-btn.active { background: var(--navy); }
+.uw-scope-btn.active .uw-scope-label, .uw-scope-btn.active .uw-scope-sub { color: #fff; }
+.uw-scope-label { font-size: 14px; font-weight: 700; color: var(--navy); }
+.uw-scope-sub { font-size: 12px; color: var(--muted); }
+.uw-scope-arrow { position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
+  z-index: 2; color: var(--muted); font-size: 15px; background: var(--bg); padding: 0 1px; }
+
+.uw-note { font-size: 14px; color: var(--navy); background: var(--teal-soft);
+  border-radius: 8px; padding: 11px 15px; margin: 0 0 18px; line-height: 1.5; }
+
+.uw-cards { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+.uw-case { flex: 1; min-width: 220px; border: 1px solid var(--line); border-left: 4px solid var(--muted);
+  border-radius: 10px; padding: 14px 16px; background: #fff; }
+.uw-case.ok { border-left-color: var(--live); }
+.uw-case.bad { border-left-color: var(--pii); }
+.uw-case.warn { border-left-color: var(--accent); }
+.uw-case-top { display: flex; justify-content: space-between; align-items: center; }
+.uw-case-num { font-size: 12px; color: var(--muted); }
+.uw-badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+  background: var(--internal-bg); color: var(--internal); }
+.uw-badge.ok { background: var(--live-bg); color: var(--live); }
+.uw-badge.bad { background: var(--pii-bg); color: var(--pii); }
+.uw-badge.warn { background: var(--accent-soft); color: var(--accent); }
+.uw-case-lob { font-size: 15px; font-weight: 700; color: var(--navy); margin-top: 8px; }
+.uw-case-prem { font-size: 18px; font-weight: 700; color: var(--teal); }
+.uw-case-by { font-size: 12px; color: var(--muted); margin: 6px 0; }
+.uw-case-why { font-size: 12.5px; color: var(--ink); line-height: 1.45; }
+
+.uw-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+.uw-stat { flex: 1; min-width: 150px; border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 18px; background: #fff; }
+.uw-stat-val { display: block; font-size: 30px; font-weight: 800; color: var(--navy); line-height: 1; }
+.uw-stat-slash { font-size: 18px; font-weight: 600; color: var(--muted); }
+.uw-stat-label { font-size: 12px; color: var(--muted); }
+
+.uw-flow { border: 1px solid var(--line); border-radius: 12px; padding: 20px; background: #fff; }
+.uw-flow-source { text-align: center; padding: 14px; background: var(--navy); border-radius: 10px; }
+.uw-flow-label { display: block; font-size: 12px; color: #a9c0cb; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.uw-flow-val { display: block; font-size: 30px; font-weight: 800; color: #fff; }
+.uw-flow-sub { display: block; font-size: 12px; color: #c4dde5; }
+.uw-flow-fan { text-align: center; color: var(--muted); font-size: 13px; font-weight: 600; padding: 12px 0; }
+.uw-flow-targets { display: flex; gap: 14px; flex-wrap: wrap; }
+.uw-flow-target { flex: 1; min-width: 180px; border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; background: var(--bg); }
+.uw-flow-target.ok { border-color: #bfe3cf; background: var(--live-bg); }
+.uw-flow-t-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.uw-flow-t-val { display: block; font-size: 21px; font-weight: 700; color: var(--navy); }
+.uw-flow-t-sub { display: block; font-size: 12px; color: var(--muted); }
+.uw-flow-target.ok .uw-flow-t-sub { color: var(--live); font-weight: 600; }

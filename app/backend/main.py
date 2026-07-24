@@ -546,6 +546,124 @@ def atlas_reserving(line_of_business: str = "COMMERCIAL_PROPERTY",
     }
 
 
+# --------------------------------------------------------------------------- #
+# Underwriting workbench — one decision, three scopes (submission/team/enterprise)
+# The through-line: the SAME agentic underwriting decision that Anthropic would
+# do in a spreadsheet becomes a governed fact, then the team's portfolio, then
+# the enterprise's numbers — because it lives on the layer, not in a file.
+# --------------------------------------------------------------------------- #
+UNDERWRITING_GENIE = (
+    "https://fevm-lr-serverless-aws-us.cloud.databricks.com/genie/rooms/"
+    "01f17ec37dd71693a552cac8383e1651")  # Distribution, Underwriting & Conduct
+
+
+@app.get("/api/atlas/underwriting")
+def atlas_underwriting(currency: str = "GBP"):
+    """The underwriting workbench across three scopes. Submission: the agentic
+    machine-buyer decisions (accept/decline/refer). Team: the portfolio roll-up
+    of every decision. Enterprise: the same written premium flowing live to the
+    finance close, reinsurance and reserving — reconciling, never re-keyed."""
+    cur = currency.replace("'", "")[:3] or "GBP"
+
+    # ---- SCOPE 1: submission — the agentic buyer thread (accept / decline / refer)
+    subs = run_sql(
+        f"SELECT q.quote_number, q.line_of_business_code, "
+        f"CAST(q.quoted_gross_premium AS DECIMAL(18,2)), q.quote_status_code, "
+        f"ud.underwriting_decision_type_code, ud.decided_by_agent, ud.decided_by, "
+        f"ud.rationale FROM {q('policy','quote')} q "
+        f"JOIN {q('policy','underwriting_decision')} ud ON ud.quote_id = q.quote_id "
+        f"WHERE q.distribution_channel_code = 'MACHINE_AGENT' ORDER BY q.quote_number")
+    submissions = [{
+        "quote_number": r[0], "line_of_business": (r[1] or "").replace("_", " ").title(),
+        "quoted_premium": _num(r[2]), "quote_status": r[3],
+        "decision": r[4], "by_agent": as_bool(r[5]), "decided_by": r[6],
+        "rationale": r[7]} for r in subs]
+
+    # ---- SCOPE 2: team — the portfolio roll-up of all decisions
+    dec = run_sql(
+        f"SELECT underwriting_decision_type_code, decided_by_agent, COUNT(*) "
+        f"FROM {q('policy','underwriting_decision')} "
+        f"GROUP BY 1, 2 ORDER BY 1, 2")
+    decisions = [{"decision": r[0], "by_agent": as_bool(r[1]), "count": int(r[2])}
+                 for r in dec]
+    total_dec = sum(d["count"] for d in decisions)
+    agent_dec = sum(d["count"] for d in decisions if d["by_agent"])
+    conv = run_sql(
+        f"SELECT quote_status_code, COUNT(*) FROM {q('policy','quote')} GROUP BY 1")
+    quote_status = {r[0]: int(r[1]) for r in conv}
+    converted = quote_status.get("CONVERTED", 0)
+    total_quotes = sum(quote_status.values())
+    # book being built: GWP by line of business (the team's exposure forming)
+    book = run_sql(
+        f"SELECT line_of_business, CAST(MEASURE(gross_written_premium) AS DECIMAL(18,2)), "
+        f"MEASURE(policy_count) FROM {q('semantics','underwriting_metrics')} "
+        f"WHERE currency_code = '{cur}' GROUP BY line_of_business ORDER BY 2 DESC")
+    portfolio = [{"line_of_business": r[0], "gwp": _num(r[1]),
+                  "policy_count": int(_num(r[2]) or 0)} for r in book]
+
+    # ---- SCOPE 3: enterprise — the same GWP flowing to three consumers, live
+    gwp = run_sql(
+        f"SELECT CAST(MEASURE(gross_written_premium) AS DECIMAL(18,2)) "
+        f"FROM {q('semantics','underwriting_metrics')} WHERE currency_code = '{cur}'")
+    uw_gwp = _num(gwp[0][0]) if gwp else None
+    fin = run_sql(
+        f"SELECT CAST(SUM(-jl.amount) AS DECIMAL(18,2)) "
+        f"FROM {q('finance','journal_line')} jl "
+        f"JOIN {q('finance','chart_of_account')} coa ON coa.account_id = jl.account_id "
+        f"WHERE jl.source_entity = 'premium_transaction' AND jl.currency_code = '{cur}' "
+        f"AND coa.account_number = '4000'")
+    finance_premium = _num(fin[0][0]) if fin else None
+    # MEASURE() is itself an aggregate — sum the per-treaty results outside it.
+    ceded = run_sql(
+        f"SELECT treaty_reference, CAST(MEASURE(ceded_premium) AS DECIMAL(18,2)) "
+        f"FROM {q('semantics','cession_metrics')} GROUP BY treaty_reference")
+    ceded_premium = round(sum(_num(r[1]) or 0 for r in ceded), 2) if ceded else None
+    resv = run_sql(
+        f"SELECT CAST(SUM(ultimate_loss) AS DECIMAL(18,2)), CAST(SUM(ibnr) AS DECIMAL(18,2)) "
+        f"FROM {q('reserving','reserve_estimate')} WHERE currency_code = '{cur}' "
+        f"AND reserving_method_code = 'CHAIN_LADDER'")
+    resv_ult = _num(resv[0][0]) if resv else None
+    resv_ibnr = _num(resv[0][1]) if resv else None
+
+    return {
+        "currency": cur,
+        "submission": {
+            "cases": submissions,
+            "note": ("A machine buyer agent submits; fn_appetite_check decides "
+                     "accept, decline or refer — the same agentic act Anthropic "
+                     "shows in a spreadsheet, but recorded as a governed decision."),
+        },
+        "team": {
+            "total_decisions": total_dec,
+            "agent_decisions": agent_dec,
+            "human_decisions": total_dec - agent_dec,
+            "decisions": decisions,
+            "converted": converted,
+            "total_quotes": total_quotes,
+            "conversion_rate": round(converted / total_quotes, 3) if total_quotes else None,
+            "portfolio": portfolio,
+            "note": ("Every underwriter's and agent's decision rolls up live — the "
+                     "book forms in real time, no one collated a spreadsheet."),
+        },
+        "enterprise": {
+            "underwriting_gwp": uw_gwp,
+            "finance_premium_income": finance_premium,
+            "finance_reconciles": (uw_gwp is not None and finance_premium is not None
+                                   and abs(uw_gwp - finance_premium) < 0.01),
+            "reinsurance_ceded": ceded_premium,
+            "reserving_ultimate": resv_ult,
+            "reserving_ibnr": resv_ibnr,
+            "note": ("The same written premium the underwriter just bound flows, "
+                     "with no re-key, to the finance close, the reinsurance "
+                     "programme and the reserving triangle — reconciling by "
+                     "construction."),
+        },
+        "genie_url": UNDERWRITING_GENIE,
+        "genie_question": "How many quotes came from a machine buyer agent, and what did we decide?",
+        "provenance": "policy.underwriting_decision · semantics.underwriting_metrics · finance.journal_line · reserving.reserve_estimate (v0.9.0)",
+    }
+
+
 @app.get("/api/atlas/genie-health")
 def atlas_genie_health():
     """Is the Genie loop demonstrable right now? Checks the warehouse is warm.

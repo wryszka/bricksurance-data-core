@@ -389,6 +389,46 @@ export interface ReservingResponse {
   provenance: string;
 }
 
+export interface UnderwritingResponse {
+  currency: string;
+  submission: {
+    cases: {
+      quote_number: string;
+      line_of_business: string;
+      quoted_premium: number | null;
+      quote_status: string;
+      decision: string;
+      by_agent: boolean;
+      decided_by: string;
+      rationale: string;
+    }[];
+    note: string;
+  };
+  team: {
+    total_decisions: number;
+    agent_decisions: number;
+    human_decisions: number;
+    decisions: { decision: string; by_agent: boolean; count: number }[];
+    converted: number;
+    total_quotes: number;
+    conversion_rate: number | null;
+    portfolio: { line_of_business: string; gwp: number | null; policy_count: number }[];
+    note: string;
+  };
+  enterprise: {
+    underwriting_gwp: number | null;
+    finance_premium_income: number | null;
+    finance_reconciles: boolean;
+    reinsurance_ceded: number | null;
+    reserving_ultimate: number | null;
+    reserving_ibnr: number | null;
+    note: string;
+  };
+  genie_url: string;
+  genie_question: string;
+  provenance: string;
+}
+
 export const api = {
   model: () => getJSON<ModelResponse>('/api/model'),
   metrics: (currency: string, year?: number | null) =>
@@ -456,6 +496,10 @@ export const api = {
     getJSON<ReservingResponse>(
       `/api/atlas/reserving?line_of_business=${encodeURIComponent(lob)}` +
         `&currency=${encodeURIComponent(currency)}&method=${encodeURIComponent(method)}`,
+    ),
+  underwriting: (currency: string) =>
+    getJSON<UnderwritingResponse>(
+      `/api/atlas/underwriting?currency=${encodeURIComponent(currency)}`,
     ),
   governanceActions: () =>
     getJSON<GovernanceActionsResponse>('/api/atlas/governance/actions'),
