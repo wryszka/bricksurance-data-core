@@ -106,6 +106,12 @@ export const DOCS: Record<string, DocLink> = {
     url: 'https://docs.google.com/document/d/1PB_tn3cyc0zRuuzY-IjGeBmru2NdzQPvvJ-WJfrNtUs/edit',
     description: 'Programme, cat recovery, and the two-sided cession bordereau that reconciles to the penny — kill the bordereau.',
   },
+  genieOntology: {
+    key: 'genieOntology',
+    title: 'How this works with Genie Ontology',
+    url: 'https://docs.google.com/document/d/1Z2ugo-ed6Y5mwK2dSSTpArhjCtfPmgirA8xrfu2yrHw/edit',
+    description: 'We define the truth; Genie Ontology discovers and ranks it. Feed it a mess it maps the mess; feed it the governed layer it ranks the truth to the top.',
+  },
   atlasDemo: {
     key: 'atlasDemo',
     title: 'Demo — Insurance Ontology (App + Workspace)',
@@ -141,6 +147,7 @@ export const DOC_ORDER: DocLink[] = [
   DOCS.adoption,
   DOCS.evolution,
   DOCS.genieCatalog,
+  DOCS.genieOntology,
   DOCS.agentPlaybook,
   DOCS.topicCoverage,
 ];
