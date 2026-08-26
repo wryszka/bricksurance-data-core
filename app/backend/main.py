@@ -958,6 +958,57 @@ def atlas_model_swap(model: str = "databricks-claude-sonnet-5"):
     return result
 
 
+# --------------------------------------------------------------------------- #
+# The interactive spine — record a claim, watch it ripple across the estate
+# --------------------------------------------------------------------------- #
+from . import claim_events  # noqa: E402
+
+
+class ClaimEventRequest(BaseModel):
+    policy_number: str
+    reserve_amount: float
+    cause_of_loss_code: str = "FIRE"
+    loss_date: str = "2026-08-01"
+    description: str | None = None
+
+
+@app.get("/api/atlas/event/policies")
+def atlas_event_policies():
+    """Existing policies a claim can be recorded against, flagged by whether
+    they're ceded (so the UI can offer a 'huge claim on a ceded policy' that
+    lights up reinsurance too)."""
+    rows = run_sql(
+        f"SELECT p.policy_number, p.line_of_business_code, p.currency_code, "
+        f"CASE WHEN EXISTS (SELECT 1 FROM {q('reinsurance','cession')} c "
+        f"  WHERE c.policy_id = p.policy_id) THEN true ELSE false END AS ceded "
+        f"FROM {q('policy','policy')} p "
+        f"WHERE p.policy_number NOT LIKE 'POL-%-9%' "
+        f"ORDER BY ceded DESC, p.policy_number LIMIT 25")
+    return {"policies": [
+        {"policy_number": r[0], "line_of_business": (r[1] or "").replace("_", " ").title(),
+         "currency": r[2], "ceded": as_bool(r[3])} for r in rows]}
+
+
+@app.post("/api/atlas/event/record-claim")
+def atlas_record_claim(ev: ClaimEventRequest):
+    try:
+        return claim_events.record_claim(
+            ev.policy_number, ev.reserve_amount, ev.cause_of_loss_code,
+            ev.loss_date, ev.description)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(500, f"Could not record claim: {e}")
+
+
+@app.post("/api/atlas/event/reset")
+def atlas_event_reset():
+    try:
+        return claim_events.list_reset_live()
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(500, f"Reset failed: {e}")
+
+
 @app.get("/api/atlas/genie-health")
 def atlas_genie_health():
     """Is the Genie loop demonstrable right now? Checks the warehouse is warm.

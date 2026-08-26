@@ -501,6 +501,35 @@ export interface ReinsuranceResponse {
   provenance: string;
 }
 
+export interface EventPolicy {
+  policy_number: string;
+  line_of_business: string;
+  currency: string;
+  ceded: boolean;
+}
+export interface ClaimEventResult {
+  claim_number: string;
+  policy_number: string;
+  line_of_business: string;
+  currency: string;
+  reserve_amount: number;
+  ceded: boolean;
+  ceded_share: number | null;
+  treaty_reference: string | null;
+  reinsurance_recovery: number | null;
+  before: Record<string, number>;
+  after: Record<string, number>;
+  ripple: {
+    claims_incurred_delta: number;
+    outstanding_reserve_delta: number;
+    loss_ratio_before: number;
+    loss_ratio_after: number;
+    trial_balance_after: number;
+    trial_balance_still_zero: boolean;
+  };
+  note: string;
+}
+
 export const api = {
   model: () => getJSON<ModelResponse>('/api/model'),
   metrics: (currency: string, year?: number | null) =>
@@ -583,6 +612,23 @@ export const api = {
   account: (partyId: string) =>
     getJSON<AccountDetail>(`/api/atlas/account/${encodeURIComponent(partyId)}`),
   reinsurance: () => getJSON<ReinsuranceResponse>('/api/atlas/reinsurance'),
+  eventPolicies: () => getJSON<{ policies: EventPolicy[] }>('/api/atlas/event/policies'),
+  recordClaim: async (body: {
+    policy_number: string; reserve_amount: number;
+    cause_of_loss_code?: string; loss_date?: string; description?: string;
+  }): Promise<ClaimEventResult> => {
+    const r = await fetch('/api/atlas/event/record-claim', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+    return r.json();
+  },
+  resetEvents: async (): Promise<{ reset: boolean }> => {
+    const r = await fetch('/api/atlas/event/reset', { method: 'POST' });
+    if (!r.ok) throw new Error(r.statusText);
+    return r.json();
+  },
   governanceActions: () =>
     getJSON<GovernanceActionsResponse>('/api/atlas/governance/actions'),
   propose: async (body: ProposeBody): Promise<ProposeResponse> => {
