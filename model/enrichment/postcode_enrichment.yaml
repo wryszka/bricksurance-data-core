@@ -1,0 +1,45 @@
+kind: entity
+name: postcode_enrichment
+domain: enrichment
+title: Postcode Enrichment
+description: >
+  Area attributes for a postcode - settlement type, deprivation and region -
+  used as rating and accumulation dimensions. Reference-like: keyed by postcode,
+  shared across policies and objects in that area.
+grain: One row per postcode.
+tags:
+  maturity: draft
+attributes:
+  - name: postcode
+    type: string
+    required: true
+    description: Postcode or postal-area key the attributes describe.
+    classification: internal
+  - name: country_code
+    code_set: country
+    required: true
+    description: Country the postcode belongs to.
+    classification: internal
+  - name: urbanity_code
+    code_set: urbanity
+    required: false
+    description: Settlement type of the postcode.
+    classification: internal
+  - name: deprivation_decile
+    type: integer
+    required: false
+    description: Index of multiple deprivation decile, 1 (most) to 10 (least).
+    classification: internal
+  - name: region_code
+    type: string
+    required: false
+    description: Statistical region the postcode sits in.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Provider the postcode attributes originate from.
+    classification: internal
+keys:
+  primary: [postcode]
+owner: Chief Underwriting Officer

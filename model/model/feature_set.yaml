@@ -1,0 +1,36 @@
+kind: entity
+name: feature_set
+domain: model
+title: Feature Set
+description: >
+  A named collection of features a model version consumes. The set is the
+  contract between features and models; membership is resolved through
+  feature_set_member so the same feature can serve many sets.
+grain: One row per feature set.
+tags:
+  maturity: draft
+attributes:
+  - name: feature_set_id
+    type: string
+    required: true
+    description: Identifier for the feature set.
+    classification: internal
+  - name: name
+    type: string
+    required: true
+    description: Feature set name.
+    classification: internal
+  - name: description
+    type: string
+    required: false
+    description: What the set is for.
+    classification: internal
+  - name: model_purpose_code
+    code_set: model_purpose
+    required: false
+    description: The purpose the set was assembled for.
+    classification: internal
+keys:
+  primary: [feature_set_id]
+  natural: [name]
+owner: Head of Data Science

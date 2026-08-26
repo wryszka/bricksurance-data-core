@@ -55,6 +55,14 @@ attributes:
     required: false
     description: Longitude of the object's location, where geocoded.
     classification: confidential
+  - name: location_key
+    type: string
+    required: false
+    description: >
+      Location key used to join external hazard enrichment
+      (enrichment.geospatial_hazard.location_key) - typically the postcode or a
+      gazetteer id. A soft join key, not a hard reference.
+    classification: internal
 keys:
   primary: [insured_object_id]
 owner: Chief Underwriting Officer

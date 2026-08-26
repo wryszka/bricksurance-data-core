@@ -132,7 +132,24 @@ class World:
                      "legal_entity", "chart_of_account", "accounting_period", "statement_line",
                      "journal", "journal_line", "investment_holding", "investment_transaction",
                      "tax_transaction", "financial_plan", "fx_rate",
-                     "contract_group", "csm_movement"):
+                     "contract_group", "csm_movement",
+                     # enrichment
+                     "postcode_enrichment", "geospatial_hazard",
+                     "motor_telematics_aggregate", "policy_demographics",
+                     "credit_bureau_summary", "sanctions_screen",
+                     "market_pricing_benchmark",
+                     # model / ML governance
+                     "model_asset", "model_version", "feature_definition",
+                     "feature_set", "feature_set_member", "model_score",
+                     "model_monitor_metric",
+                     # pricing
+                     "rating_factor", "rating_factor_level", "rating_engine_config",
+                     "derived_factor", "rating_factor_feature",
+                     # claim depth
+                     "claim_feature", "claim_reserve_category", "claim_recovery",
+                     "litigation", "claim_party_role",
+                     # underwriting depth
+                     "uw_submission", "referral_rule", "referral_event"):
             self.t[name] = []
 
     def n(self, base):
@@ -1207,7 +1224,351 @@ def build_world(scale):
               valuation_run_id=run_q2["valuation_run_id"],
               csm_movement_type_code=mtype, amount=amt, currency_code="GBP")
 
+    add_extensions(w)
     return w
+
+
+def add_extensions(w):
+    """Enrichment, model/ML-governance, pricing, and claims/underwriting depth.
+
+    Coherent with the world already built: telematics and demographics hang off
+    the motor policies; scores cite the model versions the rating engine config
+    points to; claim features and reserve categories decompose the existing
+    claims; the rated premium and conversion flags fill in on the quotes that
+    already converted. Narrative-scale, deterministic.
+    """
+    policies = w.t["policy"]
+    motor = [p for p in policies if p["line_of_business_code"] == "MOTOR"]
+    property_pol = [p for p in policies if p["line_of_business_code"] == "COMMERCIAL_PROPERTY"]
+    parties = w.t["party"]
+    claims = w.t["claim"]
+    quotes = w.t["quote"]
+    obj_by_policy = {}
+    for o in w.t["insured_object"]:
+        obj_by_policy.setdefault(o["policy_id"], o)
+
+    # ---- model / ML-governance: the estate of models --------------------
+    def add_model(purpose, mtype, lob, name, champ_metric, champ_val, retired=False):
+        mid = w.nid("mdl")
+        w.add("model_asset", model_id=mid, name=name, model_type_code=mtype,
+              model_purpose_code=purpose, line_of_business_code=lob,
+              registered_name=f"lr_serverless_aws_us_catalog.bricksurance_model.{name}",
+              description=f"{name.replace('_', ' ').title()} for {lob or 'all lines'}.",
+              owner_role="Head of Data Science", source_system_code="ML_PLATFORM")
+        champ = w.add("model_version", model_version_id=w.nid("mvr"), model_id=mid,
+                      version="3", model_status_code="CHAMPION", trained_on=date(2026, 4, 1),
+                      training_frame_ref=f"bricksurance_model.training_{name}",
+                      primary_metric_type_code=champ_metric, primary_metric_value=champ_val,
+                      promoted_on=date(2026, 4, 15), source_system_code="ML_PLATFORM")
+        if retired:
+            w.add("model_version", model_version_id=w.nid("mvr"), model_id=mid,
+                  version="2", model_status_code="RETIRED", trained_on=date(2025, 10, 1),
+                  training_frame_ref=f"bricksurance_model.training_{name}_v2",
+                  primary_metric_type_code=champ_metric,
+                  primary_metric_value=round(champ_val * 0.96, 4),
+                  promoted_on=None, source_system_code="ML_PLATFORM")
+        # one challenger for the frequency model — the champion/challenger story
+        if purpose == "PRICING_FREQUENCY":
+            w.add("model_version", model_version_id=w.nid("mvr"), model_id=mid,
+                  version="4", model_status_code="CHALLENGER", trained_on=date(2026, 6, 1),
+                  training_frame_ref=f"bricksurance_model.training_{name}_v4",
+                  primary_metric_type_code=champ_metric,
+                  primary_metric_value=round(champ_val * 1.02, 4),
+                  promoted_on=None, source_system_code="ML_PLATFORM")
+        return mid, champ
+
+    freq_mid, freq_champ = add_model("PRICING_FREQUENCY", "GLM", "MOTOR",
+                                     "motor_frequency_glm", "GINI", 0.412, retired=True)
+    sev_mid, sev_champ = add_model("PRICING_SEVERITY", "GLM", "MOTOR",
+                                   "motor_severity_glm", "RMSE", 1840.0)
+    dem_mid, dem_champ = add_model("DEMAND", "GBM", "MOTOR",
+                                   "motor_demand_gbm", "AUC", 0.781)
+    fraud_mid, fraud_champ = add_model("FRAUD", "GBM", None,
+                                       "claim_fraud_gbm", "AUC", 0.844)
+    add_model("NARRATION", "LLM", None, "underwriting_narrator", "LIFT", 1.0)
+
+    # features, once, with classification carried from the enrichment they use
+    feats = [
+        ("telematics_score", "motor_telematics_aggregate", "confidential", True),
+        ("mileage_band", "motor_telematics_aggregate", "internal", False),
+        ("night_driving_pct", "motor_telematics_aggregate", "confidential", True),
+        ("vehicle_group", "vehicle", "internal", False),
+        ("flood_band", "geospatial_hazard", "internal", False),
+        ("credit_score_band", "credit_bureau_summary", "pii", True),
+        ("prior_claims_band", "policy_demographics", "pii", True),
+        ("age_band", "policy_demographics", "pii", True),
+    ]
+    feat_id = {}
+    for name, src, cls, pii in feats:
+        fid = w.nid("ftr")
+        feat_id[name] = fid
+        w.add("feature_definition", feature_id=fid, name=name,
+              description=f"{name.replace('_', ' ').title()} used as a model feature.",
+              source_entity=src, expression=f"{src}.{name}", classification=cls, pii_flag=pii)
+    fs_price = w.nid("fst")
+    w.add("feature_set", feature_set_id=fs_price, name="motor_pricing_features",
+          description="Features consumed by the motor pricing models.",
+          model_purpose_code="PRICING_FREQUENCY")
+    fs_fraud = w.nid("fst")
+    w.add("feature_set", feature_set_id=fs_fraud, name="claim_fraud_features",
+          description="Features consumed by the claim fraud model.",
+          model_purpose_code="FRAUD")
+    for fname in ("telematics_score", "mileage_band", "vehicle_group", "flood_band",
+                  "age_band", "prior_claims_band"):
+        w.add("feature_set_member", feature_set_member_id=w.nid("fsm"),
+              feature_set_id=fs_price, feature_id=feat_id[fname])
+    for fname in ("prior_claims_band", "credit_score_band", "night_driving_pct"):
+        w.add("feature_set_member", feature_set_member_id=w.nid("fsm"),
+              feature_set_id=fs_fraud, feature_id=feat_id[fname])
+
+    # monitoring — the champion earns its role, tracked through time
+    for mv, mtype, vals in ((freq_champ, "GINI", (0.412, 0.404, 0.398)),
+                            (fraud_champ, "PSI", (0.06, 0.09, 0.13))):
+        for i, (period, val) in enumerate(zip(("2026-Q1", "2026-Q2", "2026-Q3"), vals)):
+            w.add("model_monitor_metric", model_monitor_metric_id=w.nid("mmm"),
+                  model_version_id=mv["model_version_id"], monitor_metric_type_code=mtype,
+                  period=period, value=val,
+                  breach_flag=(mtype == "PSI" and val > 0.10),
+                  source_system_code="ML_MONITOR")
+
+    # ---- enrichment: external risk data, keyed to the world -------------
+    seen_pc = {}
+    for country, pcs in POSTCODES.items():
+        for pc in pcs:
+            urb = rng.choice(["URBAN_MAJOR", "URBAN", "SUBURBAN", "RURAL"])
+            w.add("postcode_enrichment", postcode=pc, country_code=country,
+                  urbanity_code=urb, deprivation_decile=rng.randint(1, 10),
+                  region_code=f"{country}-{pc[:2]}", source_system_code="GEO_PROVIDER")
+            seen_pc[pc] = country
+    for pc, country in seen_pc.items():
+        w.add("geospatial_hazard", geospatial_hazard_id=w.nid("haz"), location_key=pc,
+              postcode=pc, flood_band_code=rng.choice(["LOW", "MODERATE", "HIGH", "VERY_HIGH"]),
+              subsidence_band_code=rng.choice(["LOW", "MODERATE", "HIGH"]),
+              crime_index=rng.randint(10, 90), coastal_flag=rng.random() < 0.2,
+              hazard_source_code="ENV_AGENCY", source_system_code="GEO_PROVIDER")
+    # set the property objects' location_key to their postcode so hazard joins
+    for o in w.t["insured_object"]:
+        if o.get("postcode"):
+            o["location_key"] = o["postcode"]
+
+    for p in motor:
+        score = rng.randint(45, 95)
+        miles = rng.randint(3000, 24000)
+        mband = ("LOW" if miles < 6000 else "MEDIUM" if miles < 12000
+                 else "HIGH" if miles < 20000 else "VERY_HIGH")
+        w.add("motor_telematics_aggregate", telematics_aggregate_id=w.nid("tel"),
+              policy_id=p["policy_id"], period_start_date=date(2026, 1, 1),
+              period_end_date=date(2026, 6, 30), observed_miles=miles // 2,
+              mileage_band_code=mband, harsh_braking_rate=round(rng.uniform(0.2, 3.5), 3),
+              night_driving_pct=round(rng.uniform(2, 30), 2), telematics_score=score,
+              source_system_code="TELEMATICS")
+        w.add("policy_demographics", policy_demographics_id=w.nid("dem"),
+              policy_id=p["policy_id"], age_band=rng.choice(["25-29", "30-39", "40-49", "50-64"]),
+              tenure_band=rng.choice(["<1y", "1-3y", "3-5y", "5y+"]),
+              prior_claims_band=rng.choice(["0", "0", "1", "2+"]),
+              occupation_class=rng.choice(["PROF", "SKILLED", "MANUAL", "RETIRED"]),
+              source_system_code="PAS_CORE")
+
+    for pty in parties:
+        # persons get a credit summary; everyone is screened (mostly clear)
+        if pty.get("party_type_code") == "PERSON":
+            w.add("credit_bureau_summary", credit_bureau_summary_id=w.nid("crb"),
+                  party_id=pty["party_id"], pull_date=date(2026, 1, 15),
+                  credit_score_band_code=rng.choice(["EXCELLENT", "GOOD", "GOOD", "FAIR"]),
+                  ccj_count=rng.choice([0, 0, 0, 1]), electoral_roll_flag=True,
+                  consent_id=None, source_system_code="CREDIT_BUREAU")
+        hit = rng.random() < 0.05
+        w.add("sanctions_screen", sanctions_screen_id=w.nid("san"),
+              party_id=pty["party_id"], screen_date=date(2026, 1, 10),
+              hit_flag=hit, pep_flag=(hit and rng.random() < 0.5),
+              sanctions_list_code=("OFSI" if hit else None),
+              cleared_flag=(True if hit else None), source_system_code="SCREENING")
+
+    for lob in ("MOTOR", "COMMERCIAL_PROPERTY", "GENERAL_LIABILITY", "MARINE_CARGO"):
+        w.add("market_pricing_benchmark", market_pricing_benchmark_id=w.nid("mkb"),
+              line_of_business_code=lob, segment="STANDARD", benchmark_period="2026-Q2",
+              market_median_premium=round(BASE_PREMIUM[lob] * rng.uniform(0.9, 1.1), 2),
+              rank_percentile=round(rng.uniform(35, 65), 2), currency_code="GBP",
+              source_system_code="MARKET_INTEL")
+
+    # ---- pricing: rating structure + the build-up on quotes -------------
+    engine_cfg = w.nid("rec")
+    w.add("rating_engine_config", rating_engine_config_id=engine_cfg,
+          line_of_business_code="MOTOR", version="2026.1", base_rate=420.00,
+          model_version_id=freq_champ["model_version_id"], currency_code="GBP",
+          effective_from=date(2026, 1, 1), effective_to=None)
+    factors = [
+        ("vehicle_group", "MULTIPLICATIVE", "internal", "vehicle_group",
+         [("1-10", 0.80), ("11-20", 1.00), ("21-30", 1.25), ("31-50", 1.70)]),
+        ("mileage", "MULTIPLICATIVE", "internal", "mileage_band",
+         [("LOW", 0.85), ("MEDIUM", 1.00), ("HIGH", 1.20), ("VERY_HIGH", 1.45)]),
+        ("telematics", "DISCOUNT", "confidential", "telematics_score",
+         [("SAFE", 0.85), ("AVERAGE", 1.00), ("RISKY", 1.30)]),
+        ("area", "MULTIPLICATIVE", "internal", None,
+         [("RURAL", 0.90), ("SUBURBAN", 1.00), ("URBAN", 1.15), ("URBAN_MAJOR", 1.35)]),
+    ]
+    rf_id = {}
+    for fname, kind, cls, feat, levels in factors:
+        rid = w.nid("rtf")
+        rf_id[fname] = rid
+        w.add("rating_factor", rating_factor_id=rid, line_of_business_code="MOTOR",
+              name=fname, description=f"{fname.replace('_', ' ').title()} motor rating factor.",
+              rating_factor_kind_code=kind, classification=cls)
+        for level_code, rel in levels:
+            w.add("rating_factor_level", rating_factor_level_id=w.nid("rfl"),
+                  rating_factor_id=rid, level_code=level_code, relativity=rel,
+                  effective_from=date(2026, 1, 1), effective_to=None)
+        if feat and feat in feat_id:
+            w.add("rating_factor_feature", rating_factor_feature_id=w.nid("rff"),
+                  rating_factor_id=rid, feature_id=feat_id[feat])
+
+    # the build-up on up to 12 converted motor quotes, reconciling to premium
+    motor_quotes = [q for q in quotes if q["line_of_business_code"] == "MOTOR"][:12]
+    for q in motor_quotes:
+        base = 420.00
+        picks = [("vehicle_group", rng.choice(["1-10", "11-20", "21-30", "31-50"])),
+                 ("mileage", rng.choice(["LOW", "MEDIUM", "HIGH", "VERY_HIGH"])),
+                 ("telematics", rng.choice(["SAFE", "AVERAGE", "RISKY"])),
+                 ("area", rng.choice(["RURAL", "SUBURBAN", "URBAN", "URBAN_MAJOR"]))]
+        rels = {"vehicle_group": {"1-10": 0.80, "11-20": 1.00, "21-30": 1.25, "31-50": 1.70},
+                "mileage": {"LOW": 0.85, "MEDIUM": 1.00, "HIGH": 1.20, "VERY_HIGH": 1.45},
+                "telematics": {"SAFE": 0.85, "AVERAGE": 1.00, "RISKY": 1.30},
+                "area": {"RURAL": 0.90, "SUBURBAN": 1.00, "URBAN": 1.15, "URBAN_MAJOR": 1.35}}
+        running = base
+        rows = []
+        for fname, level in picks:
+            rel = rels[fname][level]
+            contribution = round(running * (rel - 1.0), 2)
+            running = round(running * rel, 2)
+            rows.append((fname, level, rel, contribution))
+        w.add("derived_factor", derived_factor_id=w.nid("dvf"), subject_kind_code="QUOTE",
+              subject_id=q["quote_id"], rating_factor_id=rf_id["vehicle_group"],
+              level_code="BASE", relativity=1.0, contribution=base)
+        for fname, level, rel, contribution in rows:
+            w.add("derived_factor", derived_factor_id=w.nid("dvf"), subject_kind_code="QUOTE",
+                  subject_id=q["quote_id"], rating_factor_id=rf_id[fname], level_code=level,
+                  relativity=rel, contribution=contribution)
+        # fill the quote's rating provenance + the demand target
+        q["rated_gross_premium"] = running
+        q["rating_engine_config_id"] = engine_cfg
+        q["model_version_id"] = freq_champ["model_version_id"]
+
+    # every already-converted quote converted; rated ~ quoted where not set
+    for q in quotes:
+        q.setdefault("conversion_flag", None)
+        q["conversion_flag"] = (q.get("quote_status_code") == "CONVERTED")
+        if q.get("rated_gross_premium") is None and q.get("quoted_gross_premium") is not None:
+            q["rated_gross_premium"] = q["quoted_gross_premium"]
+
+    # a batch of lost/declined motor quotes so conversion isn't 100% (demand signal)
+    for i in range(w.n(20)):
+        pol = motor[i % len(motor)] if motor else None
+        if not pol:
+            break
+        status = rng.choice(["REJECTED_BY_CUSTOMER", "REJECTED_BY_CUSTOMER",
+                             "DECLINED_BY_INSURER", "EXPIRED"])
+        rated = round(BASE_PREMIUM["MOTOR"] * rng.uniform(0.8, 1.6), 2)
+        w.add("quote", quote_id=w.nid("quo"), quote_number=f"QUO-2026-9{i:05d}",
+              policy_id=None, line_of_business_code="MOTOR", quote_status_code=status,
+              quote_date=date(2026, rng.randint(1, 6), rng.randint(1, 28)),
+              requested_inception_date=None, quoted_gross_premium=rated,
+              rated_gross_premium=rated, rating_engine_config_id=engine_cfg,
+              model_version_id=freq_champ["model_version_id"], conversion_flag=False,
+              currency_code="GBP", source_system_code="PAS_CORE",
+              product_id=None, distribution_channel_code=rng.choice(["DIRECT", "BROKER"]))
+        # a demand score on the lost quote
+        w.add("model_score", model_score_id=w.nid("msc"),
+              model_version_id=dem_champ["model_version_id"], subject_kind_code="QUOTE",
+              subject_id=w.t["quote"][-1]["quote_id"], score=round(rng.uniform(0.1, 0.6), 6),
+              scored_at=datetime(2026, 6, 1, 9, 0, 0), source_system_code="ML_SERVING")
+
+    # ---- claim depth: features, reserve split, recovery, litigation -----
+    party_by_claim_claimant = {}
+    for pr in w.t["party_role"]:
+        if pr.get("party_role_type_code") == "CLAIMANT" and pr.get("claim_id"):
+            party_by_claim_claimant.setdefault(pr["claim_id"], pr.get("party_id"))
+    handler_names = ["H. Okafor (handler)", "S. Bianchi (handler)", "T. Lindqvist (handler)"]
+    for idx, c in enumerate(claims):
+        lob = next((p["line_of_business_code"] for p in policies
+                    if p["policy_id"] == c["policy_id"]), "MOTOR")
+        ccy = next((p["currency_code"] for p in policies
+                    if p["policy_id"] == c["policy_id"]), "GBP")
+        ftypes = (["OWN_DAMAGE", "THIRD_PARTY_INJURY"] if lob == "MOTOR"
+                  else ["PROPERTY_MATERIAL_DAMAGE"] if lob == "COMMERCIAL_PROPERTY"
+                  else ["THIRD_PARTY_INJURY"] if lob == "GENERAL_LIABILITY"
+                  else ["OWN_DAMAGE"])
+        # outstanding reserve on this claim (sum of case reserve movements)
+        outstanding = round(sum(tx["amount"] for tx in w.t["claim_transaction"]
+                                if tx["claim_id"] == c["claim_id"]
+                                and tx["claim_transaction_type_code"] == "CASE_RESERVE_MOVEMENT"), 2)
+        feat_rows = []
+        for j, ft in enumerate(ftypes):
+            fid = w.nid("clf")
+            w.add("claim_feature", claim_feature_id=fid, claim_id=c["claim_id"],
+                  coverage_id=c.get("coverage_id"), claim_feature_type_code=ft,
+                  claim_status_code=c["claim_status_code"], source_system_code="CLM_CORE")
+            feat_rows.append((fid, ft))
+        # split the outstanding across the first feature: 70% indemnity / 20% expense / 10% legal
+        if feat_rows and outstanding:
+            fid0 = feat_rows[0][0]
+            for cat, share in (("INDEMNITY", 0.70), ("EXPENSE", 0.20), ("LEGAL", 0.10)):
+                w.add("claim_reserve_category", claim_reserve_category_id=w.nid("crc"),
+                      claim_feature_id=fid0, reserve_category_code=cat,
+                      amount=round(outstanding * share, 2), currency_code=ccy,
+                      as_at_date=date(2026, 6, 30), source_system_code="CLM_CORE")
+        # a handler on every claim; an adjuster + litigation on injury features
+        handler = handler_names[idx % 3]
+        # handler is an internal role, recorded as a party role only if the party exists;
+        # to keep referential integrity we attach the claimant party as CLAIMANT here
+        claimant_pid = party_by_claim_claimant.get(c["claim_id"])
+        if claimant_pid:
+            w.add("claim_party_role", claim_party_role_id=w.nid("cpr"),
+                  claim_id=c["claim_id"], party_id=claimant_pid,
+                  claim_party_role_type_code="CLAIMANT", source_system_code="CLM_CORE")
+        if "THIRD_PARTY_INJURY" in ftypes and idx % 2 == 0:
+            w.add("litigation", litigation_id=w.nid("lit"), claim_id=c["claim_id"],
+                  litigation_status_code=rng.choice(["PRE_ACTION", "ISSUED", "DEFENDED"]),
+                  jurisdiction="England & Wales", legal_reserve=round(outstanding * 0.15, 2),
+                  currency_code=ccy, opened_date=c.get("reported_date"),
+                  source_system_code="CLM_CORE")
+        if idx % 3 == 0 and outstanding:
+            w.add("claim_recovery", claim_recovery_id=w.nid("rcv"), claim_id=c["claim_id"],
+                  recovery_type_code=rng.choice(["SUBROGATION", "SALVAGE"]),
+                  against_party_id=None, expected_amount=round(outstanding * 0.12, 2),
+                  received_amount=None, currency_code=ccy, status="OPEN",
+                  source_system_code="CLM_CORE")
+
+    # ---- underwriting depth: submissions + SCD2 referral rulebook -------
+    for i, q in enumerate([qq for qq in quotes if qq.get("policy_id")][:15]):
+        w.add("uw_submission", uw_submission_id=w.nid("sub"), party_id=None,
+              line_of_business_code=q["line_of_business_code"], product_id=q.get("product_id"),
+              received_date=q.get("quote_date"), uw_submission_status_code="QUOTED",
+              distribution_channel_code=q.get("distribution_channel_code"),
+              quote_id=q["quote_id"], source_system_code="PAS_CORE")
+
+    # a referral rule that changed — SCD2: v1 superseded, v2 current
+    w.add("referral_rule", referral_rule_id=w.nid("rul"), rule_key="MOTOR_HIGH_TELEMATICS",
+          name="Refer risky telematics scores", line_of_business_code="MOTOR",
+          condition_expression="telematics_score < 40", referral_action_code="REFER",
+          version=1, effective_from=date(2025, 1, 1), effective_to=date(2025, 12, 31),
+          is_current=False, source_system_code="UW_RULES")
+    rule_curr = w.add("referral_rule", referral_rule_id=w.nid("rul"),
+          rule_key="MOTOR_HIGH_TELEMATICS", name="Refer risky telematics scores",
+          line_of_business_code="MOTOR", condition_expression="telematics_score < 50",
+          referral_action_code="REFER", version=2, effective_from=date(2026, 1, 1),
+          effective_to=None, is_current=True, source_system_code="UW_RULES")
+    rule_flood = w.add("referral_rule", referral_rule_id=w.nid("rul"),
+          rule_key="PROPERTY_VERY_HIGH_FLOOD", name="Decline very-high flood risks",
+          line_of_business_code="COMMERCIAL_PROPERTY",
+          condition_expression="flood_band = 'VERY_HIGH'", referral_action_code="DECLINE",
+          version=1, effective_from=date(2026, 1, 1), effective_to=None,
+          is_current=True, source_system_code="UW_RULES")
+    for i, q in enumerate([qq for qq in quotes if qq["line_of_business_code"] == "MOTOR"][:6]):
+        w.add("referral_event", referral_event_id=w.nid("rev"),
+              referral_rule_id=rule_curr["referral_rule_id"], subject_kind_code="QUOTE",
+              subject_id=q["quote_id"], fired_at=datetime(2026, 5, 10, 11, 0, 0),
+              referral_outcome_code=rng.choice(["ACCEPTED", "ACCEPTED", "DECLINED", "OVERRIDDEN"]),
+              decided_by="U. Marsh (senior underwriter)", source_system_code="UW_RULES")
 
 
 def main():
@@ -1232,7 +1593,22 @@ def main():
              "investment_transaction", "tax_transaction", "financial_plan", "fx_rate",
              "assumption_set", "scenario_set",
              "valuation_run", "valuation_run_assumption", "valuation_result",
-             "contract_group", "csm_movement", "model_point", "party_role"]
+             "contract_group", "csm_movement", "model_point", "party_role",
+             # enrichment (postcode before hazard for the informational FK)
+             "postcode_enrichment", "geospatial_hazard", "motor_telematics_aggregate",
+             "policy_demographics", "credit_bureau_summary", "sanctions_screen",
+             "market_pricing_benchmark",
+             # model / ML governance (assets before versions before scores)
+             "model_asset", "model_version", "feature_definition", "feature_set",
+             "feature_set_member", "model_score", "model_monitor_metric",
+             # pricing (factors before levels/derived)
+             "rating_factor", "rating_factor_level", "rating_engine_config",
+             "derived_factor", "rating_factor_feature",
+             # claim depth (features before reserve categories)
+             "claim_feature", "claim_reserve_category", "claim_recovery",
+             "litigation", "claim_party_role",
+             # underwriting depth
+             "uw_submission", "referral_rule", "referral_event"]
     missing = set(order) - set(entities)
     assert not missing, f"world emits unknown entities: {missing}"
 

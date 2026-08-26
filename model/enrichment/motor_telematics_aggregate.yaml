@@ -1,0 +1,70 @@
+kind: entity
+name: motor_telematics_aggregate
+domain: enrichment
+title: Motor Telematics Aggregate
+description: >
+  Aggregated driving behaviour for a motor policy over a period, from a
+  telematics device or app. Aggregates only - never raw journey traces - so the
+  rating signal is usable without holding location-level personal data.
+grain: One row per policy per observation period.
+tags:
+  maturity: draft
+attributes:
+  - name: telematics_aggregate_id
+    type: string
+    required: true
+    description: Identifier for the telematics aggregate record.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: true
+    description: Motor policy the behaviour was observed for.
+    classification: internal
+  - name: period_start_date
+    type: date
+    required: true
+    description: Start of the observation window.
+    classification: internal
+  - name: period_end_date
+    type: date
+    required: true
+    description: End of the observation window.
+    classification: internal
+  - name: observed_miles
+    type: integer
+    required: false
+    description: Miles observed in the window.
+    classification: confidential
+  - name: mileage_band_code
+    code_set: mileage_band
+    required: false
+    description: Annualised mileage banding derived from observed miles.
+    classification: internal
+  - name: harsh_braking_rate
+    type: decimal(6,3)
+    required: false
+    description: Harsh-braking events per 100 miles.
+    classification: confidential
+  - name: night_driving_pct
+    type: decimal(5,2)
+    required: false
+    description: Percentage of miles driven between 11pm and 5am.
+    classification: confidential
+  - name: telematics_score
+    type: integer
+    required: false
+    description: Composite driving score 0-100; higher is safer.
+    classification: confidential
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Telematics provider or platform the aggregate originates from.
+    classification: internal
+keys:
+  primary: [telematics_aggregate_id]
+quality:
+  - name: period_ordered
+    rule: period_end_date >= period_start_date
+    description: The observation window must end on or after it starts.
+owner: Chief Underwriting Officer

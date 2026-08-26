@@ -1,0 +1,16 @@
+kind: code_set
+name: subsidence_band
+title: Subsidence Band
+description: >
+  Ground-stability / subsidence risk banding for a location, from modelled
+  geology and claims history.
+codes:
+  - code: LOW
+    label: Low
+    description: Stable ground; negligible subsidence exposure.
+  - code: MODERATE
+    label: Moderate
+    description: Some clay-shrinkage or historic movement exposure.
+  - code: HIGH
+    label: High
+    description: Material subsidence exposure requiring rating loading.

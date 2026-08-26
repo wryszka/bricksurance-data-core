@@ -1,0 +1,57 @@
+kind: entity
+name: credit_bureau_summary
+domain: enrichment
+title: Credit Bureau Summary
+description: >
+  A banded summary of a party's consumer credit standing from a bureau pull.
+  Banded, not raw, and held only where a lawful basis and disclosure exist.
+  Personal data - classified accordingly.
+grain: One row per party per bureau pull.
+tags:
+  maturity: draft
+attributes:
+  - name: credit_bureau_summary_id
+    type: string
+    required: true
+    description: Identifier for the bureau summary record.
+    classification: internal
+  - name: party_id
+    references: party
+    type: string
+    required: true
+    description: Party the bureau summary concerns.
+    classification: internal
+  - name: pull_date
+    type: date
+    required: true
+    description: Date the bureau summary was obtained.
+    classification: internal
+  - name: credit_score_band_code
+    code_set: credit_score_band
+    required: true
+    description: Banded credit rating from the bureau.
+    classification: pii
+  - name: ccj_count
+    type: integer
+    required: false
+    description: Count of county court judgments on file.
+    classification: pii
+  - name: electoral_roll_flag
+    type: boolean
+    required: false
+    description: Whether the party is present on the electoral roll at the address.
+    classification: pii
+  - name: consent_id
+    references: consent
+    type: string
+    required: false
+    description: Consent record providing the lawful basis for the bureau pull.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Bureau or aggregator the summary originates from.
+    classification: internal
+keys:
+  primary: [credit_bureau_summary_id]
+owner: Data Protection Officer

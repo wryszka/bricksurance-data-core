@@ -1,6 +1,6 @@
 # Bricksurance Data Core - Metric Catalog
 
-*Generated from model v0.9.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+*Generated from model v0.10.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
 
 ## Reserving Metrics (`reserving.reserving_metrics`)
 
@@ -16,6 +16,21 @@ Certified reserving KPIs over the loss-development triangle - cumulative paid an
 | `incurred_to_date` | Cumulative incurred (paid plus case reserves) for the selection, in original currency - the latest diagonal is the current best estimate before IBNR. | `SUM(incremental_incurred)` |
 | `paid_ratio` | Paid over incurred - how far the selected cohort has run off. Low early, approaching 1.0 as an accident year matures. | `SUM(incremental_paid) / NULLIF(SUM(incremental_incurred), 0)` |
 | `accident_year_count` | Number of distinct accident years in the selection. | `COUNT(DISTINCT accident_year)` |
+
+## Accumulation Metrics (`semantics.accumulation_metrics`)
+
+Catastrophe accumulation KPIs over event losses - gross loss, ceded recovery and net retained by event and peril. The exposure view reinsurance and capital teams work from, derived from the event-loss records rather than stored. Amounts are in original currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
+
+**Owner:** Head of Reinsurance · **Certification:** draft · **Source:** `reinsurance.event_loss`
+
+**Dimensions:** event_name, peril_code, currency_code
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `event_count` | Number of catastrophe events with losses. | `COUNT(DISTINCT source.cat_event_id)` |
+| `gross_loss_total` | Total gross loss across events, in original currency. | `SUM(gross_loss_amount)` |
+| `ceded_recovery_total` | Total reinsurance recovery on those losses, in original currency. | `SUM(ceded_loss_amount)` |
+| `net_retained_total` | Net retained loss after reinsurance recovery, in original currency. | `SUM(gross_loss_amount - ceded_loss_amount)` |
 
 ## Cession Metrics (`semantics.cession_metrics`)
 
@@ -59,6 +74,22 @@ The asset side: market value, book cost, unrealised gain and investment income b
 | `unrealised_gain` | Market value less book cost. | `SUM(market_value) - SUM(book_cost)` |
 | `holding_count` | Number of holdings. | `COUNT(*)` |
 
+## Model Governance Metrics (`semantics.model_governance_metrics`)
+
+Governance KPIs over the model estate - how many models and versions exist, how many are champion versus challenger or retired, by type and purpose. The AI-governance readout the semantic layer can answer directly: which models decide, and are they under control. Query measures with MEASURE(name).
+
+**Owner:** Head of Data Science · **Certification:** draft · **Source:** `model.model_version`
+
+**Dimensions:** model_purpose_code, model_type_code, model_status_code, line_of_business_code
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `model_version_count` | Number of model versions. | `COUNT(DISTINCT model_version_id)` |
+| `model_count` | Number of distinct model assets. | `COUNT(DISTINCT source.model_id)` |
+| `champion_count` | Versions currently serving as champion. | `COUNT(DISTINCT CASE WHEN model_status_code = 'CHAMPION' THEN model_version_id END)` |
+| `challenger_count` | Versions being evaluated as challengers. | `COUNT(DISTINCT CASE WHEN model_status_code = 'CHALLENGER' THEN model_version_id END)` |
+| `retired_count` | Retired versions kept for lineage. | `COUNT(DISTINCT CASE WHEN model_status_code = 'RETIRED' THEN model_version_id END)` |
+
 ## Performance Metrics (`semantics.performance_metrics`)
 
 The underwriting result: earned premium, incurred claims, expenses and the loss / expense / combined ratios - each defined once. Earning is straight-line daily; expenses are line-level, so combined ratio is meaningful per line and currency (not per underwriting year). Always constrain currency_code. Query measures with MEASURE(name).
@@ -75,6 +106,22 @@ The underwriting result: earned premium, incurred claims, expenses and the loss 
 | `loss_ratio` | The loss ratio: claims incurred over EARNED premium. This is the canonical, reporting-basis definition. (underwriting_metrics.loss_ratio_written is the quick written-basis view.) Meaningful within a single currency. | `SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
 | `expense_ratio` | Expenses over earned premium. | `SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
 | `combined_ratio` | Loss ratio plus expense ratio; below 1.0 is an underwriting profit. | `(SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) + SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
+
+## Pricing Metrics (`semantics.pricing_metrics`)
+
+Quote and conversion KPIs over the quote book - volumes, conversion and rated versus quoted premium by line and period. The pricing and demand view of the funnel. Amounts are in original quote currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
+
+**Owner:** Chief Pricing Actuary · **Certification:** draft · **Source:** `policy.quote`
+
+**Dimensions:** quote_month, line_of_business, line_of_business_code, currency_code
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `quote_count` | Number of quotes produced. | `COUNT(DISTINCT quote_id)` |
+| `converted_count` | Quotes that converted to a policy. | `COUNT(DISTINCT CASE WHEN conversion_flag THEN quote_id END)` |
+| `conversion_rate` | Converted quotes over all quotes - the headline conversion rate. | `COUNT(DISTINCT CASE WHEN conversion_flag THEN quote_id END) / NULLIF(COUNT(DISTINCT quote_id), 0)` |
+| `quoted_premium_total` | Total gross premium quoted, in original currency. | `SUM(quoted_gross_premium)` |
+| `rated_premium_total` | Total technical rated premium, in original currency. | `SUM(rated_gross_premium)` |
 
 ## Submission Metrics (`semantics.submission_metrics`)
 

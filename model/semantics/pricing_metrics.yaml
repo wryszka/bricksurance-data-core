@@ -1,0 +1,47 @@
+kind: metric_view
+name: pricing_metrics
+domain: semantics
+title: Pricing Metrics
+description: >
+  Quote and conversion KPIs over the quote book - volumes, conversion and rated
+  versus quoted premium by line and period. The pricing and demand view of the
+  funnel. Amounts are in original quote currency; group by or filter on
+  currency_code before summing money. Query measures with MEASURE(name).
+owner: Chief Pricing Actuary
+certification: draft
+source: policy.quote
+joins:
+  - name: line_of_business
+    source: reference.line_of_business
+    condition: source.line_of_business_code = line_of_business.line_of_business_code
+dimensions:
+  - name: quote_month
+    expr: DATE_TRUNC('MONTH', quote_date)
+    description: Calendar month the quote was produced in.
+  - name: line_of_business
+    expr: line_of_business.label
+    description: >
+      Line of business as its business label, e.g. 'Motor'. Filter with labels;
+      use line_of_business_code for codes.
+  - name: line_of_business_code
+    expr: source.line_of_business_code
+    description: Line of business as its code, e.g. MOTOR.
+  - name: currency_code
+    expr: currency_code
+    description: Original currency of the quote. Group by this before summing money.
+measures:
+  - name: quote_count
+    expr: COUNT(DISTINCT quote_id)
+    description: Number of quotes produced.
+  - name: converted_count
+    expr: COUNT(DISTINCT CASE WHEN conversion_flag THEN quote_id END)
+    description: Quotes that converted to a policy.
+  - name: conversion_rate
+    expr: COUNT(DISTINCT CASE WHEN conversion_flag THEN quote_id END) / NULLIF(COUNT(DISTINCT quote_id), 0)
+    description: Converted quotes over all quotes - the headline conversion rate.
+  - name: quoted_premium_total
+    expr: SUM(quoted_gross_premium)
+    description: Total gross premium quoted, in original currency.
+  - name: rated_premium_total
+    expr: SUM(rated_gross_premium)
+    description: Total technical rated premium, in original currency.

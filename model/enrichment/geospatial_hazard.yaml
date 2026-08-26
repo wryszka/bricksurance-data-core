@@ -1,0 +1,63 @@
+kind: entity
+name: geospatial_hazard
+domain: enrichment
+title: Geospatial Hazard
+description: >
+  Modelled peril hazard for a location - flood, subsidence, crime and coastal
+  exposure - with the source it came from. Used in property rating and
+  catastrophe accumulation. A modelled classification, not a live event state.
+grain: One row per location key per hazard source.
+tags:
+  maturity: draft
+attributes:
+  - name: geospatial_hazard_id
+    type: string
+    required: true
+    description: Identifier for the hazard record.
+    classification: internal
+  - name: location_key
+    type: string
+    required: true
+    description: >
+      Location the hazard describes - postcode, grid reference or gazetteer id.
+      Insured objects carry the same key to join hazard.
+    classification: internal
+  - name: postcode
+    references: postcode_enrichment
+    type: string
+    required: false
+    description: Postcode the location falls in, where resolvable.
+    classification: internal
+  - name: flood_band_code
+    code_set: flood_band
+    required: false
+    description: Modelled flood risk banding.
+    classification: internal
+  - name: subsidence_band_code
+    code_set: subsidence_band
+    required: false
+    description: Modelled ground-stability risk banding.
+    classification: internal
+  - name: crime_index
+    type: integer
+    required: false
+    description: Relative crime index for the area, 0-100.
+    classification: internal
+  - name: coastal_flag
+    type: boolean
+    required: false
+    description: Whether the location is within a coastal exposure zone.
+    classification: internal
+  - name: hazard_source_code
+    code_set: hazard_source
+    required: true
+    description: Provenance of the hazard classification.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the hazard record was loaded through.
+    classification: internal
+keys:
+  primary: [geospatial_hazard_id]
+owner: Chief Risk Officer

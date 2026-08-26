@@ -1,0 +1,25 @@
+kind: code_set
+name: claim_feature_type
+title: Claim Feature Type
+description: >
+  Kinds of feature (head of damage) a claim can split into - the sub-claims that
+  reserve and settle independently under one claim.
+codes:
+  - code: OWN_DAMAGE
+    label: Own Damage
+    description: Damage to the insured's own property or vehicle.
+  - code: THIRD_PARTY_PROPERTY
+    label: Third Party Property
+    description: Damage to a third party's property.
+  - code: THIRD_PARTY_INJURY
+    label: Third Party Injury
+    description: Bodily injury to a third party.
+  - code: BUSINESS_INTERRUPTION
+    label: Business Interruption
+    description: Loss of income following an insured event.
+  - code: LEGAL_EXPENSES
+    label: Legal Expenses
+    description: Legal costs arising from the claim.
+  - code: PROPERTY_MATERIAL_DAMAGE
+    label: Property Material Damage
+    description: Material damage to insured property.

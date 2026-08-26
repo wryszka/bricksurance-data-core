@@ -1,0 +1,25 @@
+kind: code_set
+name: uw_submission_status
+title: Underwriting Submission Status
+description: >
+  Status of a direct underwriting submission as it moves from received to a
+  quote or a decline - the grain before a quote exists.
+codes:
+  - code: RECEIVED
+    label: Received
+    description: Submission received; not yet triaged.
+  - code: IN_APPETITE
+    label: In Appetite
+    description: Passed appetite screening; proceeding to rate.
+  - code: REFERRED
+    label: Referred
+    description: Routed to a referral for a human decision.
+  - code: QUOTED
+    label: Quoted
+    description: A quote was produced from the submission.
+  - code: DECLINED
+    label: Declined
+    description: Declined; no quote offered.
+  - code: WITHDRAWN
+    label: Withdrawn
+    description: Withdrawn by the broker or prospect.

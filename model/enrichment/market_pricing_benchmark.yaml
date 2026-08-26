@@ -1,0 +1,55 @@
+kind: entity
+name: market_pricing_benchmark
+domain: enrichment
+title: Market Pricing Benchmark
+description: >
+  External market premium benchmarks by line of business, segment and period -
+  where the insurer's price sits against the market. Feeds demand modelling and
+  competitive-position views. Commercially sensitive.
+grain: One row per line of business per segment per period.
+tags:
+  maturity: draft
+attributes:
+  - name: market_pricing_benchmark_id
+    type: string
+    required: true
+    description: Identifier for the benchmark record.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business the benchmark covers.
+    classification: internal
+  - name: segment
+    type: string
+    required: false
+    description: Market segment or tier the benchmark applies to.
+    classification: internal
+  - name: benchmark_period
+    type: string
+    required: true
+    description: Period the benchmark represents, e.g. 2026-Q2.
+    classification: internal
+  - name: market_median_premium
+    type: decimal(18,2)
+    required: false
+    description: Median market premium for the segment, in the benchmark currency.
+    classification: confidential
+  - name: rank_percentile
+    type: decimal(5,2)
+    required: false
+    description: Where the insurer's average price ranks, 0 (cheapest) to 100.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the benchmark premium.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Market-intelligence provider the benchmark originates from.
+    classification: internal
+keys:
+  primary: [market_pricing_benchmark_id]
+owner: Chief Pricing Actuary

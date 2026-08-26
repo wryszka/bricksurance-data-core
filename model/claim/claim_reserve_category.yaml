@@ -1,0 +1,52 @@
+kind: entity
+name: claim_reserve_category
+domain: claim
+title: Claim Reserve Category
+description: >
+  The split of a claim feature's case reserve by category - indemnity, expense,
+  legal - as at a date. A reporting decomposition of the reserve; the movements
+  themselves remain claim transactions, and the categories sum to the feature's
+  outstanding reserve.
+grain: One row per feature per reserve category per as-at date.
+tags:
+  maturity: draft
+attributes:
+  - name: claim_reserve_category_id
+    type: string
+    required: true
+    description: Identifier for the reserve category row.
+    classification: internal
+  - name: claim_feature_id
+    references: claim_feature
+    type: string
+    required: true
+    description: The claim feature the reserve category belongs to.
+    classification: internal
+  - name: reserve_category_code
+    code_set: reserve_category
+    required: true
+    description: The category of reserve.
+    classification: internal
+  - name: amount
+    type: decimal(18,2)
+    required: true
+    description: Reserve held in this category, in the claim currency.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the reserve amount.
+    classification: internal
+  - name: as_at_date
+    type: date
+    required: true
+    description: Date the reserve split was struck.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Claims system the split originates from.
+    classification: internal
+keys:
+  primary: [claim_reserve_category_id]
+owner: Chief Claims Officer

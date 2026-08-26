@@ -46,6 +46,21 @@ attributes:
     required: false
     description: Year of manufacture.
     classification: internal
+  - name: vehicle_group
+    type: string
+    required: false
+    description: Insurance vehicle group used in rating, e.g. an ABI-style group.
+    classification: internal
+  - name: abi_code
+    type: string
+    required: false
+    description: ABI vehicle code identifying the make/model/variant for rating.
+    classification: internal
+  - name: telematics_enrolled_flag
+    type: boolean
+    required: false
+    description: Whether the vehicle is enrolled in a telematics programme.
+    classification: internal
 keys:
   primary: [vehicle_id]
 owner: Chief Underwriting Officer

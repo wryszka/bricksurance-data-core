@@ -1,0 +1,19 @@
+kind: code_set
+name: flood_band
+title: Flood Band
+description: >
+  Flood risk banding for a location, low to very high. A modelled hazard
+  classification, not a live flood state.
+codes:
+  - code: LOW
+    label: Low
+    description: Negligible modelled flood exposure.
+  - code: MODERATE
+    label: Moderate
+    description: Some modelled flood exposure; surface-water or fluvial.
+  - code: HIGH
+    label: High
+    description: Material modelled flood exposure requiring rating loading.
+  - code: VERY_HIGH
+    label: Very High
+    description: Severe modelled flood exposure; may fall outside standard appetite.

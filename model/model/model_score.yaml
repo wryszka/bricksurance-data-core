@@ -1,0 +1,55 @@
+kind: entity
+name: model_score
+domain: model
+title: Model Score
+description: >
+  A score a model version produced for a business object - the atomic output of
+  a model. Polymorphic by subject_kind (policy, quote, claim, party) so one
+  governed table holds every score and each traces to the version that made it.
+  Business-facing signals such as a fraud signal consume scores; they are not the
+  same thing.
+grain: One row per scored subject per model version per scoring run.
+tags:
+  maturity: draft
+attributes:
+  - name: model_score_id
+    type: string
+    required: true
+    description: Identifier for the score.
+    classification: internal
+  - name: model_version_id
+    references: model_version
+    type: string
+    required: true
+    description: Model version that produced the score.
+    classification: internal
+  - name: subject_kind_code
+    code_set: model_subject_kind
+    required: true
+    description: What kind of object the score is about.
+    classification: internal
+  - name: subject_id
+    type: string
+    required: true
+    description: >
+      Identifier of the scored object; resolve against the table named by
+      subject_kind_code (policy, quote, claim or party).
+    classification: internal
+  - name: score
+    type: decimal(12,6)
+    required: true
+    description: The score value, in the model's native scale.
+    classification: confidential
+  - name: scored_at
+    type: timestamp
+    required: true
+    description: When the score was produced.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Serving system that produced the score.
+    classification: internal
+keys:
+  primary: [model_score_id]
+owner: Head of Data Science

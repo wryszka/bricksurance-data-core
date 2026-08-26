@@ -1,0 +1,51 @@
+kind: entity
+name: model_monitor_metric
+domain: model
+title: Model Monitor Metric
+description: >
+  A monitoring measurement for a model version over a period - performance and
+  drift tracked through time. This is what turns "the model is governed" into
+  evidence: whether the champion still earns its role.
+grain: One row per model version per metric type per period.
+tags:
+  maturity: draft
+attributes:
+  - name: model_monitor_metric_id
+    type: string
+    required: true
+    description: Identifier for the monitoring measurement.
+    classification: internal
+  - name: model_version_id
+    references: model_version
+    type: string
+    required: true
+    description: Model version the measurement concerns.
+    classification: internal
+  - name: monitor_metric_type_code
+    code_set: monitor_metric_type
+    required: true
+    description: The kind of metric measured.
+    classification: internal
+  - name: period
+    type: string
+    required: true
+    description: Period the measurement covers, e.g. 2026-Q2.
+    classification: internal
+  - name: value
+    type: decimal(12,4)
+    required: true
+    description: Measured value of the metric.
+    classification: internal
+  - name: breach_flag
+    type: boolean
+    required: false
+    description: Whether the value breached its governance threshold in the period.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Monitoring system the measurement originates from.
+    classification: internal
+keys:
+  primary: [model_monitor_metric_id]
+owner: Head of Data Science

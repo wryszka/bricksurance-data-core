@@ -1,0 +1,43 @@
+kind: entity
+name: claim_party_role
+domain: claim
+title: Claim Party Role
+description: >
+  A party and the role it plays on a specific claim - handler, adjuster,
+  claimant, third party, solicitor or supplier. Distinct from policy-level party
+  roles: it captures who is involved in this loss, not the contract.
+grain: One row per party per role per claim.
+tags:
+  maturity: draft
+attributes:
+  - name: claim_party_role_id
+    type: string
+    required: true
+    description: Identifier for the claim party role.
+    classification: internal
+  - name: claim_id
+    references: claim
+    type: string
+    required: true
+    description: The claim the party is involved in.
+    classification: internal
+  - name: party_id
+    references: party
+    type: string
+    required: true
+    description: The party playing the role.
+    classification: internal
+  - name: claim_party_role_type_code
+    code_set: claim_party_role_type
+    required: true
+    description: The role the party plays on the claim.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the involvement originates from.
+    classification: internal
+keys:
+  primary: [claim_party_role_id]
+  natural: [claim_id, party_id, claim_party_role_type_code]
+owner: Chief Claims Officer

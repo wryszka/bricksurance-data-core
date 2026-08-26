@@ -1,0 +1,22 @@
+kind: code_set
+name: referral_outcome
+title: Referral Outcome
+description: >
+  How a fired referral was resolved - what the underwriter decided after the
+  rule routed the risk to them.
+codes:
+  - code: PENDING
+    label: Pending
+    description: Awaiting an underwriter decision.
+  - code: ACCEPTED
+    label: Accepted
+    description: Underwriter accepted the risk, possibly on amended terms.
+  - code: DECLINED
+    label: Declined
+    description: Underwriter declined the risk.
+  - code: OVERRIDDEN
+    label: Overridden
+    description: Underwriter overrode the rule's suggested action.
+  - code: AUTO
+    label: Auto-Resolved
+    description: Resolved automatically without human intervention.

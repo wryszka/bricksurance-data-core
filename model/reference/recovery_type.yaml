@@ -1,0 +1,22 @@
+kind: code_set
+name: recovery_type
+title: Recovery Type
+description: >
+  Sources of recovery on a claim - how money comes back after a payment. The
+  dimensional detail behind RECOVERY claim transactions.
+codes:
+  - code: SUBROGATION
+    label: Subrogation
+    description: Recovery pursued against a liable third party.
+  - code: SALVAGE
+    label: Salvage
+    description: Proceeds from disposal of damaged property.
+  - code: CONTRIBUTION
+    label: Contribution
+    description: Recovery from another insurer covering the same loss.
+  - code: REINSURANCE
+    label: Reinsurance
+    description: Recovery under a reinsurance treaty.
+  - code: DEDUCTIBLE
+    label: Deductible
+    description: Recovery of the policy excess from the insured.

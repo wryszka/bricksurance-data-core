@@ -1,0 +1,22 @@
+kind: code_set
+name: model_type
+title: Model Type
+description: >
+  The kind of analytical or machine-learning model an asset is, independent of
+  what it is used for.
+codes:
+  - code: GLM
+    label: Generalised Linear Model
+    description: Regression model, e.g. frequency or severity.
+  - code: GBM
+    label: Gradient Boosted Machine
+    description: Tree-ensemble model, e.g. demand or fraud propensity.
+  - code: LLM
+    label: Large Language Model
+    description: Foundation model used for narration, extraction or reasoning.
+  - code: RULES
+    label: Rules Engine
+    description: Deterministic rule set, not a learned model.
+  - code: STATISTICAL
+    label: Statistical
+    description: Other statistical estimator, e.g. a credibility or reserving model.

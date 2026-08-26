@@ -1,0 +1,25 @@
+kind: code_set
+name: litigation_status
+title: Litigation Status
+description: >
+  Status of legal proceedings on a claim, from letter of claim through to
+  settlement or judgment.
+codes:
+  - code: PRE_ACTION
+    label: Pre-Action
+    description: Letter of claim received; proceedings not yet issued.
+  - code: ISSUED
+    label: Issued
+    description: Proceedings issued at court.
+  - code: DEFENDED
+    label: Defended
+    description: The insurer is actively defending.
+  - code: SETTLED
+    label: Settled
+    description: Resolved by agreement.
+  - code: JUDGMENT
+    label: Judgment
+    description: Resolved by court judgment.
+  - code: DISCONTINUED
+    label: Discontinued
+    description: Proceedings withdrawn or struck out.

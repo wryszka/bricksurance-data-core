@@ -1,0 +1,64 @@
+kind: entity
+name: uw_submission
+domain: product
+title: Underwriting Submission
+description: >
+  A direct-book submission for cover, upstream of a quote - the request as it
+  arrives from a broker or channel, before it is rated or declined. It gives the
+  underwriting funnel a grain that exists before a quote does; a submission that
+  proceeds produces a quote.
+grain: One row per submission per source system.
+tags:
+  maturity: draft
+attributes:
+  - name: uw_submission_id
+    type: string
+    required: true
+    description: Identifier for the submission.
+    classification: internal
+  - name: party_id
+    references: party
+    type: string
+    required: false
+    description: Prospect or broker the submission came from.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business the submission is for.
+    classification: internal
+  - name: product_id
+    references: product
+    type: string
+    required: false
+    description: Product the submission is against, where the catalog applies.
+    classification: internal
+  - name: received_date
+    type: date
+    required: true
+    description: Date the submission was received.
+    classification: internal
+  - name: uw_submission_status_code
+    code_set: uw_submission_status
+    required: true
+    description: Status of the submission in the funnel.
+    classification: internal
+  - name: distribution_channel_code
+    code_set: distribution_channel
+    required: false
+    description: Channel the submission arrived through.
+    classification: internal
+  - name: quote_id
+    references: quote
+    type: string
+    required: false
+    description: Quote produced from the submission, where it proceeded.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the submission originates from.
+    classification: internal
+keys:
+  primary: [uw_submission_id]
+owner: Chief Underwriting Officer

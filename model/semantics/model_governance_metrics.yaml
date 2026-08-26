@@ -1,0 +1,45 @@
+kind: metric_view
+name: model_governance_metrics
+domain: semantics
+title: Model Governance Metrics
+description: >
+  Governance KPIs over the model estate - how many models and versions exist, how
+  many are champion versus challenger or retired, by type and purpose. The
+  AI-governance readout the semantic layer can answer directly: which models
+  decide, and are they under control. Query measures with MEASURE(name).
+owner: Head of Data Science
+certification: draft
+source: model.model_version
+joins:
+  - name: model_asset
+    source: model.model_asset
+    condition: source.model_id = model_asset.model_id
+dimensions:
+  - name: model_purpose_code
+    expr: model_asset.model_purpose_code
+    description: What the model is used for, e.g. PRICING_FREQUENCY, FRAUD, DEMAND.
+  - name: model_type_code
+    expr: model_asset.model_type_code
+    description: Kind of model, e.g. GLM, GBM, LLM.
+  - name: model_status_code
+    expr: source.model_status_code
+    description: Serving role of the version, e.g. CHAMPION, CHALLENGER, RETIRED.
+  - name: line_of_business_code
+    expr: model_asset.line_of_business_code
+    description: Line of business the model applies to, where specific.
+measures:
+  - name: model_version_count
+    expr: COUNT(DISTINCT model_version_id)
+    description: Number of model versions.
+  - name: model_count
+    expr: COUNT(DISTINCT source.model_id)
+    description: Number of distinct model assets.
+  - name: champion_count
+    expr: COUNT(DISTINCT CASE WHEN model_status_code = 'CHAMPION' THEN model_version_id END)
+    description: Versions currently serving as champion.
+  - name: challenger_count
+    expr: COUNT(DISTINCT CASE WHEN model_status_code = 'CHALLENGER' THEN model_version_id END)
+    description: Versions being evaluated as challengers.
+  - name: retired_count
+    expr: COUNT(DISTINCT CASE WHEN model_status_code = 'RETIRED' THEN model_version_id END)
+    description: Retired versions kept for lineage.

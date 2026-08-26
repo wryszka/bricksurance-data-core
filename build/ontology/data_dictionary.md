@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.9.0. Do not edit.*
+*Generated from model v0.10.0. Do not edit.*
 
 ## Account Type (`reference.account_type`)
 
@@ -101,6 +101,34 @@ The peril or event that gave rise to a claim. Aligned to ACORD cause-of-loss voc
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** cause_of_loss_code
+
+## Claim Feature Type (`reference.claim_feature_type`)
+
+Kinds of feature (head of damage) a claim can split into - the sub-claims that reserve and settle independently under one claim.
+
+**Grain:** One row per claim feature type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_feature_type_code | string | yes | Code value; referenced by claim_feature_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** claim_feature_type_code
+
+## Claim Party Role Type (`reference.claim_party_role_type`)
+
+The role a party plays on a specific claim - who is handling it and who is involved. Distinct from party roles on the policy.
+
+**Grain:** One row per claim party role type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_party_role_type_code | string | yes | Code value; referenced by claim_party_role_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** claim_party_role_type_code
 
 ## Claim Status (`reference.claim_status`)
 
@@ -250,6 +278,20 @@ Kinds of cover that can be granted under a policy. A policy bundles one or more 
 
 **Primary key:** coverage_type_code
 
+## Credit Score Band (`reference.credit_score_band`)
+
+Banded consumer credit rating from a bureau summary. Banded, never the raw score, so the attribute can be used in rating without holding fine-grained bureau data. Bureau data is used only where permitted and disclosed.
+
+**Grain:** One row per credit score band code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| credit_score_band_code | string | yes | Code value; referenced by credit_score_band_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** credit_score_band_code
+
 ## CSM Movement Type (`reference.csm_movement_type`)
 
 Steps in the IFRS 17 contractual service margin roll-forward. The closing CSM is the signed sum of these movements over the opening balance - a balance derived from movements, never overwritten.
@@ -366,6 +408,20 @@ Kinds of operating expense allocated to lines of business - the missing half of 
 
 **Primary key:** expense_type_code
 
+## Flood Band (`reference.flood_band`)
+
+Flood risk banding for a location, low to very high. A modelled hazard classification, not a live flood state.
+
+**Grain:** One row per flood band code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| flood_band_code | string | yes | Code value; referenced by flood_band_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** flood_band_code
+
 ## Fraud Signal Type (`reference.fraud_signal_type`)
 
 Kinds of fraud indicator on a claim. Signals inform investigation; they never auto-decide.
@@ -379,6 +435,20 @@ Kinds of fraud indicator on a claim. Signals inform investigation; they never au
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** fraud_signal_type_code
+
+## Hazard Source (`reference.hazard_source`)
+
+Provenance of a geospatial hazard rating - which external model or authority the banding came from. Provenance travels with the enrichment.
+
+**Grain:** One row per hazard source code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| hazard_source_code | string | yes | Code value; referenced by hazard_source_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** hazard_source_code
 
 ## Insured Object Type (`reference.insured_object_type`)
 
@@ -440,6 +510,20 @@ Classes of insurance business written by the group, aligned to ACORD LOBCd vocab
 
 **Primary key:** line_of_business_code
 
+## Litigation Status (`reference.litigation_status`)
+
+Status of legal proceedings on a claim, from letter of claim through to settlement or judgment.
+
+**Grain:** One row per litigation status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| litigation_status_code | string | yes | Code value; referenced by litigation_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** litigation_status_code
+
 ## Loss Basis (`reference.loss_basis`)
 
 Whether an event loss figure is modelled or reported. Day-one catastrophe numbers are modelled (event footprint against in-force exposure); cedant reports firm up over the following weeks — the basis keeps the two honest.
@@ -467,6 +551,90 @@ The IFRS 17 measurement model applied to a group of contracts.
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** measurement_model_code
+
+## Mileage Band (`reference.mileage_band`)
+
+Annual mileage banding for a motor risk, derived from declared or telematics mileage. A rating exposure dimension.
+
+**Grain:** One row per mileage band code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| mileage_band_code | string | yes | Code value; referenced by mileage_band_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** mileage_band_code
+
+## Model Purpose (`reference.model_purpose`)
+
+What a model is used for in the business - the decision or estimate it supports. Purpose is separate from type: a GBM might serve demand or fraud.
+
+**Grain:** One row per model purpose code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| model_purpose_code | string | yes | Code value; referenced by model_purpose_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** model_purpose_code
+
+## Model Status (`reference.model_status`)
+
+Lifecycle status of a model version in production - the champion/challenger discipline that governs which version actually decides.
+
+**Grain:** One row per model status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| model_status_code | string | yes | Code value; referenced by model_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** model_status_code
+
+## Model Subject Kind (`reference.model_subject_kind`)
+
+What kind of business object a model score is about. A score is polymorphic - it attaches to a policy, quote, claim or party - and this names which.
+
+**Grain:** One row per model subject kind code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| model_subject_kind_code | string | yes | Code value; referenced by model_subject_kind_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** model_subject_kind_code
+
+## Model Type (`reference.model_type`)
+
+The kind of analytical or machine-learning model an asset is, independent of what it is used for.
+
+**Grain:** One row per model type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| model_type_code | string | yes | Code value; referenced by model_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** model_type_code
+
+## Monitor Metric Type (`reference.monitor_metric_type`)
+
+The kind of monitoring metric recorded for a model version over a period - performance and drift measures that govern whether it stays champion.
+
+**Grain:** One row per monitor metric type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| monitor_metric_type_code | string | yes | Code value; referenced by monitor_metric_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** monitor_metric_type_code
 
 ## Party Role Type (`reference.party_role_type`)
 
@@ -576,6 +744,20 @@ Lifecycle status of a quotation. A quote that converts is linked to the resultin
 
 **Primary key:** quote_status_code
 
+## Rating Factor Kind (`reference.rating_factor_kind`)
+
+How a rating factor acts on premium - the arithmetic of the rating build-up, so a quoted premium can be decomposed and explained.
+
+**Grain:** One row per rating factor kind code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| rating_factor_kind_code | string | yes | Code value; referenced by rating_factor_kind_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** rating_factor_kind_code
+
 ## Receivable Transaction Type (`reference.receivable_transaction_type`)
 
 Premium billing movements. Outstanding debt is the signed sum - invoices positive, cash negative - never a stored balance.
@@ -589,6 +771,48 @@ Premium billing movements. Outstanding debt is the signed sum - invoices positiv
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** receivable_transaction_type_code
+
+## Recovery Type (`reference.recovery_type`)
+
+Sources of recovery on a claim - how money comes back after a payment. The dimensional detail behind RECOVERY claim transactions.
+
+**Grain:** One row per recovery type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| recovery_type_code | string | yes | Code value; referenced by recovery_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** recovery_type_code
+
+## Referral Action (`reference.referral_action`)
+
+What a referral rule does when its condition is met - the action taken on a risk that trips the rule.
+
+**Grain:** One row per referral action code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| referral_action_code | string | yes | Code value; referenced by referral_action_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** referral_action_code
+
+## Referral Outcome (`reference.referral_outcome`)
+
+How a fired referral was resolved - what the underwriter decided after the rule routed the risk to them.
+
+**Grain:** One row per referral outcome code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| referral_outcome_code | string | yes | Code value; referenced by referral_outcome_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** referral_outcome_code
 
 ## Reporting Level (`reference.reporting_level`)
 
@@ -617,6 +841,20 @@ The reporting framework a figure is prepared under. One valuation or statement f
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** reporting_regime_code
+
+## Reserve Category (`reference.reserve_category`)
+
+The split of a case reserve by kind of cost - so indemnity, expense and legal reserves are visible separately, as claims and reserving teams hold them.
+
+**Grain:** One row per reserve category code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| reserve_category_code | string | yes | Code value; referenced by reserve_category_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** reserve_category_code
 
 ## Reserving Method (`reference.reserving_method`)
 
@@ -647,6 +885,20 @@ Quality-gate verdict of a processing or valuation run. RED runs never feed downs
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** run_verdict_code
+
+## Sanctions List (`reference.sanctions_list`)
+
+Which screening list a sanctions or PEP hit was raised against. A hit is an indicator for review, never an automatic decision.
+
+**Grain:** One row per sanctions list code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| sanctions_list_code | string | yes | Code value; referenced by sanctions_list_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** sanctions_list_code
 
 ## Scenario Set Status (`reference.scenario_status`)
 
@@ -706,6 +958,20 @@ Lifecycle of a reinsurance submission from receipt to bind or decline.
 
 **Primary key:** submission_status_code
 
+## Subsidence Band (`reference.subsidence_band`)
+
+Ground-stability / subsidence risk banding for a location, from modelled geology and claims history.
+
+**Grain:** One row per subsidence band code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| subsidence_band_code | string | yes | Code value; referenced by subsidence_band_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** subsidence_band_code
+
 ## Tax Type (`reference.tax_type`)
 
 Kinds of tax the group accounts for.
@@ -749,6 +1015,34 @@ Outcome of an underwriting decision. Every decision records who or what decided 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** underwriting_decision_type_code
+
+## Urbanity (`reference.urbanity`)
+
+Settlement type of a postcode, urban to rural, used as a rating and accumulation dimension.
+
+**Grain:** One row per urbanity code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| urbanity_code | string | yes | Code value; referenced by urbanity_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** urbanity_code
+
+## Underwriting Submission Status (`reference.uw_submission_status`)
+
+Status of a direct underwriting submission as it moves from received to a quote or a decline - the grain before a quote exists.
+
+**Grain:** One row per underwriting submission status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| uw_submission_status_code | string | yes | Code value; referenced by uw_submission_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** uw_submission_status_code
 
 ## Valuation Measure (`reference.valuation_measure`)
 
@@ -807,11 +1101,86 @@ A demand for indemnity under a policy arising from a loss event. The claim recor
 | loss_date | date | yes | Date the loss occurred. | internal | LossDt | Date of loss |
 | reported_date | date | yes | Date the loss was first reported to the insurer. Must be on or after loss_date. | internal | ReportedDt |  |
 | description | string |  | Free-text description of the loss circumstances. | confidential |  |  |
+| handling_office | string |  | Claims office or team handling the file. | internal |  |  |
+| catastrophe_id | string |  | Catastrophe event the claim is attributed to, where it belongs to one. | internal |  |  |
+| reopened_flag | boolean |  | Whether the claim has been reopened after closure. | internal |  |  |
 | source_system_code | string | yes | System of record the claim originates from. | internal |  |  |
 
 **Primary key:** claim_id
 **Natural key:** source_system_code, claim_number
 **Quality — reported_after_loss:** `reported_date >= loss_date` — A loss cannot be reported before it happens.
+
+## Claim Feature (`claim.claim_feature`)
+
+A feature (head of damage) within a claim - a sub-claim that reserves and settles on its own, e.g. own damage versus third-party injury under one motor claim. Financial development still flows through claim transactions; the feature gives claims and reserving teams the grain they actually work at.
+
+**Grain:** One row per feature per claim.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_feature_id | string | yes | Identifier for the claim feature. | internal |  |  |
+| claim_id | string | yes | The claim this feature belongs to. | internal |  |  |
+| coverage_id | string |  | Coverage the feature attaches to, where the source provides it. | internal |  |  |
+| claim_feature_type_code | string | yes | Kind of feature (head of damage). | internal |  |  |
+| claim_status_code | string | yes | Handling status of the feature; features can close independently. | internal |  |  |
+| source_system_code | string | yes | Claims system the feature originates from. | internal |  |  |
+
+**Primary key:** claim_feature_id
+
+## Claim Party Role (`claim.claim_party_role`)
+
+A party and the role it plays on a specific claim - handler, adjuster, claimant, third party, solicitor or supplier. Distinct from policy-level party roles: it captures who is involved in this loss, not the contract.
+
+**Grain:** One row per party per role per claim.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_party_role_id | string | yes | Identifier for the claim party role. | internal |  |  |
+| claim_id | string | yes | The claim the party is involved in. | internal |  |  |
+| party_id | string | yes | The party playing the role. | internal |  |  |
+| claim_party_role_type_code | string | yes | The role the party plays on the claim. | internal |  |  |
+| source_system_code | string | yes | System the involvement originates from. | internal |  |  |
+
+**Primary key:** claim_party_role_id
+**Natural key:** claim_id, party_id, claim_party_role_type_code
+
+## Claim Recovery (`claim.claim_recovery`)
+
+A recovery pursued or received on a claim, with its source - subrogation, salvage, contribution, reinsurance or deductible. The dimensional detail behind RECOVERY claim transactions: what kind of recovery, against whom, and where it stands.
+
+**Grain:** One row per recovery per claim.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_recovery_id | string | yes | Identifier for the recovery. | internal |  |  |
+| claim_id | string | yes | The claim the recovery relates to. | internal |  |  |
+| recovery_type_code | string | yes | Source of the recovery. | internal |  |  |
+| against_party_id | string |  | Party the recovery is pursued against, where applicable. | internal |  |  |
+| expected_amount | decimal(18,2) |  | Recovery anticipated, in the claim currency. | confidential |  |  |
+| received_amount | decimal(18,2) |  | Recovery actually received to date, in the claim currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the recovery amounts. | internal |  |  |
+| status | string |  | Status of the recovery, e.g. open, received, closed. | internal |  |  |
+| source_system_code | string | yes | Claims system the recovery originates from. | internal |  |  |
+
+**Primary key:** claim_recovery_id
+
+## Claim Reserve Category (`claim.claim_reserve_category`)
+
+The split of a claim feature's case reserve by category - indemnity, expense, legal - as at a date. A reporting decomposition of the reserve; the movements themselves remain claim transactions, and the categories sum to the feature's outstanding reserve.
+
+**Grain:** One row per feature per reserve category per as-at date.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| claim_reserve_category_id | string | yes | Identifier for the reserve category row. | internal |  |  |
+| claim_feature_id | string | yes | The claim feature the reserve category belongs to. | internal |  |  |
+| reserve_category_code | string | yes | The category of reserve. | internal |  |  |
+| amount | decimal(18,2) | yes | Reserve held in this category, in the claim currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the reserve amount. | internal |  |  |
+| as_at_date | date | yes | Date the reserve split was struck. | internal |  |  |
+| source_system_code | string | yes | Claims system the split originates from. | internal |  |  |
+
+**Primary key:** claim_reserve_category_id
 
 ## Claim Transaction (`claim.claim_transaction`)
 
@@ -847,9 +1216,29 @@ A fraud indicator raised on a claim, with its score and provenance. Signals info
 | score | integer | yes | Signal strength 0-100. | confidential |  |  |
 | detected_at | timestamp | yes | When the signal was raised. | internal |  |  |
 | detail | string |  | What was observed, in business language. | confidential |  |  |
+| model_version_id | string |  | Model version that raised the signal, where a model did; ties the business-facing signal to the governed model and its score. | internal |  |  |
 | source_system_code | string | yes | Detecting system. | internal |  |  |
 
 **Primary key:** fraud_signal_id
+
+## Litigation (`claim.litigation`)
+
+Legal proceedings arising from a claim - status, jurisdiction and the legal reserve. Litigation is a material driver of claim cost and duration; modelling it lets the claims workbench track defended matters distinctly.
+
+**Grain:** One row per suit per claim.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| litigation_id | string | yes | Identifier for the litigation matter. | internal |  |  |
+| claim_id | string | yes | The claim the proceedings arise from. | internal |  |  |
+| litigation_status_code | string | yes | Status of the proceedings. | internal |  |  |
+| jurisdiction | string |  | Court or jurisdiction the matter is in. | internal |  |  |
+| legal_reserve | decimal(18,2) |  | Reserve held for legal and defence costs, in the claim currency. | confidential |  |  |
+| currency_code | string |  | Currency of the legal reserve. | internal |  |  |
+| opened_date | date |  | Date proceedings were first notified. | internal |  |  |
+| source_system_code | string | yes | System the litigation record originates from. | internal |  |  |
+
+**Primary key:** litigation_id
 
 ## Complaint (`conduct.complaint`)
 
@@ -917,6 +1306,140 @@ A signed intermediary remuneration movement on a policy. Transactional like all 
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** commission_transaction_id
+
+## Credit Bureau Summary (`enrichment.credit_bureau_summary`)
+
+A banded summary of a party's consumer credit standing from a bureau pull. Banded, not raw, and held only where a lawful basis and disclosure exist. Personal data - classified accordingly.
+
+**Grain:** One row per party per bureau pull.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| credit_bureau_summary_id | string | yes | Identifier for the bureau summary record. | internal |  |  |
+| party_id | string | yes | Party the bureau summary concerns. | internal |  |  |
+| pull_date | date | yes | Date the bureau summary was obtained. | internal |  |  |
+| credit_score_band_code | string | yes | Banded credit rating from the bureau. | pii |  |  |
+| ccj_count | integer |  | Count of county court judgments on file. | pii |  |  |
+| electoral_roll_flag | boolean |  | Whether the party is present on the electoral roll at the address. | pii |  |  |
+| consent_id | string |  | Consent record providing the lawful basis for the bureau pull. | internal |  |  |
+| source_system_code | string | yes | Bureau or aggregator the summary originates from. | internal |  |  |
+
+**Primary key:** credit_bureau_summary_id
+
+## Geospatial Hazard (`enrichment.geospatial_hazard`)
+
+Modelled peril hazard for a location - flood, subsidence, crime and coastal exposure - with the source it came from. Used in property rating and catastrophe accumulation. A modelled classification, not a live event state.
+
+**Grain:** One row per location key per hazard source.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| geospatial_hazard_id | string | yes | Identifier for the hazard record. | internal |  |  |
+| location_key | string | yes | Location the hazard describes - postcode, grid reference or gazetteer id. Insured objects carry the same key to join hazard. | internal |  |  |
+| postcode | string |  | Postcode the location falls in, where resolvable. | internal |  |  |
+| flood_band_code | string |  | Modelled flood risk banding. | internal |  |  |
+| subsidence_band_code | string |  | Modelled ground-stability risk banding. | internal |  |  |
+| crime_index | integer |  | Relative crime index for the area, 0-100. | internal |  |  |
+| coastal_flag | boolean |  | Whether the location is within a coastal exposure zone. | internal |  |  |
+| hazard_source_code | string | yes | Provenance of the hazard classification. | internal |  |  |
+| source_system_code | string | yes | System the hazard record was loaded through. | internal |  |  |
+
+**Primary key:** geospatial_hazard_id
+
+## Market Pricing Benchmark (`enrichment.market_pricing_benchmark`)
+
+External market premium benchmarks by line of business, segment and period - where the insurer's price sits against the market. Feeds demand modelling and competitive-position views. Commercially sensitive.
+
+**Grain:** One row per line of business per segment per period.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| market_pricing_benchmark_id | string | yes | Identifier for the benchmark record. | internal |  |  |
+| line_of_business_code | string | yes | Line of business the benchmark covers. | internal |  |  |
+| segment | string |  | Market segment or tier the benchmark applies to. | internal |  |  |
+| benchmark_period | string | yes | Period the benchmark represents, e.g. 2026-Q2. | internal |  |  |
+| market_median_premium | decimal(18,2) |  | Median market premium for the segment, in the benchmark currency. | confidential |  |  |
+| rank_percentile | decimal(5,2) |  | Where the insurer's average price ranks, 0 (cheapest) to 100. | confidential |  |  |
+| currency_code | string | yes | Currency of the benchmark premium. | internal |  |  |
+| source_system_code | string | yes | Market-intelligence provider the benchmark originates from. | internal |  |  |
+
+**Primary key:** market_pricing_benchmark_id
+
+## Motor Telematics Aggregate (`enrichment.motor_telematics_aggregate`)
+
+Aggregated driving behaviour for a motor policy over a period, from a telematics device or app. Aggregates only - never raw journey traces - so the rating signal is usable without holding location-level personal data.
+
+**Grain:** One row per policy per observation period.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| telematics_aggregate_id | string | yes | Identifier for the telematics aggregate record. | internal |  |  |
+| policy_id | string | yes | Motor policy the behaviour was observed for. | internal |  |  |
+| period_start_date | date | yes | Start of the observation window. | internal |  |  |
+| period_end_date | date | yes | End of the observation window. | internal |  |  |
+| observed_miles | integer |  | Miles observed in the window. | confidential |  |  |
+| mileage_band_code | string |  | Annualised mileage banding derived from observed miles. | internal |  |  |
+| harsh_braking_rate | decimal(6,3) |  | Harsh-braking events per 100 miles. | confidential |  |  |
+| night_driving_pct | decimal(5,2) |  | Percentage of miles driven between 11pm and 5am. | confidential |  |  |
+| telematics_score | integer |  | Composite driving score 0-100; higher is safer. | confidential |  |  |
+| source_system_code | string | yes | Telematics provider or platform the aggregate originates from. | internal |  |  |
+
+**Primary key:** telematics_aggregate_id
+**Quality — period_ordered:** `period_end_date >= period_start_date` — The observation window must end on or after it starts.
+
+## Policy Demographics (`enrichment.policy_demographics`)
+
+Banded demographic and prior-history attributes for a policy's proposer, used as rating dimensions. Banded, never raw, and personal - classified accordingly. Held only where a lawful basis and disclosure exist.
+
+**Grain:** One row per policy.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| policy_demographics_id | string | yes | Identifier for the demographics record. | internal |  |  |
+| policy_id | string | yes | Policy the demographic attributes describe. | internal |  |  |
+| age_band | string |  | Banded proposer age, e.g. 30-39. | pii |  |  |
+| tenure_band | string |  | Banded length of relationship with the insurer. | internal |  |  |
+| prior_claims_band | string |  | Banded count of prior claims in the last five years. | pii |  |  |
+| occupation_class | string |  | Occupation class grouping used in rating. | pii |  |  |
+| source_system_code | string | yes | System the demographic attributes were sourced from. | internal |  |  |
+
+**Primary key:** policy_demographics_id
+
+## Postcode Enrichment (`enrichment.postcode_enrichment`)
+
+Area attributes for a postcode - settlement type, deprivation and region - used as rating and accumulation dimensions. Reference-like: keyed by postcode, shared across policies and objects in that area.
+
+**Grain:** One row per postcode.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| postcode | string | yes | Postcode or postal-area key the attributes describe. | internal |  |  |
+| country_code | string | yes | Country the postcode belongs to. | internal |  |  |
+| urbanity_code | string |  | Settlement type of the postcode. | internal |  |  |
+| deprivation_decile | integer |  | Index of multiple deprivation decile, 1 (most) to 10 (least). | internal |  |  |
+| region_code | string |  | Statistical region the postcode sits in. | internal |  |  |
+| source_system_code | string | yes | Provider the postcode attributes originate from. | internal |  |  |
+
+**Primary key:** postcode
+
+## Sanctions Screen (`enrichment.sanctions_screen`)
+
+The result of screening a party against sanctions and PEP lists. A hit is an indicator that routes the party to review; it is never an automatic decline. Personal data - classified accordingly.
+
+**Grain:** One row per party per screening run.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| sanctions_screen_id | string | yes | Identifier for the screening record. | internal |  |  |
+| party_id | string | yes | Party that was screened. | internal |  |  |
+| screen_date | date | yes | Date the screening was run. | internal |  |  |
+| hit_flag | boolean | yes | Whether the screen raised a potential match. | pii |  |  |
+| pep_flag | boolean |  | Whether the match was a politically-exposed-person indicator. | pii |  |  |
+| sanctions_list_code | string |  | List the match was raised against, where there was a hit. | internal |  |  |
+| cleared_flag | boolean |  | Whether review cleared the hit as a false positive. | internal |  |  |
+| source_system_code | string | yes | Screening provider the result originates from. | internal |  |  |
+
+**Primary key:** sanctions_screen_id
 
 ## Business Event (`events.business_event`)
 
@@ -1334,6 +1857,135 @@ Which assumption sets a valuation run used - one row per assumption set, typical
 
 **Primary key:** valuation_run_id, assumption_set_id
 
+## Feature Definition (`model.feature_definition`)
+
+A single model feature defined once - what it means, where it comes from and how it is classified. Features are governed the same way attributes are: a feature built from personal data carries that classification wherever it is used.
+
+**Grain:** One row per feature.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| feature_id | string | yes | Identifier for the feature. | internal |  |  |
+| name | string | yes | Feature name as referenced by models. | internal |  |  |
+| description | string | yes | What the feature represents, in business language. | internal |  |  |
+| source_entity | string |  | The model entity the feature is derived from, e.g. motor_telematics_aggregate. | internal |  |  |
+| expression | string |  | Definition or derivation of the feature, as documentation. | internal |  |  |
+| classification | string | yes | Data classification inherited by the feature - internal, confidential or pii. | internal |  |  |
+| pii_flag | boolean | yes | Whether the feature is built from personal data. | internal |  |  |
+
+**Primary key:** feature_id
+**Natural key:** name
+
+## Feature Set (`model.feature_set`)
+
+A named collection of features a model version consumes. The set is the contract between features and models; membership is resolved through feature_set_member so the same feature can serve many sets.
+
+**Grain:** One row per feature set.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| feature_set_id | string | yes | Identifier for the feature set. | internal |  |  |
+| name | string | yes | Feature set name. | internal |  |  |
+| description | string |  | What the set is for. | internal |  |  |
+| model_purpose_code | string |  | The purpose the set was assembled for. | internal |  |  |
+
+**Primary key:** feature_set_id
+**Natural key:** name
+
+## Feature Set Member (`model.feature_set_member`)
+
+Membership of a feature in a feature set - the many-to-many bridge between feature_definition and feature_set. Modelled relationally so features are shared, not duplicated per set.
+
+**Grain:** One row per feature per feature set.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| feature_set_member_id | string | yes | Identifier for the membership row. | internal |  |  |
+| feature_set_id | string | yes | The feature set. | internal |  |  |
+| feature_id | string | yes | The feature that is a member of the set. | internal |  |  |
+
+**Primary key:** feature_set_member_id
+**Natural key:** feature_set_id, feature_id
+
+## Model Asset (`model.model_asset`)
+
+A governed analytical or machine-learning model as a business asset - what it is, what it is for, who owns it and where it is registered. Versions, features, scores and monitoring hang off it. This is how the semantic layer governs AI the way it governs data.
+
+**Grain:** One row per model asset.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| model_id | string | yes | Stable identifier for the model asset, owned by the data layer. | internal |  |  |
+| name | string | yes | Human-readable model name. | internal |  |  |
+| model_type_code | string | yes | The kind of model. | internal |  |  |
+| model_purpose_code | string | yes | What the model is used for in the business. | internal |  |  |
+| line_of_business_code | string |  | Line of business the model applies to, where specific. | internal |  |  |
+| registered_name | string |  | Fully-qualified registry name, e.g. the Unity Catalog model name. | internal |  |  |
+| description | string |  | What the model does, in business language. | internal |  |  |
+| owner_role | string | yes | Accountable owner of the model, as an org role. | internal |  |  |
+| source_system_code | string | yes | Platform or registry the model is managed in. | internal |  |  |
+
+**Primary key:** model_id
+**Natural key:** registered_name
+
+## Model Monitor Metric (`model.model_monitor_metric`)
+
+A monitoring measurement for a model version over a period - performance and drift tracked through time. This is what turns "the model is governed" into evidence: whether the champion still earns its role.
+
+**Grain:** One row per model version per metric type per period.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| model_monitor_metric_id | string | yes | Identifier for the monitoring measurement. | internal |  |  |
+| model_version_id | string | yes | Model version the measurement concerns. | internal |  |  |
+| monitor_metric_type_code | string | yes | The kind of metric measured. | internal |  |  |
+| period | string | yes | Period the measurement covers, e.g. 2026-Q2. | internal |  |  |
+| value | decimal(12,4) | yes | Measured value of the metric. | internal |  |  |
+| breach_flag | boolean |  | Whether the value breached its governance threshold in the period. | internal |  |  |
+| source_system_code | string | yes | Monitoring system the measurement originates from. | internal |  |  |
+
+**Primary key:** model_monitor_metric_id
+
+## Model Score (`model.model_score`)
+
+A score a model version produced for a business object - the atomic output of a model. Polymorphic by subject_kind (policy, quote, claim, party) so one governed table holds every score and each traces to the version that made it. Business-facing signals such as a fraud signal consume scores; they are not the same thing.
+
+**Grain:** One row per scored subject per model version per scoring run.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| model_score_id | string | yes | Identifier for the score. | internal |  |  |
+| model_version_id | string | yes | Model version that produced the score. | internal |  |  |
+| subject_kind_code | string | yes | What kind of object the score is about. | internal |  |  |
+| subject_id | string | yes | Identifier of the scored object; resolve against the table named by subject_kind_code (policy, quote, claim or party). | internal |  |  |
+| score | decimal(12,6) | yes | The score value, in the model's native scale. | confidential |  |  |
+| scored_at | timestamp | yes | When the score was produced. | internal |  |  |
+| source_system_code | string | yes | Serving system that produced the score. | internal |  |  |
+
+**Primary key:** model_score_id
+
+## Model Version (`model.model_version`)
+
+A specific trained version of a model asset - when it was trained, on what frame, how it scored, and its serving role. Every score and decision cites a version, so a decision is always reproducible to the exact model that made it.
+
+**Grain:** One row per version of a model asset.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| model_version_id | string | yes | Identifier for this model version. | internal |  |  |
+| model_id | string | yes | Model asset this is a version of. | internal |  |  |
+| version | string | yes | Version label, e.g. 3 or 2026.07.1. | internal |  |  |
+| model_status_code | string | yes | Serving role of this version - champion, challenger, shadow, retired, draft. | internal |  |  |
+| trained_on | date |  | Date the version was trained. | internal |  |  |
+| training_frame_ref | string |  | Reference to the governed training frame or view the version was trained on. | internal |  |  |
+| primary_metric_type_code | string |  | The headline evaluation metric reported at training time. | internal |  |  |
+| primary_metric_value | decimal(12,4) |  | Value of the headline evaluation metric at training time. | internal |  |  |
+| promoted_on | date |  | Date this version became champion, where applicable. | internal |  |  |
+| source_system_code | string | yes | Registry the version is tracked in. | internal |  |  |
+
+**Primary key:** model_version_id
+**Natural key:** model_id, version
+
 ## Legal Entity (`org.legal_entity`)
 
 A legal entity in the group's structure and the reporting hierarchy that connects them. This is the spine of the whole system: policies, valuations, ledgers and statements all belong to a legal entity, and every entity rolls up to the group holding via parent_legal_entity_id. Solo reporting is one entity; group reporting is the consolidation up this tree.
@@ -1504,6 +2156,7 @@ A concrete object or exposure insured under a policy - a building, a vehicle, a 
 | postcode | string |  | Postal code of the object's location, where applicable; drives geographic accumulation. | confidential |  | Risk location |
 | latitude | decimal(9,6) |  | Latitude of the object's location, where geocoded. | confidential |  |  |
 | longitude | decimal(9,6) |  | Longitude of the object's location, where geocoded. | confidential |  |  |
+| location_key | string |  | Location key used to join external hazard enrichment (enrichment.geospatial_hazard.location_key) - typically the postcode or a gazetteer id. A soft join key, not a hard reference. | internal |  |  |
 
 **Primary key:** insured_object_id
 
@@ -1572,6 +2225,10 @@ A quotation for insurance cover. Quotes live upstream of policies: a converted q
 | quote_date | date | yes | Date the quotation was produced. | internal |  |  |
 | requested_inception_date | date |  | Cover start date requested by the prospect. | internal |  |  |
 | quoted_gross_premium | decimal(18,2) |  | Gross premium quoted, in the quote currency; empty while the quote is open. | confidential |  |  |
+| rated_gross_premium | decimal(18,2) |  | Technical rated premium the rating engine produced, before any commercial adjustment to the quoted figure; empty for quotes not machine-rated. | confidential |  |  |
+| rating_engine_config_id | string |  | Rating engine configuration version that produced the rated premium. | internal |  |  |
+| model_version_id | string |  | Model version behind the risk premium, tying the quote to a governed model. | internal |  |  |
+| conversion_flag | boolean |  | Whether the quote converted to a policy; the demand-modelling target. | internal |  |  |
 | currency_code | string | yes | Currency of the quoted premium. | internal |  |  |
 | source_system_code | string | yes | System of record the quote originates from. | internal |  |  |
 | product_id | string |  | The product quoted, where the product catalog applies. | internal |  |  |
@@ -1615,8 +2272,100 @@ Motor-specific detail for an insured object of type VEHICLE. This is the model's
 | make | string |  | Manufacturer. | internal |  |  |
 | model | string |  | Model designation. | internal |  |  |
 | year_of_manufacture | integer |  | Year of manufacture. | internal |  |  |
+| vehicle_group | string |  | Insurance vehicle group used in rating, e.g. an ABI-style group. | internal |  |  |
+| abi_code | string |  | ABI vehicle code identifying the make/model/variant for rating. | internal |  |  |
+| telematics_enrolled_flag | boolean |  | Whether the vehicle is enrolled in a telematics programme. | internal |  |  |
 
 **Primary key:** vehicle_id
+
+## Derived Factor (`pricing.derived_factor`)
+
+The factor level and contribution applied to a specific quote or policy - the rating build-up made concrete. Summing the contributions reconstructs the quoted premium, so a price is always explainable to the factors that made it.
+
+**Grain:** One row per rating factor applied to a quote or policy.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| derived_factor_id | string | yes | Identifier for the applied-factor row. | internal |  |  |
+| subject_kind_code | string | yes | Whether the factor was applied to a quote or a policy. | internal |  |  |
+| subject_id | string | yes | Identifier of the quote or policy the factor was applied to. | internal |  |  |
+| rating_factor_id | string | yes | The rating factor applied. | internal |  |  |
+| level_code | string | yes | The factor level selected for the risk. | internal |  |  |
+| relativity | decimal(10,4) |  | Relativity applied, copied from the level in force at rating time. | confidential |  |  |
+| contribution | decimal(18,2) |  | Premium contribution of this factor, in the quote currency. | confidential |  |  |
+
+**Primary key:** derived_factor_id
+
+## Rating Engine Config (`pricing.rating_engine_config`)
+
+A versioned rating configuration for a line of business - the base rate and the model version behind it, effective-dated. This is what a quote's rating provenance points to, tying a premium to a governed model version.
+
+**Grain:** One row per rating engine configuration version.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| rating_engine_config_id | string | yes | Identifier for the rating engine configuration. | internal |  |  |
+| line_of_business_code | string | yes | Line of business the configuration rates. | internal |  |  |
+| version | string | yes | Configuration version label. | internal |  |  |
+| base_rate | decimal(18,4) |  | Base rate the factors build up from, in the config currency. | confidential |  |  |
+| model_version_id | string |  | Model version providing the risk premium behind the configuration. | internal |  |  |
+| currency_code | string | yes | Currency of the base rate. | internal |  |  |
+| effective_from | date | yes | Date the configuration took effect. | internal |  |  |
+| effective_to | date |  | Date the configuration was superseded; empty while current. | internal |  |  |
+
+**Primary key:** rating_engine_config_id
+**Natural key:** line_of_business_code, version
+
+## Rating Factor (`pricing.rating_factor`)
+
+A factor used to rate a line of business - the named driver premium responds to (e.g. vehicle group, flood band, mileage). Factors are data, so a rating build-up is inspectable rather than buried in engine code.
+
+**Grain:** One row per rating factor per line of business.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| rating_factor_id | string | yes | Identifier for the rating factor. | internal |  |  |
+| line_of_business_code | string | yes | Line of business the factor applies to. | internal |  |  |
+| name | string | yes | Factor name as used in rating, e.g. vehicle_group. | internal |  |  |
+| description | string |  | What the factor represents, in business language. | internal |  |  |
+| rating_factor_kind_code | string | yes | How the factor acts on premium. | internal |  |  |
+| classification | string | yes | Data classification of the underlying input - internal, confidential or pii. | internal |  |  |
+
+**Primary key:** rating_factor_id
+**Natural key:** line_of_business_code, name
+
+## Rating Factor Feature (`pricing.rating_factor_feature`)
+
+The link between a rating factor and the model feature that supplies it - the bridge from the rating structure to the governed feature catalog. It is what lets a factor's data classification and lineage flow from the feature it uses.
+
+**Grain:** One row per rating factor per feature it draws on.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| rating_factor_feature_id | string | yes | Identifier for the link row. | internal |  |  |
+| rating_factor_id | string | yes | The rating factor. | internal |  |  |
+| feature_id | string | yes | The model feature that supplies the factor. | internal |  |  |
+
+**Primary key:** rating_factor_feature_id
+**Natural key:** rating_factor_id, feature_id
+
+## Rating Factor Level (`pricing.rating_factor_level`)
+
+A level of a rating factor and its relativity - the value a factor can take and what it does to premium. Levels are effective-dated so a historic quote can be re-priced with the relativities in force when it was made.
+
+**Grain:** One row per level of a rating factor, effective-dated.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| rating_factor_level_id | string | yes | Identifier for the factor level. | internal |  |  |
+| rating_factor_id | string | yes | The rating factor this is a level of. | internal |  |  |
+| level_code | string | yes | The factor level value, e.g. HIGH or a vehicle-group code. | internal |  |  |
+| relativity | decimal(10,4) | yes | Relativity applied at this level; 1.0 is neutral for multiplicative factors. | confidential |  |  |
+| effective_from | date | yes | Date the relativity took effect. | internal |  |  |
+| effective_to | date |  | Date the relativity ceased; empty while current. | internal |  |  |
+
+**Primary key:** rating_factor_level_id
+**Quality — level_period_ordered:** `effective_to IS NULL OR effective_to >= effective_from` — A level cannot cease before it takes effect.
 
 ## Appetite Rule (`product.appetite_rule`)
 
@@ -1678,6 +2427,49 @@ A coverage the product offers, with its default limits. Policy coverages are ins
 
 **Primary key:** product_coverage_id
 
+## Referral Event (`product.referral_event`)
+
+A firing of a referral rule against a risk - the telemetry of the rulebook. Each event cites the exact rule version that fired and how it was resolved, so the rulebook can be audited: which rules fire, on what, and whether underwriters uphold or override them.
+
+**Grain:** One row per rule firing against a submission or quote.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| referral_event_id | string | yes | Identifier for the referral event. | internal |  |  |
+| referral_rule_id | string | yes | The exact rule version that fired. | internal |  |  |
+| subject_kind_code | string | yes | Whether the rule fired on a submission or a quote. | internal |  |  |
+| subject_id | string | yes | Identifier of the submission or quote the rule fired on. | internal |  |  |
+| fired_at | timestamp | yes | When the rule fired. | internal |  |  |
+| referral_outcome_code | string | yes | How the referral was resolved. | internal |  |  |
+| decided_by | string |  | Underwriter role that resolved the referral, where a human did. | internal |  |  |
+| source_system_code | string | yes | System the event originates from. | internal |  |  |
+
+**Primary key:** referral_event_id
+
+## Referral Rule (`product.referral_rule`)
+
+A governed underwriting referral rule - a condition and the action to take when a risk meets it. Rules are effective-dated (a slowly-changing record): a change supersedes the prior version rather than overwriting it, so any past referral can be explained by the rule version in force at the time. Filter is_current for the live rulebook.
+
+**Grain:** One row per rule version; at most one current row per rule key.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| referral_rule_id | string | yes | Identifier for this rule version. | internal |  |  |
+| rule_key | string | yes | Stable business key of the rule, constant across its versions. | internal |  |  |
+| name | string | yes | Human-readable rule name. | internal |  |  |
+| line_of_business_code | string |  | Line of business the rule applies to; empty means all lines. | internal |  |  |
+| condition_expression | string | yes | The condition that trips the rule, in business language or a rule expression. | internal |  |  |
+| referral_action_code | string | yes | Action taken when the condition is met. | internal |  |  |
+| version | integer | yes | Version number of the rule, increasing as it changes. | internal |  |  |
+| effective_from | date | yes | Date this version took effect. | internal |  |  |
+| effective_to | date |  | Date this version was superseded; empty while current. | internal |  |  |
+| is_current | boolean | yes | Whether this is the version currently in force for the rule key. | internal |  |  |
+| source_system_code | string | yes | System the rule is managed in. | internal |  |  |
+
+**Primary key:** referral_rule_id
+**Natural key:** rule_key, version
+**Quality — rule_period_ordered:** `effective_to IS NULL OR effective_to >= effective_from` — A rule version cannot be superseded before it takes effect.
+
 ## Underwriting Question (`product.underwriting_question`)
 
 A question the product asks at quotation. The question set is data, so any channel - a form, an aggregator API or a buyer agent - can discover what the product needs to know and answer it programmatically.
@@ -1694,6 +2486,26 @@ A question the product asks at quotation. The question set is data, so any chann
 | required | boolean | yes | Whether an answer is mandatory to quote. | internal |  |  |
 
 **Primary key:** underwriting_question_id
+
+## Underwriting Submission (`product.uw_submission`)
+
+A direct-book submission for cover, upstream of a quote - the request as it arrives from a broker or channel, before it is rated or declined. It gives the underwriting funnel a grain that exists before a quote does; a submission that proceeds produces a quote.
+
+**Grain:** One row per submission per source system.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| uw_submission_id | string | yes | Identifier for the submission. | internal |  |  |
+| party_id | string |  | Prospect or broker the submission came from. | internal |  |  |
+| line_of_business_code | string | yes | Line of business the submission is for. | internal |  |  |
+| product_id | string |  | Product the submission is against, where the catalog applies. | internal |  |  |
+| received_date | date | yes | Date the submission was received. | internal |  |  |
+| uw_submission_status_code | string | yes | Status of the submission in the funnel. | internal |  |  |
+| distribution_channel_code | string |  | Channel the submission arrived through. | internal |  |  |
+| quote_id | string |  | Quote produced from the submission, where it proceeded. | internal |  |  |
+| source_system_code | string | yes | System the submission originates from. | internal |  |  |
+
+**Primary key:** uw_submission_id
 
 ## Catastrophe Event (`reinsurance.cat_event`)
 

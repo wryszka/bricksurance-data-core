@@ -1,0 +1,62 @@
+kind: entity
+name: model_asset
+domain: model
+title: Model Asset
+description: >
+  A governed analytical or machine-learning model as a business asset - what it
+  is, what it is for, who owns it and where it is registered. Versions, features,
+  scores and monitoring hang off it. This is how the semantic layer governs AI
+  the way it governs data.
+grain: One row per model asset.
+tags:
+  maturity: draft
+attributes:
+  - name: model_id
+    type: string
+    required: true
+    description: Stable identifier for the model asset, owned by the data layer.
+    classification: internal
+  - name: name
+    type: string
+    required: true
+    description: Human-readable model name.
+    classification: internal
+  - name: model_type_code
+    code_set: model_type
+    required: true
+    description: The kind of model.
+    classification: internal
+  - name: model_purpose_code
+    code_set: model_purpose
+    required: true
+    description: What the model is used for in the business.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: false
+    description: Line of business the model applies to, where specific.
+    classification: internal
+  - name: registered_name
+    type: string
+    required: false
+    description: Fully-qualified registry name, e.g. the Unity Catalog model name.
+    classification: internal
+  - name: description
+    type: string
+    required: false
+    description: What the model does, in business language.
+    classification: internal
+  - name: owner_role
+    type: string
+    required: true
+    description: Accountable owner of the model, as an org role.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Platform or registry the model is managed in.
+    classification: internal
+keys:
+  primary: [model_id]
+  natural: [registered_name]
+owner: Head of Data Science

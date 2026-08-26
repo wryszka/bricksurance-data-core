@@ -1,0 +1,19 @@
+kind: code_set
+name: model_subject_kind
+title: Model Subject Kind
+description: >
+  What kind of business object a model score is about. A score is polymorphic -
+  it attaches to a policy, quote, claim or party - and this names which.
+codes:
+  - code: POLICY
+    label: Policy
+    description: The score concerns a policy.
+  - code: QUOTE
+    label: Quote
+    description: The score concerns a quote.
+  - code: CLAIM
+    label: Claim
+    description: The score concerns a claim.
+  - code: PARTY
+    label: Party
+    description: The score concerns a party.

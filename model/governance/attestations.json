@@ -1,6 +1,6 @@
 {
   "attestation_format": "bricksurance-data-core/attestations-v1",
-  "as_of": "2026-07-19",
+  "as_of": "2026-08-26",
   "note": "Dated certification attestations. An element is certified only if it appears here; all other entities remain draft. Roles, not people — evidence-linked.",
   "attestations": [
     {
@@ -164,6 +164,78 @@
       "attested_by": "Chief Actuary",
       "attested_on": "2026-07-19",
       "evidence": "Benchmark-backed metric; MEASURE() reconciles to source transactions."
+    },
+    {
+      "element": "rating_factor",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Pricing Actuary",
+      "attested_by": "Chief Pricing Actuary",
+      "attested_on": "2026-08-26",
+      "evidence": "Rating structure as data; the build-up reconciles to rated premium under smoke_test tie-outs."
+    },
+    {
+      "element": "derived_factor",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Pricing Actuary",
+      "attested_by": "Chief Pricing Actuary",
+      "attested_on": "2026-08-26",
+      "evidence": "Applied factor contributions sum to the quote's rated premium (smoke_test)."
+    },
+    {
+      "element": "model_asset",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Head of Data Science",
+      "attested_by": "Head of Data Science",
+      "attested_on": "2026-08-26",
+      "evidence": "Model estate governed as assets; owner and registry recorded."
+    },
+    {
+      "element": "model_version",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Head of Data Science",
+      "attested_by": "Head of Data Science",
+      "attested_on": "2026-08-26",
+      "evidence": "Every model score traces to a version (smoke_test); champion/challenger discipline modelled."
+    },
+    {
+      "element": "referral_rule",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Underwriting Officer",
+      "attested_by": "Chief Underwriting Officer",
+      "attested_on": "2026-08-26",
+      "evidence": "Effective-dated rulebook; exactly one current version per rule key (smoke_test SCD2 integrity)."
+    },
+    {
+      "element": "motor_telematics_aggregate",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Underwriting Officer",
+      "attested_by": "Chief Underwriting Officer",
+      "attested_on": "2026-08-26",
+      "evidence": "Enrichment keyed to policy; covers every motor policy (smoke_test coverage tie-out)."
+    },
+    {
+      "element": "pricing_metrics",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Chief Pricing Actuary",
+      "attested_by": "Chief Pricing Actuary",
+      "attested_on": "2026-08-26",
+      "evidence": "Conversion and rated/quoted premium; MEASURE() answers over the quote book (smoke_test)."
+    },
+    {
+      "element": "model_governance_metrics",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Head of Data Science",
+      "attested_by": "Head of Data Science",
+      "attested_on": "2026-08-26",
+      "evidence": "Champion/challenger counts by purpose; MEASURE() answers over the model estate (smoke_test)."
     }
   ]
 }

@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with an indicative Lloyd's Core Data Record crosswalk. The crosswalk is a hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names, not a verified extract from the licensed models; element names are cited only, and the licensed standards are not reproduced.",
   "domains": [
@@ -45,6 +45,18 @@
     {
       "name": "product",
       "description": "Machine-readable products - offered coverages, underwriting questions and appetite rules as data, so any channel (human, aggregator or buyer agent) can discover, quote and be decided against the same rules.\n"
+    },
+    {
+      "name": "enrichment",
+      "description": "External and derived risk data joined to the canonical model - telematics, credit, geospatial hazard, postcode, market benchmarks, demographics and sanctions screening. These are third-party or derived attributes about a policy, party or insured object, kept as governed, classified data rather than scattered feature tables. Pricing and underwriting both draw on them; modelling them once, with data classification, is what lets those workbenches share risk signal instead of each re-sourcing it.\n"
+    },
+    {
+      "name": "model",
+      "description": "Machine-learning and analytical models as governed assets - the model, its versions, the features it consumes, the scores it produces and its monitoring metrics. The layer represents AI the way it represents data: every score traces to a model version, every feature to a definition and a classification. This is what makes model governance a first-class part of the semantic layer, not a side system.\n"
+    },
+    {
+      "name": "pricing",
+      "description": "The rating structure - factors, their levels and relativities, engine configurations and the derived factor contributions on a quote or policy. Pricing decisions become explainable data: a quoted premium decomposes into the factors and relativities that produced it, and the engine config cites the model version behind it.\n"
     },
     {
       "name": "distribution",
@@ -318,6 +330,82 @@
           "code": "FREEZE",
           "label": "Freeze",
           "description": "Freeze, frost and burst-pipe damage from severe cold weather."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "claim_feature_type",
+      "title": "Claim Feature Type",
+      "description": "Kinds of feature (head of damage) a claim can split into - the sub-claims that reserve and settle independently under one claim.\n",
+      "codes": [
+        {
+          "code": "OWN_DAMAGE",
+          "label": "Own Damage",
+          "description": "Damage to the insured's own property or vehicle."
+        },
+        {
+          "code": "THIRD_PARTY_PROPERTY",
+          "label": "Third Party Property",
+          "description": "Damage to a third party's property."
+        },
+        {
+          "code": "THIRD_PARTY_INJURY",
+          "label": "Third Party Injury",
+          "description": "Bodily injury to a third party."
+        },
+        {
+          "code": "BUSINESS_INTERRUPTION",
+          "label": "Business Interruption",
+          "description": "Loss of income following an insured event."
+        },
+        {
+          "code": "LEGAL_EXPENSES",
+          "label": "Legal Expenses",
+          "description": "Legal costs arising from the claim."
+        },
+        {
+          "code": "PROPERTY_MATERIAL_DAMAGE",
+          "label": "Property Material Damage",
+          "description": "Material damage to insured property."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "claim_party_role_type",
+      "title": "Claim Party Role Type",
+      "description": "The role a party plays on a specific claim - who is handling it and who is involved. Distinct from party roles on the policy.\n",
+      "codes": [
+        {
+          "code": "HANDLER",
+          "label": "Handler",
+          "description": "The claims handler responsible for the file."
+        },
+        {
+          "code": "ADJUSTER",
+          "label": "Loss Adjuster",
+          "description": "The loss adjuster appointed to the claim."
+        },
+        {
+          "code": "CLAIMANT",
+          "label": "Claimant",
+          "description": "The party making the claim."
+        },
+        {
+          "code": "THIRD_PARTY",
+          "label": "Third Party",
+          "description": "A third party involved in the loss."
+        },
+        {
+          "code": "SOLICITOR",
+          "label": "Solicitor",
+          "description": "A legal representative on the claim."
+        },
+        {
+          "code": "SUPPLIER",
+          "label": "Supplier",
+          "description": "A repairer or supplier engaged on the claim."
         }
       ]
     },
@@ -625,6 +713,39 @@
     },
     {
       "kind": "code_set",
+      "name": "credit_score_band",
+      "title": "Credit Score Band",
+      "description": "Banded consumer credit rating from a bureau summary. Banded, never the raw score, so the attribute can be used in rating without holding fine-grained bureau data. Bureau data is used only where permitted and disclosed.\n",
+      "codes": [
+        {
+          "code": "EXCELLENT",
+          "label": "Excellent",
+          "description": "Top-tier bureau rating."
+        },
+        {
+          "code": "GOOD",
+          "label": "Good",
+          "description": "Above-average bureau rating."
+        },
+        {
+          "code": "FAIR",
+          "label": "Fair",
+          "description": "Average bureau rating."
+        },
+        {
+          "code": "POOR",
+          "label": "Poor",
+          "description": "Below-average bureau rating."
+        },
+        {
+          "code": "THIN_FILE",
+          "label": "Thin File",
+          "description": "Insufficient credit history to score."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "csm_movement_type",
       "title": "CSM Movement Type",
       "description": "Steps in the IFRS 17 contractual service margin roll-forward. The closing CSM is the signed sum of these movements over the opening balance - a balance derived from movements, never overwritten.\n",
@@ -871,6 +992,34 @@
     },
     {
       "kind": "code_set",
+      "name": "flood_band",
+      "title": "Flood Band",
+      "description": "Flood risk banding for a location, low to very high. A modelled hazard classification, not a live flood state.\n",
+      "codes": [
+        {
+          "code": "LOW",
+          "label": "Low",
+          "description": "Negligible modelled flood exposure."
+        },
+        {
+          "code": "MODERATE",
+          "label": "Moderate",
+          "description": "Some modelled flood exposure; surface-water or fluvial."
+        },
+        {
+          "code": "HIGH",
+          "label": "High",
+          "description": "Material modelled flood exposure requiring rating loading."
+        },
+        {
+          "code": "VERY_HIGH",
+          "label": "Very High",
+          "description": "Severe modelled flood exposure; may fall outside standard appetite."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "fraud_signal_type",
       "title": "Fraud Signal Type",
       "description": "Kinds of fraud indicator on a claim. Signals inform investigation; they never auto-decide.\n",
@@ -899,6 +1048,34 @@
           "code": "NETWORK_LINK",
           "label": "Network Link",
           "description": "Link to parties or addresses seen in confirmed fraud."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "hazard_source",
+      "title": "Hazard Source",
+      "description": "Provenance of a geospatial hazard rating - which external model or authority the banding came from. Provenance travels with the enrichment.\n",
+      "codes": [
+        {
+          "code": "ENV_AGENCY",
+          "label": "Environment Agency",
+          "description": "National environment authority flood/coastal mapping."
+        },
+        {
+          "code": "BGS",
+          "label": "Geological Survey",
+          "description": "National geological survey ground-stability data."
+        },
+        {
+          "code": "CAT_MODEL",
+          "label": "Cat Model",
+          "description": "Commercial catastrophe model output."
+        },
+        {
+          "code": "INTERNAL",
+          "label": "Internal",
+          "description": "Insurer's own derived hazard model."
         }
       ]
     },
@@ -1053,6 +1230,44 @@
     },
     {
       "kind": "code_set",
+      "name": "litigation_status",
+      "title": "Litigation Status",
+      "description": "Status of legal proceedings on a claim, from letter of claim through to settlement or judgment.\n",
+      "codes": [
+        {
+          "code": "PRE_ACTION",
+          "label": "Pre-Action",
+          "description": "Letter of claim received; proceedings not yet issued."
+        },
+        {
+          "code": "ISSUED",
+          "label": "Issued",
+          "description": "Proceedings issued at court."
+        },
+        {
+          "code": "DEFENDED",
+          "label": "Defended",
+          "description": "The insurer is actively defending."
+        },
+        {
+          "code": "SETTLED",
+          "label": "Settled",
+          "description": "Resolved by agreement."
+        },
+        {
+          "code": "JUDGMENT",
+          "label": "Judgment",
+          "description": "Resolved by court judgment."
+        },
+        {
+          "code": "DISCONTINUED",
+          "label": "Discontinued",
+          "description": "Proceedings withdrawn or struck out."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "loss_basis",
       "title": "Loss Basis",
       "description": "Whether an event loss figure is modelled or reported. Day-one catastrophe numbers are modelled (event footprint against in-force exposure); cedant reports firm up over the following weeks — the basis keeps the two honest.\n",
@@ -1089,6 +1304,209 @@
           "code": "VFA",
           "label": "Variable Fee Approach",
           "description": "For contracts with direct participation features."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "mileage_band",
+      "title": "Mileage Band",
+      "description": "Annual mileage banding for a motor risk, derived from declared or telematics mileage. A rating exposure dimension.\n",
+      "codes": [
+        {
+          "code": "LOW",
+          "label": "Low (<6k)",
+          "description": "Under 6,000 miles per year."
+        },
+        {
+          "code": "MEDIUM",
+          "label": "Medium (6k-12k)",
+          "description": "6,000 to 12,000 miles per year."
+        },
+        {
+          "code": "HIGH",
+          "label": "High (12k-20k)",
+          "description": "12,000 to 20,000 miles per year."
+        },
+        {
+          "code": "VERY_HIGH",
+          "label": "Very High (>20k)",
+          "description": "Over 20,000 miles per year."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "model_purpose",
+      "title": "Model Purpose",
+      "description": "What a model is used for in the business - the decision or estimate it supports. Purpose is separate from type: a GBM might serve demand or fraud.\n",
+      "codes": [
+        {
+          "code": "PRICING_FREQUENCY",
+          "label": "Pricing - Frequency",
+          "description": "Predicts claim frequency for a risk."
+        },
+        {
+          "code": "PRICING_SEVERITY",
+          "label": "Pricing - Severity",
+          "description": "Predicts claim severity for a risk."
+        },
+        {
+          "code": "DEMAND",
+          "label": "Demand / Conversion",
+          "description": "Predicts conversion or price elasticity of demand."
+        },
+        {
+          "code": "FRAUD",
+          "label": "Fraud Propensity",
+          "description": "Scores a claim or application for fraud risk."
+        },
+        {
+          "code": "TRIAGE",
+          "label": "Claims Triage",
+          "description": "Routes or prioritises a claim by predicted complexity."
+        },
+        {
+          "code": "NARRATION",
+          "label": "Narration / Reasoning",
+          "description": "Generates explanations or summaries with a language model."
+        },
+        {
+          "code": "RESERVING",
+          "label": "Reserving",
+          "description": "Estimates ultimate losses or IBNR."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "model_status",
+      "title": "Model Status",
+      "description": "Lifecycle status of a model version in production - the champion/challenger discipline that governs which version actually decides.\n",
+      "codes": [
+        {
+          "code": "CHAMPION",
+          "label": "Champion",
+          "description": "The version currently in force for decisions."
+        },
+        {
+          "code": "CHALLENGER",
+          "label": "Challenger",
+          "description": "A candidate version being evaluated against the champion."
+        },
+        {
+          "code": "SHADOW",
+          "label": "Shadow",
+          "description": "Scored in parallel for monitoring only; does not decide."
+        },
+        {
+          "code": "RETIRED",
+          "label": "Retired",
+          "description": "No longer in use; kept for lineage and reproducibility."
+        },
+        {
+          "code": "DRAFT",
+          "label": "Draft",
+          "description": "In development; not yet promoted to any serving role."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "model_subject_kind",
+      "title": "Model Subject Kind",
+      "description": "What kind of business object a model score is about. A score is polymorphic - it attaches to a policy, quote, claim or party - and this names which.\n",
+      "codes": [
+        {
+          "code": "POLICY",
+          "label": "Policy",
+          "description": "The score concerns a policy."
+        },
+        {
+          "code": "QUOTE",
+          "label": "Quote",
+          "description": "The score concerns a quote."
+        },
+        {
+          "code": "CLAIM",
+          "label": "Claim",
+          "description": "The score concerns a claim."
+        },
+        {
+          "code": "PARTY",
+          "label": "Party",
+          "description": "The score concerns a party."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "model_type",
+      "title": "Model Type",
+      "description": "The kind of analytical or machine-learning model an asset is, independent of what it is used for.\n",
+      "codes": [
+        {
+          "code": "GLM",
+          "label": "Generalised Linear Model",
+          "description": "Regression model, e.g. frequency or severity."
+        },
+        {
+          "code": "GBM",
+          "label": "Gradient Boosted Machine",
+          "description": "Tree-ensemble model, e.g. demand or fraud propensity."
+        },
+        {
+          "code": "LLM",
+          "label": "Large Language Model",
+          "description": "Foundation model used for narration, extraction or reasoning."
+        },
+        {
+          "code": "RULES",
+          "label": "Rules Engine",
+          "description": "Deterministic rule set, not a learned model."
+        },
+        {
+          "code": "STATISTICAL",
+          "label": "Statistical",
+          "description": "Other statistical estimator, e.g. a credibility or reserving model."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "monitor_metric_type",
+      "title": "Monitor Metric Type",
+      "description": "The kind of monitoring metric recorded for a model version over a period - performance and drift measures that govern whether it stays champion.\n",
+      "codes": [
+        {
+          "code": "AUC",
+          "label": "AUC",
+          "description": "Area under the ROC curve; discrimination of a classifier."
+        },
+        {
+          "code": "GINI",
+          "label": "Gini",
+          "description": "Gini coefficient; rank-ordering power."
+        },
+        {
+          "code": "PSI",
+          "label": "Population Stability Index",
+          "description": "Shift in the scored population versus training."
+        },
+        {
+          "code": "DRIFT",
+          "label": "Feature Drift",
+          "description": "Distributional drift in input features."
+        },
+        {
+          "code": "RMSE",
+          "label": "RMSE",
+          "description": "Root mean squared error of a regression model."
+        },
+        {
+          "code": "LIFT",
+          "label": "Lift",
+          "description": "Lift of the top decile over the base rate."
         }
       ]
     },
@@ -1330,6 +1748,39 @@
     },
     {
       "kind": "code_set",
+      "name": "rating_factor_kind",
+      "title": "Rating Factor Kind",
+      "description": "How a rating factor acts on premium - the arithmetic of the rating build-up, so a quoted premium can be decomposed and explained.\n",
+      "codes": [
+        {
+          "code": "BASE",
+          "label": "Base Rate",
+          "description": "The starting base rate the factors act on."
+        },
+        {
+          "code": "MULTIPLICATIVE",
+          "label": "Multiplicative",
+          "description": "A relativity that multiplies the running premium."
+        },
+        {
+          "code": "ADDITIVE",
+          "label": "Additive",
+          "description": "A fixed amount added to the running premium."
+        },
+        {
+          "code": "DISCOUNT",
+          "label": "Discount",
+          "description": "A multiplicative relativity below 1 that reduces premium."
+        },
+        {
+          "code": "LOADING",
+          "label": "Loading",
+          "description": "A multiplicative relativity above 1 that increases premium."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "receivable_transaction_type",
       "title": "Receivable Transaction Type",
       "description": "Premium billing movements. Outstanding debt is the signed sum - invoices positive, cash negative - never a stored balance.\n",
@@ -1353,6 +1804,105 @@
           "code": "REFUND",
           "label": "Refund",
           "description": "Premium refunded to the payer; positive."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "recovery_type",
+      "title": "Recovery Type",
+      "description": "Sources of recovery on a claim - how money comes back after a payment. The dimensional detail behind RECOVERY claim transactions.\n",
+      "codes": [
+        {
+          "code": "SUBROGATION",
+          "label": "Subrogation",
+          "description": "Recovery pursued against a liable third party."
+        },
+        {
+          "code": "SALVAGE",
+          "label": "Salvage",
+          "description": "Proceeds from disposal of damaged property."
+        },
+        {
+          "code": "CONTRIBUTION",
+          "label": "Contribution",
+          "description": "Recovery from another insurer covering the same loss."
+        },
+        {
+          "code": "REINSURANCE",
+          "label": "Reinsurance",
+          "description": "Recovery under a reinsurance treaty."
+        },
+        {
+          "code": "DEDUCTIBLE",
+          "label": "Deductible",
+          "description": "Recovery of the policy excess from the insured."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "referral_action",
+      "title": "Referral Action",
+      "description": "What a referral rule does when its condition is met - the action taken on a risk that trips the rule.\n",
+      "codes": [
+        {
+          "code": "REFER",
+          "label": "Refer",
+          "description": "Route to a human underwriter for a decision."
+        },
+        {
+          "code": "DECLINE",
+          "label": "Decline",
+          "description": "Decline the risk automatically."
+        },
+        {
+          "code": "LOAD",
+          "label": "Load",
+          "description": "Apply a premium loading."
+        },
+        {
+          "code": "RESTRICT",
+          "label": "Restrict",
+          "description": "Offer only on restricted terms."
+        },
+        {
+          "code": "NOTIFY",
+          "label": "Notify",
+          "description": "Allow but flag for monitoring."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "referral_outcome",
+      "title": "Referral Outcome",
+      "description": "How a fired referral was resolved - what the underwriter decided after the rule routed the risk to them.\n",
+      "codes": [
+        {
+          "code": "PENDING",
+          "label": "Pending",
+          "description": "Awaiting an underwriter decision."
+        },
+        {
+          "code": "ACCEPTED",
+          "label": "Accepted",
+          "description": "Underwriter accepted the risk, possibly on amended terms."
+        },
+        {
+          "code": "DECLINED",
+          "label": "Declined",
+          "description": "Underwriter declined the risk."
+        },
+        {
+          "code": "OVERRIDDEN",
+          "label": "Overridden",
+          "description": "Underwriter overrode the rule's suggested action."
+        },
+        {
+          "code": "AUTO",
+          "label": "Auto-Resolved",
+          "description": "Resolved automatically without human intervention."
         }
       ]
     },
@@ -1399,6 +1949,34 @@
           "code": "MANAGEMENT",
           "label": "Management",
           "description": "Internal management-reporting basis."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "reserve_category",
+      "title": "Reserve Category",
+      "description": "The split of a case reserve by kind of cost - so indemnity, expense and legal reserves are visible separately, as claims and reserving teams hold them.\n",
+      "codes": [
+        {
+          "code": "INDEMNITY",
+          "label": "Indemnity",
+          "description": "Reserve for the loss payment itself."
+        },
+        {
+          "code": "EXPENSE",
+          "label": "Expense",
+          "description": "Reserve for allocated loss adjustment expense."
+        },
+        {
+          "code": "LEGAL",
+          "label": "Legal",
+          "description": "Reserve for legal and defence costs."
+        },
+        {
+          "code": "RECOVERY",
+          "label": "Recovery",
+          "description": "Anticipated recovery held as a negative reserve."
         }
       ]
     },
@@ -1453,6 +2031,39 @@
           "code": "RED",
           "label": "Red",
           "description": "Quality gate failed; results blocked from downstream use."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "sanctions_list",
+      "title": "Sanctions List",
+      "description": "Which screening list a sanctions or PEP hit was raised against. A hit is an indicator for review, never an automatic decision.\n",
+      "codes": [
+        {
+          "code": "OFSI",
+          "label": "OFSI Consolidated",
+          "description": "UK financial sanctions consolidated list."
+        },
+        {
+          "code": "EU",
+          "label": "EU Consolidated",
+          "description": "EU consolidated financial sanctions list."
+        },
+        {
+          "code": "OFAC",
+          "label": "OFAC SDN",
+          "description": "US OFAC Specially Designated Nationals list."
+        },
+        {
+          "code": "UN",
+          "label": "UN Consolidated",
+          "description": "United Nations Security Council consolidated list."
+        },
+        {
+          "code": "PEP",
+          "label": "PEP",
+          "description": "Politically Exposed Persons watchlist."
         }
       ]
     },
@@ -1583,6 +2194,29 @@
     },
     {
       "kind": "code_set",
+      "name": "subsidence_band",
+      "title": "Subsidence Band",
+      "description": "Ground-stability / subsidence risk banding for a location, from modelled geology and claims history.\n",
+      "codes": [
+        {
+          "code": "LOW",
+          "label": "Low",
+          "description": "Stable ground; negligible subsidence exposure."
+        },
+        {
+          "code": "MODERATE",
+          "label": "Moderate",
+          "description": "Some clay-shrinkage or historic movement exposure."
+        },
+        {
+          "code": "HIGH",
+          "label": "High",
+          "description": "Material subsidence exposure requiring rating loading."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "tax_type",
       "title": "Tax Type",
       "description": "Kinds of tax the group accounts for.",
@@ -1655,6 +2289,72 @@
           "code": "DECLINE",
           "label": "Decline",
           "description": "Risk declined."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "urbanity",
+      "title": "Urbanity",
+      "description": "Settlement type of a postcode, urban to rural, used as a rating and accumulation dimension.\n",
+      "codes": [
+        {
+          "code": "URBAN_MAJOR",
+          "label": "Major Urban",
+          "description": "Major conurbation or city centre."
+        },
+        {
+          "code": "URBAN",
+          "label": "Urban",
+          "description": "Town or suburban area."
+        },
+        {
+          "code": "SUBURBAN",
+          "label": "Suburban",
+          "description": "Suburban / commuter belt."
+        },
+        {
+          "code": "RURAL",
+          "label": "Rural",
+          "description": "Village or open countryside."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "uw_submission_status",
+      "title": "Underwriting Submission Status",
+      "description": "Status of a direct underwriting submission as it moves from received to a quote or a decline - the grain before a quote exists.\n",
+      "codes": [
+        {
+          "code": "RECEIVED",
+          "label": "Received",
+          "description": "Submission received; not yet triaged."
+        },
+        {
+          "code": "IN_APPETITE",
+          "label": "In Appetite",
+          "description": "Passed appetite screening; proceeding to rate."
+        },
+        {
+          "code": "REFERRED",
+          "label": "Referred",
+          "description": "Routed to a referral for a human decision."
+        },
+        {
+          "code": "QUOTED",
+          "label": "Quoted",
+          "description": "A quote was produced from the submission."
+        },
+        {
+          "code": "DECLINED",
+          "label": "Declined",
+          "description": "Declined; no quote offered."
+        },
+        {
+          "code": "WITHDRAWN",
+          "label": "Withdrawn",
+          "description": "Withdrawn by the broker or prospect."
         }
       ]
     },
@@ -1850,6 +2550,28 @@
           "classification": "confidential"
         },
         {
+          "name": "handling_office",
+          "type": "string",
+          "required": false,
+          "description": "Claims office or team handling the file.",
+          "classification": "internal"
+        },
+        {
+          "name": "catastrophe_id",
+          "references": "cat_event",
+          "type": "string",
+          "required": false,
+          "description": "Catastrophe event the claim is attributed to, where it belongs to one.",
+          "classification": "internal"
+        },
+        {
+          "name": "reopened_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the claim has been reopened after closure.",
+          "classification": "internal"
+        },
+        {
           "name": "source_system_code",
           "code_set": "source_system",
           "required": true,
@@ -1873,6 +2595,283 @@
           "description": "A loss cannot be reported before it happens."
         }
       ],
+      "owner": "Chief Claims Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "claim_feature",
+      "domain": "claim",
+      "title": "Claim Feature",
+      "description": "A feature (head of damage) within a claim - a sub-claim that reserves and settles on its own, e.g. own damage versus third-party injury under one motor claim. Financial development still flows through claim transactions; the feature gives claims and reserving teams the grain they actually work at.\n",
+      "grain": "One row per feature per claim.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "claim_feature_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the claim feature.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": true,
+          "description": "The claim this feature belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "coverage_id",
+          "references": "coverage",
+          "type": "string",
+          "required": false,
+          "description": "Coverage the feature attaches to, where the source provides it.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_feature_type_code",
+          "code_set": "claim_feature_type",
+          "required": true,
+          "description": "Kind of feature (head of damage).",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_status_code",
+          "code_set": "claim_status",
+          "required": true,
+          "description": "Handling status of the feature; features can close independently.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Claims system the feature originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "claim_feature_id"
+        ]
+      },
+      "owner": "Chief Claims Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "claim_party_role",
+      "domain": "claim",
+      "title": "Claim Party Role",
+      "description": "A party and the role it plays on a specific claim - handler, adjuster, claimant, third party, solicitor or supplier. Distinct from policy-level party roles: it captures who is involved in this loss, not the contract.\n",
+      "grain": "One row per party per role per claim.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "claim_party_role_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the claim party role.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": true,
+          "description": "The claim the party is involved in.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The party playing the role.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_party_role_type_code",
+          "code_set": "claim_party_role_type",
+          "required": true,
+          "description": "The role the party plays on the claim.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the involvement originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "claim_party_role_id"
+        ],
+        "natural": [
+          "claim_id",
+          "party_id",
+          "claim_party_role_type_code"
+        ]
+      },
+      "owner": "Chief Claims Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "claim_recovery",
+      "domain": "claim",
+      "title": "Claim Recovery",
+      "description": "A recovery pursued or received on a claim, with its source - subrogation, salvage, contribution, reinsurance or deductible. The dimensional detail behind RECOVERY claim transactions: what kind of recovery, against whom, and where it stands.\n",
+      "grain": "One row per recovery per claim.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "claim_recovery_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the recovery.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": true,
+          "description": "The claim the recovery relates to.",
+          "classification": "internal"
+        },
+        {
+          "name": "recovery_type_code",
+          "code_set": "recovery_type",
+          "required": true,
+          "description": "Source of the recovery.",
+          "classification": "internal"
+        },
+        {
+          "name": "against_party_id",
+          "references": "party",
+          "type": "string",
+          "required": false,
+          "description": "Party the recovery is pursued against, where applicable.",
+          "classification": "internal"
+        },
+        {
+          "name": "expected_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Recovery anticipated, in the claim currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "received_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Recovery actually received to date, in the claim currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the recovery amounts.",
+          "classification": "internal"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": false,
+          "description": "Status of the recovery, e.g. open, received, closed.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Claims system the recovery originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "claim_recovery_id"
+        ]
+      },
+      "owner": "Chief Claims Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "claim_reserve_category",
+      "domain": "claim",
+      "title": "Claim Reserve Category",
+      "description": "The split of a claim feature's case reserve by category - indemnity, expense, legal - as at a date. A reporting decomposition of the reserve; the movements themselves remain claim transactions, and the categories sum to the feature's outstanding reserve.\n",
+      "grain": "One row per feature per reserve category per as-at date.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "claim_reserve_category_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the reserve category row.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_feature_id",
+          "references": "claim_feature",
+          "type": "string",
+          "required": true,
+          "description": "The claim feature the reserve category belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "reserve_category_code",
+          "code_set": "reserve_category",
+          "required": true,
+          "description": "The category of reserve.",
+          "classification": "internal"
+        },
+        {
+          "name": "amount",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Reserve held in this category, in the claim currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the reserve amount.",
+          "classification": "internal"
+        },
+        {
+          "name": "as_at_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the reserve split was struck.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Claims system the split originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "claim_reserve_category_id"
+        ]
+      },
       "owner": "Chief Claims Officer"
     },
     {
@@ -2002,6 +3001,14 @@
           "classification": "confidential"
         },
         {
+          "name": "model_version_id",
+          "references": "model_version",
+          "type": "string",
+          "required": false,
+          "description": "Model version that raised the signal, where a model did; ties the business-facing signal to the governed model and its score.\n",
+          "classification": "internal"
+        },
+        {
           "name": "source_system_code",
           "code_set": "source_system",
           "required": true,
@@ -2012,6 +3019,82 @@
       "keys": {
         "primary": [
           "fraud_signal_id"
+        ]
+      },
+      "owner": "Chief Claims Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "litigation",
+      "domain": "claim",
+      "title": "Litigation",
+      "description": "Legal proceedings arising from a claim - status, jurisdiction and the legal reserve. Litigation is a material driver of claim cost and duration; modelling it lets the claims workbench track defended matters distinctly.\n",
+      "grain": "One row per suit per claim.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "litigation_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the litigation matter.",
+          "classification": "internal"
+        },
+        {
+          "name": "claim_id",
+          "references": "claim",
+          "type": "string",
+          "required": true,
+          "description": "The claim the proceedings arise from.",
+          "classification": "internal"
+        },
+        {
+          "name": "litigation_status_code",
+          "code_set": "litigation_status",
+          "required": true,
+          "description": "Status of the proceedings.",
+          "classification": "internal"
+        },
+        {
+          "name": "jurisdiction",
+          "type": "string",
+          "required": false,
+          "description": "Court or jurisdiction the matter is in.",
+          "classification": "internal"
+        },
+        {
+          "name": "legal_reserve",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Reserve held for legal and defence costs, in the claim currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": false,
+          "description": "Currency of the legal reserve.",
+          "classification": "internal"
+        },
+        {
+          "name": "opened_date",
+          "type": "date",
+          "required": false,
+          "description": "Date proceedings were first notified.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the litigation record originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "litigation_id"
         ]
       },
       "owner": "Chief Claims Officer"
@@ -2319,6 +3402,544 @@
         ]
       },
       "owner": "Chief Distribution Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "credit_bureau_summary",
+      "domain": "enrichment",
+      "title": "Credit Bureau Summary",
+      "description": "A banded summary of a party's consumer credit standing from a bureau pull. Banded, not raw, and held only where a lawful basis and disclosure exist. Personal data - classified accordingly.\n",
+      "grain": "One row per party per bureau pull.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "credit_bureau_summary_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the bureau summary record.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "Party the bureau summary concerns.",
+          "classification": "internal"
+        },
+        {
+          "name": "pull_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the bureau summary was obtained.",
+          "classification": "internal"
+        },
+        {
+          "name": "credit_score_band_code",
+          "code_set": "credit_score_band",
+          "required": true,
+          "description": "Banded credit rating from the bureau.",
+          "classification": "pii"
+        },
+        {
+          "name": "ccj_count",
+          "type": "integer",
+          "required": false,
+          "description": "Count of county court judgments on file.",
+          "classification": "pii"
+        },
+        {
+          "name": "electoral_roll_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the party is present on the electoral roll at the address.",
+          "classification": "pii"
+        },
+        {
+          "name": "consent_id",
+          "references": "consent",
+          "type": "string",
+          "required": false,
+          "description": "Consent record providing the lawful basis for the bureau pull.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Bureau or aggregator the summary originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "credit_bureau_summary_id"
+        ]
+      },
+      "owner": "Data Protection Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "geospatial_hazard",
+      "domain": "enrichment",
+      "title": "Geospatial Hazard",
+      "description": "Modelled peril hazard for a location - flood, subsidence, crime and coastal exposure - with the source it came from. Used in property rating and catastrophe accumulation. A modelled classification, not a live event state.\n",
+      "grain": "One row per location key per hazard source.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "geospatial_hazard_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the hazard record.",
+          "classification": "internal"
+        },
+        {
+          "name": "location_key",
+          "type": "string",
+          "required": true,
+          "description": "Location the hazard describes - postcode, grid reference or gazetteer id. Insured objects carry the same key to join hazard.\n",
+          "classification": "internal"
+        },
+        {
+          "name": "postcode",
+          "references": "postcode_enrichment",
+          "type": "string",
+          "required": false,
+          "description": "Postcode the location falls in, where resolvable.",
+          "classification": "internal"
+        },
+        {
+          "name": "flood_band_code",
+          "code_set": "flood_band",
+          "required": false,
+          "description": "Modelled flood risk banding.",
+          "classification": "internal"
+        },
+        {
+          "name": "subsidence_band_code",
+          "code_set": "subsidence_band",
+          "required": false,
+          "description": "Modelled ground-stability risk banding.",
+          "classification": "internal"
+        },
+        {
+          "name": "crime_index",
+          "type": "integer",
+          "required": false,
+          "description": "Relative crime index for the area, 0-100.",
+          "classification": "internal"
+        },
+        {
+          "name": "coastal_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the location is within a coastal exposure zone.",
+          "classification": "internal"
+        },
+        {
+          "name": "hazard_source_code",
+          "code_set": "hazard_source",
+          "required": true,
+          "description": "Provenance of the hazard classification.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the hazard record was loaded through.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "geospatial_hazard_id"
+        ]
+      },
+      "owner": "Chief Risk Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "market_pricing_benchmark",
+      "domain": "enrichment",
+      "title": "Market Pricing Benchmark",
+      "description": "External market premium benchmarks by line of business, segment and period - where the insurer's price sits against the market. Feeds demand modelling and competitive-position views. Commercially sensitive.\n",
+      "grain": "One row per line of business per segment per period.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "market_pricing_benchmark_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the benchmark record.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business the benchmark covers.",
+          "classification": "internal"
+        },
+        {
+          "name": "segment",
+          "type": "string",
+          "required": false,
+          "description": "Market segment or tier the benchmark applies to.",
+          "classification": "internal"
+        },
+        {
+          "name": "benchmark_period",
+          "type": "string",
+          "required": true,
+          "description": "Period the benchmark represents, e.g. 2026-Q2.",
+          "classification": "internal"
+        },
+        {
+          "name": "market_median_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Median market premium for the segment, in the benchmark currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "rank_percentile",
+          "type": "decimal(5,2)",
+          "required": false,
+          "description": "Where the insurer's average price ranks, 0 (cheapest) to 100.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the benchmark premium.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Market-intelligence provider the benchmark originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "market_pricing_benchmark_id"
+        ]
+      },
+      "owner": "Chief Pricing Actuary"
+    },
+    {
+      "kind": "entity",
+      "name": "motor_telematics_aggregate",
+      "domain": "enrichment",
+      "title": "Motor Telematics Aggregate",
+      "description": "Aggregated driving behaviour for a motor policy over a period, from a telematics device or app. Aggregates only - never raw journey traces - so the rating signal is usable without holding location-level personal data.\n",
+      "grain": "One row per policy per observation period.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "telematics_aggregate_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the telematics aggregate record.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Motor policy the behaviour was observed for.",
+          "classification": "internal"
+        },
+        {
+          "name": "period_start_date",
+          "type": "date",
+          "required": true,
+          "description": "Start of the observation window.",
+          "classification": "internal"
+        },
+        {
+          "name": "period_end_date",
+          "type": "date",
+          "required": true,
+          "description": "End of the observation window.",
+          "classification": "internal"
+        },
+        {
+          "name": "observed_miles",
+          "type": "integer",
+          "required": false,
+          "description": "Miles observed in the window.",
+          "classification": "confidential"
+        },
+        {
+          "name": "mileage_band_code",
+          "code_set": "mileage_band",
+          "required": false,
+          "description": "Annualised mileage banding derived from observed miles.",
+          "classification": "internal"
+        },
+        {
+          "name": "harsh_braking_rate",
+          "type": "decimal(6,3)",
+          "required": false,
+          "description": "Harsh-braking events per 100 miles.",
+          "classification": "confidential"
+        },
+        {
+          "name": "night_driving_pct",
+          "type": "decimal(5,2)",
+          "required": false,
+          "description": "Percentage of miles driven between 11pm and 5am.",
+          "classification": "confidential"
+        },
+        {
+          "name": "telematics_score",
+          "type": "integer",
+          "required": false,
+          "description": "Composite driving score 0-100; higher is safer.",
+          "classification": "confidential"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Telematics provider or platform the aggregate originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "telematics_aggregate_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "period_ordered",
+          "rule": "period_end_date >= period_start_date",
+          "description": "The observation window must end on or after it starts."
+        }
+      ],
+      "owner": "Chief Underwriting Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "policy_demographics",
+      "domain": "enrichment",
+      "title": "Policy Demographics",
+      "description": "Banded demographic and prior-history attributes for a policy's proposer, used as rating dimensions. Banded, never raw, and personal - classified accordingly. Held only where a lawful basis and disclosure exist.\n",
+      "grain": "One row per policy.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "policy_demographics_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the demographics record.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy the demographic attributes describe.",
+          "classification": "internal"
+        },
+        {
+          "name": "age_band",
+          "type": "string",
+          "required": false,
+          "description": "Banded proposer age, e.g. 30-39.",
+          "classification": "pii"
+        },
+        {
+          "name": "tenure_band",
+          "type": "string",
+          "required": false,
+          "description": "Banded length of relationship with the insurer.",
+          "classification": "internal"
+        },
+        {
+          "name": "prior_claims_band",
+          "type": "string",
+          "required": false,
+          "description": "Banded count of prior claims in the last five years.",
+          "classification": "pii"
+        },
+        {
+          "name": "occupation_class",
+          "type": "string",
+          "required": false,
+          "description": "Occupation class grouping used in rating.",
+          "classification": "pii"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the demographic attributes were sourced from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "policy_demographics_id"
+        ]
+      },
+      "owner": "Data Protection Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "postcode_enrichment",
+      "domain": "enrichment",
+      "title": "Postcode Enrichment",
+      "description": "Area attributes for a postcode - settlement type, deprivation and region - used as rating and accumulation dimensions. Reference-like: keyed by postcode, shared across policies and objects in that area.\n",
+      "grain": "One row per postcode.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "postcode",
+          "type": "string",
+          "required": true,
+          "description": "Postcode or postal-area key the attributes describe.",
+          "classification": "internal"
+        },
+        {
+          "name": "country_code",
+          "code_set": "country",
+          "required": true,
+          "description": "Country the postcode belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "urbanity_code",
+          "code_set": "urbanity",
+          "required": false,
+          "description": "Settlement type of the postcode.",
+          "classification": "internal"
+        },
+        {
+          "name": "deprivation_decile",
+          "type": "integer",
+          "required": false,
+          "description": "Index of multiple deprivation decile, 1 (most) to 10 (least).",
+          "classification": "internal"
+        },
+        {
+          "name": "region_code",
+          "type": "string",
+          "required": false,
+          "description": "Statistical region the postcode sits in.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Provider the postcode attributes originate from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "postcode"
+        ]
+      },
+      "owner": "Chief Underwriting Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "sanctions_screen",
+      "domain": "enrichment",
+      "title": "Sanctions Screen",
+      "description": "The result of screening a party against sanctions and PEP lists. A hit is an indicator that routes the party to review; it is never an automatic decline. Personal data - classified accordingly.\n",
+      "grain": "One row per party per screening run.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "sanctions_screen_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the screening record.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "Party that was screened.",
+          "classification": "internal"
+        },
+        {
+          "name": "screen_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the screening was run.",
+          "classification": "internal"
+        },
+        {
+          "name": "hit_flag",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the screen raised a potential match.",
+          "classification": "pii"
+        },
+        {
+          "name": "pep_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the match was a politically-exposed-person indicator.",
+          "classification": "pii"
+        },
+        {
+          "name": "sanctions_list_code",
+          "code_set": "sanctions_list",
+          "required": false,
+          "description": "List the match was raised against, where there was a hit.",
+          "classification": "internal"
+        },
+        {
+          "name": "cleared_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether review cleared the hit as a false positive.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Screening provider the result originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "sanctions_screen_id"
+        ]
+      },
+      "owner": "Money Laundering Reporting Officer"
     },
     {
       "kind": "entity",
@@ -3965,6 +5586,490 @@
     },
     {
       "kind": "entity",
+      "name": "feature_definition",
+      "domain": "model",
+      "title": "Feature Definition",
+      "description": "A single model feature defined once - what it means, where it comes from and how it is classified. Features are governed the same way attributes are: a feature built from personal data carries that classification wherever it is used.\n",
+      "grain": "One row per feature.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "feature_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the feature.",
+          "classification": "internal"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Feature name as referenced by models.",
+          "classification": "internal"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": true,
+          "description": "What the feature represents, in business language.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_entity",
+          "type": "string",
+          "required": false,
+          "description": "The model entity the feature is derived from, e.g. motor_telematics_aggregate.",
+          "classification": "internal"
+        },
+        {
+          "name": "expression",
+          "type": "string",
+          "required": false,
+          "description": "Definition or derivation of the feature, as documentation.",
+          "classification": "internal"
+        },
+        {
+          "name": "classification",
+          "type": "string",
+          "required": true,
+          "description": "Data classification inherited by the feature - internal, confidential or pii.",
+          "classification": "internal"
+        },
+        {
+          "name": "pii_flag",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the feature is built from personal data.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "feature_id"
+        ],
+        "natural": [
+          "name"
+        ]
+      },
+      "owner": "Head of Data Science"
+    },
+    {
+      "kind": "entity",
+      "name": "feature_set",
+      "domain": "model",
+      "title": "Feature Set",
+      "description": "A named collection of features a model version consumes. The set is the contract between features and models; membership is resolved through feature_set_member so the same feature can serve many sets.\n",
+      "grain": "One row per feature set.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "feature_set_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the feature set.",
+          "classification": "internal"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Feature set name.",
+          "classification": "internal"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "What the set is for.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_purpose_code",
+          "code_set": "model_purpose",
+          "required": false,
+          "description": "The purpose the set was assembled for.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "feature_set_id"
+        ],
+        "natural": [
+          "name"
+        ]
+      },
+      "owner": "Head of Data Science"
+    },
+    {
+      "kind": "entity",
+      "name": "feature_set_member",
+      "domain": "model",
+      "title": "Feature Set Member",
+      "description": "Membership of a feature in a feature set - the many-to-many bridge between feature_definition and feature_set. Modelled relationally so features are shared, not duplicated per set.\n",
+      "grain": "One row per feature per feature set.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "feature_set_member_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the membership row.",
+          "classification": "internal"
+        },
+        {
+          "name": "feature_set_id",
+          "references": "feature_set",
+          "type": "string",
+          "required": true,
+          "description": "The feature set.",
+          "classification": "internal"
+        },
+        {
+          "name": "feature_id",
+          "references": "feature_definition",
+          "type": "string",
+          "required": true,
+          "description": "The feature that is a member of the set.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "feature_set_member_id"
+        ],
+        "natural": [
+          "feature_set_id",
+          "feature_id"
+        ]
+      },
+      "owner": "Head of Data Science"
+    },
+    {
+      "kind": "entity",
+      "name": "model_asset",
+      "domain": "model",
+      "title": "Model Asset",
+      "description": "A governed analytical or machine-learning model as a business asset - what it is, what it is for, who owns it and where it is registered. Versions, features, scores and monitoring hang off it. This is how the semantic layer governs AI the way it governs data.\n",
+      "grain": "One row per model asset.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "model_id",
+          "type": "string",
+          "required": true,
+          "description": "Stable identifier for the model asset, owned by the data layer.",
+          "classification": "internal"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Human-readable model name.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_type_code",
+          "code_set": "model_type",
+          "required": true,
+          "description": "The kind of model.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_purpose_code",
+          "code_set": "model_purpose",
+          "required": true,
+          "description": "What the model is used for in the business.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": false,
+          "description": "Line of business the model applies to, where specific.",
+          "classification": "internal"
+        },
+        {
+          "name": "registered_name",
+          "type": "string",
+          "required": false,
+          "description": "Fully-qualified registry name, e.g. the Unity Catalog model name.",
+          "classification": "internal"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "What the model does, in business language.",
+          "classification": "internal"
+        },
+        {
+          "name": "owner_role",
+          "type": "string",
+          "required": true,
+          "description": "Accountable owner of the model, as an org role.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Platform or registry the model is managed in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "model_id"
+        ],
+        "natural": [
+          "registered_name"
+        ]
+      },
+      "owner": "Head of Data Science"
+    },
+    {
+      "kind": "entity",
+      "name": "model_monitor_metric",
+      "domain": "model",
+      "title": "Model Monitor Metric",
+      "description": "A monitoring measurement for a model version over a period - performance and drift tracked through time. This is what turns \"the model is governed\" into evidence: whether the champion still earns its role.\n",
+      "grain": "One row per model version per metric type per period.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "model_monitor_metric_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the monitoring measurement.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_version_id",
+          "references": "model_version",
+          "type": "string",
+          "required": true,
+          "description": "Model version the measurement concerns.",
+          "classification": "internal"
+        },
+        {
+          "name": "monitor_metric_type_code",
+          "code_set": "monitor_metric_type",
+          "required": true,
+          "description": "The kind of metric measured.",
+          "classification": "internal"
+        },
+        {
+          "name": "period",
+          "type": "string",
+          "required": true,
+          "description": "Period the measurement covers, e.g. 2026-Q2.",
+          "classification": "internal"
+        },
+        {
+          "name": "value",
+          "type": "decimal(12,4)",
+          "required": true,
+          "description": "Measured value of the metric.",
+          "classification": "internal"
+        },
+        {
+          "name": "breach_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the value breached its governance threshold in the period.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Monitoring system the measurement originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "model_monitor_metric_id"
+        ]
+      },
+      "owner": "Head of Data Science"
+    },
+    {
+      "kind": "entity",
+      "name": "model_score",
+      "domain": "model",
+      "title": "Model Score",
+      "description": "A score a model version produced for a business object - the atomic output of a model. Polymorphic by subject_kind (policy, quote, claim, party) so one governed table holds every score and each traces to the version that made it. Business-facing signals such as a fraud signal consume scores; they are not the same thing.\n",
+      "grain": "One row per scored subject per model version per scoring run.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "model_score_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the score.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_version_id",
+          "references": "model_version",
+          "type": "string",
+          "required": true,
+          "description": "Model version that produced the score.",
+          "classification": "internal"
+        },
+        {
+          "name": "subject_kind_code",
+          "code_set": "model_subject_kind",
+          "required": true,
+          "description": "What kind of object the score is about.",
+          "classification": "internal"
+        },
+        {
+          "name": "subject_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier of the scored object; resolve against the table named by subject_kind_code (policy, quote, claim or party).\n",
+          "classification": "internal"
+        },
+        {
+          "name": "score",
+          "type": "decimal(12,6)",
+          "required": true,
+          "description": "The score value, in the model's native scale.",
+          "classification": "confidential"
+        },
+        {
+          "name": "scored_at",
+          "type": "timestamp",
+          "required": true,
+          "description": "When the score was produced.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Serving system that produced the score.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "model_score_id"
+        ]
+      },
+      "owner": "Head of Data Science"
+    },
+    {
+      "kind": "entity",
+      "name": "model_version",
+      "domain": "model",
+      "title": "Model Version",
+      "description": "A specific trained version of a model asset - when it was trained, on what frame, how it scored, and its serving role. Every score and decision cites a version, so a decision is always reproducible to the exact model that made it.\n",
+      "grain": "One row per version of a model asset.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "model_version_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for this model version.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_id",
+          "references": "model_asset",
+          "type": "string",
+          "required": true,
+          "description": "Model asset this is a version of.",
+          "classification": "internal"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "required": true,
+          "description": "Version label, e.g. 3 or 2026.07.1.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_status_code",
+          "code_set": "model_status",
+          "required": true,
+          "description": "Serving role of this version - champion, challenger, shadow, retired, draft.",
+          "classification": "internal"
+        },
+        {
+          "name": "trained_on",
+          "type": "date",
+          "required": false,
+          "description": "Date the version was trained.",
+          "classification": "internal"
+        },
+        {
+          "name": "training_frame_ref",
+          "type": "string",
+          "required": false,
+          "description": "Reference to the governed training frame or view the version was trained on.",
+          "classification": "internal"
+        },
+        {
+          "name": "primary_metric_type_code",
+          "code_set": "monitor_metric_type",
+          "required": false,
+          "description": "The headline evaluation metric reported at training time.",
+          "classification": "internal"
+        },
+        {
+          "name": "primary_metric_value",
+          "type": "decimal(12,4)",
+          "required": false,
+          "description": "Value of the headline evaluation metric at training time.",
+          "classification": "internal"
+        },
+        {
+          "name": "promoted_on",
+          "type": "date",
+          "required": false,
+          "description": "Date this version became champion, where applicable.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Registry the version is tracked in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "model_version_id"
+        ],
+        "natural": [
+          "model_id",
+          "version"
+        ]
+      },
+      "owner": "Head of Data Science"
+    },
+    {
+      "kind": "entity",
       "name": "legal_entity",
       "domain": "org",
       "title": "Legal Entity",
@@ -4621,6 +6726,13 @@
           "required": false,
           "description": "Longitude of the object's location, where geocoded.",
           "classification": "confidential"
+        },
+        {
+          "name": "location_key",
+          "type": "string",
+          "required": false,
+          "description": "Location key used to join external hazard enrichment (enrichment.geospatial_hazard.location_key) - typically the postcode or a gazetteer id. A soft join key, not a hard reference.\n",
+          "classification": "internal"
         }
       ],
       "keys": {
@@ -4922,6 +7034,36 @@
           "classification": "confidential"
         },
         {
+          "name": "rated_gross_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Technical rated premium the rating engine produced, before any commercial adjustment to the quoted figure; empty for quotes not machine-rated.\n",
+          "classification": "confidential"
+        },
+        {
+          "name": "rating_engine_config_id",
+          "references": "rating_engine_config",
+          "type": "string",
+          "required": false,
+          "description": "Rating engine configuration version that produced the rated premium.",
+          "classification": "internal"
+        },
+        {
+          "name": "model_version_id",
+          "references": "model_version",
+          "type": "string",
+          "required": false,
+          "description": "Model version behind the risk premium, tying the quote to a governed model.",
+          "classification": "internal"
+        },
+        {
+          "name": "conversion_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the quote converted to a policy; the demand-modelling target.",
+          "classification": "internal"
+        },
+        {
           "name": "currency_code",
           "code_set": "currency",
           "required": true,
@@ -5098,6 +7240,27 @@
           "required": false,
           "description": "Year of manufacture.",
           "classification": "internal"
+        },
+        {
+          "name": "vehicle_group",
+          "type": "string",
+          "required": false,
+          "description": "Insurance vehicle group used in rating, e.g. an ABI-style group.",
+          "classification": "internal"
+        },
+        {
+          "name": "abi_code",
+          "type": "string",
+          "required": false,
+          "description": "ABI vehicle code identifying the make/model/variant for rating.",
+          "classification": "internal"
+        },
+        {
+          "name": "telematics_enrolled_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the vehicle is enrolled in a telematics programme.",
+          "classification": "internal"
         }
       ],
       "keys": {
@@ -5106,6 +7269,335 @@
         ]
       },
       "owner": "Chief Underwriting Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "derived_factor",
+      "domain": "pricing",
+      "title": "Derived Factor",
+      "description": "The factor level and contribution applied to a specific quote or policy - the rating build-up made concrete. Summing the contributions reconstructs the quoted premium, so a price is always explainable to the factors that made it.\n",
+      "grain": "One row per rating factor applied to a quote or policy.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "derived_factor_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the applied-factor row.",
+          "classification": "internal"
+        },
+        {
+          "name": "subject_kind_code",
+          "code_set": "model_subject_kind",
+          "required": true,
+          "description": "Whether the factor was applied to a quote or a policy.",
+          "classification": "internal"
+        },
+        {
+          "name": "subject_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier of the quote or policy the factor was applied to.",
+          "classification": "internal"
+        },
+        {
+          "name": "rating_factor_id",
+          "references": "rating_factor",
+          "type": "string",
+          "required": true,
+          "description": "The rating factor applied.",
+          "classification": "internal"
+        },
+        {
+          "name": "level_code",
+          "type": "string",
+          "required": true,
+          "description": "The factor level selected for the risk.",
+          "classification": "internal"
+        },
+        {
+          "name": "relativity",
+          "type": "decimal(10,4)",
+          "required": false,
+          "description": "Relativity applied, copied from the level in force at rating time.",
+          "classification": "confidential"
+        },
+        {
+          "name": "contribution",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Premium contribution of this factor, in the quote currency.",
+          "classification": "confidential"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "derived_factor_id"
+        ]
+      },
+      "owner": "Chief Pricing Actuary"
+    },
+    {
+      "kind": "entity",
+      "name": "rating_engine_config",
+      "domain": "pricing",
+      "title": "Rating Engine Config",
+      "description": "A versioned rating configuration for a line of business - the base rate and the model version behind it, effective-dated. This is what a quote's rating provenance points to, tying a premium to a governed model version.\n",
+      "grain": "One row per rating engine configuration version.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "rating_engine_config_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the rating engine configuration.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business the configuration rates.",
+          "classification": "internal"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "required": true,
+          "description": "Configuration version label.",
+          "classification": "internal"
+        },
+        {
+          "name": "base_rate",
+          "type": "decimal(18,4)",
+          "required": false,
+          "description": "Base rate the factors build up from, in the config currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "model_version_id",
+          "references": "model_version",
+          "type": "string",
+          "required": false,
+          "description": "Model version providing the risk premium behind the configuration.",
+          "classification": "internal"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the base rate.",
+          "classification": "internal"
+        },
+        {
+          "name": "effective_from",
+          "type": "date",
+          "required": true,
+          "description": "Date the configuration took effect.",
+          "classification": "internal"
+        },
+        {
+          "name": "effective_to",
+          "type": "date",
+          "required": false,
+          "description": "Date the configuration was superseded; empty while current.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "rating_engine_config_id"
+        ],
+        "natural": [
+          "line_of_business_code",
+          "version"
+        ]
+      },
+      "owner": "Chief Pricing Actuary"
+    },
+    {
+      "kind": "entity",
+      "name": "rating_factor",
+      "domain": "pricing",
+      "title": "Rating Factor",
+      "description": "A factor used to rate a line of business - the named driver premium responds to (e.g. vehicle group, flood band, mileage). Factors are data, so a rating build-up is inspectable rather than buried in engine code.\n",
+      "grain": "One row per rating factor per line of business.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "rating_factor_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the rating factor.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business the factor applies to.",
+          "classification": "internal"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Factor name as used in rating, e.g. vehicle_group.",
+          "classification": "internal"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "What the factor represents, in business language.",
+          "classification": "internal"
+        },
+        {
+          "name": "rating_factor_kind_code",
+          "code_set": "rating_factor_kind",
+          "required": true,
+          "description": "How the factor acts on premium.",
+          "classification": "internal"
+        },
+        {
+          "name": "classification",
+          "type": "string",
+          "required": true,
+          "description": "Data classification of the underlying input - internal, confidential or pii.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "rating_factor_id"
+        ],
+        "natural": [
+          "line_of_business_code",
+          "name"
+        ]
+      },
+      "owner": "Chief Pricing Actuary"
+    },
+    {
+      "kind": "entity",
+      "name": "rating_factor_feature",
+      "domain": "pricing",
+      "title": "Rating Factor Feature",
+      "description": "The link between a rating factor and the model feature that supplies it - the bridge from the rating structure to the governed feature catalog. It is what lets a factor's data classification and lineage flow from the feature it uses.\n",
+      "grain": "One row per rating factor per feature it draws on.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "rating_factor_feature_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the link row.",
+          "classification": "internal"
+        },
+        {
+          "name": "rating_factor_id",
+          "references": "rating_factor",
+          "type": "string",
+          "required": true,
+          "description": "The rating factor.",
+          "classification": "internal"
+        },
+        {
+          "name": "feature_id",
+          "references": "feature_definition",
+          "type": "string",
+          "required": true,
+          "description": "The model feature that supplies the factor.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "rating_factor_feature_id"
+        ],
+        "natural": [
+          "rating_factor_id",
+          "feature_id"
+        ]
+      },
+      "owner": "Chief Pricing Actuary"
+    },
+    {
+      "kind": "entity",
+      "name": "rating_factor_level",
+      "domain": "pricing",
+      "title": "Rating Factor Level",
+      "description": "A level of a rating factor and its relativity - the value a factor can take and what it does to premium. Levels are effective-dated so a historic quote can be re-priced with the relativities in force when it was made.\n",
+      "grain": "One row per level of a rating factor, effective-dated.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "rating_factor_level_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the factor level.",
+          "classification": "internal"
+        },
+        {
+          "name": "rating_factor_id",
+          "references": "rating_factor",
+          "type": "string",
+          "required": true,
+          "description": "The rating factor this is a level of.",
+          "classification": "internal"
+        },
+        {
+          "name": "level_code",
+          "type": "string",
+          "required": true,
+          "description": "The factor level value, e.g. HIGH or a vehicle-group code.",
+          "classification": "internal"
+        },
+        {
+          "name": "relativity",
+          "type": "decimal(10,4)",
+          "required": true,
+          "description": "Relativity applied at this level; 1.0 is neutral for multiplicative factors.",
+          "classification": "confidential"
+        },
+        {
+          "name": "effective_from",
+          "type": "date",
+          "required": true,
+          "description": "Date the relativity took effect.",
+          "classification": "internal"
+        },
+        {
+          "name": "effective_to",
+          "type": "date",
+          "required": false,
+          "description": "Date the relativity ceased; empty while current.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "rating_factor_level_id"
+        ]
+      },
+      "quality": [
+        {
+          "name": "level_period_ordered",
+          "rule": "effective_to IS NULL OR effective_to >= effective_from",
+          "description": "A level cannot cease before it takes effect."
+        }
+      ],
+      "owner": "Chief Pricing Actuary"
     },
     {
       "kind": "entity",
@@ -5343,6 +7835,189 @@
     },
     {
       "kind": "entity",
+      "name": "referral_event",
+      "domain": "product",
+      "title": "Referral Event",
+      "description": "A firing of a referral rule against a risk - the telemetry of the rulebook. Each event cites the exact rule version that fired and how it was resolved, so the rulebook can be audited: which rules fire, on what, and whether underwriters uphold or override them.\n",
+      "grain": "One row per rule firing against a submission or quote.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "referral_event_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the referral event.",
+          "classification": "internal"
+        },
+        {
+          "name": "referral_rule_id",
+          "references": "referral_rule",
+          "type": "string",
+          "required": true,
+          "description": "The exact rule version that fired.",
+          "classification": "internal"
+        },
+        {
+          "name": "subject_kind_code",
+          "code_set": "model_subject_kind",
+          "required": true,
+          "description": "Whether the rule fired on a submission or a quote.",
+          "classification": "internal"
+        },
+        {
+          "name": "subject_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier of the submission or quote the rule fired on.",
+          "classification": "internal"
+        },
+        {
+          "name": "fired_at",
+          "type": "timestamp",
+          "required": true,
+          "description": "When the rule fired.",
+          "classification": "internal"
+        },
+        {
+          "name": "referral_outcome_code",
+          "code_set": "referral_outcome",
+          "required": true,
+          "description": "How the referral was resolved.",
+          "classification": "internal"
+        },
+        {
+          "name": "decided_by",
+          "type": "string",
+          "required": false,
+          "description": "Underwriter role that resolved the referral, where a human did.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the event originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "referral_event_id"
+        ]
+      },
+      "owner": "Chief Underwriting Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "referral_rule",
+      "domain": "product",
+      "title": "Referral Rule",
+      "description": "A governed underwriting referral rule - a condition and the action to take when a risk meets it. Rules are effective-dated (a slowly-changing record): a change supersedes the prior version rather than overwriting it, so any past referral can be explained by the rule version in force at the time. Filter is_current for the live rulebook.\n",
+      "grain": "One row per rule version; at most one current row per rule key.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "referral_rule_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for this rule version.",
+          "classification": "internal"
+        },
+        {
+          "name": "rule_key",
+          "type": "string",
+          "required": true,
+          "description": "Stable business key of the rule, constant across its versions.",
+          "classification": "internal"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Human-readable rule name.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": false,
+          "description": "Line of business the rule applies to; empty means all lines.",
+          "classification": "internal"
+        },
+        {
+          "name": "condition_expression",
+          "type": "string",
+          "required": true,
+          "description": "The condition that trips the rule, in business language or a rule expression.",
+          "classification": "internal"
+        },
+        {
+          "name": "referral_action_code",
+          "code_set": "referral_action",
+          "required": true,
+          "description": "Action taken when the condition is met.",
+          "classification": "internal"
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "required": true,
+          "description": "Version number of the rule, increasing as it changes.",
+          "classification": "internal"
+        },
+        {
+          "name": "effective_from",
+          "type": "date",
+          "required": true,
+          "description": "Date this version took effect.",
+          "classification": "internal"
+        },
+        {
+          "name": "effective_to",
+          "type": "date",
+          "required": false,
+          "description": "Date this version was superseded; empty while current.",
+          "classification": "internal"
+        },
+        {
+          "name": "is_current",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether this is the version currently in force for the rule key.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the rule is managed in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "referral_rule_id"
+        ],
+        "natural": [
+          "rule_key",
+          "version"
+        ]
+      },
+      "quality": [
+        {
+          "name": "rule_period_ordered",
+          "rule": "effective_to IS NULL OR effective_to >= effective_from",
+          "description": "A rule version cannot be superseded before it takes effect."
+        }
+      ],
+      "owner": "Chief Underwriting Officer"
+    },
+    {
+      "kind": "entity",
       "name": "underwriting_question",
       "domain": "product",
       "title": "Underwriting Question",
@@ -5399,6 +8074,91 @@
       "keys": {
         "primary": [
           "underwriting_question_id"
+        ]
+      },
+      "owner": "Chief Underwriting Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "uw_submission",
+      "domain": "product",
+      "title": "Underwriting Submission",
+      "description": "A direct-book submission for cover, upstream of a quote - the request as it arrives from a broker or channel, before it is rated or declined. It gives the underwriting funnel a grain that exists before a quote does; a submission that proceeds produces a quote.\n",
+      "grain": "One row per submission per source system.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "uw_submission_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the submission.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": false,
+          "description": "Prospect or broker the submission came from.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business the submission is for.",
+          "classification": "internal"
+        },
+        {
+          "name": "product_id",
+          "references": "product",
+          "type": "string",
+          "required": false,
+          "description": "Product the submission is against, where the catalog applies.",
+          "classification": "internal"
+        },
+        {
+          "name": "received_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the submission was received.",
+          "classification": "internal"
+        },
+        {
+          "name": "uw_submission_status_code",
+          "code_set": "uw_submission_status",
+          "required": true,
+          "description": "Status of the submission in the funnel.",
+          "classification": "internal"
+        },
+        {
+          "name": "distribution_channel_code",
+          "code_set": "distribution_channel",
+          "required": false,
+          "description": "Channel the submission arrived through.",
+          "classification": "internal"
+        },
+        {
+          "name": "quote_id",
+          "references": "quote",
+          "type": "string",
+          "required": false,
+          "description": "Quote produced from the submission, where it proceeded.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the submission originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "uw_submission_id"
         ]
       },
       "owner": "Chief Underwriting Officer"
@@ -6058,6 +8818,15 @@
     },
     {
       "kind": "view",
+      "name": "enrichment_coverage",
+      "domain": "semantics",
+      "title": "Enrichment Coverage",
+      "description": "A completeness readout of the enrichment domain - for each external source, how many records exist and how many distinct subjects they cover. A data-quality view: how much of the book actually carries each risk signal, so gaps are visible rather than assumed.\n",
+      "grain": "One row per enrichment source.",
+      "sql": "SELECT 'motor_telematics_aggregate' AS enrichment_source,\n       'policy' AS subject_kind,\n       COUNT(*) AS record_count,\n       COUNT(DISTINCT policy_id) AS subject_count\nFROM {enrichment.motor_telematics_aggregate}\nUNION ALL\nSELECT 'policy_demographics', 'policy', COUNT(*), COUNT(DISTINCT policy_id)\nFROM {enrichment.policy_demographics}\nUNION ALL\nSELECT 'credit_bureau_summary', 'party', COUNT(*), COUNT(DISTINCT party_id)\nFROM {enrichment.credit_bureau_summary}\nUNION ALL\nSELECT 'sanctions_screen', 'party', COUNT(*), COUNT(DISTINCT party_id)\nFROM {enrichment.sanctions_screen}\nUNION ALL\nSELECT 'geospatial_hazard', 'location', COUNT(*), COUNT(DISTINCT location_key)\nFROM {enrichment.geospatial_hazard}\nUNION ALL\nSELECT 'postcode_enrichment', 'postcode', COUNT(*), COUNT(DISTINCT postcode)\nFROM {enrichment.postcode_enrichment}\nUNION ALL\nSELECT 'market_pricing_benchmark', 'segment', COUNT(*),\n       COUNT(DISTINCT CONCAT(line_of_business_code, ':', COALESCE(segment, '')))\nFROM {enrichment.market_pricing_benchmark}\n"
+    },
+    {
+      "kind": "view",
       "name": "financial_transaction",
       "domain": "semantics",
       "title": "Financial Transaction (unified)",
@@ -6148,6 +8917,62 @@
           "name": "accident_year_count",
           "expr": "COUNT(DISTINCT accident_year)",
           "description": "Number of distinct accident years in the selection."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "accumulation_metrics",
+      "domain": "semantics",
+      "title": "Accumulation Metrics",
+      "description": "Catastrophe accumulation KPIs over event losses - gross loss, ceded recovery and net retained by event and peril. The exposure view reinsurance and capital teams work from, derived from the event-loss records rather than stored. Amounts are in original currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "owner": "Head of Reinsurance",
+      "certification": "draft",
+      "source": "reinsurance.event_loss",
+      "joins": [
+        {
+          "name": "cat_event",
+          "source": "reinsurance.cat_event",
+          "condition": "source.cat_event_id = cat_event.cat_event_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "event_name",
+          "expr": "cat_event.event_name",
+          "description": "Name of the catastrophe event."
+        },
+        {
+          "name": "peril_code",
+          "expr": "cat_event.cause_of_loss_code",
+          "description": "Peril of the event, e.g. FLOOD, STORM."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Original currency of the loss. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "event_count",
+          "expr": "COUNT(DISTINCT source.cat_event_id)",
+          "description": "Number of catastrophe events with losses."
+        },
+        {
+          "name": "gross_loss_total",
+          "expr": "SUM(gross_loss_amount)",
+          "description": "Total gross loss across events, in original currency."
+        },
+        {
+          "name": "ceded_recovery_total",
+          "expr": "SUM(ceded_loss_amount)",
+          "description": "Total reinsurance recovery on those losses, in original currency."
+        },
+        {
+          "name": "net_retained_total",
+          "expr": "SUM(gross_loss_amount - ceded_loss_amount)",
+          "description": "Net retained loss after reinsurance recovery, in original currency."
         }
       ]
     },
@@ -6336,6 +9161,72 @@
     },
     {
       "kind": "metric_view",
+      "name": "model_governance_metrics",
+      "domain": "semantics",
+      "title": "Model Governance Metrics",
+      "description": "Governance KPIs over the model estate - how many models and versions exist, how many are champion versus challenger or retired, by type and purpose. The AI-governance readout the semantic layer can answer directly: which models decide, and are they under control. Query measures with MEASURE(name).\n",
+      "owner": "Head of Data Science",
+      "certification": "draft",
+      "source": "model.model_version",
+      "joins": [
+        {
+          "name": "model_asset",
+          "source": "model.model_asset",
+          "condition": "source.model_id = model_asset.model_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "model_purpose_code",
+          "expr": "model_asset.model_purpose_code",
+          "description": "What the model is used for, e.g. PRICING_FREQUENCY, FRAUD, DEMAND."
+        },
+        {
+          "name": "model_type_code",
+          "expr": "model_asset.model_type_code",
+          "description": "Kind of model, e.g. GLM, GBM, LLM."
+        },
+        {
+          "name": "model_status_code",
+          "expr": "source.model_status_code",
+          "description": "Serving role of the version, e.g. CHAMPION, CHALLENGER, RETIRED."
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "model_asset.line_of_business_code",
+          "description": "Line of business the model applies to, where specific."
+        }
+      ],
+      "measures": [
+        {
+          "name": "model_version_count",
+          "expr": "COUNT(DISTINCT model_version_id)",
+          "description": "Number of model versions."
+        },
+        {
+          "name": "model_count",
+          "expr": "COUNT(DISTINCT source.model_id)",
+          "description": "Number of distinct model assets."
+        },
+        {
+          "name": "champion_count",
+          "expr": "COUNT(DISTINCT CASE WHEN model_status_code = 'CHAMPION' THEN model_version_id END)",
+          "description": "Versions currently serving as champion."
+        },
+        {
+          "name": "challenger_count",
+          "expr": "COUNT(DISTINCT CASE WHEN model_status_code = 'CHALLENGER' THEN model_version_id END)",
+          "description": "Versions being evaluated as challengers."
+        },
+        {
+          "name": "retired_count",
+          "expr": "COUNT(DISTINCT CASE WHEN model_status_code = 'RETIRED' THEN model_version_id END)",
+          "description": "Retired versions kept for lineage."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
       "name": "performance_metrics",
       "domain": "semantics",
       "title": "Performance Metrics",
@@ -6397,6 +9288,72 @@
           "name": "combined_ratio",
           "expr": "(SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) + SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)",
           "description": "Loss ratio plus expense ratio; below 1.0 is an underwriting profit."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "pricing_metrics",
+      "domain": "semantics",
+      "title": "Pricing Metrics",
+      "description": "Quote and conversion KPIs over the quote book - volumes, conversion and rated versus quoted premium by line and period. The pricing and demand view of the funnel. Amounts are in original quote currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "owner": "Chief Pricing Actuary",
+      "certification": "draft",
+      "source": "policy.quote",
+      "joins": [
+        {
+          "name": "line_of_business",
+          "source": "reference.line_of_business",
+          "condition": "source.line_of_business_code = line_of_business.line_of_business_code"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "quote_month",
+          "expr": "DATE_TRUNC('MONTH', quote_date)",
+          "description": "Calendar month the quote was produced in."
+        },
+        {
+          "name": "line_of_business",
+          "expr": "line_of_business.label",
+          "description": "Line of business as its business label, e.g. 'Motor'. Filter with labels; use line_of_business_code for codes.\n"
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "source.line_of_business_code",
+          "description": "Line of business as its code, e.g. MOTOR."
+        },
+        {
+          "name": "currency_code",
+          "expr": "currency_code",
+          "description": "Original currency of the quote. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "quote_count",
+          "expr": "COUNT(DISTINCT quote_id)",
+          "description": "Number of quotes produced."
+        },
+        {
+          "name": "converted_count",
+          "expr": "COUNT(DISTINCT CASE WHEN conversion_flag THEN quote_id END)",
+          "description": "Quotes that converted to a policy."
+        },
+        {
+          "name": "conversion_rate",
+          "expr": "COUNT(DISTINCT CASE WHEN conversion_flag THEN quote_id END) / NULLIF(COUNT(DISTINCT quote_id), 0)",
+          "description": "Converted quotes over all quotes - the headline conversion rate."
+        },
+        {
+          "name": "quoted_premium_total",
+          "expr": "SUM(quoted_gross_premium)",
+          "description": "Total gross premium quoted, in original currency."
+        },
+        {
+          "name": "rated_premium_total",
+          "expr": "SUM(rated_gross_premium)",
+          "description": "Total technical rated premium, in original currency."
         }
       ]
     },
@@ -6780,6 +9737,29 @@
     },
     {
       "kind": "function",
+      "name": "fn_champion_score",
+      "domain": "model",
+      "description": "The latest score from the champion model version for a given subject, derived live - never a stored balance. Lets any workbench ask 'what does the model in force say about this policy/quote/claim' without knowing which version that is.\n",
+      "inputs": [
+        {
+          "name": "in_subject_kind",
+          "type": "string",
+          "description": "Subject kind, one of POLICY, QUOTE, CLAIM, PARTY."
+        },
+        {
+          "name": "in_subject_id",
+          "type": "string",
+          "description": "Identifier of the scored subject."
+        }
+      ],
+      "returns": {
+        "type": "decimal(12,6)",
+        "description": "Latest champion score for the subject; empty if none scored."
+      },
+      "sql": "(SELECT ms.score\n FROM {model.model_score} ms\n JOIN {model.model_version} mv ON mv.model_version_id = ms.model_version_id\n WHERE mv.model_status_code = 'CHAMPION'\n   AND ms.subject_kind_code = in_subject_kind\n   AND ms.subject_id = in_subject_id\n ORDER BY ms.scored_at DESC\n LIMIT 1)\n"
+    },
+    {
+      "kind": "function",
       "name": "fn_policy_snapshot",
       "domain": "policy",
       "description": "One-line snapshot of a policy - line, status, cover period, year, currency.",
@@ -6915,6 +9895,139 @@
     },
     {
       "from_entity": "claim",
+      "attribute": "catastrophe_id",
+      "to": "cat_event",
+      "to_kind": "entity",
+      "to_attribute": "cat_event_id"
+    },
+    {
+      "from_entity": "claim",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "claim_feature",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "claim_feature",
+      "attribute": "coverage_id",
+      "to": "coverage",
+      "to_kind": "entity",
+      "to_attribute": "coverage_id"
+    },
+    {
+      "from_entity": "claim_feature",
+      "attribute": "claim_feature_type_code",
+      "to": "claim_feature_type",
+      "to_kind": "code_set",
+      "to_attribute": "claim_feature_type_code"
+    },
+    {
+      "from_entity": "claim_feature",
+      "attribute": "claim_status_code",
+      "to": "claim_status",
+      "to_kind": "code_set",
+      "to_attribute": "claim_status_code"
+    },
+    {
+      "from_entity": "claim_feature",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "claim_party_role",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "claim_party_role",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "claim_party_role",
+      "attribute": "claim_party_role_type_code",
+      "to": "claim_party_role_type",
+      "to_kind": "code_set",
+      "to_attribute": "claim_party_role_type_code"
+    },
+    {
+      "from_entity": "claim_party_role",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "claim_recovery",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "claim_recovery",
+      "attribute": "recovery_type_code",
+      "to": "recovery_type",
+      "to_kind": "code_set",
+      "to_attribute": "recovery_type_code"
+    },
+    {
+      "from_entity": "claim_recovery",
+      "attribute": "against_party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "claim_recovery",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "claim_recovery",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "claim_reserve_category",
+      "attribute": "claim_feature_id",
+      "to": "claim_feature",
+      "to_kind": "entity",
+      "to_attribute": "claim_feature_id"
+    },
+    {
+      "from_entity": "claim_reserve_category",
+      "attribute": "reserve_category_code",
+      "to": "reserve_category",
+      "to_kind": "code_set",
+      "to_attribute": "reserve_category_code"
+    },
+    {
+      "from_entity": "claim_reserve_category",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "claim_reserve_category",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",
@@ -6964,6 +10077,41 @@
     },
     {
       "from_entity": "fraud_signal",
+      "attribute": "model_version_id",
+      "to": "model_version",
+      "to_kind": "entity",
+      "to_attribute": "model_version_id"
+    },
+    {
+      "from_entity": "fraud_signal",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "litigation",
+      "attribute": "claim_id",
+      "to": "claim",
+      "to_kind": "entity",
+      "to_attribute": "claim_id"
+    },
+    {
+      "from_entity": "litigation",
+      "attribute": "litigation_status_code",
+      "to": "litigation_status",
+      "to_kind": "code_set",
+      "to_attribute": "litigation_status_code"
+    },
+    {
+      "from_entity": "litigation",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "litigation",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",
@@ -7090,6 +10238,167 @@
     },
     {
       "from_entity": "commission_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "credit_bureau_summary",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "credit_bureau_summary",
+      "attribute": "credit_score_band_code",
+      "to": "credit_score_band",
+      "to_kind": "code_set",
+      "to_attribute": "credit_score_band_code"
+    },
+    {
+      "from_entity": "credit_bureau_summary",
+      "attribute": "consent_id",
+      "to": "consent",
+      "to_kind": "entity",
+      "to_attribute": "consent_id"
+    },
+    {
+      "from_entity": "credit_bureau_summary",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "geospatial_hazard",
+      "attribute": "postcode",
+      "to": "postcode_enrichment",
+      "to_kind": "entity",
+      "to_attribute": "postcode"
+    },
+    {
+      "from_entity": "geospatial_hazard",
+      "attribute": "flood_band_code",
+      "to": "flood_band",
+      "to_kind": "code_set",
+      "to_attribute": "flood_band_code"
+    },
+    {
+      "from_entity": "geospatial_hazard",
+      "attribute": "subsidence_band_code",
+      "to": "subsidence_band",
+      "to_kind": "code_set",
+      "to_attribute": "subsidence_band_code"
+    },
+    {
+      "from_entity": "geospatial_hazard",
+      "attribute": "hazard_source_code",
+      "to": "hazard_source",
+      "to_kind": "code_set",
+      "to_attribute": "hazard_source_code"
+    },
+    {
+      "from_entity": "geospatial_hazard",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "market_pricing_benchmark",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "market_pricing_benchmark",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "market_pricing_benchmark",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "motor_telematics_aggregate",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "motor_telematics_aggregate",
+      "attribute": "mileage_band_code",
+      "to": "mileage_band",
+      "to_kind": "code_set",
+      "to_attribute": "mileage_band_code"
+    },
+    {
+      "from_entity": "motor_telematics_aggregate",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "policy_demographics",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "policy_demographics",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "postcode_enrichment",
+      "attribute": "country_code",
+      "to": "country",
+      "to_kind": "code_set",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "postcode_enrichment",
+      "attribute": "urbanity_code",
+      "to": "urbanity",
+      "to_kind": "code_set",
+      "to_attribute": "urbanity_code"
+    },
+    {
+      "from_entity": "postcode_enrichment",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "sanctions_screen",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "sanctions_screen",
+      "attribute": "sanctions_list_code",
+      "to": "sanctions_list",
+      "to_kind": "code_set",
+      "to_attribute": "sanctions_list_code"
+    },
+    {
+      "from_entity": "sanctions_screen",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",
@@ -7635,6 +10944,125 @@
       "to_attribute": "assumption_set_id"
     },
     {
+      "from_entity": "feature_set",
+      "attribute": "model_purpose_code",
+      "to": "model_purpose",
+      "to_kind": "code_set",
+      "to_attribute": "model_purpose_code"
+    },
+    {
+      "from_entity": "feature_set_member",
+      "attribute": "feature_set_id",
+      "to": "feature_set",
+      "to_kind": "entity",
+      "to_attribute": "feature_set_id"
+    },
+    {
+      "from_entity": "feature_set_member",
+      "attribute": "feature_id",
+      "to": "feature_definition",
+      "to_kind": "entity",
+      "to_attribute": "feature_id"
+    },
+    {
+      "from_entity": "model_asset",
+      "attribute": "model_type_code",
+      "to": "model_type",
+      "to_kind": "code_set",
+      "to_attribute": "model_type_code"
+    },
+    {
+      "from_entity": "model_asset",
+      "attribute": "model_purpose_code",
+      "to": "model_purpose",
+      "to_kind": "code_set",
+      "to_attribute": "model_purpose_code"
+    },
+    {
+      "from_entity": "model_asset",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "model_asset",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "model_monitor_metric",
+      "attribute": "model_version_id",
+      "to": "model_version",
+      "to_kind": "entity",
+      "to_attribute": "model_version_id"
+    },
+    {
+      "from_entity": "model_monitor_metric",
+      "attribute": "monitor_metric_type_code",
+      "to": "monitor_metric_type",
+      "to_kind": "code_set",
+      "to_attribute": "monitor_metric_type_code"
+    },
+    {
+      "from_entity": "model_monitor_metric",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "model_score",
+      "attribute": "model_version_id",
+      "to": "model_version",
+      "to_kind": "entity",
+      "to_attribute": "model_version_id"
+    },
+    {
+      "from_entity": "model_score",
+      "attribute": "subject_kind_code",
+      "to": "model_subject_kind",
+      "to_kind": "code_set",
+      "to_attribute": "model_subject_kind_code"
+    },
+    {
+      "from_entity": "model_score",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "model_version",
+      "attribute": "model_id",
+      "to": "model_asset",
+      "to_kind": "entity",
+      "to_attribute": "model_id"
+    },
+    {
+      "from_entity": "model_version",
+      "attribute": "model_status_code",
+      "to": "model_status",
+      "to_kind": "code_set",
+      "to_attribute": "model_status_code"
+    },
+    {
+      "from_entity": "model_version",
+      "attribute": "primary_metric_type_code",
+      "to": "monitor_metric_type",
+      "to_kind": "code_set",
+      "to_attribute": "monitor_metric_type_code"
+    },
+    {
+      "from_entity": "model_version",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
       "from_entity": "legal_entity",
       "attribute": "legal_entity_type_code",
       "to": "legal_entity_type",
@@ -7958,6 +11386,20 @@
     },
     {
       "from_entity": "quote",
+      "attribute": "rating_engine_config_id",
+      "to": "rating_engine_config",
+      "to_kind": "entity",
+      "to_attribute": "rating_engine_config_id"
+    },
+    {
+      "from_entity": "quote",
+      "attribute": "model_version_id",
+      "to": "model_version",
+      "to_kind": "entity",
+      "to_attribute": "model_version_id"
+    },
+    {
+      "from_entity": "quote",
       "attribute": "currency_code",
       "to": "currency",
       "to_kind": "code_set",
@@ -8011,6 +11453,76 @@
       "to": "insured_object",
       "to_kind": "entity",
       "to_attribute": "insured_object_id"
+    },
+    {
+      "from_entity": "derived_factor",
+      "attribute": "subject_kind_code",
+      "to": "model_subject_kind",
+      "to_kind": "code_set",
+      "to_attribute": "model_subject_kind_code"
+    },
+    {
+      "from_entity": "derived_factor",
+      "attribute": "rating_factor_id",
+      "to": "rating_factor",
+      "to_kind": "entity",
+      "to_attribute": "rating_factor_id"
+    },
+    {
+      "from_entity": "rating_engine_config",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "rating_engine_config",
+      "attribute": "model_version_id",
+      "to": "model_version",
+      "to_kind": "entity",
+      "to_attribute": "model_version_id"
+    },
+    {
+      "from_entity": "rating_engine_config",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "rating_factor",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "rating_factor",
+      "attribute": "rating_factor_kind_code",
+      "to": "rating_factor_kind",
+      "to_kind": "code_set",
+      "to_attribute": "rating_factor_kind_code"
+    },
+    {
+      "from_entity": "rating_factor_feature",
+      "attribute": "rating_factor_id",
+      "to": "rating_factor",
+      "to_kind": "entity",
+      "to_attribute": "rating_factor_id"
+    },
+    {
+      "from_entity": "rating_factor_feature",
+      "attribute": "feature_id",
+      "to": "feature_definition",
+      "to_kind": "entity",
+      "to_attribute": "feature_id"
+    },
+    {
+      "from_entity": "rating_factor_level",
+      "attribute": "rating_factor_id",
+      "to": "rating_factor",
+      "to_kind": "entity",
+      "to_attribute": "rating_factor_id"
     },
     {
       "from_entity": "appetite_rule",
@@ -8083,11 +11595,109 @@
       "to_attribute": "coverage_type_code"
     },
     {
+      "from_entity": "referral_event",
+      "attribute": "referral_rule_id",
+      "to": "referral_rule",
+      "to_kind": "entity",
+      "to_attribute": "referral_rule_id"
+    },
+    {
+      "from_entity": "referral_event",
+      "attribute": "subject_kind_code",
+      "to": "model_subject_kind",
+      "to_kind": "code_set",
+      "to_attribute": "model_subject_kind_code"
+    },
+    {
+      "from_entity": "referral_event",
+      "attribute": "referral_outcome_code",
+      "to": "referral_outcome",
+      "to_kind": "code_set",
+      "to_attribute": "referral_outcome_code"
+    },
+    {
+      "from_entity": "referral_event",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "referral_rule",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "referral_rule",
+      "attribute": "referral_action_code",
+      "to": "referral_action",
+      "to_kind": "code_set",
+      "to_attribute": "referral_action_code"
+    },
+    {
+      "from_entity": "referral_rule",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
       "from_entity": "underwriting_question",
       "attribute": "product_id",
       "to": "product",
       "to_kind": "entity",
       "to_attribute": "product_id"
+    },
+    {
+      "from_entity": "uw_submission",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "uw_submission",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "uw_submission",
+      "attribute": "product_id",
+      "to": "product",
+      "to_kind": "entity",
+      "to_attribute": "product_id"
+    },
+    {
+      "from_entity": "uw_submission",
+      "attribute": "uw_submission_status_code",
+      "to": "uw_submission_status",
+      "to_kind": "code_set",
+      "to_attribute": "uw_submission_status_code"
+    },
+    {
+      "from_entity": "uw_submission",
+      "attribute": "distribution_channel_code",
+      "to": "distribution_channel",
+      "to_kind": "code_set",
+      "to_attribute": "distribution_channel_code"
+    },
+    {
+      "from_entity": "uw_submission",
+      "attribute": "quote_id",
+      "to": "quote",
+      "to_kind": "entity",
+      "to_attribute": "quote_id"
+    },
+    {
+      "from_entity": "uw_submission",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
     },
     {
       "from_entity": "cat_event",
@@ -8441,6 +12051,78 @@
       "attested_by": "Chief Actuary",
       "attested_on": "2026-07-19",
       "evidence": "Benchmark-backed metric; MEASURE() reconciles to source transactions."
+    },
+    {
+      "element": "rating_factor",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Pricing Actuary",
+      "attested_by": "Chief Pricing Actuary",
+      "attested_on": "2026-08-26",
+      "evidence": "Rating structure as data; the build-up reconciles to rated premium under smoke_test tie-outs."
+    },
+    {
+      "element": "derived_factor",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Pricing Actuary",
+      "attested_by": "Chief Pricing Actuary",
+      "attested_on": "2026-08-26",
+      "evidence": "Applied factor contributions sum to the quote's rated premium (smoke_test)."
+    },
+    {
+      "element": "model_asset",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Head of Data Science",
+      "attested_by": "Head of Data Science",
+      "attested_on": "2026-08-26",
+      "evidence": "Model estate governed as assets; owner and registry recorded."
+    },
+    {
+      "element": "model_version",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Head of Data Science",
+      "attested_by": "Head of Data Science",
+      "attested_on": "2026-08-26",
+      "evidence": "Every model score traces to a version (smoke_test); champion/challenger discipline modelled."
+    },
+    {
+      "element": "referral_rule",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Underwriting Officer",
+      "attested_by": "Chief Underwriting Officer",
+      "attested_on": "2026-08-26",
+      "evidence": "Effective-dated rulebook; exactly one current version per rule key (smoke_test SCD2 integrity)."
+    },
+    {
+      "element": "motor_telematics_aggregate",
+      "element_kind": "entity",
+      "certification": "certified",
+      "owner": "Chief Underwriting Officer",
+      "attested_by": "Chief Underwriting Officer",
+      "attested_on": "2026-08-26",
+      "evidence": "Enrichment keyed to policy; covers every motor policy (smoke_test coverage tie-out)."
+    },
+    {
+      "element": "pricing_metrics",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Chief Pricing Actuary",
+      "attested_by": "Chief Pricing Actuary",
+      "attested_on": "2026-08-26",
+      "evidence": "Conversion and rated/quoted premium; MEASURE() answers over the quote book (smoke_test)."
+    },
+    {
+      "element": "model_governance_metrics",
+      "element_kind": "metric_view",
+      "certification": "certified",
+      "owner": "Head of Data Science",
+      "attested_by": "Head of Data Science",
+      "attested_on": "2026-08-26",
+      "evidence": "Champion/challenger counts by purpose; MEASURE() answers over the model estate (smoke_test)."
     }
   ]
 }

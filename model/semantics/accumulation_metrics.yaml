@@ -1,0 +1,40 @@
+kind: metric_view
+name: accumulation_metrics
+domain: semantics
+title: Accumulation Metrics
+description: >
+  Catastrophe accumulation KPIs over event losses - gross loss, ceded recovery
+  and net retained by event and peril. The exposure view reinsurance and capital
+  teams work from, derived from the event-loss records rather than stored.
+  Amounts are in original currency; group by or filter on currency_code before
+  summing money. Query measures with MEASURE(name).
+owner: Head of Reinsurance
+certification: draft
+source: reinsurance.event_loss
+joins:
+  - name: cat_event
+    source: reinsurance.cat_event
+    condition: source.cat_event_id = cat_event.cat_event_id
+dimensions:
+  - name: event_name
+    expr: cat_event.event_name
+    description: Name of the catastrophe event.
+  - name: peril_code
+    expr: cat_event.cause_of_loss_code
+    description: Peril of the event, e.g. FLOOD, STORM.
+  - name: currency_code
+    expr: currency_code
+    description: Original currency of the loss. Group by this before summing money.
+measures:
+  - name: event_count
+    expr: COUNT(DISTINCT source.cat_event_id)
+    description: Number of catastrophe events with losses.
+  - name: gross_loss_total
+    expr: SUM(gross_loss_amount)
+    description: Total gross loss across events, in original currency.
+  - name: ceded_recovery_total
+    expr: SUM(ceded_loss_amount)
+    description: Total reinsurance recovery on those losses, in original currency.
+  - name: net_retained_total
+    expr: SUM(gross_loss_amount - ceded_loss_amount)
+    description: Net retained loss after reinsurance recovery, in original currency.

@@ -1,0 +1,28 @@
+kind: code_set
+name: model_purpose
+title: Model Purpose
+description: >
+  What a model is used for in the business - the decision or estimate it
+  supports. Purpose is separate from type: a GBM might serve demand or fraud.
+codes:
+  - code: PRICING_FREQUENCY
+    label: Pricing - Frequency
+    description: Predicts claim frequency for a risk.
+  - code: PRICING_SEVERITY
+    label: Pricing - Severity
+    description: Predicts claim severity for a risk.
+  - code: DEMAND
+    label: Demand / Conversion
+    description: Predicts conversion or price elasticity of demand.
+  - code: FRAUD
+    label: Fraud Propensity
+    description: Scores a claim or application for fraud risk.
+  - code: TRIAGE
+    label: Claims Triage
+    description: Routes or prioritises a claim by predicted complexity.
+  - code: NARRATION
+    label: Narration / Reasoning
+    description: Generates explanations or summaries with a language model.
+  - code: RESERVING
+    label: Reserving
+    description: Estimates ultimate losses or IBNR.

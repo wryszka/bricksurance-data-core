@@ -1,6 +1,6 @@
 model: bricksurance-data-core
 title: Bricksurance Data Core
-version: 0.9.0
+version: 0.10.0
 description: >
   An open, business-first semantic data model for insurance, aligned to ACORD
   terminology with a crosswalk to the Lloyd's Core Data Record. Platform
@@ -59,6 +59,30 @@ domains:
       Machine-readable products - offered coverages, underwriting questions
       and appetite rules as data, so any channel (human, aggregator or buyer
       agent) can discover, quote and be decided against the same rules.
+  - name: enrichment
+    description: >
+      External and derived risk data joined to the canonical model - telematics,
+      credit, geospatial hazard, postcode, market benchmarks, demographics and
+      sanctions screening. These are third-party or derived attributes about a
+      policy, party or insured object, kept as governed, classified data rather
+      than scattered feature tables. Pricing and underwriting both draw on them;
+      modelling them once, with data classification, is what lets those
+      workbenches share risk signal instead of each re-sourcing it.
+  - name: model
+    description: >
+      Machine-learning and analytical models as governed assets - the model,
+      its versions, the features it consumes, the scores it produces and its
+      monitoring metrics. The layer represents AI the way it represents data:
+      every score traces to a model version, every feature to a definition and a
+      classification. This is what makes model governance a first-class part of
+      the semantic layer, not a side system.
+  - name: pricing
+    description: >
+      The rating structure - factors, their levels and relativities, engine
+      configurations and the derived factor contributions on a quote or policy.
+      Pricing decisions become explainable data: a quoted premium decomposes into
+      the factors and relativities that produced it, and the engine config cites
+      the model version behind it.
   - name: distribution
     description: >
       How business reaches the insurer - channels and intermediary

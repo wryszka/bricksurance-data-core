@@ -1,0 +1,51 @@
+kind: entity
+name: policy_demographics
+domain: enrichment
+title: Policy Demographics
+description: >
+  Banded demographic and prior-history attributes for a policy's proposer,
+  used as rating dimensions. Banded, never raw, and personal - classified
+  accordingly. Held only where a lawful basis and disclosure exist.
+grain: One row per policy.
+tags:
+  maturity: draft
+attributes:
+  - name: policy_demographics_id
+    type: string
+    required: true
+    description: Identifier for the demographics record.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: true
+    description: Policy the demographic attributes describe.
+    classification: internal
+  - name: age_band
+    type: string
+    required: false
+    description: Banded proposer age, e.g. 30-39.
+    classification: pii
+  - name: tenure_band
+    type: string
+    required: false
+    description: Banded length of relationship with the insurer.
+    classification: internal
+  - name: prior_claims_band
+    type: string
+    required: false
+    description: Banded count of prior claims in the last five years.
+    classification: pii
+  - name: occupation_class
+    type: string
+    required: false
+    description: Occupation class grouping used in rating.
+    classification: pii
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the demographic attributes were sourced from.
+    classification: internal
+keys:
+  primary: [policy_demographics_id]
+owner: Data Protection Officer

@@ -197,6 +197,35 @@ def main():
          f"WHERE CAST(policy_id IS NOT NULL AS INT) + CAST(claim_id IS NOT NULL AS INT) "
          f"+ CAST(treaty_id IS NOT NULL AS INT) + CAST(quote_id IS NOT NULL AS INT) "
          f"+ CAST(submission_id IS NOT NULL AS INT) <> 1", "0"),
+        # ---- new domains: enrichment, model/ML, pricing, depth ----------
+        ("pricing build-up reconciles: derived factors sum to the rated premium",
+         f"SELECT COUNT(*) FROM (SELECT subject_id, SUM(contribution) s "
+         f"FROM {q('pricing', 'derived_factor')} WHERE subject_kind_code = 'QUOTE' "
+         f"GROUP BY subject_id) x JOIN {q('policy', 'quote')} qq ON qq.quote_id = x.subject_id "
+         f"WHERE ROUND(x.s, 2) <> ROUND(qq.rated_gross_premium, 2)", "0"),
+        ("every model score traces to a governed model version",
+         f"SELECT COUNT(*) FROM {q('model', 'model_score')} ms "
+         f"LEFT JOIN {q('model', 'model_version')} mv ON mv.model_version_id = ms.model_version_id "
+         f"WHERE mv.model_version_id IS NULL", "0"),
+        ("referral rulebook: exactly one current version per rule (SCD2 integrity)",
+         f"SELECT COUNT(*) FROM (SELECT rule_key, SUM(CAST(is_current AS INT)) c "
+         f"FROM {q('product', 'referral_rule')} GROUP BY rule_key) WHERE c <> 1", "0"),
+        ("enrichment coverage: telematics covers every motor policy",
+         f"SELECT (SELECT subject_count FROM {q('semantics', 'enrichment_coverage')} "
+         f"WHERE enrichment_source = 'motor_telematics_aggregate') = "
+         f"(SELECT COUNT(*) FROM {q('policy', 'policy')} WHERE line_of_business_code = 'MOTOR')", "true"),
+        ("governed tool: champion score resolves for a scored quote",
+         f"SELECT {q('model', 'fn_champion_score')}('QUOTE', "
+         f"(SELECT subject_id FROM {q('model', 'model_score')} WHERE subject_kind_code = 'QUOTE' LIMIT 1)) "
+         f"IS NOT NULL", "true"),
+        ("pricing metric view answers conversion rate for motor (GBP)",
+         f"SELECT MEASURE(conversion_rate) BETWEEN 0 AND 1 "
+         f"FROM {q('semantics', 'pricing_metrics')} "
+         f"WHERE line_of_business_code = 'MOTOR' AND currency_code = 'GBP'", "true"),
+        ("model governance view: the frequency model has a champion in force",
+         f"SELECT MEASURE(champion_count) >= 1 "
+         f"FROM {q('semantics', 'model_governance_metrics')} "
+         f"WHERE model_purpose_code = 'PRICING_FREQUENCY'", "true"),
     ]
 
     failures = 0

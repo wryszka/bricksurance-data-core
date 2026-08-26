@@ -1,0 +1,57 @@
+kind: entity
+name: rating_engine_config
+domain: pricing
+title: Rating Engine Config
+description: >
+  A versioned rating configuration for a line of business - the base rate and
+  the model version behind it, effective-dated. This is what a quote's rating
+  provenance points to, tying a premium to a governed model version.
+grain: One row per rating engine configuration version.
+tags:
+  maturity: draft
+attributes:
+  - name: rating_engine_config_id
+    type: string
+    required: true
+    description: Identifier for the rating engine configuration.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business the configuration rates.
+    classification: internal
+  - name: version
+    type: string
+    required: true
+    description: Configuration version label.
+    classification: internal
+  - name: base_rate
+    type: decimal(18,4)
+    required: false
+    description: Base rate the factors build up from, in the config currency.
+    classification: confidential
+  - name: model_version_id
+    references: model_version
+    type: string
+    required: false
+    description: Model version providing the risk premium behind the configuration.
+    classification: internal
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the base rate.
+    classification: internal
+  - name: effective_from
+    type: date
+    required: true
+    description: Date the configuration took effect.
+    classification: internal
+  - name: effective_to
+    type: date
+    required: false
+    description: Date the configuration was superseded; empty while current.
+    classification: internal
+keys:
+  primary: [rating_engine_config_id]
+  natural: [line_of_business_code, version]
+owner: Chief Pricing Actuary

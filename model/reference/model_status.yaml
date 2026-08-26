@@ -1,0 +1,22 @@
+kind: code_set
+name: model_status
+title: Model Status
+description: >
+  Lifecycle status of a model version in production - the champion/challenger
+  discipline that governs which version actually decides.
+codes:
+  - code: CHAMPION
+    label: Champion
+    description: The version currently in force for decisions.
+  - code: CHALLENGER
+    label: Challenger
+    description: A candidate version being evaluated against the champion.
+  - code: SHADOW
+    label: Shadow
+    description: Scored in parallel for monitoring only; does not decide.
+  - code: RETIRED
+    label: Retired
+    description: No longer in use; kept for lineage and reproducibility.
+  - code: DRAFT
+    label: Draft
+    description: In development; not yet promoted to any serving role.

@@ -1,0 +1,35 @@
+kind: view
+name: enrichment_coverage
+domain: semantics
+title: Enrichment Coverage
+description: >
+  A completeness readout of the enrichment domain - for each external source,
+  how many records exist and how many distinct subjects they cover. A data-quality
+  view: how much of the book actually carries each risk signal, so gaps are
+  visible rather than assumed.
+grain: One row per enrichment source.
+sql: |
+  SELECT 'motor_telematics_aggregate' AS enrichment_source,
+         'policy' AS subject_kind,
+         COUNT(*) AS record_count,
+         COUNT(DISTINCT policy_id) AS subject_count
+  FROM {enrichment.motor_telematics_aggregate}
+  UNION ALL
+  SELECT 'policy_demographics', 'policy', COUNT(*), COUNT(DISTINCT policy_id)
+  FROM {enrichment.policy_demographics}
+  UNION ALL
+  SELECT 'credit_bureau_summary', 'party', COUNT(*), COUNT(DISTINCT party_id)
+  FROM {enrichment.credit_bureau_summary}
+  UNION ALL
+  SELECT 'sanctions_screen', 'party', COUNT(*), COUNT(DISTINCT party_id)
+  FROM {enrichment.sanctions_screen}
+  UNION ALL
+  SELECT 'geospatial_hazard', 'location', COUNT(*), COUNT(DISTINCT location_key)
+  FROM {enrichment.geospatial_hazard}
+  UNION ALL
+  SELECT 'postcode_enrichment', 'postcode', COUNT(*), COUNT(DISTINCT postcode)
+  FROM {enrichment.postcode_enrichment}
+  UNION ALL
+  SELECT 'market_pricing_benchmark', 'segment', COUNT(*),
+         COUNT(DISTINCT CONCAT(line_of_business_code, ':', COALESCE(segment, '')))
+  FROM {enrichment.market_pricing_benchmark}

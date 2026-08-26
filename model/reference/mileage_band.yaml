@@ -1,0 +1,19 @@
+kind: code_set
+name: mileage_band
+title: Mileage Band
+description: >
+  Annual mileage banding for a motor risk, derived from declared or telematics
+  mileage. A rating exposure dimension.
+codes:
+  - code: LOW
+    label: Low (<6k)
+    description: Under 6,000 miles per year.
+  - code: MEDIUM
+    label: Medium (6k-12k)
+    description: 6,000 to 12,000 miles per year.
+  - code: HIGH
+    label: High (12k-20k)
+    description: 12,000 to 20,000 miles per year.
+  - code: VERY_HIGH
+    label: Very High (>20k)
+    description: Over 20,000 miles per year.

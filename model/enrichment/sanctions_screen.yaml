@@ -1,0 +1,56 @@
+kind: entity
+name: sanctions_screen
+domain: enrichment
+title: Sanctions Screen
+description: >
+  The result of screening a party against sanctions and PEP lists. A hit is an
+  indicator that routes the party to review; it is never an automatic decline.
+  Personal data - classified accordingly.
+grain: One row per party per screening run.
+tags:
+  maturity: draft
+attributes:
+  - name: sanctions_screen_id
+    type: string
+    required: true
+    description: Identifier for the screening record.
+    classification: internal
+  - name: party_id
+    references: party
+    type: string
+    required: true
+    description: Party that was screened.
+    classification: internal
+  - name: screen_date
+    type: date
+    required: true
+    description: Date the screening was run.
+    classification: internal
+  - name: hit_flag
+    type: boolean
+    required: true
+    description: Whether the screen raised a potential match.
+    classification: pii
+  - name: pep_flag
+    type: boolean
+    required: false
+    description: Whether the match was a politically-exposed-person indicator.
+    classification: pii
+  - name: sanctions_list_code
+    code_set: sanctions_list
+    required: false
+    description: List the match was raised against, where there was a hit.
+    classification: internal
+  - name: cleared_flag
+    type: boolean
+    required: false
+    description: Whether review cleared the hit as a false positive.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Screening provider the result originates from.
+    classification: internal
+keys:
+  primary: [sanctions_screen_id]
+owner: Money Laundering Reporting Officer

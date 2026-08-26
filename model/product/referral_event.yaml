@@ -1,0 +1,57 @@
+kind: entity
+name: referral_event
+domain: product
+title: Referral Event
+description: >
+  A firing of a referral rule against a risk - the telemetry of the rulebook.
+  Each event cites the exact rule version that fired and how it was resolved, so
+  the rulebook can be audited: which rules fire, on what, and whether underwriters
+  uphold or override them.
+grain: One row per rule firing against a submission or quote.
+tags:
+  maturity: draft
+attributes:
+  - name: referral_event_id
+    type: string
+    required: true
+    description: Identifier for the referral event.
+    classification: internal
+  - name: referral_rule_id
+    references: referral_rule
+    type: string
+    required: true
+    description: The exact rule version that fired.
+    classification: internal
+  - name: subject_kind_code
+    code_set: model_subject_kind
+    required: true
+    description: Whether the rule fired on a submission or a quote.
+    classification: internal
+  - name: subject_id
+    type: string
+    required: true
+    description: Identifier of the submission or quote the rule fired on.
+    classification: internal
+  - name: fired_at
+    type: timestamp
+    required: true
+    description: When the rule fired.
+    classification: internal
+  - name: referral_outcome_code
+    code_set: referral_outcome
+    required: true
+    description: How the referral was resolved.
+    classification: internal
+  - name: decided_by
+    type: string
+    required: false
+    description: Underwriter role that resolved the referral, where a human did.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the event originates from.
+    classification: internal
+keys:
+  primary: [referral_event_id]
+owner: Chief Underwriting Officer

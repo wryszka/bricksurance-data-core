@@ -1,0 +1,33 @@
+kind: entity
+name: feature_set_member
+domain: model
+title: Feature Set Member
+description: >
+  Membership of a feature in a feature set - the many-to-many bridge between
+  feature_definition and feature_set. Modelled relationally so features are
+  shared, not duplicated per set.
+grain: One row per feature per feature set.
+tags:
+  maturity: draft
+attributes:
+  - name: feature_set_member_id
+    type: string
+    required: true
+    description: Identifier for the membership row.
+    classification: internal
+  - name: feature_set_id
+    references: feature_set
+    type: string
+    required: true
+    description: The feature set.
+    classification: internal
+  - name: feature_id
+    references: feature_definition
+    type: string
+    required: true
+    description: The feature that is a member of the set.
+    classification: internal
+keys:
+  primary: [feature_set_member_id]
+  natural: [feature_set_id, feature_id]
+owner: Head of Data Science

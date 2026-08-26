@@ -1,0 +1,25 @@
+kind: code_set
+name: monitor_metric_type
+title: Monitor Metric Type
+description: >
+  The kind of monitoring metric recorded for a model version over a period -
+  performance and drift measures that govern whether it stays champion.
+codes:
+  - code: AUC
+    label: AUC
+    description: Area under the ROC curve; discrimination of a classifier.
+  - code: GINI
+    label: Gini
+    description: Gini coefficient; rank-ordering power.
+  - code: PSI
+    label: Population Stability Index
+    description: Shift in the scored population versus training.
+  - code: DRIFT
+    label: Feature Drift
+    description: Distributional drift in input features.
+  - code: RMSE
+    label: RMSE
+    description: Root mean squared error of a regression model.
+  - code: LIFT
+    label: Lift
+    description: Lift of the top decile over the base rate.

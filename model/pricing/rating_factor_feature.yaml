@@ -1,0 +1,33 @@
+kind: entity
+name: rating_factor_feature
+domain: pricing
+title: Rating Factor Feature
+description: >
+  The link between a rating factor and the model feature that supplies it - the
+  bridge from the rating structure to the governed feature catalog. It is what
+  lets a factor's data classification and lineage flow from the feature it uses.
+grain: One row per rating factor per feature it draws on.
+tags:
+  maturity: draft
+attributes:
+  - name: rating_factor_feature_id
+    type: string
+    required: true
+    description: Identifier for the link row.
+    classification: internal
+  - name: rating_factor_id
+    references: rating_factor
+    type: string
+    required: true
+    description: The rating factor.
+    classification: internal
+  - name: feature_id
+    references: feature_definition
+    type: string
+    required: true
+    description: The model feature that supplies the factor.
+    classification: internal
+keys:
+  primary: [rating_factor_feature_id]
+  natural: [rating_factor_id, feature_id]
+owner: Chief Pricing Actuary

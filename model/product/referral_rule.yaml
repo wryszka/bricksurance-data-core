@@ -1,0 +1,77 @@
+kind: entity
+name: referral_rule
+domain: product
+title: Referral Rule
+description: >
+  A governed underwriting referral rule - a condition and the action to take when
+  a risk meets it. Rules are effective-dated (a slowly-changing record): a change
+  supersedes the prior version rather than overwriting it, so any past referral
+  can be explained by the rule version in force at the time. Filter is_current for
+  the live rulebook.
+grain: One row per rule version; at most one current row per rule key.
+tags:
+  maturity: draft
+attributes:
+  - name: referral_rule_id
+    type: string
+    required: true
+    description: Identifier for this rule version.
+    classification: internal
+  - name: rule_key
+    type: string
+    required: true
+    description: Stable business key of the rule, constant across its versions.
+    classification: internal
+  - name: name
+    type: string
+    required: true
+    description: Human-readable rule name.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: false
+    description: Line of business the rule applies to; empty means all lines.
+    classification: internal
+  - name: condition_expression
+    type: string
+    required: true
+    description: The condition that trips the rule, in business language or a rule expression.
+    classification: internal
+  - name: referral_action_code
+    code_set: referral_action
+    required: true
+    description: Action taken when the condition is met.
+    classification: internal
+  - name: version
+    type: integer
+    required: true
+    description: Version number of the rule, increasing as it changes.
+    classification: internal
+  - name: effective_from
+    type: date
+    required: true
+    description: Date this version took effect.
+    classification: internal
+  - name: effective_to
+    type: date
+    required: false
+    description: Date this version was superseded; empty while current.
+    classification: internal
+  - name: is_current
+    type: boolean
+    required: true
+    description: Whether this is the version currently in force for the rule key.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the rule is managed in.
+    classification: internal
+keys:
+  primary: [referral_rule_id]
+  natural: [rule_key, version]
+quality:
+  - name: rule_period_ordered
+    rule: effective_to IS NULL OR effective_to >= effective_from
+    description: A rule version cannot be superseded before it takes effect.
+owner: Chief Underwriting Officer

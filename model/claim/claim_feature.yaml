@@ -1,0 +1,48 @@
+kind: entity
+name: claim_feature
+domain: claim
+title: Claim Feature
+description: >
+  A feature (head of damage) within a claim - a sub-claim that reserves and
+  settles on its own, e.g. own damage versus third-party injury under one motor
+  claim. Financial development still flows through claim transactions; the feature
+  gives claims and reserving teams the grain they actually work at.
+grain: One row per feature per claim.
+tags:
+  maturity: draft
+attributes:
+  - name: claim_feature_id
+    type: string
+    required: true
+    description: Identifier for the claim feature.
+    classification: internal
+  - name: claim_id
+    references: claim
+    type: string
+    required: true
+    description: The claim this feature belongs to.
+    classification: internal
+  - name: coverage_id
+    references: coverage
+    type: string
+    required: false
+    description: Coverage the feature attaches to, where the source provides it.
+    classification: internal
+  - name: claim_feature_type_code
+    code_set: claim_feature_type
+    required: true
+    description: Kind of feature (head of damage).
+    classification: internal
+  - name: claim_status_code
+    code_set: claim_status
+    required: true
+    description: Handling status of the feature; features can close independently.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Claims system the feature originates from.
+    classification: internal
+keys:
+  primary: [claim_feature_id]
+owner: Chief Claims Officer

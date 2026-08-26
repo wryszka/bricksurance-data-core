@@ -1,0 +1,19 @@
+kind: code_set
+name: urbanity
+title: Urbanity
+description: >
+  Settlement type of a postcode, urban to rural, used as a rating and
+  accumulation dimension.
+codes:
+  - code: URBAN_MAJOR
+    label: Major Urban
+    description: Major conurbation or city centre.
+  - code: URBAN
+    label: Urban
+    description: Town or suburban area.
+  - code: SUBURBAN
+    label: Suburban
+    description: Suburban / commuter belt.
+  - code: RURAL
+    label: Rural
+    description: Village or open countryside.

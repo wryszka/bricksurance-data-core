@@ -1,0 +1,51 @@
+kind: entity
+name: feature_definition
+domain: model
+title: Feature Definition
+description: >
+  A single model feature defined once - what it means, where it comes from and
+  how it is classified. Features are governed the same way attributes are: a
+  feature built from personal data carries that classification wherever it is used.
+grain: One row per feature.
+tags:
+  maturity: draft
+attributes:
+  - name: feature_id
+    type: string
+    required: true
+    description: Identifier for the feature.
+    classification: internal
+  - name: name
+    type: string
+    required: true
+    description: Feature name as referenced by models.
+    classification: internal
+  - name: description
+    type: string
+    required: true
+    description: What the feature represents, in business language.
+    classification: internal
+  - name: source_entity
+    type: string
+    required: false
+    description: The model entity the feature is derived from, e.g. motor_telematics_aggregate.
+    classification: internal
+  - name: expression
+    type: string
+    required: false
+    description: Definition or derivation of the feature, as documentation.
+    classification: internal
+  - name: classification
+    type: string
+    required: true
+    description: Data classification inherited by the feature - internal, confidential or pii.
+    classification: internal
+  - name: pii_flag
+    type: boolean
+    required: true
+    description: Whether the feature is built from personal data.
+    classification: internal
+keys:
+  primary: [feature_id]
+  natural: [name]
+owner: Head of Data Science

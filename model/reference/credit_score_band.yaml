@@ -1,0 +1,23 @@
+kind: code_set
+name: credit_score_band
+title: Credit Score Band
+description: >
+  Banded consumer credit rating from a bureau summary. Banded, never the raw
+  score, so the attribute can be used in rating without holding fine-grained
+  bureau data. Bureau data is used only where permitted and disclosed.
+codes:
+  - code: EXCELLENT
+    label: Excellent
+    description: Top-tier bureau rating.
+  - code: GOOD
+    label: Good
+    description: Above-average bureau rating.
+  - code: FAIR
+    label: Fair
+    description: Average bureau rating.
+  - code: POOR
+    label: Poor
+    description: Below-average bureau rating.
+  - code: THIN_FILE
+    label: Thin File
+    description: Insufficient credit history to score.

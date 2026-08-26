@@ -54,6 +54,30 @@ attributes:
     required: false
     description: Gross premium quoted, in the quote currency; empty while the quote is open.
     classification: confidential
+  - name: rated_gross_premium
+    type: decimal(18,2)
+    required: false
+    description: >
+      Technical rated premium the rating engine produced, before any commercial
+      adjustment to the quoted figure; empty for quotes not machine-rated.
+    classification: confidential
+  - name: rating_engine_config_id
+    references: rating_engine_config
+    type: string
+    required: false
+    description: Rating engine configuration version that produced the rated premium.
+    classification: internal
+  - name: model_version_id
+    references: model_version
+    type: string
+    required: false
+    description: Model version behind the risk premium, tying the quote to a governed model.
+    classification: internal
+  - name: conversion_flag
+    type: boolean
+    required: false
+    description: Whether the quote converted to a policy; the demand-modelling target.
+    classification: internal
   - name: currency_code
     code_set: currency
     required: true

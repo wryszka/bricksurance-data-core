@@ -1,0 +1,19 @@
+kind: code_set
+name: reserve_category
+title: Reserve Category
+description: >
+  The split of a case reserve by kind of cost - so indemnity, expense and legal
+  reserves are visible separately, as claims and reserving teams hold them.
+codes:
+  - code: INDEMNITY
+    label: Indemnity
+    description: Reserve for the loss payment itself.
+  - code: EXPENSE
+    label: Expense
+    description: Reserve for allocated loss adjustment expense.
+  - code: LEGAL
+    label: Legal
+    description: Reserve for legal and defence costs.
+  - code: RECOVERY
+    label: Recovery
+    description: Anticipated recovery held as a negative reserve.

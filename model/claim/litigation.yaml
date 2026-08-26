@@ -1,0 +1,56 @@
+kind: entity
+name: litigation
+domain: claim
+title: Litigation
+description: >
+  Legal proceedings arising from a claim - status, jurisdiction and the legal
+  reserve. Litigation is a material driver of claim cost and duration; modelling
+  it lets the claims workbench track defended matters distinctly.
+grain: One row per suit per claim.
+tags:
+  maturity: draft
+attributes:
+  - name: litigation_id
+    type: string
+    required: true
+    description: Identifier for the litigation matter.
+    classification: internal
+  - name: claim_id
+    references: claim
+    type: string
+    required: true
+    description: The claim the proceedings arise from.
+    classification: internal
+  - name: litigation_status_code
+    code_set: litigation_status
+    required: true
+    description: Status of the proceedings.
+    classification: internal
+  - name: jurisdiction
+    type: string
+    required: false
+    description: Court or jurisdiction the matter is in.
+    classification: internal
+  - name: legal_reserve
+    type: decimal(18,2)
+    required: false
+    description: Reserve held for legal and defence costs, in the claim currency.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: false
+    description: Currency of the legal reserve.
+    classification: internal
+  - name: opened_date
+    type: date
+    required: false
+    description: Date proceedings were first notified.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the litigation record originates from.
+    classification: internal
+keys:
+  primary: [litigation_id]
+owner: Chief Claims Officer

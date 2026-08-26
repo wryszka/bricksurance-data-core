@@ -1,0 +1,63 @@
+kind: entity
+name: claim_recovery
+domain: claim
+title: Claim Recovery
+description: >
+  A recovery pursued or received on a claim, with its source - subrogation,
+  salvage, contribution, reinsurance or deductible. The dimensional detail behind
+  RECOVERY claim transactions: what kind of recovery, against whom, and where it
+  stands.
+grain: One row per recovery per claim.
+tags:
+  maturity: draft
+attributes:
+  - name: claim_recovery_id
+    type: string
+    required: true
+    description: Identifier for the recovery.
+    classification: internal
+  - name: claim_id
+    references: claim
+    type: string
+    required: true
+    description: The claim the recovery relates to.
+    classification: internal
+  - name: recovery_type_code
+    code_set: recovery_type
+    required: true
+    description: Source of the recovery.
+    classification: internal
+  - name: against_party_id
+    references: party
+    type: string
+    required: false
+    description: Party the recovery is pursued against, where applicable.
+    classification: internal
+  - name: expected_amount
+    type: decimal(18,2)
+    required: false
+    description: Recovery anticipated, in the claim currency.
+    classification: confidential
+  - name: received_amount
+    type: decimal(18,2)
+    required: false
+    description: Recovery actually received to date, in the claim currency.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the recovery amounts.
+    classification: internal
+  - name: status
+    type: string
+    required: false
+    description: Status of the recovery, e.g. open, received, closed.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Claims system the recovery originates from.
+    classification: internal
+keys:
+  primary: [claim_recovery_id]
+owner: Chief Claims Officer

@@ -1,0 +1,22 @@
+kind: code_set
+name: sanctions_list
+title: Sanctions List
+description: >
+  Which screening list a sanctions or PEP hit was raised against. A hit is an
+  indicator for review, never an automatic decision.
+codes:
+  - code: OFSI
+    label: OFSI Consolidated
+    description: UK financial sanctions consolidated list.
+  - code: EU
+    label: EU Consolidated
+    description: EU consolidated financial sanctions list.
+  - code: OFAC
+    label: OFAC SDN
+    description: US OFAC Specially Designated Nationals list.
+  - code: UN
+    label: UN Consolidated
+    description: United Nations Security Council consolidated list.
+  - code: PEP
+    label: PEP
+    description: Politically Exposed Persons watchlist.

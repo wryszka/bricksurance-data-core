@@ -1,0 +1,25 @@
+kind: code_set
+name: claim_party_role_type
+title: Claim Party Role Type
+description: >
+  The role a party plays on a specific claim - who is handling it and who is
+  involved. Distinct from party roles on the policy.
+codes:
+  - code: HANDLER
+    label: Handler
+    description: The claims handler responsible for the file.
+  - code: ADJUSTER
+    label: Loss Adjuster
+    description: The loss adjuster appointed to the claim.
+  - code: CLAIMANT
+    label: Claimant
+    description: The party making the claim.
+  - code: THIRD_PARTY
+    label: Third Party
+    description: A third party involved in the loss.
+  - code: SOLICITOR
+    label: Solicitor
+    description: A legal representative on the claim.
+  - code: SUPPLIER
+    label: Supplier
+    description: A repairer or supplier engaged on the claim.

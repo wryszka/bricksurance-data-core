@@ -1,0 +1,22 @@
+kind: code_set
+name: rating_factor_kind
+title: Rating Factor Kind
+description: >
+  How a rating factor acts on premium - the arithmetic of the rating build-up,
+  so a quoted premium can be decomposed and explained.
+codes:
+  - code: BASE
+    label: Base Rate
+    description: The starting base rate the factors act on.
+  - code: MULTIPLICATIVE
+    label: Multiplicative
+    description: A relativity that multiplies the running premium.
+  - code: ADDITIVE
+    label: Additive
+    description: A fixed amount added to the running premium.
+  - code: DISCOUNT
+    label: Discount
+    description: A multiplicative relativity below 1 that reduces premium.
+  - code: LOADING
+    label: Loading
+    description: A multiplicative relativity above 1 that increases premium.

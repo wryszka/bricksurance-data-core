@@ -1,0 +1,50 @@
+kind: entity
+name: rating_factor_level
+domain: pricing
+title: Rating Factor Level
+description: >
+  A level of a rating factor and its relativity - the value a factor can take
+  and what it does to premium. Levels are effective-dated so a historic quote
+  can be re-priced with the relativities in force when it was made.
+grain: One row per level of a rating factor, effective-dated.
+tags:
+  maturity: draft
+attributes:
+  - name: rating_factor_level_id
+    type: string
+    required: true
+    description: Identifier for the factor level.
+    classification: internal
+  - name: rating_factor_id
+    references: rating_factor
+    type: string
+    required: true
+    description: The rating factor this is a level of.
+    classification: internal
+  - name: level_code
+    type: string
+    required: true
+    description: The factor level value, e.g. HIGH or a vehicle-group code.
+    classification: internal
+  - name: relativity
+    type: decimal(10,4)
+    required: true
+    description: Relativity applied at this level; 1.0 is neutral for multiplicative factors.
+    classification: confidential
+  - name: effective_from
+    type: date
+    required: true
+    description: Date the relativity took effect.
+    classification: internal
+  - name: effective_to
+    type: date
+    required: false
+    description: Date the relativity ceased; empty while current.
+    classification: internal
+keys:
+  primary: [rating_factor_level_id]
+quality:
+  - name: level_period_ordered
+    rule: effective_to IS NULL OR effective_to >= effective_from
+    description: A level cannot cease before it takes effect.
+owner: Chief Pricing Actuary

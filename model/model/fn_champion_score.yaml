@@ -1,0 +1,26 @@
+kind: function
+name: fn_champion_score
+domain: model
+description: >
+  The latest score from the champion model version for a given subject, derived
+  live - never a stored balance. Lets any workbench ask 'what does the model in
+  force say about this policy/quote/claim' without knowing which version that is.
+inputs:
+  - name: in_subject_kind
+    type: string
+    description: Subject kind, one of POLICY, QUOTE, CLAIM, PARTY.
+  - name: in_subject_id
+    type: string
+    description: Identifier of the scored subject.
+returns:
+  type: decimal(12,6)
+  description: Latest champion score for the subject; empty if none scored.
+sql: |
+  (SELECT ms.score
+   FROM {model.model_score} ms
+   JOIN {model.model_version} mv ON mv.model_version_id = ms.model_version_id
+   WHERE mv.model_status_code = 'CHAMPION'
+     AND ms.subject_kind_code = in_subject_kind
+     AND ms.subject_id = in_subject_id
+   ORDER BY ms.scored_at DESC
+   LIMIT 1)

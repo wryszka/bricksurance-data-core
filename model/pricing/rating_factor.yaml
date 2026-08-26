@@ -1,0 +1,46 @@
+kind: entity
+name: rating_factor
+domain: pricing
+title: Rating Factor
+description: >
+  A factor used to rate a line of business - the named driver premium responds
+  to (e.g. vehicle group, flood band, mileage). Factors are data, so a rating
+  build-up is inspectable rather than buried in engine code.
+grain: One row per rating factor per line of business.
+tags:
+  maturity: draft
+attributes:
+  - name: rating_factor_id
+    type: string
+    required: true
+    description: Identifier for the rating factor.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business the factor applies to.
+    classification: internal
+  - name: name
+    type: string
+    required: true
+    description: Factor name as used in rating, e.g. vehicle_group.
+    classification: internal
+  - name: description
+    type: string
+    required: false
+    description: What the factor represents, in business language.
+    classification: internal
+  - name: rating_factor_kind_code
+    code_set: rating_factor_kind
+    required: true
+    description: How the factor acts on premium.
+    classification: internal
+  - name: classification
+    type: string
+    required: true
+    description: Data classification of the underlying input - internal, confidential or pii.
+    classification: internal
+keys:
+  primary: [rating_factor_id]
+  natural: [line_of_business_code, name]
+owner: Chief Pricing Actuary

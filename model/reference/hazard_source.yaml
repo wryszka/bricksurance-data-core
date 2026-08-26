@@ -1,0 +1,19 @@
+kind: code_set
+name: hazard_source
+title: Hazard Source
+description: >
+  Provenance of a geospatial hazard rating - which external model or authority
+  the banding came from. Provenance travels with the enrichment.
+codes:
+  - code: ENV_AGENCY
+    label: Environment Agency
+    description: National environment authority flood/coastal mapping.
+  - code: BGS
+    label: Geological Survey
+    description: National geological survey ground-stability data.
+  - code: CAT_MODEL
+    label: Cat Model
+    description: Commercial catastrophe model output.
+  - code: INTERNAL
+    label: Internal
+    description: Insurer's own derived hazard model.

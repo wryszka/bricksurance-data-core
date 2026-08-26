@@ -34,6 +34,16 @@ erDiagram
         string label
         string description
     }
+    claim_feature_type {
+        string claim_feature_type_code PK
+        string label
+        string description
+    }
+    claim_party_role_type {
+        string claim_party_role_type_code PK
+        string label
+        string description
+    }
     claim_status {
         string claim_status_code PK
         string label
@@ -84,6 +94,11 @@ erDiagram
         string label
         string description
     }
+    credit_score_band {
+        string credit_score_band_code PK
+        string label
+        string description
+    }
     csm_movement_type {
         string csm_movement_type_code PK
         string label
@@ -124,8 +139,18 @@ erDiagram
         string label
         string description
     }
+    flood_band {
+        string flood_band_code PK
+        string label
+        string description
+    }
     fraud_signal_type {
         string fraud_signal_type_code PK
+        string label
+        string description
+    }
+    hazard_source {
+        string hazard_source_code PK
         string label
         string description
     }
@@ -149,6 +174,11 @@ erDiagram
         string label
         string description
     }
+    litigation_status {
+        string litigation_status_code PK
+        string label
+        string description
+    }
     loss_basis {
         string loss_basis_code PK
         string label
@@ -156,6 +186,36 @@ erDiagram
     }
     measurement_model {
         string measurement_model_code PK
+        string label
+        string description
+    }
+    mileage_band {
+        string mileage_band_code PK
+        string label
+        string description
+    }
+    model_purpose {
+        string model_purpose_code PK
+        string label
+        string description
+    }
+    model_status {
+        string model_status_code PK
+        string label
+        string description
+    }
+    model_subject_kind {
+        string model_subject_kind_code PK
+        string label
+        string description
+    }
+    model_type {
+        string model_type_code PK
+        string label
+        string description
+    }
+    monitor_metric_type {
+        string monitor_metric_type_code PK
         string label
         string description
     }
@@ -194,8 +254,28 @@ erDiagram
         string label
         string description
     }
+    rating_factor_kind {
+        string rating_factor_kind_code PK
+        string label
+        string description
+    }
     receivable_transaction_type {
         string receivable_transaction_type_code PK
+        string label
+        string description
+    }
+    recovery_type {
+        string recovery_type_code PK
+        string label
+        string description
+    }
+    referral_action {
+        string referral_action_code PK
+        string label
+        string description
+    }
+    referral_outcome {
+        string referral_outcome_code PK
         string label
         string description
     }
@@ -209,6 +289,11 @@ erDiagram
         string label
         string description
     }
+    reserve_category {
+        string reserve_category_code PK
+        string label
+        string description
+    }
     reserving_method {
         string reserving_method_code PK
         string label
@@ -216,6 +301,11 @@ erDiagram
     }
     run_verdict {
         string run_verdict_code PK
+        string label
+        string description
+    }
+    sanctions_list {
+        string sanctions_list_code PK
         string label
         string description
     }
@@ -239,6 +329,11 @@ erDiagram
         string label
         string description
     }
+    subsidence_band {
+        string subsidence_band_code PK
+        string label
+        string description
+    }
     tax_type {
         string tax_type_code PK
         string label
@@ -251,6 +346,16 @@ erDiagram
     }
     underwriting_decision_type {
         string underwriting_decision_type_code PK
+        string label
+        string description
+    }
+    urbanity {
+        string urbanity_code PK
+        string label
+        string description
+    }
+    uw_submission_status {
+        string uw_submission_status_code PK
         string label
         string description
     }
@@ -282,6 +387,44 @@ erDiagram
         date loss_date
         date reported_date
         string description
+        string handling_office
+        string catastrophe_id
+        boolean reopened_flag
+        string source_system_code
+    }
+    claim_feature {
+        string claim_feature_id PK
+        string claim_id
+        string coverage_id
+        string claim_feature_type_code
+        string claim_status_code
+        string source_system_code
+    }
+    claim_party_role {
+        string claim_party_role_id PK
+        string claim_id
+        string party_id
+        string claim_party_role_type_code
+        string source_system_code
+    }
+    claim_recovery {
+        string claim_recovery_id PK
+        string claim_id
+        string recovery_type_code
+        string against_party_id
+        decimal expected_amount
+        decimal received_amount
+        string currency_code
+        string status
+        string source_system_code
+    }
+    claim_reserve_category {
+        string claim_reserve_category_id PK
+        string claim_feature_id
+        string reserve_category_code
+        decimal amount
+        string currency_code
+        date as_at_date
         string source_system_code
     }
     claim_transaction {
@@ -300,6 +443,17 @@ erDiagram
         integer score
         timestamp detected_at
         string detail
+        string model_version_id
+        string source_system_code
+    }
+    litigation {
+        string litigation_id PK
+        string claim_id
+        string litigation_status_code
+        string jurisdiction
+        decimal legal_reserve
+        string currency_code
+        date opened_date
         string source_system_code
     }
     complaint {
@@ -338,6 +492,76 @@ erDiagram
         decimal amount
         string currency_code
         date transaction_date
+        string source_system_code
+    }
+    credit_bureau_summary {
+        string credit_bureau_summary_id PK
+        string party_id
+        date pull_date
+        string credit_score_band_code
+        integer ccj_count
+        boolean electoral_roll_flag
+        string consent_id
+        string source_system_code
+    }
+    geospatial_hazard {
+        string geospatial_hazard_id PK
+        string location_key
+        string postcode
+        string flood_band_code
+        string subsidence_band_code
+        integer crime_index
+        boolean coastal_flag
+        string hazard_source_code
+        string source_system_code
+    }
+    market_pricing_benchmark {
+        string market_pricing_benchmark_id PK
+        string line_of_business_code
+        string segment
+        string benchmark_period
+        decimal market_median_premium
+        decimal rank_percentile
+        string currency_code
+        string source_system_code
+    }
+    motor_telematics_aggregate {
+        string telematics_aggregate_id PK
+        string policy_id
+        date period_start_date
+        date period_end_date
+        integer observed_miles
+        string mileage_band_code
+        decimal harsh_braking_rate
+        decimal night_driving_pct
+        integer telematics_score
+        string source_system_code
+    }
+    policy_demographics {
+        string policy_demographics_id PK
+        string policy_id
+        string age_band
+        string tenure_band
+        string prior_claims_band
+        string occupation_class
+        string source_system_code
+    }
+    postcode_enrichment {
+        string postcode PK
+        string country_code
+        string urbanity_code
+        integer deprivation_decile
+        string region_code
+        string source_system_code
+    }
+    sanctions_screen {
+        string sanctions_screen_id PK
+        string party_id
+        date screen_date
+        boolean hit_flag
+        boolean pep_flag
+        string sanctions_list_code
+        boolean cleared_flag
         string source_system_code
     }
     business_event {
@@ -552,6 +776,67 @@ erDiagram
         string valuation_run_id PK
         string assumption_set_id PK
     }
+    feature_definition {
+        string feature_id PK
+        string name
+        string description
+        string source_entity
+        string expression
+        string classification
+        boolean pii_flag
+    }
+    feature_set {
+        string feature_set_id PK
+        string name
+        string description
+        string model_purpose_code
+    }
+    feature_set_member {
+        string feature_set_member_id PK
+        string feature_set_id
+        string feature_id
+    }
+    model_asset {
+        string model_id PK
+        string name
+        string model_type_code
+        string model_purpose_code
+        string line_of_business_code
+        string registered_name
+        string description
+        string owner_role
+        string source_system_code
+    }
+    model_monitor_metric {
+        string model_monitor_metric_id PK
+        string model_version_id
+        string monitor_metric_type_code
+        string period
+        decimal value
+        boolean breach_flag
+        string source_system_code
+    }
+    model_score {
+        string model_score_id PK
+        string model_version_id
+        string subject_kind_code
+        string subject_id
+        decimal score
+        timestamp scored_at
+        string source_system_code
+    }
+    model_version {
+        string model_version_id PK
+        string model_id
+        string version
+        string model_status_code
+        date trained_on
+        string training_frame_ref
+        string primary_metric_type_code
+        decimal primary_metric_value
+        date promoted_on
+        string source_system_code
+    }
     legal_entity {
         string legal_entity_id PK
         string name
@@ -631,6 +916,7 @@ erDiagram
         string postcode
         decimal latitude
         decimal longitude
+        string location_key
     }
     policy {
         string policy_id PK
@@ -664,6 +950,10 @@ erDiagram
         date quote_date
         date requested_inception_date
         decimal quoted_gross_premium
+        decimal rated_gross_premium
+        string rating_engine_config_id
+        string model_version_id
+        boolean conversion_flag
         string currency_code
         string source_system_code
         string product_id
@@ -686,6 +976,49 @@ erDiagram
         string make
         string model
         integer year_of_manufacture
+        string vehicle_group
+        string abi_code
+        boolean telematics_enrolled_flag
+    }
+    derived_factor {
+        string derived_factor_id PK
+        string subject_kind_code
+        string subject_id
+        string rating_factor_id
+        string level_code
+        decimal relativity
+        decimal contribution
+    }
+    rating_engine_config {
+        string rating_engine_config_id PK
+        string line_of_business_code
+        string version
+        decimal base_rate
+        string model_version_id
+        string currency_code
+        date effective_from
+        date effective_to
+    }
+    rating_factor {
+        string rating_factor_id PK
+        string line_of_business_code
+        string name
+        string description
+        string rating_factor_kind_code
+        string classification
+    }
+    rating_factor_feature {
+        string rating_factor_feature_id PK
+        string rating_factor_id
+        string feature_id
+    }
+    rating_factor_level {
+        string rating_factor_level_id PK
+        string rating_factor_id
+        string level_code
+        decimal relativity
+        date effective_from
+        date effective_to
     }
     appetite_rule {
         string appetite_rule_id PK
@@ -717,6 +1050,29 @@ erDiagram
         decimal default_deductible_amount
         boolean optional
     }
+    referral_event {
+        string referral_event_id PK
+        string referral_rule_id
+        string subject_kind_code
+        string subject_id
+        timestamp fired_at
+        string referral_outcome_code
+        string decided_by
+        string source_system_code
+    }
+    referral_rule {
+        string referral_rule_id PK
+        string rule_key
+        string name
+        string line_of_business_code
+        string condition_expression
+        string referral_action_code
+        integer version
+        date effective_from
+        date effective_to
+        boolean is_current
+        string source_system_code
+    }
     underwriting_question {
         string underwriting_question_id PK
         string product_id
@@ -724,6 +1080,17 @@ erDiagram
         string question_text
         string answer_type
         boolean required
+    }
+    uw_submission {
+        string uw_submission_id PK
+        string party_id
+        string line_of_business_code
+        string product_id
+        date received_date
+        string uw_submission_status_code
+        string distribution_channel_code
+        string quote_id
+        string source_system_code
     }
     cat_event {
         string cat_event_id PK
@@ -806,14 +1173,38 @@ erDiagram
     claim }o--|| coverage : coverage_id
     claim }o--|| claim_status : claim_status_code
     claim }o--|| cause_of_loss : cause_of_loss_code
+    claim }o--|| cat_event : catastrophe_id
     claim }o--|| source_system : source_system_code
+    claim_feature }o--|| claim : claim_id
+    claim_feature }o--|| coverage : coverage_id
+    claim_feature }o--|| claim_feature_type : claim_feature_type_code
+    claim_feature }o--|| claim_status : claim_status_code
+    claim_feature }o--|| source_system : source_system_code
+    claim_party_role }o--|| claim : claim_id
+    claim_party_role }o--|| party : party_id
+    claim_party_role }o--|| claim_party_role_type : claim_party_role_type_code
+    claim_party_role }o--|| source_system : source_system_code
+    claim_recovery }o--|| claim : claim_id
+    claim_recovery }o--|| recovery_type : recovery_type_code
+    claim_recovery }o--|| party : against_party_id
+    claim_recovery }o--|| currency : currency_code
+    claim_recovery }o--|| source_system : source_system_code
+    claim_reserve_category }o--|| claim_feature : claim_feature_id
+    claim_reserve_category }o--|| reserve_category : reserve_category_code
+    claim_reserve_category }o--|| currency : currency_code
+    claim_reserve_category }o--|| source_system : source_system_code
     claim_transaction }o--|| claim : claim_id
     claim_transaction }o--|| claim_transaction_type : claim_transaction_type_code
     claim_transaction }o--|| currency : currency_code
     claim_transaction }o--|| source_system : source_system_code
     fraud_signal }o--|| claim : claim_id
     fraud_signal }o--|| fraud_signal_type : fraud_signal_type_code
+    fraud_signal }o--|| model_version : model_version_id
     fraud_signal }o--|| source_system : source_system_code
+    litigation }o--|| claim : claim_id
+    litigation }o--|| litigation_status : litigation_status_code
+    litigation }o--|| currency : currency_code
+    litigation }o--|| source_system : source_system_code
     complaint }o--|| party : complainant_party_id
     complaint }o--|| policy : policy_id
     complaint }o--|| claim : claim_id
@@ -832,6 +1223,29 @@ erDiagram
     commission_transaction }o--|| commission_type : commission_type_code
     commission_transaction }o--|| currency : currency_code
     commission_transaction }o--|| source_system : source_system_code
+    credit_bureau_summary }o--|| party : party_id
+    credit_bureau_summary }o--|| credit_score_band : credit_score_band_code
+    credit_bureau_summary }o--|| consent : consent_id
+    credit_bureau_summary }o--|| source_system : source_system_code
+    geospatial_hazard }o--|| postcode_enrichment : postcode
+    geospatial_hazard }o--|| flood_band : flood_band_code
+    geospatial_hazard }o--|| subsidence_band : subsidence_band_code
+    geospatial_hazard }o--|| hazard_source : hazard_source_code
+    geospatial_hazard }o--|| source_system : source_system_code
+    market_pricing_benchmark }o--|| line_of_business : line_of_business_code
+    market_pricing_benchmark }o--|| currency : currency_code
+    market_pricing_benchmark }o--|| source_system : source_system_code
+    motor_telematics_aggregate }o--|| policy : policy_id
+    motor_telematics_aggregate }o--|| mileage_band : mileage_band_code
+    motor_telematics_aggregate }o--|| source_system : source_system_code
+    policy_demographics }o--|| policy : policy_id
+    policy_demographics }o--|| source_system : source_system_code
+    postcode_enrichment }o--|| country : country_code
+    postcode_enrichment }o--|| urbanity : urbanity_code
+    postcode_enrichment }o--|| source_system : source_system_code
+    sanctions_screen }o--|| party : party_id
+    sanctions_screen }o--|| sanctions_list : sanctions_list_code
+    sanctions_screen }o--|| source_system : source_system_code
     business_event }o--|| business_event_type : business_event_type_code
     business_event }o--|| distribution_channel : channel_code
     business_event }o--|| source_system : source_system_code
@@ -909,6 +1323,23 @@ erDiagram
     valuation_run }o--|| source_system : source_system_code
     valuation_run_assumption }o--|| valuation_run : valuation_run_id
     valuation_run_assumption }o--|| assumption_set : assumption_set_id
+    feature_set }o--|| model_purpose : model_purpose_code
+    feature_set_member }o--|| feature_set : feature_set_id
+    feature_set_member }o--|| feature_definition : feature_id
+    model_asset }o--|| model_type : model_type_code
+    model_asset }o--|| model_purpose : model_purpose_code
+    model_asset }o--|| line_of_business : line_of_business_code
+    model_asset }o--|| source_system : source_system_code
+    model_monitor_metric }o--|| model_version : model_version_id
+    model_monitor_metric }o--|| monitor_metric_type : monitor_metric_type_code
+    model_monitor_metric }o--|| source_system : source_system_code
+    model_score }o--|| model_version : model_version_id
+    model_score }o--|| model_subject_kind : subject_kind_code
+    model_score }o--|| source_system : source_system_code
+    model_version }o--|| model_asset : model_id
+    model_version }o--|| model_status : model_status_code
+    model_version }o--|| monitor_metric_type : primary_metric_type_code
+    model_version }o--|| source_system : source_system_code
     legal_entity }o--|| legal_entity_type : legal_entity_type_code
     legal_entity }o--|| legal_entity : parent_legal_entity_id
     legal_entity }o--|| country : country_code
@@ -955,6 +1386,8 @@ erDiagram
     quote }o--|| policy : policy_id
     quote }o--|| line_of_business : line_of_business_code
     quote }o--|| quote_status : quote_status_code
+    quote }o--|| rating_engine_config : rating_engine_config_id
+    quote }o--|| model_version : model_version_id
     quote }o--|| currency : currency_code
     quote }o--|| source_system : source_system_code
     quote }o--|| product : product_id
@@ -963,6 +1396,16 @@ erDiagram
     underwriting_decision }o--|| underwriting_decision_type : underwriting_decision_type_code
     underwriting_decision }o--|| appetite_rule : appetite_rule_id
     vehicle }o--|| insured_object : insured_object_id
+    derived_factor }o--|| model_subject_kind : subject_kind_code
+    derived_factor }o--|| rating_factor : rating_factor_id
+    rating_engine_config }o--|| line_of_business : line_of_business_code
+    rating_engine_config }o--|| model_version : model_version_id
+    rating_engine_config }o--|| currency : currency_code
+    rating_factor }o--|| line_of_business : line_of_business_code
+    rating_factor }o--|| rating_factor_kind : rating_factor_kind_code
+    rating_factor_feature }o--|| rating_factor : rating_factor_id
+    rating_factor_feature }o--|| feature_definition : feature_id
+    rating_factor_level }o--|| rating_factor : rating_factor_id
     appetite_rule }o--|| product : product_id
     appetite_rule }o--|| line_of_business : line_of_business_code
     appetite_rule }o--|| country : country_code
@@ -973,7 +1416,21 @@ erDiagram
     product }o--|| source_system : source_system_code
     product_coverage }o--|| product : product_id
     product_coverage }o--|| coverage_type : coverage_type_code
+    referral_event }o--|| referral_rule : referral_rule_id
+    referral_event }o--|| model_subject_kind : subject_kind_code
+    referral_event }o--|| referral_outcome : referral_outcome_code
+    referral_event }o--|| source_system : source_system_code
+    referral_rule }o--|| line_of_business : line_of_business_code
+    referral_rule }o--|| referral_action : referral_action_code
+    referral_rule }o--|| source_system : source_system_code
     underwriting_question }o--|| product : product_id
+    uw_submission }o--|| party : party_id
+    uw_submission }o--|| line_of_business : line_of_business_code
+    uw_submission }o--|| product : product_id
+    uw_submission }o--|| uw_submission_status : uw_submission_status_code
+    uw_submission }o--|| distribution_channel : distribution_channel_code
+    uw_submission }o--|| quote : quote_id
+    uw_submission }o--|| source_system : source_system_code
     cat_event }o--|| cause_of_loss : cause_of_loss_code
     cat_event }o--|| country : country_code
     cat_event }o--|| currency : currency_code

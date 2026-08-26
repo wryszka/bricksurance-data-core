@@ -1,0 +1,22 @@
+kind: code_set
+name: referral_action
+title: Referral Action
+description: >
+  What a referral rule does when its condition is met - the action taken on a
+  risk that trips the rule.
+codes:
+  - code: REFER
+    label: Refer
+    description: Route to a human underwriter for a decision.
+  - code: DECLINE
+    label: Decline
+    description: Decline the risk automatically.
+  - code: LOAD
+    label: Load
+    description: Apply a premium loading.
+  - code: RESTRICT
+    label: Restrict
+    description: Offer only on restricted terms.
+  - code: NOTIFY
+    label: Notify
+    description: Allow but flag for monitoring.

@@ -1,0 +1,67 @@
+kind: entity
+name: model_version
+domain: model
+title: Model Version
+description: >
+  A specific trained version of a model asset - when it was trained, on what
+  frame, how it scored, and its serving role. Every score and decision cites a
+  version, so a decision is always reproducible to the exact model that made it.
+grain: One row per version of a model asset.
+tags:
+  maturity: draft
+attributes:
+  - name: model_version_id
+    type: string
+    required: true
+    description: Identifier for this model version.
+    classification: internal
+  - name: model_id
+    references: model_asset
+    type: string
+    required: true
+    description: Model asset this is a version of.
+    classification: internal
+  - name: version
+    type: string
+    required: true
+    description: Version label, e.g. 3 or 2026.07.1.
+    classification: internal
+  - name: model_status_code
+    code_set: model_status
+    required: true
+    description: Serving role of this version - champion, challenger, shadow, retired, draft.
+    classification: internal
+  - name: trained_on
+    type: date
+    required: false
+    description: Date the version was trained.
+    classification: internal
+  - name: training_frame_ref
+    type: string
+    required: false
+    description: Reference to the governed training frame or view the version was trained on.
+    classification: internal
+  - name: primary_metric_type_code
+    code_set: monitor_metric_type
+    required: false
+    description: The headline evaluation metric reported at training time.
+    classification: internal
+  - name: primary_metric_value
+    type: decimal(12,4)
+    required: false
+    description: Value of the headline evaluation metric at training time.
+    classification: internal
+  - name: promoted_on
+    type: date
+    required: false
+    description: Date this version became champion, where applicable.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: Registry the version is tracked in.
+    classification: internal
+keys:
+  primary: [model_version_id]
+  natural: [model_id, version]
+owner: Head of Data Science

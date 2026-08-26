@@ -1,0 +1,51 @@
+kind: entity
+name: derived_factor
+domain: pricing
+title: Derived Factor
+description: >
+  The factor level and contribution applied to a specific quote or policy - the
+  rating build-up made concrete. Summing the contributions reconstructs the
+  quoted premium, so a price is always explainable to the factors that made it.
+grain: One row per rating factor applied to a quote or policy.
+tags:
+  maturity: draft
+attributes:
+  - name: derived_factor_id
+    type: string
+    required: true
+    description: Identifier for the applied-factor row.
+    classification: internal
+  - name: subject_kind_code
+    code_set: model_subject_kind
+    required: true
+    description: Whether the factor was applied to a quote or a policy.
+    classification: internal
+  - name: subject_id
+    type: string
+    required: true
+    description: Identifier of the quote or policy the factor was applied to.
+    classification: internal
+  - name: rating_factor_id
+    references: rating_factor
+    type: string
+    required: true
+    description: The rating factor applied.
+    classification: internal
+  - name: level_code
+    type: string
+    required: true
+    description: The factor level selected for the risk.
+    classification: internal
+  - name: relativity
+    type: decimal(10,4)
+    required: false
+    description: Relativity applied, copied from the level in force at rating time.
+    classification: confidential
+  - name: contribution
+    type: decimal(18,2)
+    required: false
+    description: Premium contribution of this factor, in the quote currency.
+    classification: confidential
+keys:
+  primary: [derived_factor_id]
+owner: Chief Pricing Actuary

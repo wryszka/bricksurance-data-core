@@ -40,6 +40,14 @@ attributes:
     required: false
     description: What was observed, in business language.
     classification: confidential
+  - name: model_version_id
+    references: model_version
+    type: string
+    required: false
+    description: >
+      Model version that raised the signal, where a model did; ties the
+      business-facing signal to the governed model and its score.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true
