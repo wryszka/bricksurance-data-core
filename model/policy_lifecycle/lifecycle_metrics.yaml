@@ -1,0 +1,58 @@
+kind: metric_view
+name: lifecycle_metrics
+domain: policy_lifecycle
+title: Policy Lifecycle Metrics
+description: >
+  Flow KPIs over the policy event spine - new business, renewals, lapses,
+  cancellations and mid-term adjustments by line, period, channel and actor.
+  Retention is chain-based (renewed over invited). Point-in-time policies-in-force
+  is answered from vw_policy_current (status = IN_FORCE), not here. Query measures
+  with MEASURE(name).
+owner: Head of Operations
+certification: draft
+source: policy_lifecycle.policy_event
+joins:
+  - name: policy
+    source: policy.policy
+    condition: source.policy_id = policy.policy_id
+dimensions:
+  - name: policy_event_type_code
+    expr: source.policy_event_type_code
+    description: The kind of lifecycle event.
+  - name: line_of_business_code
+    expr: policy.line_of_business_code
+    description: Line of business of the policy the event concerns.
+  - name: event_month
+    expr: DATE_TRUNC('MONTH', source.event_ts)
+    description: Calendar month the event was recorded in.
+  - name: actor_type_code
+    expr: source.actor_type_code
+    description: Whether a human, agent or the system caused the event.
+  - name: event_source_system_code
+    expr: source.event_source_system_code
+    description: Channel or system that raised the event.
+measures:
+  - name: event_count
+    expr: COUNT(event_id)
+    description: Total lifecycle events.
+  - name: new_business_count
+    expr: COUNT(DISTINCT CASE WHEN policy_event_type_code = 'BOUND' THEN policy_id END)
+    description: Policies bound (new business).
+  - name: renewal_invited_count
+    expr: COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWAL_INVITED' THEN policy_id END)
+    description: Policies invited to renew.
+  - name: renewed_count
+    expr: COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWED' THEN policy_id END)
+    description: Policies renewed.
+  - name: lapsed_count
+    expr: COUNT(DISTINCT CASE WHEN policy_event_type_code = 'LAPSED' THEN policy_id END)
+    description: Policies lapsed at renewal.
+  - name: cancelled_count
+    expr: COUNT(DISTINCT CASE WHEN policy_event_type_code IN ('CANCELLED_INSURED', 'CANCELLED_INSURER', 'CANCELLED_NONPAYMENT') THEN policy_id END)
+    description: Policies cancelled mid-term (any cause).
+  - name: mta_count
+    expr: COUNT(CASE WHEN policy_event_type_code = 'MTA_APPLIED' THEN event_id END)
+    description: Mid-term adjustments applied.
+  - name: retention_rate
+    expr: COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWED' THEN policy_id END) / NULLIF(COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWAL_INVITED' THEN policy_id END), 0)
+    description: Renewed over invited - chain-based retention rate.

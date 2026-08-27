@@ -1,6 +1,6 @@
 model: bricksurance-data-core
 title: Bricksurance Data Core
-version: 0.10.0
+version: 0.11.0
 description: >
   An open, business-first semantic data model for insurance, aligned to ACORD
   terminology with a crosswalk to the Lloyd's Core Data Record. Platform
@@ -59,6 +59,14 @@ domains:
       Machine-readable products - offered coverages, underwriting questions
       and appetite rules as data, so any channel (human, aggregator or buyer
       agent) can discover, quote and be decided against the same rules.
+  - name: policy_lifecycle
+    description: >
+      The append-only policy administration spine - every lifecycle event of a
+      policy (quote, bind, endorse, renew, lapse, cancel) as an immutable,
+      hash-chained record, and the slowly-changing versions derived from it.
+      This is the shared key fabric that joins underwriting to claims to finance:
+      current policy state is a projection of the event stream, never a hand-edited
+      table, and a claim attaches to the policy version in force at the loss.
   - name: enrichment
     description: >
       External and derived risk data joined to the canonical model - telematics,

@@ -226,6 +226,36 @@ def main():
          f"SELECT MEASURE(champion_count) >= 1 "
          f"FROM {q('semantics', 'model_governance_metrics')} "
          f"WHERE model_purpose_code = 'PRICING_FREQUENCY'", "true"),
+        # ---- WP1 policy lifecycle spine ----------------------------------
+        ("vw_policy_current has exactly one row per policy",
+         f"SELECT (SELECT COUNT(*) FROM {q('policy_lifecycle', 'vw_policy_current')}) = "
+         f"(SELECT COUNT(*) FROM {q('policy', 'policy')})", "true"),
+        ("vw_policy_current reconciles row-for-row to the policy table (event spine complete)",
+         f"SELECT COUNT(*) FROM {q('policy', 'policy')} p "
+         f"JOIN {q('policy_lifecycle', 'vw_policy_current')} v ON v.policy_id = p.policy_id "
+         f"WHERE v.policy_number <> p.policy_number OR v.policy_status_code <> p.policy_status_code "
+         f"OR v.line_of_business_code <> p.line_of_business_code OR v.inception_date <> p.inception_date "
+         f"OR v.expiry_date <> p.expiry_date OR v.currency_code <> p.currency_code "
+         f"OR v.underwriting_year <> p.underwriting_year OR v.legal_entity_id <> p.legal_entity_id "
+         f"OR COALESCE(v.renews_policy_id,'') <> COALESCE(p.renews_policy_id,'')", "0"),
+        ("every policy event chain verifies intact (fn_verify_event_chain, estate-wide)",
+         f"SELECT CAST(SUM({q('policy_lifecycle', 'fn_verify_event_chain')}(policy_id)) AS INT) "
+         f"FROM {q('policy', 'policy')}", "0"),
+        ("policy event sequence numbers are gap-free per policy",
+         f"SELECT COUNT(*) FROM (SELECT policy_id, COUNT(*) c, MIN(sequence_no) mn, MAX(sequence_no) mx "
+         f"FROM {q('policy_lifecycle', 'policy_event')} GROUP BY policy_id) WHERE mn <> 1 OR mx <> c", "0"),
+        ("every claim attaches to the policy version in force at its loss (as-at, clamped to v1 for pre-inception losses)",
+         f"SELECT COUNT(*) FROM {q('claim', 'claim')} c "
+         f"JOIN {q('policy_lifecycle', 'policy_version')} pv ON pv.policy_version_id = c.policy_version_id "
+         f"WHERE pv.policy_id <> c.policy_id OR NOT ("
+         f"(pv.valid_from <= c.loss_date AND (pv.valid_to IS NULL OR c.loss_date <= pv.valid_to)) "
+         f"OR (pv.version_no = 1 AND c.loss_date < pv.valid_from))", "0"),
+        ("hero claim attaches to the post-MTA version (sum insured changed before the loss)",
+         f"SELECT pv.version_no >= 2 FROM {q('claim', 'claim')} c "
+         f"JOIN {q('policy_lifecycle', 'policy_version')} pv ON pv.policy_version_id = c.policy_version_id "
+         f"WHERE c.claim_number = 'CLM-2026-000001'", "true"),
+        ("lifecycle metric view answers new-business count",
+         f"SELECT MEASURE(new_business_count) > 0 FROM {q('policy_lifecycle', 'lifecycle_metrics')}", "true"),
     ]
 
     failures = 0

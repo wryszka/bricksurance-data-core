@@ -1,0 +1,17 @@
+kind: code_set
+name: actor_type
+title: Actor Type
+description: >
+  What kind of actor caused an event - a person, an automated agent, or the
+  system itself. Makes "who did this" answerable and separates human from agentic
+  from batch action across the spine.
+codes:
+  - code: HUMAN
+    label: Human
+    description: A named human actor (e.g. an underwriter).
+  - code: AGENT
+    label: Agent
+    description: An automated or AI agent acting under authority.
+  - code: SYSTEM
+    label: System
+    description: The platform itself (batch jobs, scheduled transitions).

@@ -1,6 +1,25 @@
 # Bricksurance Data Core - Metric Catalog
 
-*Generated from model v0.10.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+*Generated from model v0.11.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+
+## Policy Lifecycle Metrics (`policy_lifecycle.lifecycle_metrics`)
+
+Flow KPIs over the policy event spine - new business, renewals, lapses, cancellations and mid-term adjustments by line, period, channel and actor. Retention is chain-based (renewed over invited). Point-in-time policies-in-force is answered from vw_policy_current (status = IN_FORCE), not here. Query measures with MEASURE(name).
+
+**Owner:** Head of Operations · **Certification:** draft · **Source:** `policy_lifecycle.policy_event`
+
+**Dimensions:** policy_event_type_code, line_of_business_code, event_month, actor_type_code, event_source_system_code
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `event_count` | Total lifecycle events. | `COUNT(event_id)` |
+| `new_business_count` | Policies bound (new business). | `COUNT(DISTINCT CASE WHEN policy_event_type_code = 'BOUND' THEN policy_id END)` |
+| `renewal_invited_count` | Policies invited to renew. | `COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWAL_INVITED' THEN policy_id END)` |
+| `renewed_count` | Policies renewed. | `COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWED' THEN policy_id END)` |
+| `lapsed_count` | Policies lapsed at renewal. | `COUNT(DISTINCT CASE WHEN policy_event_type_code = 'LAPSED' THEN policy_id END)` |
+| `cancelled_count` | Policies cancelled mid-term (any cause). | `COUNT(DISTINCT CASE WHEN policy_event_type_code IN ('CANCELLED_INSURED', 'CANCELLED_INSURER', 'CANCELLED_NONPAYMENT') THEN policy_id END)` |
+| `mta_count` | Mid-term adjustments applied. | `COUNT(CASE WHEN policy_event_type_code = 'MTA_APPLIED' THEN event_id END)` |
+| `retention_rate` | Renewed over invited - chain-based retention rate. | `COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWED' THEN policy_id END) / NULLIF(COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWAL_INVITED' THEN policy_id END), 0)` |
 
 ## Reserving Metrics (`reserving.reserving_metrics`)
 

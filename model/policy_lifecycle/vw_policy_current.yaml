@@ -1,0 +1,26 @@
+kind: view
+name: vw_policy_current
+domain: policy_lifecycle
+title: Policy (current, derived)
+description: >
+  Current policy state reconstructed from the version history - the projection
+  that proves the event spine is complete. Selects exactly the columns of the
+  policy table from the current version of each policy; it must reconcile
+  row-for-row with policy. Consumers wanting "the policy as it is now" can read
+  this or the policy table interchangeably; the audit truth is the event stream.
+grain: One row per policy (its current version).
+sql: |
+  SELECT
+    policy_id,
+    policy_number,
+    legal_entity_id,
+    source_system_code,
+    line_of_business_code,
+    policy_status_code,
+    inception_date,
+    expiry_date,
+    underwriting_year,
+    currency_code,
+    renews_policy_id
+  FROM {policy_lifecycle.policy_version}
+  WHERE is_current = TRUE

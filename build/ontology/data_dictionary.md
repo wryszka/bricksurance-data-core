@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.10.0. Do not edit.*
+*Generated from model v0.11.0. Do not edit.*
 
 ## Account Type (`reference.account_type`)
 
@@ -15,6 +15,20 @@ The fundamental classification of a ledger account, which fixes its normal balan
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** account_type_code
+
+## Actor Type (`reference.actor_type`)
+
+What kind of actor caused an event - a person, an automated agent, or the system itself. Makes "who did this" answerable and separates human from agentic from batch action across the spine.
+
+**Grain:** One row per actor type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| actor_type_code | string | yes | Code value; referenced by actor_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** actor_type_code
 
 ## Appetite Effect (`reference.appetite_effect`)
 
@@ -394,6 +408,20 @@ Kinds of mid-term change to a policy. The premium effect of an endorsement is al
 
 **Primary key:** endorsement_type_code
 
+## Event Source System (`reference.event_source_system`)
+
+Where a policy lifecycle event originated - the channel or system that raised it. Distinct from source_system (system of record for a row); this names the actor's channel so delegated and agentic business is visible in the spine.
+
+**Grain:** One row per event source system code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| event_source_system_code | string | yes | Code value; referenced by event_source_system_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** event_source_system_code
+
 ## Expense Type (`reference.expense_type`)
 
 Kinds of operating expense allocated to lines of business - the missing half of the combined ratio.
@@ -681,6 +709,20 @@ Lifecycle of an accounting period; postings are only allowed while OPEN.
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** period_status_code
+
+## Policy Event Type (`reference.policy_event_type`)
+
+The kinds of lifecycle event a policy can undergo. Every workbench uses these codes - no local variants - so the policy administration spine reads the same everywhere.
+
+**Grain:** One row per policy event type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| policy_event_type_code | string | yes | Code value; referenced by policy_event_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** policy_event_type_code
 
 ## Policy Status (`reference.policy_status`)
 
@@ -1104,6 +1146,7 @@ A demand for indemnity under a policy arising from a loss event. The claim recor
 | handling_office | string |  | Claims office or team handling the file. | internal |  |  |
 | catastrophe_id | string |  | Catastrophe event the claim is attributed to, where it belongs to one. | internal |  |  |
 | reopened_flag | boolean |  | Whether the claim has been reopened after closure. | internal |  |  |
+| policy_version_id | string |  | The policy version in force at the loss date - claims attach to the as-at version, not just the policy, so cover is read as it stood at loss. | internal |  |  |
 | source_system_code | string | yes | System of record the claim originates from. | internal |  |  |
 
 **Primary key:** claim_id
@@ -2277,6 +2320,90 @@ Motor-specific detail for an insured object of type VEHICLE. This is the model's
 | telematics_enrolled_flag | boolean |  | Whether the vehicle is enrolled in a telematics programme. | internal |  |  |
 
 **Primary key:** vehicle_id
+
+## Policy Event (`policy_lifecycle.policy_event`)
+
+One immutable lifecycle event of a policy - the append-only spine of policy administration. Events are never updated or deleted; a correction is a new event that references the one it reverses. Each event carries a hash of the prior event and of itself, forming a chain that makes tampering detectable. Current policy state and the version history are both derived from this stream.
+
+**Grain:** One row per lifecycle event, ordered by sequence_no within a policy.
+
+**Standards:** Acord: Policy transaction / lifecycle concept
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| event_id | string | yes | Deterministic identifier for the event (seeded), stable across rebuilds. | internal |  |  |
+| policy_id | string | yes | Policy the event concerns. | internal |  |  |
+| sequence_no | integer | yes | Gap-free sequence of the event within the policy, starting at 1. | internal |  |  |
+| policy_event_type_code | string | yes | The kind of lifecycle event. | internal |  |  |
+| event_ts | timestamp | yes | When the event was recorded. | internal |  |  |
+| effective_from | date | yes | Date the event's effect begins. | internal |  |  |
+| effective_to | date |  | Date the event's effect ends, where bounded; empty if open. | internal |  |  |
+| reverses_event_id | string |  | The event this one reverses (a correction); empty for ordinary events. | internal |  |  |
+| event_source_system_code | string | yes | Channel or system that raised the event. | internal |  |  |
+| actor_type_code | string | yes | Whether a human, an agent, or the system caused the event. | internal |  |  |
+| actor_id | string |  | Identifier or role of the actor that caused the event. | internal |  |  |
+| premium_delta | decimal(18,2) |  | Change in premium the event applied, in policy currency (payload). | confidential |  |  |
+| sum_insured_delta | decimal(18,2) |  | Change in sum insured the event applied, in policy currency (payload). | confidential |  |  |
+| coverage_change_note | string |  | Human-readable description of any coverage change (payload). | internal |  |  |
+| reason_code | string |  | Reason the event occurred, e.g. non-payment, insured request (payload). | internal |  |  |
+| prior_event_hash | string |  | Hash of the prior event in the chain; empty for the first event. | internal |  |  |
+| event_hash | string | yes | Hash of this event chained onto prior_event_hash. Recomputing and comparing the chain proves no event was altered or removed. | internal |  |  |
+| source_system_code | string | yes | System of record the event row is stored in. | internal |  |  |
+
+**Primary key:** event_id
+**Natural key:** policy_id, sequence_no
+**Quality — event_period_ordered:** `effective_to IS NULL OR effective_to >= effective_from` — An event cannot cease to have effect before it takes effect.
+
+## Policy Version (`policy_lifecycle.policy_version`)
+
+A slowly-changing version of a policy as at a point in time - the materialised history derived from the policy event stream, never hand-written. Each version records the policy's attributes while a given set of events was in force. The current policy is the version where is_current is true; a claim attaches to the version in force at its loss date.
+
+**Grain:** One row per policy per version; at most one current version per policy.
+
+**Standards:** Acord: Policy (as-at) concept
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| policy_version_id | string | yes | Identifier for this policy version. | internal |  |  |
+| policy_id | string | yes | Policy this is a version of. | internal |  |  |
+| policy_number | string | yes | Policy reference as issued (immutable identity), carried on every version. | confidential |  |  |
+| legal_entity_id | string | yes | Carrying legal entity as at this version. | internal |  |  |
+| underwriting_year | integer | yes | Underwriting year of account as at this version. | internal |  |  |
+| renews_policy_id | string |  | Prior policy this term renewed from, as recorded on the policy. | internal |  |  |
+| version_no | integer | yes | Version number within the policy, increasing as events change state. | internal |  |  |
+| valid_from | date | yes | Date this version took effect. | internal |  |  |
+| valid_to | date |  | Date this version was superseded; empty while current. | internal |  |  |
+| is_current | boolean | yes | Whether this is the version currently in force for the policy. | internal |  |  |
+| created_by_event_id | string | yes | The event that created this version. | internal |  |  |
+| policy_status_code | string | yes | Policy status as at this version. | internal |  |  |
+| line_of_business_code | string | yes | Line of business as at this version. | internal |  |  |
+| inception_date | date | yes | Cover start date as at this version. | internal |  |  |
+| expiry_date | date | yes | Cover end date as at this version. | internal |  |  |
+| sum_insured_amount | decimal(18,2) |  | Total sum insured as at this version, in policy currency. | confidential |  |  |
+| annual_premium | decimal(18,2) |  | Annualised premium as at this version, in policy currency. | confidential |  |  |
+| currency_code | string | yes | Policy currency as at this version. | internal |  |  |
+| source_system_code | string | yes | System of record the version is stored in. | internal |  |  |
+
+**Primary key:** policy_version_id
+**Natural key:** policy_id, version_no
+**Quality — version_period_ordered:** `valid_to IS NULL OR valid_to >= valid_from` — A version cannot be superseded before it takes effect.
+
+## Renewal Chain (`policy_lifecycle.renewal_chain`)
+
+Links a policy to its predecessor and to the stable chain of all renewals of one original risk. This is what makes "customer since 2019, seventh renewal" answerable, and what the renewal loop and the customer dimension hang off. It formalises the policy renews-from linkage as first-class data.
+
+**Grain:** One row per policy, placing it in its renewal chain.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| renewal_chain_id | string | yes | Identifier for the chain-membership row. | internal |  |  |
+| policy_id | string | yes | The policy placed in the chain. | internal |  |  |
+| chain_id | string | yes | Stable identifier of the risk across all its renewals. | internal |  |  |
+| predecessor_policy_id | string |  | The prior policy this one renewed from; empty for the first term. | internal |  |  |
+| renewal_number | integer | yes | Position in the chain; 0 for new business, 1 for first renewal, and so on. | internal |  |  |
+
+**Primary key:** renewal_chain_id
+**Natural key:** policy_id
 
 ## Derived Factor (`pricing.derived_factor`)
 

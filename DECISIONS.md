@@ -34,11 +34,28 @@ Full analysis in `docs/INVENTORY_GEN2_EXPANSION.md`. Decisions taken from it:
   redress, fos_referred), do not move or duplicate. One estate-wide `vulnerability_basis`
   code set created here (data-core), consumed by both this and the claims workbench.
 
-- **D5 — WP1 `policy` refactor is ADDITIVE.** `policy.policy` is referenced by 20+ FKs.
-  Add `policy_version` (SCD2 history) + `vw_policy_current`; keep `policy` as the current
-  row so no existing consumer breaks. Full rewire of `policy` into a pure view is deferred
-  to a later, separate decision. `policy_event` is a NEW `policy_lifecycle` domain
-  (distinct from the lightweight `events.business_event` stream, which will reference it).
+- **D5 — WP1 policy refactor: FULL REWIRE (user choice 2026-08-27), realized within UC
+  constraints.** User chose the cleanest end state: events are the source of truth and
+  policy is fully derived. Unity Catalog informational FKs require the target to be a
+  *keyed table*, not a view, so a literal "`policy` = pure view with all ~20 FKs repointed"
+  is not buildable without discarding the FK graph (which the golden thread and the
+  289-FK integrity story depend on). Faithful realization:
+  (a) `policy_event` (append-only, hash-chained) + `policy_version` (SCD2 history) are the
+      source-of-truth history, in a NEW `policy_lifecycle` domain;
+  (b) `policy` remains a keyed table but becomes the **derived current projection** —
+      `vw_policy_current` reconstructs current state from the event stream and MUST
+      byte-match `policy` (reconciliation AC);
+  (c) the concrete repoint the spec names is delivered: **claim → policy_version as-at
+      loss date** (new relationship), so claims attach to the version in force at loss;
+  (d) deeper repoint (moving other consumers off `policy.policy_id` onto version keys) is
+      a later, workbench-by-workbench phase, not done blind now.
+  `events.business_event` stays the lightweight near-real-time feed and references
+  `policy_event`.
+
+- **D9 — `payload` struct flattened.** The generator's type system is flat
+  (string/int/bool/date/timestamp/decimal — no struct/array). `policy_event.payload` is
+  flattened to typed columns (`premium_delta`, `sum_insured_delta`, `coverage_change_note`,
+  `reason_code`). Same treatment for WP6 `lob_scope` (array → membership/CSV) when reached.
 
 - **D6 — ESTATE_MANIFEST is cross-repo.** The estate/spine manifest lives with the Group
   Control Tower (actuarial-workbench-hub). WP8 will publish a local
@@ -54,6 +71,33 @@ Full analysis in `docs/INVENTORY_GEN2_EXPANSION.md`. Decisions taken from it:
   level (no fabricated element codes). WP6 bordereau rows map precisely to public Lloyd's
   CDR v3.x field names (`crosswalk_status: mapped`).
 
-Status: **proposed, pending user confirmation on D2/D3/D4/D5** (the extend-vs-new and
-refactor-scope calls) before Phase 2 build begins, per the Phase-1 gate
-("inventory doc reviewed").
+Status: confirmed by user 2026-08-27 — D2/D3/D4 = **extend existing**; D5 = **full rewire**
+(realized within the UC keyed-table-FK constraint as above). Phase 1 gate cleared.
+
+---
+
+## 2026-08-27 — Phase 2 (WP1 Policy Lifecycle Spine) COMPLETE
+
+Built model v0.11.0, deployed to serverless, **smoke 47/47 pass** (40 prior + 7 WP1).
+- New `policy_lifecycle` domain: `policy_event` (append-only, hash-chained, seq-gap-free),
+  `policy_version` (SCD2 history), `renewal_chain`; view `vw_policy_current`; metric view
+  `lifecycle_metrics`; function `fn_verify_event_chain`. Code sets: policy_event_type,
+  event_source_system, actor_type. `claim.policy_version_id` added (as-at attach).
+- world_engine `add_lifecycle()` back-generates events+versions+chains for all 172 policies
+  (deterministic; no rng — MTA by policy-id parity). Hero POL-2026-000001 gets an MTA_APPLIED
+  on 2026-02-14 (v2), and the golden-thread claim CLM-2026-000001 (loss 2026-03-14) attaches
+  to v2 — cover read as at the loss. **This is the WP1 demo beat.**
+- **Hash canonical excludes free text** (reason_code): a cancellation reason with an
+  apostrophe made the Python-stored hash diverge from the Spark recompute on one event.
+  Canonical is now structured identity only (policy_id|seq|type|effective_from) — collision-
+  proof and deterministic across Python/Spark. (Fix logged; both world_engine and
+  fn_verify_event_chain updated.)
+- **As-at attach clamps to v1** when a loss predates inception (40 reserving-history claims
+  have loss_date < inception — a pre-existing data trait); smoke accepts the clamp.
+- ACs met: vw_policy_current byte-matches policy (0 mismatches, 172/172); chain verifies
+  estate-wide (SUM fn_verify_event_chain = 0); sequences gap-free; hero→v2.
+- Retention dynamics are thin (6 invited / 6 renewed / 0 lapsed) because the base book has
+  no LAPSED-status policies — **WP5's advance_period is what populates real lapse dynamics**;
+  left honest rather than fabricating lapses inconsistent with policy status.
+- App refreshed to v0.11.0 and redeployed; SP granted on bricksurance_policy_lifecycle.
+- Deploy gotcha reconfirmed: `claim` needed ALTER ADD COLUMN policy_version_id before deploy.

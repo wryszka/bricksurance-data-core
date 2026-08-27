@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with an indicative Lloyd's Core Data Record crosswalk. The crosswalk is a hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names, not a verified extract from the licensed models; element names are cited only, and the licensed standards are not reproduced.",
   "domains": [
@@ -45,6 +45,10 @@
     {
       "name": "product",
       "description": "Machine-readable products - offered coverages, underwriting questions and appetite rules as data, so any channel (human, aggregator or buyer agent) can discover, quote and be decided against the same rules.\n"
+    },
+    {
+      "name": "policy_lifecycle",
+      "description": "The append-only policy administration spine - every lifecycle event of a policy (quote, bind, endorse, renew, lapse, cancel) as an immutable, hash-chained record, and the slowly-changing versions derived from it. This is the shared key fabric that joins underwriting to claims to finance: current policy state is a projection of the event stream, never a hand-edited table, and a claim attaches to the policy version in force at the loss.\n"
     },
     {
       "name": "enrichment",
@@ -118,6 +122,29 @@
           "code": "EXPENSE",
           "label": "Expense",
           "description": "Costs and losses; normal debit balance."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "actor_type",
+      "title": "Actor Type",
+      "description": "What kind of actor caused an event - a person, an automated agent, or the system itself. Makes \"who did this\" answerable and separates human from agentic from batch action across the spine.\n",
+      "codes": [
+        {
+          "code": "HUMAN",
+          "label": "Human",
+          "description": "A named human actor (e.g. an underwriter)."
+        },
+        {
+          "code": "AGENT",
+          "label": "Agent",
+          "description": "An automated or AI agent acting under authority."
+        },
+        {
+          "code": "SYSTEM",
+          "label": "System",
+          "description": "The platform itself (batch jobs, scheduled transitions)."
         }
       ]
     },
@@ -969,6 +996,44 @@
     },
     {
       "kind": "code_set",
+      "name": "event_source_system",
+      "title": "Event Source System",
+      "description": "Where a policy lifecycle event originated - the channel or system that raised it. Distinct from source_system (system of record for a row); this names the actor's channel so delegated and agentic business is visible in the spine.\n",
+      "codes": [
+        {
+          "code": "UW_WORKBENCH",
+          "label": "Underwriting Workbench",
+          "description": "Raised by the underwriting workbench."
+        },
+        {
+          "code": "PORTAL",
+          "label": "Customer Portal",
+          "description": "Raised through a self-service customer portal."
+        },
+        {
+          "code": "BROKER_MCP",
+          "label": "Broker (MCP)",
+          "description": "Raised by a broker via the machine interface."
+        },
+        {
+          "code": "BORDEREAU",
+          "label": "Bordereau",
+          "description": "Raised from a delegated-authority bordereau submission."
+        },
+        {
+          "code": "BATCH",
+          "label": "Batch",
+          "description": "Raised by a scheduled batch process (e.g. renewals, expiries)."
+        },
+        {
+          "code": "MIGRATION",
+          "label": "Migration",
+          "description": "Back-generated when the event spine was first populated from history."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "expense_type",
       "title": "Expense Type",
       "description": "Kinds of operating expense allocated to lines of business - the missing half of the combined ratio.",
@@ -1607,6 +1672,89 @@
           "code": "LOCKED",
           "label": "Locked",
           "description": "Hard-locked after reporting; no further postings."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "policy_event_type",
+      "title": "Policy Event Type",
+      "description": "The kinds of lifecycle event a policy can undergo. Every workbench uses these codes - no local variants - so the policy administration spine reads the same everywhere.\n",
+      "codes": [
+        {
+          "code": "QUOTED",
+          "label": "Quoted",
+          "description": "A quote was produced for the risk."
+        },
+        {
+          "code": "BOUND",
+          "label": "Bound",
+          "description": "Cover was agreed and bound; the contract begins."
+        },
+        {
+          "code": "ISSUED",
+          "label": "Issued",
+          "description": "The policy document was issued to the insured."
+        },
+        {
+          "code": "ENDORSED",
+          "label": "Endorsed",
+          "description": "A mid-term change was applied by endorsement."
+        },
+        {
+          "code": "MTA_REQUESTED",
+          "label": "MTA Requested",
+          "description": "A mid-term adjustment was requested."
+        },
+        {
+          "code": "MTA_APPLIED",
+          "label": "MTA Applied",
+          "description": "A requested mid-term adjustment took effect."
+        },
+        {
+          "code": "RENEWAL_INVITED",
+          "label": "Renewal Invited",
+          "description": "A renewal invitation was issued ahead of expiry."
+        },
+        {
+          "code": "RENEWED",
+          "label": "Renewed",
+          "description": "The policy renewed into a successor term."
+        },
+        {
+          "code": "LAPSED",
+          "label": "Lapsed",
+          "description": "The policy lapsed at renewal (not renewed)."
+        },
+        {
+          "code": "CANCELLED_INSURED",
+          "label": "Cancelled by Insured",
+          "description": "The insured cancelled the policy mid-term."
+        },
+        {
+          "code": "CANCELLED_INSURER",
+          "label": "Cancelled by Insurer",
+          "description": "The insurer cancelled the policy mid-term."
+        },
+        {
+          "code": "CANCELLED_NONPAYMENT",
+          "label": "Cancelled for Non-Payment",
+          "description": "Cancelled because premium was not paid."
+        },
+        {
+          "code": "REINSTATED",
+          "label": "Reinstated",
+          "description": "A cancelled or lapsed policy was reinstated."
+        },
+        {
+          "code": "NTU",
+          "label": "Not Taken Up",
+          "description": "A bound policy was never taken up by the insured."
+        },
+        {
+          "code": "EXPIRED",
+          "label": "Expired",
+          "description": "The policy reached the end of its term without renewal."
         }
       ]
     },
@@ -2569,6 +2717,14 @@
           "type": "boolean",
           "required": false,
           "description": "Whether the claim has been reopened after closure.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_version_id",
+          "references": "policy_version",
+          "type": "string",
+          "required": false,
+          "description": "The policy version in force at the loss date - claims attach to the as-at version, not just the policy, so cover is read as it stood at loss.\n",
           "classification": "internal"
         },
         {
@@ -7272,6 +7428,397 @@
     },
     {
       "kind": "entity",
+      "name": "policy_event",
+      "domain": "policy_lifecycle",
+      "title": "Policy Event",
+      "description": "One immutable lifecycle event of a policy - the append-only spine of policy administration. Events are never updated or deleted; a correction is a new event that references the one it reverses. Each event carries a hash of the prior event and of itself, forming a chain that makes tampering detectable. Current policy state and the version history are both derived from this stream.\n",
+      "grain": "One row per lifecycle event, ordered by sequence_no within a policy.",
+      "standards": {
+        "acord": "Policy transaction / lifecycle concept"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "event_id",
+          "type": "string",
+          "required": true,
+          "description": "Deterministic identifier for the event (seeded), stable across rebuilds.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy the event concerns.",
+          "classification": "internal"
+        },
+        {
+          "name": "sequence_no",
+          "type": "integer",
+          "required": true,
+          "description": "Gap-free sequence of the event within the policy, starting at 1.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_event_type_code",
+          "code_set": "policy_event_type",
+          "required": true,
+          "description": "The kind of lifecycle event.",
+          "classification": "internal"
+        },
+        {
+          "name": "event_ts",
+          "type": "timestamp",
+          "required": true,
+          "description": "When the event was recorded.",
+          "classification": "internal"
+        },
+        {
+          "name": "effective_from",
+          "type": "date",
+          "required": true,
+          "description": "Date the event's effect begins.",
+          "classification": "internal"
+        },
+        {
+          "name": "effective_to",
+          "type": "date",
+          "required": false,
+          "description": "Date the event's effect ends, where bounded; empty if open.",
+          "classification": "internal"
+        },
+        {
+          "name": "reverses_event_id",
+          "type": "string",
+          "required": false,
+          "description": "The event this one reverses (a correction); empty for ordinary events.",
+          "classification": "internal"
+        },
+        {
+          "name": "event_source_system_code",
+          "code_set": "event_source_system",
+          "required": true,
+          "description": "Channel or system that raised the event.",
+          "classification": "internal"
+        },
+        {
+          "name": "actor_type_code",
+          "code_set": "actor_type",
+          "required": true,
+          "description": "Whether a human, an agent, or the system caused the event.",
+          "classification": "internal"
+        },
+        {
+          "name": "actor_id",
+          "type": "string",
+          "required": false,
+          "description": "Identifier or role of the actor that caused the event.",
+          "classification": "internal"
+        },
+        {
+          "name": "premium_delta",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Change in premium the event applied, in policy currency (payload).",
+          "classification": "confidential"
+        },
+        {
+          "name": "sum_insured_delta",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Change in sum insured the event applied, in policy currency (payload).",
+          "classification": "confidential"
+        },
+        {
+          "name": "coverage_change_note",
+          "type": "string",
+          "required": false,
+          "description": "Human-readable description of any coverage change (payload).",
+          "classification": "internal"
+        },
+        {
+          "name": "reason_code",
+          "type": "string",
+          "required": false,
+          "description": "Reason the event occurred, e.g. non-payment, insured request (payload).",
+          "classification": "internal"
+        },
+        {
+          "name": "prior_event_hash",
+          "type": "string",
+          "required": false,
+          "description": "Hash of the prior event in the chain; empty for the first event.",
+          "classification": "internal"
+        },
+        {
+          "name": "event_hash",
+          "type": "string",
+          "required": true,
+          "description": "Hash of this event chained onto prior_event_hash. Recomputing and comparing the chain proves no event was altered or removed.\n",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the event row is stored in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "event_id"
+        ],
+        "natural": [
+          "policy_id",
+          "sequence_no"
+        ]
+      },
+      "quality": [
+        {
+          "name": "event_period_ordered",
+          "rule": "effective_to IS NULL OR effective_to >= effective_from",
+          "description": "An event cannot cease to have effect before it takes effect."
+        }
+      ],
+      "owner": "Head of Operations"
+    },
+    {
+      "kind": "entity",
+      "name": "policy_version",
+      "domain": "policy_lifecycle",
+      "title": "Policy Version",
+      "description": "A slowly-changing version of a policy as at a point in time - the materialised history derived from the policy event stream, never hand-written. Each version records the policy's attributes while a given set of events was in force. The current policy is the version where is_current is true; a claim attaches to the version in force at its loss date.\n",
+      "grain": "One row per policy per version; at most one current version per policy.",
+      "standards": {
+        "acord": "Policy (as-at) concept"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "policy_version_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for this policy version.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "Policy this is a version of.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_number",
+          "type": "string",
+          "required": true,
+          "description": "Policy reference as issued (immutable identity), carried on every version.",
+          "classification": "confidential"
+        },
+        {
+          "name": "legal_entity_id",
+          "references": "legal_entity",
+          "type": "string",
+          "required": true,
+          "description": "Carrying legal entity as at this version.",
+          "classification": "internal"
+        },
+        {
+          "name": "underwriting_year",
+          "type": "integer",
+          "required": true,
+          "description": "Underwriting year of account as at this version.",
+          "classification": "internal"
+        },
+        {
+          "name": "renews_policy_id",
+          "type": "string",
+          "required": false,
+          "description": "Prior policy this term renewed from, as recorded on the policy.",
+          "classification": "internal"
+        },
+        {
+          "name": "version_no",
+          "type": "integer",
+          "required": true,
+          "description": "Version number within the policy, increasing as events change state.",
+          "classification": "internal"
+        },
+        {
+          "name": "valid_from",
+          "type": "date",
+          "required": true,
+          "description": "Date this version took effect.",
+          "classification": "internal"
+        },
+        {
+          "name": "valid_to",
+          "type": "date",
+          "required": false,
+          "description": "Date this version was superseded; empty while current.",
+          "classification": "internal"
+        },
+        {
+          "name": "is_current",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether this is the version currently in force for the policy.",
+          "classification": "internal"
+        },
+        {
+          "name": "created_by_event_id",
+          "references": "policy_event",
+          "type": "string",
+          "required": true,
+          "description": "The event that created this version.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_status_code",
+          "code_set": "policy_status",
+          "required": true,
+          "description": "Policy status as at this version.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business as at this version.",
+          "classification": "internal"
+        },
+        {
+          "name": "inception_date",
+          "type": "date",
+          "required": true,
+          "description": "Cover start date as at this version.",
+          "classification": "internal"
+        },
+        {
+          "name": "expiry_date",
+          "type": "date",
+          "required": true,
+          "description": "Cover end date as at this version.",
+          "classification": "internal"
+        },
+        {
+          "name": "sum_insured_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Total sum insured as at this version, in policy currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "annual_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Annualised premium as at this version, in policy currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Policy currency as at this version.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the version is stored in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "policy_version_id"
+        ],
+        "natural": [
+          "policy_id",
+          "version_no"
+        ]
+      },
+      "quality": [
+        {
+          "name": "version_period_ordered",
+          "rule": "valid_to IS NULL OR valid_to >= valid_from",
+          "description": "A version cannot be superseded before it takes effect."
+        }
+      ],
+      "owner": "Head of Operations"
+    },
+    {
+      "kind": "entity",
+      "name": "renewal_chain",
+      "domain": "policy_lifecycle",
+      "title": "Renewal Chain",
+      "description": "Links a policy to its predecessor and to the stable chain of all renewals of one original risk. This is what makes \"customer since 2019, seventh renewal\" answerable, and what the renewal loop and the customer dimension hang off. It formalises the policy renews-from linkage as first-class data.\n",
+      "grain": "One row per policy, placing it in its renewal chain.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "renewal_chain_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the chain-membership row.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "The policy placed in the chain.",
+          "classification": "internal"
+        },
+        {
+          "name": "chain_id",
+          "type": "string",
+          "required": true,
+          "description": "Stable identifier of the risk across all its renewals.",
+          "classification": "internal"
+        },
+        {
+          "name": "predecessor_policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "The prior policy this one renewed from; empty for the first term.",
+          "classification": "internal"
+        },
+        {
+          "name": "renewal_number",
+          "type": "integer",
+          "required": true,
+          "description": "Position in the chain; 0 for new business, 1 for first renewal, and so on.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "renewal_chain_id"
+        ],
+        "natural": [
+          "policy_id"
+        ]
+      },
+      "owner": "Head of Operations"
+    },
+    {
+      "kind": "entity",
       "name": "derived_factor",
       "domain": "pricing",
       "title": "Derived Factor",
@@ -8809,6 +9356,15 @@
     },
     {
       "kind": "view",
+      "name": "vw_policy_current",
+      "domain": "policy_lifecycle",
+      "title": "Policy (current, derived)",
+      "description": "Current policy state reconstructed from the version history - the projection that proves the event spine is complete. Selects exactly the columns of the policy table from the current version of each policy; it must reconcile row-for-row with policy. Consumers wanting \"the policy as it is now\" can read this or the policy table interchangeably; the audit truth is the event stream.\n",
+      "grain": "One row per policy (its current version).",
+      "sql": "SELECT\n  policy_id,\n  policy_number,\n  legal_entity_id,\n  source_system_code,\n  line_of_business_code,\n  policy_status_code,\n  inception_date,\n  expiry_date,\n  underwriting_year,\n  currency_code,\n  renews_policy_id\nFROM {policy_lifecycle.policy_version}\nWHERE is_current = TRUE\n"
+    },
+    {
+      "kind": "view",
       "name": "loss_development",
       "domain": "reserving",
       "title": "Loss Development Triangle",
@@ -8854,6 +9410,92 @@
     }
   ],
   "metric_views": [
+    {
+      "kind": "metric_view",
+      "name": "lifecycle_metrics",
+      "domain": "policy_lifecycle",
+      "title": "Policy Lifecycle Metrics",
+      "description": "Flow KPIs over the policy event spine - new business, renewals, lapses, cancellations and mid-term adjustments by line, period, channel and actor. Retention is chain-based (renewed over invited). Point-in-time policies-in-force is answered from vw_policy_current (status = IN_FORCE), not here. Query measures with MEASURE(name).\n",
+      "owner": "Head of Operations",
+      "certification": "draft",
+      "source": "policy_lifecycle.policy_event",
+      "joins": [
+        {
+          "name": "policy",
+          "source": "policy.policy",
+          "condition": "source.policy_id = policy.policy_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "policy_event_type_code",
+          "expr": "source.policy_event_type_code",
+          "description": "The kind of lifecycle event."
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "policy.line_of_business_code",
+          "description": "Line of business of the policy the event concerns."
+        },
+        {
+          "name": "event_month",
+          "expr": "DATE_TRUNC('MONTH', source.event_ts)",
+          "description": "Calendar month the event was recorded in."
+        },
+        {
+          "name": "actor_type_code",
+          "expr": "source.actor_type_code",
+          "description": "Whether a human, agent or the system caused the event."
+        },
+        {
+          "name": "event_source_system_code",
+          "expr": "source.event_source_system_code",
+          "description": "Channel or system that raised the event."
+        }
+      ],
+      "measures": [
+        {
+          "name": "event_count",
+          "expr": "COUNT(event_id)",
+          "description": "Total lifecycle events."
+        },
+        {
+          "name": "new_business_count",
+          "expr": "COUNT(DISTINCT CASE WHEN policy_event_type_code = 'BOUND' THEN policy_id END)",
+          "description": "Policies bound (new business)."
+        },
+        {
+          "name": "renewal_invited_count",
+          "expr": "COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWAL_INVITED' THEN policy_id END)",
+          "description": "Policies invited to renew."
+        },
+        {
+          "name": "renewed_count",
+          "expr": "COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWED' THEN policy_id END)",
+          "description": "Policies renewed."
+        },
+        {
+          "name": "lapsed_count",
+          "expr": "COUNT(DISTINCT CASE WHEN policy_event_type_code = 'LAPSED' THEN policy_id END)",
+          "description": "Policies lapsed at renewal."
+        },
+        {
+          "name": "cancelled_count",
+          "expr": "COUNT(DISTINCT CASE WHEN policy_event_type_code IN ('CANCELLED_INSURED', 'CANCELLED_INSURER', 'CANCELLED_NONPAYMENT') THEN policy_id END)",
+          "description": "Policies cancelled mid-term (any cause)."
+        },
+        {
+          "name": "mta_count",
+          "expr": "COUNT(CASE WHEN policy_event_type_code = 'MTA_APPLIED' THEN event_id END)",
+          "description": "Mid-term adjustments applied."
+        },
+        {
+          "name": "retention_rate",
+          "expr": "COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWED' THEN policy_id END) / NULLIF(COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWAL_INVITED' THEN policy_id END), 0)",
+          "description": "Renewed over invited - chain-based retention rate."
+        }
+      ]
+    },
     {
       "kind": "metric_view",
       "name": "reserving_metrics",
@@ -9778,6 +10420,24 @@
     },
     {
       "kind": "function",
+      "name": "fn_verify_event_chain",
+      "domain": "policy_lifecycle",
+      "description": "Verifies the hash chain of a policy's event stream, live - returns the number of broken events (0 means intact). An event is broken if its stored hash does not equal the hash recomputed from its fields chained onto the prior event's hash, or if its prior-hash link does not match the actual previous event. This makes \"prove nothing was edited\" a query, not a claim. The canonical hashed fields are the structured identity - policy_id, sequence_no, event type and effective_from (free text is deliberately excluded so the check is deterministic).\n",
+      "inputs": [
+        {
+          "name": "in_policy_id",
+          "type": "string",
+          "description": "The policy whose event chain to verify."
+        }
+      ],
+      "returns": {
+        "type": "integer",
+        "description": "Count of broken events in the chain; 0 if the chain is intact."
+      },
+      "sql": "(SELECT COUNT(*)\n FROM {policy_lifecycle.policy_event} e\n LEFT JOIN {policy_lifecycle.policy_event} p\n   ON p.policy_id = e.policy_id AND p.sequence_no = e.sequence_no - 1\n WHERE e.policy_id = in_policy_id\n   AND (\n     e.event_hash <> sha2(concat(coalesce(e.prior_event_hash, ''),\n       concat_ws('|', e.policy_id, cast(e.sequence_no AS STRING),\n                 e.policy_event_type_code, cast(e.effective_from AS STRING))), 256)\n     OR coalesce(e.prior_event_hash, '') <> coalesce(p.event_hash, '')\n   ))\n"
+    },
+    {
+      "kind": "function",
       "name": "fn_appetite_check",
       "domain": "product",
       "description": "Checks a prospective risk against the live appetite rules and returns the effect (WITHIN_APPETITE, REFER or OUT_OF_APPETITE) with the matching rule's business description. The same rules humans read; the tool agents call before quoting.\n",
@@ -9899,6 +10559,13 @@
       "to": "cat_event",
       "to_kind": "entity",
       "to_attribute": "cat_event_id"
+    },
+    {
+      "from_entity": "claim",
+      "attribute": "policy_version_id",
+      "to": "policy_version",
+      "to_kind": "entity",
+      "to_attribute": "policy_version_id"
     },
     {
       "from_entity": "claim",
@@ -11453,6 +12120,104 @@
       "to": "insured_object",
       "to_kind": "entity",
       "to_attribute": "insured_object_id"
+    },
+    {
+      "from_entity": "policy_event",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "policy_event",
+      "attribute": "policy_event_type_code",
+      "to": "policy_event_type",
+      "to_kind": "code_set",
+      "to_attribute": "policy_event_type_code"
+    },
+    {
+      "from_entity": "policy_event",
+      "attribute": "event_source_system_code",
+      "to": "event_source_system",
+      "to_kind": "code_set",
+      "to_attribute": "event_source_system_code"
+    },
+    {
+      "from_entity": "policy_event",
+      "attribute": "actor_type_code",
+      "to": "actor_type",
+      "to_kind": "code_set",
+      "to_attribute": "actor_type_code"
+    },
+    {
+      "from_entity": "policy_event",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "policy_version",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "policy_version",
+      "attribute": "legal_entity_id",
+      "to": "legal_entity",
+      "to_kind": "entity",
+      "to_attribute": "legal_entity_id"
+    },
+    {
+      "from_entity": "policy_version",
+      "attribute": "created_by_event_id",
+      "to": "policy_event",
+      "to_kind": "entity",
+      "to_attribute": "event_id"
+    },
+    {
+      "from_entity": "policy_version",
+      "attribute": "policy_status_code",
+      "to": "policy_status",
+      "to_kind": "code_set",
+      "to_attribute": "policy_status_code"
+    },
+    {
+      "from_entity": "policy_version",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "policy_version",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "policy_version",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "renewal_chain",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "renewal_chain",
+      "attribute": "predecessor_policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
     },
     {
       "from_entity": "derived_factor",

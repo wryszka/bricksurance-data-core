@@ -1,0 +1,45 @@
+kind: entity
+name: renewal_chain
+domain: policy_lifecycle
+title: Renewal Chain
+description: >
+  Links a policy to its predecessor and to the stable chain of all renewals of
+  one original risk. This is what makes "customer since 2019, seventh renewal"
+  answerable, and what the renewal loop and the customer dimension hang off. It
+  formalises the policy renews-from linkage as first-class data.
+grain: One row per policy, placing it in its renewal chain.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: renewal_chain_id
+    type: string
+    required: true
+    description: Identifier for the chain-membership row.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: true
+    description: The policy placed in the chain.
+    classification: internal
+  - name: chain_id
+    type: string
+    required: true
+    description: Stable identifier of the risk across all its renewals.
+    classification: internal
+  - name: predecessor_policy_id
+    references: policy
+    type: string
+    required: false
+    description: The prior policy this one renewed from; empty for the first term.
+    classification: internal
+  - name: renewal_number
+    type: integer
+    required: true
+    description: Position in the chain; 0 for new business, 1 for first renewal, and so on.
+    classification: internal
+keys:
+  primary: [renewal_chain_id]
+  natural: [policy_id]
+owner: Head of Operations

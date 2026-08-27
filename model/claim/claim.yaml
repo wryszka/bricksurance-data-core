@@ -91,6 +91,14 @@ attributes:
     required: false
     description: Whether the claim has been reopened after closure.
     classification: internal
+  - name: policy_version_id
+    references: policy_version
+    type: string
+    required: false
+    description: >
+      The policy version in force at the loss date - claims attach to the
+      as-at version, not just the policy, so cover is read as it stood at loss.
+    classification: internal
   - name: source_system_code
     code_set: source_system
     required: true

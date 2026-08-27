@@ -1,0 +1,118 @@
+kind: entity
+name: policy_event
+domain: policy_lifecycle
+title: Policy Event
+description: >
+  One immutable lifecycle event of a policy - the append-only spine of policy
+  administration. Events are never updated or deleted; a correction is a new
+  event that references the one it reverses. Each event carries a hash of the
+  prior event and of itself, forming a chain that makes tampering detectable.
+  Current policy state and the version history are both derived from this stream.
+grain: One row per lifecycle event, ordered by sequence_no within a policy.
+standards:
+  acord: Policy transaction / lifecycle concept
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: event_id
+    type: string
+    required: true
+    description: Deterministic identifier for the event (seeded), stable across rebuilds.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: true
+    description: Policy the event concerns.
+    classification: internal
+  - name: sequence_no
+    type: integer
+    required: true
+    description: Gap-free sequence of the event within the policy, starting at 1.
+    classification: internal
+  - name: policy_event_type_code
+    code_set: policy_event_type
+    required: true
+    description: The kind of lifecycle event.
+    classification: internal
+  - name: event_ts
+    type: timestamp
+    required: true
+    description: When the event was recorded.
+    classification: internal
+  - name: effective_from
+    type: date
+    required: true
+    description: Date the event's effect begins.
+    classification: internal
+  - name: effective_to
+    type: date
+    required: false
+    description: Date the event's effect ends, where bounded; empty if open.
+    classification: internal
+  - name: reverses_event_id
+    type: string
+    required: false
+    description: The event this one reverses (a correction); empty for ordinary events.
+    classification: internal
+  - name: event_source_system_code
+    code_set: event_source_system
+    required: true
+    description: Channel or system that raised the event.
+    classification: internal
+  - name: actor_type_code
+    code_set: actor_type
+    required: true
+    description: Whether a human, an agent, or the system caused the event.
+    classification: internal
+  - name: actor_id
+    type: string
+    required: false
+    description: Identifier or role of the actor that caused the event.
+    classification: internal
+  - name: premium_delta
+    type: decimal(18,2)
+    required: false
+    description: Change in premium the event applied, in policy currency (payload).
+    classification: confidential
+  - name: sum_insured_delta
+    type: decimal(18,2)
+    required: false
+    description: Change in sum insured the event applied, in policy currency (payload).
+    classification: confidential
+  - name: coverage_change_note
+    type: string
+    required: false
+    description: Human-readable description of any coverage change (payload).
+    classification: internal
+  - name: reason_code
+    type: string
+    required: false
+    description: Reason the event occurred, e.g. non-payment, insured request (payload).
+    classification: internal
+  - name: prior_event_hash
+    type: string
+    required: false
+    description: Hash of the prior event in the chain; empty for the first event.
+    classification: internal
+  - name: event_hash
+    type: string
+    required: true
+    description: >
+      Hash of this event chained onto prior_event_hash. Recomputing and comparing
+      the chain proves no event was altered or removed.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the event row is stored in.
+    classification: internal
+keys:
+  primary: [event_id]
+  natural: [policy_id, sequence_no]
+quality:
+  - name: event_period_ordered
+    rule: effective_to IS NULL OR effective_to >= effective_from
+    description: An event cannot cease to have effect before it takes effect.
+owner: Head of Operations

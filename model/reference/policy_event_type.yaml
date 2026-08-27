@@ -1,0 +1,53 @@
+kind: code_set
+name: policy_event_type
+title: Policy Event Type
+description: >
+  The kinds of lifecycle event a policy can undergo. Every workbench uses these
+  codes - no local variants - so the policy administration spine reads the same
+  everywhere.
+codes:
+  - code: QUOTED
+    label: Quoted
+    description: A quote was produced for the risk.
+  - code: BOUND
+    label: Bound
+    description: Cover was agreed and bound; the contract begins.
+  - code: ISSUED
+    label: Issued
+    description: The policy document was issued to the insured.
+  - code: ENDORSED
+    label: Endorsed
+    description: A mid-term change was applied by endorsement.
+  - code: MTA_REQUESTED
+    label: MTA Requested
+    description: A mid-term adjustment was requested.
+  - code: MTA_APPLIED
+    label: MTA Applied
+    description: A requested mid-term adjustment took effect.
+  - code: RENEWAL_INVITED
+    label: Renewal Invited
+    description: A renewal invitation was issued ahead of expiry.
+  - code: RENEWED
+    label: Renewed
+    description: The policy renewed into a successor term.
+  - code: LAPSED
+    label: Lapsed
+    description: The policy lapsed at renewal (not renewed).
+  - code: CANCELLED_INSURED
+    label: Cancelled by Insured
+    description: The insured cancelled the policy mid-term.
+  - code: CANCELLED_INSURER
+    label: Cancelled by Insurer
+    description: The insurer cancelled the policy mid-term.
+  - code: CANCELLED_NONPAYMENT
+    label: Cancelled for Non-Payment
+    description: Cancelled because premium was not paid.
+  - code: REINSTATED
+    label: Reinstated
+    description: A cancelled or lapsed policy was reinstated.
+  - code: NTU
+    label: Not Taken Up
+    description: A bound policy was never taken up by the insured.
+  - code: EXPIRED
+    label: Expired
+    description: The policy reached the end of its term without renewal.

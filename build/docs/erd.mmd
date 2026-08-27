@@ -4,6 +4,11 @@ erDiagram
         string label
         string description
     }
+    actor_type {
+        string actor_type_code PK
+        string label
+        string description
+    }
     appetite_effect {
         string appetite_effect_code PK
         string label
@@ -134,6 +139,11 @@ erDiagram
         string label
         string description
     }
+    event_source_system {
+        string event_source_system_code PK
+        string label
+        string description
+    }
     expense_type {
         string expense_type_code PK
         string label
@@ -231,6 +241,11 @@ erDiagram
     }
     period_status {
         string period_status_code PK
+        string label
+        string description
+    }
+    policy_event_type {
+        string policy_event_type_code PK
         string label
         string description
     }
@@ -390,6 +405,7 @@ erDiagram
         string handling_office
         string catastrophe_id
         boolean reopened_flag
+        string policy_version_id
         string source_system_code
     }
     claim_feature {
@@ -980,6 +996,54 @@ erDiagram
         string abi_code
         boolean telematics_enrolled_flag
     }
+    policy_event {
+        string event_id PK
+        string policy_id
+        integer sequence_no
+        string policy_event_type_code
+        timestamp event_ts
+        date effective_from
+        date effective_to
+        string reverses_event_id
+        string event_source_system_code
+        string actor_type_code
+        string actor_id
+        decimal premium_delta
+        decimal sum_insured_delta
+        string coverage_change_note
+        string reason_code
+        string prior_event_hash
+        string event_hash
+        string source_system_code
+    }
+    policy_version {
+        string policy_version_id PK
+        string policy_id
+        string policy_number
+        string legal_entity_id
+        integer underwriting_year
+        string renews_policy_id
+        integer version_no
+        date valid_from
+        date valid_to
+        boolean is_current
+        string created_by_event_id
+        string policy_status_code
+        string line_of_business_code
+        date inception_date
+        date expiry_date
+        decimal sum_insured_amount
+        decimal annual_premium
+        string currency_code
+        string source_system_code
+    }
+    renewal_chain {
+        string renewal_chain_id PK
+        string policy_id
+        string chain_id
+        string predecessor_policy_id
+        integer renewal_number
+    }
     derived_factor {
         string derived_factor_id PK
         string subject_kind_code
@@ -1174,6 +1238,7 @@ erDiagram
     claim }o--|| claim_status : claim_status_code
     claim }o--|| cause_of_loss : cause_of_loss_code
     claim }o--|| cat_event : catastrophe_id
+    claim }o--|| policy_version : policy_version_id
     claim }o--|| source_system : source_system_code
     claim_feature }o--|| claim : claim_id
     claim_feature }o--|| coverage : coverage_id
@@ -1396,6 +1461,20 @@ erDiagram
     underwriting_decision }o--|| underwriting_decision_type : underwriting_decision_type_code
     underwriting_decision }o--|| appetite_rule : appetite_rule_id
     vehicle }o--|| insured_object : insured_object_id
+    policy_event }o--|| policy : policy_id
+    policy_event }o--|| policy_event_type : policy_event_type_code
+    policy_event }o--|| event_source_system : event_source_system_code
+    policy_event }o--|| actor_type : actor_type_code
+    policy_event }o--|| source_system : source_system_code
+    policy_version }o--|| policy : policy_id
+    policy_version }o--|| legal_entity : legal_entity_id
+    policy_version }o--|| policy_event : created_by_event_id
+    policy_version }o--|| policy_status : policy_status_code
+    policy_version }o--|| line_of_business : line_of_business_code
+    policy_version }o--|| currency : currency_code
+    policy_version }o--|| source_system : source_system_code
+    renewal_chain }o--|| policy : policy_id
+    renewal_chain }o--|| policy : predecessor_policy_id
     derived_factor }o--|| model_subject_kind : subject_kind_code
     derived_factor }o--|| rating_factor : rating_factor_id
     rating_engine_config }o--|| line_of_business : line_of_business_code

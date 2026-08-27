@@ -1,0 +1,123 @@
+kind: entity
+name: policy_version
+domain: policy_lifecycle
+title: Policy Version
+description: >
+  A slowly-changing version of a policy as at a point in time - the materialised
+  history derived from the policy event stream, never hand-written. Each version
+  records the policy's attributes while a given set of events was in force. The
+  current policy is the version where is_current is true; a claim attaches to the
+  version in force at its loss date.
+grain: One row per policy per version; at most one current version per policy.
+standards:
+  acord: Policy (as-at) concept
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: policy_version_id
+    type: string
+    required: true
+    description: Identifier for this policy version.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: true
+    description: Policy this is a version of.
+    classification: internal
+  - name: policy_number
+    type: string
+    required: true
+    description: Policy reference as issued (immutable identity), carried on every version.
+    classification: confidential
+  - name: legal_entity_id
+    references: legal_entity
+    type: string
+    required: true
+    description: Carrying legal entity as at this version.
+    classification: internal
+  - name: underwriting_year
+    type: integer
+    required: true
+    description: Underwriting year of account as at this version.
+    classification: internal
+  - name: renews_policy_id
+    type: string
+    required: false
+    description: Prior policy this term renewed from, as recorded on the policy.
+    classification: internal
+  - name: version_no
+    type: integer
+    required: true
+    description: Version number within the policy, increasing as events change state.
+    classification: internal
+  - name: valid_from
+    type: date
+    required: true
+    description: Date this version took effect.
+    classification: internal
+  - name: valid_to
+    type: date
+    required: false
+    description: Date this version was superseded; empty while current.
+    classification: internal
+  - name: is_current
+    type: boolean
+    required: true
+    description: Whether this is the version currently in force for the policy.
+    classification: internal
+  - name: created_by_event_id
+    references: policy_event
+    type: string
+    required: true
+    description: The event that created this version.
+    classification: internal
+  - name: policy_status_code
+    code_set: policy_status
+    required: true
+    description: Policy status as at this version.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Line of business as at this version.
+    classification: internal
+  - name: inception_date
+    type: date
+    required: true
+    description: Cover start date as at this version.
+    classification: internal
+  - name: expiry_date
+    type: date
+    required: true
+    description: Cover end date as at this version.
+    classification: internal
+  - name: sum_insured_amount
+    type: decimal(18,2)
+    required: false
+    description: Total sum insured as at this version, in policy currency.
+    classification: confidential
+  - name: annual_premium
+    type: decimal(18,2)
+    required: false
+    description: Annualised premium as at this version, in policy currency.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Policy currency as at this version.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the version is stored in.
+    classification: internal
+keys:
+  primary: [policy_version_id]
+  natural: [policy_id, version_no]
+quality:
+  - name: version_period_ordered
+    rule: valid_to IS NULL OR valid_to >= valid_from
+    description: A version cannot be superseded before it takes effect.
+owner: Head of Operations

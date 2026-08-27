@@ -24,6 +24,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import random
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -149,7 +150,9 @@ class World:
                      "claim_feature", "claim_reserve_category", "claim_recovery",
                      "litigation", "claim_party_role",
                      # underwriting depth
-                     "uw_submission", "referral_rule", "referral_event"):
+                     "uw_submission", "referral_rule", "referral_event",
+                     # policy lifecycle spine (WP1)
+                     "policy_event", "policy_version", "renewal_chain"):
             self.t[name] = []
 
     def n(self, base):
@@ -1225,7 +1228,165 @@ def build_world(scale):
               csm_movement_type_code=mtype, amount=amt, currency_code="GBP")
 
     add_extensions(w)
+    add_lifecycle(w)
     return w
+
+
+def add_lifecycle(w):
+    """WP1 — back-generate the policy lifecycle event spine, versions and renewal
+    chains for the existing book, then attach claims to the version in force at loss.
+
+    The event stream is the audit truth (hash-chained, append-only); policy_version
+    is derived from it; the current version's identity fields equal the policy row so
+    vw_policy_current reconciles to policy row-for-row. Deterministic — no rng: MTA
+    selection is by policy-id parity, so a rebuild is byte-identical.
+    """
+    HERO = "POL-2026-000001"
+    policies = w.t["policy"]
+    pol_by_id = {p["policy_id"]: p for p in policies}
+    successors = {p.get("renews_policy_id") for p in policies if p.get("renews_policy_id")}
+    # written premium per policy (for version premium; sum insured approximated from it)
+    prem_by_policy = {}
+    for pt in w.t["premium_transaction"]:
+        if pt.get("premium_transaction_type_code") == "WRITTEN":
+            prem_by_policy[pt["policy_id"]] = float(pt.get("amount") or 0)
+
+    def canon_hash(prior, pid, seq, etype, eff, reason):
+        # Structured identity only - free text (reason) is deliberately excluded so
+        # the hash is collision-proof and identical under Python and Spark recompute.
+        canon = "|".join([pid, str(seq), etype, eff.isoformat()])
+        return hashlib.sha256(((prior or "") + canon).encode()).hexdigest()
+
+    for p in policies:
+        pid = p["policy_id"]
+        inc, exp = p["inception_date"], p["expiry_date"]
+        status = p["policy_status_code"]
+        hero = (p["policy_number"] == HERO)
+        seq = {"n": 0}
+        prior = {"h": None}
+        events = []          # (etype, event_id, effective_from)
+
+        def emit(etype, eff, when, reason=None, prem=None, si=None, note=None,
+                 source="MIGRATION", actor_t="SYSTEM", actor_id=None):
+            seq["n"] += 1
+            eid = f"evt_{pid}_{seq['n']:02d}"
+            h = canon_hash(prior["h"], pid, seq["n"], etype, eff, reason)
+            w.add("policy_event", event_id=eid, policy_id=pid, sequence_no=seq["n"],
+                  policy_event_type_code=etype, event_ts=when, effective_from=eff,
+                  effective_to=None, reverses_event_id=None,
+                  event_source_system_code=source, actor_type_code=actor_t,
+                  actor_id=actor_id, premium_delta=prem, sum_insured_delta=si,
+                  coverage_change_note=note, reason_code=reason,
+                  prior_event_hash=prior["h"], event_hash=h, source_system_code="PAS_CORE")
+            prior["h"] = h
+            events.append((etype, eid, eff))
+            return eid
+
+        def at(d, hour=12):
+            return datetime.combine(d, datetime.min.time()).replace(hour=hour)
+
+        q_date = inc - timedelta(days=14)
+        emit("QUOTED", q_date, at(q_date, 9), source="UW_WORKBENCH",
+             actor_t="AGENT", actor_id="bricksurance-uw-agent v1")
+        bound_id = emit("BOUND", inc, at(inc, 10), source="UW_WORKBENCH",
+                        actor_t="HUMAN", actor_id="U. Marsh (senior underwriter)")
+        emit("ISSUED", inc, at(inc, 11))
+
+        base_prem = round(prem_by_policy.get(pid, 0) or 0, 2)
+        base_si = round(base_prem * 20, 2) if base_prem else None
+
+        versions = []
+
+        def add_ver(vno, vfrom, created_by, si, prem):
+            versions.append({
+                "policy_version_id": f"pvr_{pid}_{vno}", "policy_id": pid,
+                "policy_number": p["policy_number"], "legal_entity_id": p["legal_entity_id"],
+                "underwriting_year": p["underwriting_year"],
+                "renews_policy_id": p.get("renews_policy_id"), "version_no": vno,
+                "valid_from": vfrom, "valid_to": None, "is_current": False,
+                "created_by_event_id": created_by, "policy_status_code": p["policy_status_code"],
+                "line_of_business_code": p["line_of_business_code"], "inception_date": inc,
+                "expiry_date": exp, "sum_insured_amount": si, "annual_premium": prem,
+                "currency_code": p["currency_code"], "source_system_code": "PAS_CORE"})
+
+        add_ver(1, inc, bound_id, base_si, base_prem)
+
+        # MTA: hero (before the loss) + a deterministic ~30% by policy-id parity
+        try:
+            pnum = int(pid.split("_")[-1])
+        except ValueError:
+            pnum = 0
+        wants_mta = hero or (pnum % 10 < 3 and status in ("IN_FORCE", "BOUND", "EXPIRED"))
+        if wants_mta and base_prem:
+            mta_date = date(2026, 2, 14) if hero else inc + timedelta(days=90)
+            if mta_date >= exp:
+                mta_date = inc + timedelta(days=20)
+            si_delta = round((base_si or 0) * 0.25, 2)
+            prem_delta = round(base_prem * 0.08, 2)
+            note = ("Sum insured increased ahead of peak trading season." if hero
+                    else "Mid-term sum insured revision.")
+            mid = emit("MTA_APPLIED", mta_date, at(mta_date, 14),
+                       reason="Insured requested sum insured increase",
+                       prem=prem_delta, si=si_delta, note=note,
+                       source="PORTAL", actor_t="HUMAN",
+                       actor_id=(pol_by_id[pid].get("policy_number")))
+            add_ver(2, mta_date, mid, round((base_si or 0) + si_delta, 2),
+                    round(base_prem + prem_delta, 2))
+
+        # terminal events — only renewal-cycle policies get invited/renewed/lapsed
+        renewed = pid in successors
+        in_chain = renewed or bool(p.get("renews_policy_id"))
+        if status == "EXPIRED":
+            if in_chain:
+                emit("RENEWAL_INVITED", exp - timedelta(days=30), at(exp - timedelta(days=30), 9),
+                     source="BATCH")
+                if renewed:
+                    emit("RENEWED", exp, at(exp, 10), source="BATCH")
+                else:
+                    emit("LAPSED", exp, at(exp, 10), reason="Not renewed at term", source="BATCH")
+            else:
+                emit("EXPIRED", exp, at(exp, 10), source="BATCH")
+        elif status == "CANCELLED":
+            cx = inc + timedelta(days=150)
+            emit("CANCELLED_INSURED", cx, at(cx, 10),
+                 reason="Cancelled at the policyholder's request", source="PORTAL",
+                 actor_t="HUMAN", actor_id=p["policy_number"])
+        elif status == "LAPSED":
+            emit("LAPSED", exp, at(exp, 10), reason="Not renewed at term", source="BATCH")
+
+        # finalise versions: chain valid_to, mark last current
+        versions[-1]["is_current"] = True
+        for i in range(len(versions) - 1):
+            versions[i]["valid_to"] = versions[i + 1]["valid_from"] - timedelta(days=1)
+        for v in versions:
+            w.add("policy_version", **v)
+
+        # renewal chain membership (walk predecessors)
+        chain, cur, guard = [], p, 0
+        while cur and guard < 50:
+            chain.append(cur["policy_id"])
+            cur = pol_by_id.get(cur.get("renews_policy_id"))
+            guard += 1
+        w.add("renewal_chain", renewal_chain_id=f"rnc_{pid}", policy_id=pid,
+              chain_id=chain[-1], predecessor_policy_id=p.get("renews_policy_id"),
+              renewal_number=len(chain) - 1)
+
+    # attach each claim to the policy version in force at its loss date
+    ver_by_policy = {}
+    for v in w.t["policy_version"]:
+        ver_by_policy.setdefault(v["policy_id"], []).append(v)
+    for c in w.t["claim"]:
+        vers = ver_by_policy.get(c["policy_id"], [])
+        loss = c.get("loss_date")
+        chosen = None
+        for v in sorted(vers, key=lambda x: x["version_no"]):
+            if loss and v["valid_from"] <= loss and (v["valid_to"] is None or loss <= v["valid_to"]):
+                chosen = v
+        if chosen is None and vers:
+            # loss precedes the earliest version (reserving-history quirk) -> clamp to v1
+            chosen = min(vers, key=lambda x: x["version_no"])
+        if chosen:
+            c["policy_version_id"] = chosen["policy_version_id"]
 
 
 def add_extensions(w):
@@ -1608,7 +1769,9 @@ def main():
              "claim_feature", "claim_reserve_category", "claim_recovery",
              "litigation", "claim_party_role",
              # underwriting depth
-             "uw_submission", "referral_rule", "referral_event"]
+             "uw_submission", "referral_rule", "referral_event",
+             # policy lifecycle spine (events before versions; renewal_chain last)
+             "policy_event", "policy_version", "renewal_chain"]
     missing = set(order) - set(entities)
     assert not missing, f"world emits unknown entities: {missing}"
 

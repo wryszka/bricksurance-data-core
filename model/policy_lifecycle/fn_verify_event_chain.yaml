@@ -1,0 +1,30 @@
+kind: function
+name: fn_verify_event_chain
+domain: policy_lifecycle
+description: >
+  Verifies the hash chain of a policy's event stream, live - returns the number
+  of broken events (0 means intact). An event is broken if its stored hash does
+  not equal the hash recomputed from its fields chained onto the prior event's
+  hash, or if its prior-hash link does not match the actual previous event. This
+  makes "prove nothing was edited" a query, not a claim. The canonical hashed
+  fields are the structured identity - policy_id, sequence_no, event type and
+  effective_from (free text is deliberately excluded so the check is deterministic).
+inputs:
+  - name: in_policy_id
+    type: string
+    description: The policy whose event chain to verify.
+returns:
+  type: integer
+  description: Count of broken events in the chain; 0 if the chain is intact.
+sql: |
+  (SELECT COUNT(*)
+   FROM {policy_lifecycle.policy_event} e
+   LEFT JOIN {policy_lifecycle.policy_event} p
+     ON p.policy_id = e.policy_id AND p.sequence_no = e.sequence_no - 1
+   WHERE e.policy_id = in_policy_id
+     AND (
+       e.event_hash <> sha2(concat(coalesce(e.prior_event_hash, ''),
+         concat_ws('|', e.policy_id, cast(e.sequence_no AS STRING),
+                   e.policy_event_type_code, cast(e.effective_from AS STRING))), 256)
+       OR coalesce(e.prior_event_hash, '') <> coalesce(p.event_hash, '')
+     ))
