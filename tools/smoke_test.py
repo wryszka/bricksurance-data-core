@@ -297,6 +297,30 @@ def main():
          f"SELECT COUNT(*) > 0 FROM {q('semantics', 'vw_alm_annuity_match')}", "true"),
         ("asset metric view answers market value",
          f"SELECT MEASURE(asset_market_value) > 0 FROM {q('semantics', 'asset_metrics')}", "true"),
+        # ---- WP4 customer & conduct --------------------------------------
+        ("fair value computed live for every product line (no hardcoded numbers)",
+         f"SELECT COUNT(*) > 0 AND MIN(fair_value_ratio) > 0 FROM {q('semantics', 'vw_fair_value_latest')}", "true"),
+        ("exactly one product lands in MONITOR (the amber) in the attested record",
+         f"SELECT COUNT(*) FROM {q('customer', 'fair_value_assessment')} "
+         f"WHERE fair_value_outcome_code = 'MONITOR'", "1"),
+        ("live fair-value verdict matches the attested assessment (same product in MONITOR)",
+         f"SELECT (SELECT line_of_business_code FROM {q('semantics', 'vw_fair_value_latest')} "
+         f"WHERE fair_value_outcome_code = 'MONITOR') = "
+         f"(SELECT line_of_business_code FROM {q('customer', 'fair_value_assessment')} "
+         f"WHERE fair_value_outcome_code = 'MONITOR')", "true"),
+        ("conduct metric answers uphold rate and FOS referrals",
+         f"SELECT MEASURE(uphold_rate) BETWEEN 0 AND 1 AND MEASURE(fos_referred_count) >= 1 "
+         f"FROM {q('semantics', 'conduct_metrics')}", "true"),
+        ("PII conformance: customer holds no protected-characteristic proxies",
+         f"SELECT COUNT(*) FROM {q('reference', 'data_dictionary')} "
+         f"WHERE entity_name = 'customer' AND attribute_name IN "
+         f"('ethnicity','race','religion','gender','sexual_orientation','nationality')", "0"),
+        ("PII conformance: the vulnerability flag is classified as PII",
+         f"SELECT data_classification FROM {q('reference', 'data_dictionary')} "
+         f"WHERE entity_name = 'customer' AND attribute_name = 'vulnerable_flag'", "pii"),
+        ("every customer maps to a real party",
+         f"SELECT COUNT(*) FROM {q('customer', 'customer')} c "
+         f"LEFT JOIN {q('party', 'party')} p ON p.party_id = c.party_id WHERE p.party_id IS NULL", "0"),
     ]
 
     failures = 0

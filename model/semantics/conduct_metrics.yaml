@@ -1,0 +1,37 @@
+kind: metric_view
+name: conduct_metrics
+domain: semantics
+title: Conduct Metrics
+description: >
+  Conduct KPIs over complaints - volumes, uphold rate, ombudsman-referral rate and
+  redress, by category and outcome. The customer-fairness scoreboard alongside the
+  fair-value view. Query measures with MEASURE(name).
+owner: Chief Customer Officer
+certification: draft
+source: conduct.complaint
+dimensions:
+  - name: complaint_category_code
+    expr: complaint_category_code
+    description: Root category of the complaint (FCA grouping).
+  - name: complaint_outcome_code
+    expr: complaint_outcome_code
+    description: How the complaint resolved on its merits.
+  - name: received_month
+    expr: DATE_TRUNC('MONTH', received_date)
+    description: Calendar month the complaint was received.
+measures:
+  - name: complaint_count
+    expr: COUNT(complaint_id)
+    description: Number of complaints.
+  - name: upheld_count
+    expr: COUNT(CASE WHEN complaint_outcome_code IN ('UPHELD', 'PARTIAL') THEN complaint_id END)
+    description: Complaints upheld in full or part.
+  - name: uphold_rate
+    expr: COUNT(CASE WHEN complaint_outcome_code IN ('UPHELD', 'PARTIAL') THEN complaint_id END) / NULLIF(COUNT(complaint_id), 0)
+    description: Upheld over all complaints.
+  - name: fos_referred_count
+    expr: COUNT(CASE WHEN fos_referred THEN complaint_id END)
+    description: Complaints referred to the Financial Ombudsman Service.
+  - name: total_redress
+    expr: SUM(redress_amount)
+    description: Total redress paid, in stated currency.

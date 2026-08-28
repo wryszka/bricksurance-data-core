@@ -1,0 +1,83 @@
+kind: entity
+name: fair_value_assessment
+domain: customer
+title: Fair Value Assessment
+description: >
+  A governed, attested Consumer Duty fair-value assessment for a product line in a
+  period - price paid versus benefit delivered, with the verdict and who attested
+  it. This is the board-level artifact: a versioned, owned, dated record, its
+  numbers computed from premium and claims (see vw_fair_value_latest), not asserted.
+grain: One row per line of business per assessment period.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: fair_value_assessment_id
+    type: string
+    required: true
+    description: Identifier for the assessment.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: Product line assessed.
+    classification: internal
+  - name: assessment_period
+    type: string
+    required: true
+    description: Period assessed, e.g. 2026-H1.
+    classification: internal
+  - name: avg_premium
+    type: decimal(18,2)
+    required: false
+    description: Average earned premium per policy in the period.
+    classification: confidential
+  - name: avg_claims_paid
+    type: decimal(18,2)
+    required: false
+    description: Average claims incurred per policy in the period (the benefit).
+    classification: confidential
+  - name: claims_acceptance_rate
+    type: decimal(6,4)
+    required: false
+    description: Share of claims accepted (not declined).
+    classification: internal
+  - name: avg_settlement_days
+    type: integer
+    required: false
+    description: Average days from report to settlement.
+    classification: internal
+  - name: complaint_ratio
+    type: decimal(8,4)
+    required: false
+    description: Complaints per 1,000 policies in the period.
+    classification: internal
+  - name: fair_value_ratio
+    type: decimal(8,4)
+    required: false
+    description: Benefit-to-price ratio (claims incurred over earned premium).
+    classification: confidential
+  - name: fair_value_outcome_code
+    code_set: fair_value_outcome
+    required: true
+    description: The fair-value verdict - fair, monitor or action.
+    classification: internal
+  - name: attested_by
+    type: string
+    required: false
+    description: Role that attested the assessment.
+    classification: internal
+  - name: attested_at
+    type: date
+    required: false
+    description: Date of attestation.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the assessment is recorded in.
+    classification: internal
+keys:
+  primary: [fair_value_assessment_id]
+  natural: [line_of_business_code, assessment_period]
+owner: Chief Customer Officer

@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.13.0. Do not edit.*
+*Generated from model v0.14.0. Do not edit.*
 
 ## Account Type (`reference.account_type`)
 
@@ -203,6 +203,20 @@ Root category of a customer complaint, aligned to UK FCA complaints reporting gr
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** complaint_category_code
+
+## Complaint Outcome (`reference.complaint_outcome`)
+
+How a complaint was resolved on its merits - distinct from its handling status.
+
+**Grain:** One row per complaint outcome code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| complaint_outcome_code | string | yes | Code value; referenced by complaint_outcome_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** complaint_outcome_code
 
 ## Complaint Status (`reference.complaint_status`)
 
@@ -449,6 +463,20 @@ Kinds of operating expense allocated to lines of business - the missing half of 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** expense_type_code
+
+## Fair Value Outcome (`reference.fair_value_outcome`)
+
+The verdict of a product fair-value assessment under Consumer Duty - whether the price paid is justified by the benefit delivered.
+
+**Grain:** One row per fair value outcome code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| fair_value_outcome_code | string | yes | Code value; referenced by fair_value_outcome_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** fair_value_outcome_code
 
 ## Flood Band (`reference.flood_band`)
 
@@ -1158,6 +1186,20 @@ Financial measures produced by valuation processes across regimes. One code set 
 
 **Primary key:** valuation_measure_code
 
+## Vulnerability Basis (`reference.vulnerability_basis`)
+
+The driver of a customer's vulnerability, on the FCA's four-driver framework. The single estate-wide taxonomy - claims, customer and conduct all use these codes. A vulnerability flag is a duty-of-care signal, never a pricing input.
+
+**Grain:** One row per vulnerability basis code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| vulnerability_basis_code | string | yes | Code value; referenced by vulnerability_basis_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** vulnerability_basis_code
+
 ## Data Dictionary (`reference.data_dictionary`)
 
 Machine-readable dictionary of every entity and attribute in the model, generated from the specs. Include this table in every data share so the semantics travel with the data.
@@ -1356,6 +1398,8 @@ A customer complaint, categorised per UK FCA reporting groupings and tracked thr
 | complaint_status_code | string | yes | Handling status. | internal |  |  |
 | received_date | date | yes | Date received. | internal |  |  |
 | closed_date | date |  | Date resolved or referred; empty while open. | internal |  |  |
+| complaint_outcome_code | string |  | How the complaint resolved on its merits (upheld / partial / not upheld). | internal |  |  |
+| fos_referred | boolean |  | Whether the complaint was referred to the Financial Ombudsman Service. | internal |  |  |
 | redress_amount | decimal(18,2) |  | Redress paid, where upheld, in the stated currency. | confidential |  |  |
 | currency_code | string |  | Currency of any redress. | internal |  |  |
 | source_system_code | string | yes | System of record. | internal |  |  |
@@ -1385,6 +1429,52 @@ Governed unstructured content: policy wordings, schedules, claim evidence, surve
 
 **Primary key:** document_id
 **Quality — exactly_one_context:** `exactly one of product_id, policy_id, claim_id, submission_id is not null` — A document belongs to exactly one business context.
+
+## Customer (`customer.customer`)
+
+A policyholder as a customer - a thin dimension over party that adds tenure, segment and duty-of-care attributes. A party exists once; the customer view adds the relationship. Vulnerability is a duty-of-care signal, never a pricing input, and no protected-characteristic proxies are held here by design.
+
+**Grain:** One row per customer (policyholder party).
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| customer_id | string | yes | Identifier for the customer. | internal |  |  |
+| party_id | string | yes | The party this customer record is a view over. | internal |  |  |
+| first_policy_date | date |  | Date of the customer's first policy - the start of tenure. | internal |  |  |
+| tenure_years | integer |  | Years since first policy, derived from the renewal chain. | internal |  |  |
+| segment | string |  | Customer segment used for service and value analysis (not pricing). | internal |  |  |
+| vulnerable_flag | boolean |  | Whether a vulnerability has been identified - a duty-of-care signal. | pii |  |  |
+| vulnerability_basis_code | string |  | The driver of vulnerability, on the FCA four-driver framework. | pii |  |  |
+| marketing_consent | boolean |  | Whether the customer consented to marketing. | pii |  |  |
+| source_system_code | string | yes | System of record the customer is held in. | internal |  |  |
+
+**Primary key:** customer_id
+**Natural key:** party_id
+
+## Fair Value Assessment (`customer.fair_value_assessment`)
+
+A governed, attested Consumer Duty fair-value assessment for a product line in a period - price paid versus benefit delivered, with the verdict and who attested it. This is the board-level artifact: a versioned, owned, dated record, its numbers computed from premium and claims (see vw_fair_value_latest), not asserted.
+
+**Grain:** One row per line of business per assessment period.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| fair_value_assessment_id | string | yes | Identifier for the assessment. | internal |  |  |
+| line_of_business_code | string | yes | Product line assessed. | internal |  |  |
+| assessment_period | string | yes | Period assessed, e.g. 2026-H1. | internal |  |  |
+| avg_premium | decimal(18,2) |  | Average earned premium per policy in the period. | confidential |  |  |
+| avg_claims_paid | decimal(18,2) |  | Average claims incurred per policy in the period (the benefit). | confidential |  |  |
+| claims_acceptance_rate | decimal(6,4) |  | Share of claims accepted (not declined). | internal |  |  |
+| avg_settlement_days | integer |  | Average days from report to settlement. | internal |  |  |
+| complaint_ratio | decimal(8,4) |  | Complaints per 1,000 policies in the period. | internal |  |  |
+| fair_value_ratio | decimal(8,4) |  | Benefit-to-price ratio (claims incurred over earned premium). | confidential |  |  |
+| fair_value_outcome_code | string | yes | The fair-value verdict - fair, monitor or action. | internal |  |  |
+| attested_by | string |  | Role that attested the assessment. | internal |  |  |
+| attested_at | date |  | Date of attestation. | internal |  |  |
+| source_system_code | string | yes | System the assessment is recorded in. | internal |  |  |
+
+**Primary key:** fair_value_assessment_id
+**Natural key:** line_of_business_code, assessment_period
 
 ## Commission Transaction (`distribution.commission_transaction`)
 

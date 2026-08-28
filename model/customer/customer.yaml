@@ -1,0 +1,64 @@
+kind: entity
+name: customer
+domain: customer
+title: Customer
+description: >
+  A policyholder as a customer - a thin dimension over party that adds tenure,
+  segment and duty-of-care attributes. A party exists once; the customer view adds
+  the relationship. Vulnerability is a duty-of-care signal, never a pricing input,
+  and no protected-characteristic proxies are held here by design.
+grain: One row per customer (policyholder party).
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: customer_id
+    type: string
+    required: true
+    description: Identifier for the customer.
+    classification: internal
+  - name: party_id
+    references: party
+    type: string
+    required: true
+    description: The party this customer record is a view over.
+    classification: internal
+  - name: first_policy_date
+    type: date
+    required: false
+    description: Date of the customer's first policy - the start of tenure.
+    classification: internal
+  - name: tenure_years
+    type: integer
+    required: false
+    description: Years since first policy, derived from the renewal chain.
+    classification: internal
+  - name: segment
+    type: string
+    required: false
+    description: Customer segment used for service and value analysis (not pricing).
+    classification: internal
+  - name: vulnerable_flag
+    type: boolean
+    required: false
+    description: Whether a vulnerability has been identified - a duty-of-care signal.
+    classification: pii
+  - name: vulnerability_basis_code
+    code_set: vulnerability_basis
+    required: false
+    description: The driver of vulnerability, on the FCA four-driver framework.
+    classification: pii
+  - name: marketing_consent
+    type: boolean
+    required: false
+    description: Whether the customer consented to marketing.
+    classification: pii
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the customer is held in.
+    classification: internal
+keys:
+  primary: [customer_id]
+  natural: [party_id]
+owner: Chief Customer Officer

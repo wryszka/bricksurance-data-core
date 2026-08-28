@@ -1,0 +1,53 @@
+kind: view
+name: vw_fair_value_latest
+domain: semantics
+title: Fair Value (live, by product line)
+description: >
+  Consumer Duty fair value computed live by product line: earned premium, claims
+  incurred (the benefit), the benefit-to-price ratio and a verdict. No hardcoded
+  numbers - it derives from the premium_earning view and claim transactions, so a
+  product's fair value moves as the book does. The attested snapshot lives in
+  customer.fair_value_assessment; this is the always-current computation behind it.
+grain: One row per line of business.
+sql: |
+  WITH prem AS (
+    SELECT line_of_business_code,
+           SUM(earned_premium) AS earned_premium,
+           COUNT(DISTINCT policy_id) AS policies
+    FROM {semantics.premium_earning}
+    GROUP BY line_of_business_code
+  ),
+  clm AS (
+    SELECT p.line_of_business_code,
+           SUM(ct.amount) AS claims_incurred,
+           COUNT(DISTINCT CASE WHEN c.claim_status_code = 'DECLINED' THEN c.claim_id END) AS declined,
+           COUNT(DISTINCT c.claim_id) AS claims
+    FROM {claim.claim_transaction} ct
+    JOIN {claim.claim} c ON c.claim_id = ct.claim_id
+    JOIN {policy.policy} p ON p.policy_id = c.policy_id
+    GROUP BY p.line_of_business_code
+  ),
+  cmp AS (
+    SELECT p.line_of_business_code, COUNT(*) AS complaints
+    FROM {conduct.complaint} cp
+    JOIN {policy.policy} p ON p.policy_id = cp.policy_id
+    GROUP BY p.line_of_business_code
+  )
+  SELECT
+    prem.line_of_business_code,
+    CAST(prem.earned_premium AS DECIMAL(18,2)) AS earned_premium,
+    CAST(COALESCE(clm.claims_incurred, 0) AS DECIMAL(18,2)) AS claims_incurred,
+    prem.policies,
+    CAST(COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) AS DECIMAL(8,4)) AS fair_value_ratio,
+    CAST(1.0 - COALESCE(clm.declined, 0) / NULLIF(clm.claims, 0) AS DECIMAL(6,4)) AS claims_acceptance_rate,
+    CAST(COALESCE(cmp.complaints, 0) / NULLIF(prem.policies, 0) * 1000 AS DECIMAL(8,4)) AS complaint_ratio,
+    CASE
+      WHEN COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) > 1.10 THEN 'ACTION'
+      WHEN COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) < 0.15
+        OR (1.0 - COALESCE(clm.declined, 0) / NULLIF(clm.claims, 0)) < 0.90
+        OR COALESCE(cmp.complaints, 0) / NULLIF(prem.policies, 0) * 1000 > 10 THEN 'MONITOR'
+      ELSE 'FAIR'
+    END AS fair_value_outcome_code
+  FROM prem
+  LEFT JOIN clm ON clm.line_of_business_code = prem.line_of_business_code
+  LEFT JOIN cmp ON cmp.line_of_business_code = prem.line_of_business_code

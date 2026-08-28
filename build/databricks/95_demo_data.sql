@@ -2528,14 +2528,14 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_claim.claim_transacti
   ('ctx_1544', 'clm_0129', 'CASE_RESERVE_MOVEMENT', -967.82, 'GBP', DATE '2026-05-15', 'CLM_CORE'),
   ('ctx_1545', 'clm_0130', 'CASE_RESERVE_MOVEMENT', 40427.4, 'GBP', DATE '2026-09-19', 'CLM_CORE');
 
-INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_conduct.complaint (complaint_id, complaint_reference, complainant_party_id, policy_id, claim_id, complaint_category_code, complaint_status_code, received_date, closed_date, redress_amount, currency_code, source_system_code) VALUES
-  ('cpl_0001', 'CMP-2026-000001', 'pty_0010', NULL, 'clm_0002', 'CLAIMS_HANDLING', 'UPHELD', DATE '2025-01-27', DATE '2025-03-10', 1200.0, 'GBP', 'CLM_CORE'),
-  ('cpl_0002', 'CMP-2026-000002', 'pty_0013', NULL, 'clm_0003', 'CLAIMS_HANDLING', 'NOT_UPHELD', DATE '2025-10-08', DATE '2025-11-19', NULL, NULL, 'CLM_CORE'),
-  ('cpl_0003', 'CMP-2026-000003', 'pty_0016', NULL, 'clm_0004', 'CLAIMS_HANDLING', 'REFERRED_FOS', DATE '2025-12-03', DATE '2026-01-14', NULL, NULL, 'CLM_CORE'),
-  ('cpl_0004', 'CMP-2026-000004', 'pty_0009', NULL, 'clm_0005', 'ADMIN_AND_SERVICE', 'UPHELD', DATE '2025-05-03', DATE '2025-06-14', 150.0, 'GBP', 'CLM_CORE'),
-  ('cpl_0005', 'CMP-2026-000005', 'pty_0012', NULL, 'clm_0006', 'CLAIMS_HANDLING', 'OPEN', DATE '2024-10-22', NULL, NULL, NULL, 'CLM_CORE'),
-  ('cpl_0006', 'CMP-2026-000006', 'pty_0015', NULL, 'clm_0007', 'SALES_AND_ADVICE', 'NOT_UPHELD', DATE '2025-11-02', DATE '2025-12-14', NULL, NULL, 'CLM_CORE'),
-  ('cpl_0007', 'CMP-2026-000099', 'pty_0013', 'pol_0017', NULL, 'PRICING_AND_RENEWAL', 'NOT_UPHELD', DATE '2025-11-21', DATE '2025-12-16', NULL, NULL, 'PAS_CORE');
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_conduct.complaint (complaint_id, complaint_reference, complainant_party_id, policy_id, claim_id, complaint_category_code, complaint_status_code, received_date, closed_date, complaint_outcome_code, fos_referred, redress_amount, currency_code, source_system_code) VALUES
+  ('cpl_0001', 'CMP-2026-000001', 'pty_0010', NULL, 'clm_0002', 'CLAIMS_HANDLING', 'UPHELD', DATE '2025-01-27', DATE '2025-03-10', 'UPHELD', True, 1200.0, 'GBP', 'CLM_CORE'),
+  ('cpl_0002', 'CMP-2026-000002', 'pty_0013', NULL, 'clm_0003', 'CLAIMS_HANDLING', 'NOT_UPHELD', DATE '2025-10-08', DATE '2025-11-19', 'NOT_UPHELD', False, NULL, NULL, 'CLM_CORE'),
+  ('cpl_0003', 'CMP-2026-000003', 'pty_0016', NULL, 'clm_0004', 'CLAIMS_HANDLING', 'REFERRED_FOS', DATE '2025-12-03', DATE '2026-01-14', 'PARTIAL', False, NULL, NULL, 'CLM_CORE'),
+  ('cpl_0004', 'CMP-2026-000004', 'pty_0009', NULL, 'clm_0005', 'ADMIN_AND_SERVICE', 'UPHELD', DATE '2025-05-03', DATE '2025-06-14', 'NOT_UPHELD', False, 150.0, 'GBP', 'CLM_CORE'),
+  ('cpl_0005', 'CMP-2026-000005', 'pty_0012', NULL, 'clm_0006', 'CLAIMS_HANDLING', 'OPEN', DATE '2024-10-22', NULL, 'UPHELD', False, NULL, NULL, 'CLM_CORE'),
+  ('cpl_0006', 'CMP-2026-000006', 'pty_0015', NULL, 'clm_0007', 'SALES_AND_ADVICE', 'NOT_UPHELD', DATE '2025-11-02', DATE '2025-12-14', 'NOT_UPHELD', False, NULL, NULL, 'CLM_CORE'),
+  ('cpl_0007', 'CMP-2026-000099', 'pty_0013', 'pol_0017', NULL, 'PRICING_AND_RENEWAL', 'NOT_UPHELD', DATE '2025-11-21', DATE '2025-12-16', 'PARTIAL', False, NULL, NULL, 'PAS_CORE');
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty (treaty_id, treaty_reference, treaty_type_code, line_of_business_code, underwriting_year, inception_date, expiry_date, cession_rate, currency_code, source_system_code) VALUES
   ('trt_0001', 'TR-QS-PROP-2026', 'QUOTA_SHARE', 'COMMERCIAL_PROPERTY', 2026, DATE '2026-01-01', DATE '2026-12-31', 0.3, 'GBP', 'RI_CORE'),
@@ -14509,3 +14509,21 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_investment.asset_cash
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_investment.asset_valuation_run (asset_valuation_run_id, as_of_date, curve_set, run_hash, source_system_code) VALUES
   ('avr_2026-03-31', DATE '2026-03-31', 'EIOPA RFR 2026-06', 'aa2fbbd6ae6f33b7', 'INV_CORE'),
   ('avr_2026-06-28', DATE '2026-06-28', 'EIOPA RFR 2026-06', '4ed33bb7879e570f', 'INV_CORE');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_customer.customer (customer_id, party_id, first_policy_date, tenure_years, segment, vulnerable_flag, vulnerability_basis_code, marketing_consent, source_system_code) VALUES
+  ('cus_pty_0007', 'pty_0007', DATE '2019-02-02', 7, 'KEY_ACCOUNT', True, 'LIFE_EVENT', False, 'CRM_CORE'),
+  ('cus_pty_0008', 'pty_0008', DATE '2019-03-03', 7, 'KEY_ACCOUNT', False, 'NONE', True, 'CRM_CORE'),
+  ('cus_pty_0009', 'pty_0009', DATE '2019-04-04', 7, 'KEY_ACCOUNT', False, 'NONE', True, 'CRM_CORE'),
+  ('cus_pty_0010', 'pty_0010', DATE '2019-01-01', 7, 'KEY_ACCOUNT', False, 'NONE', True, 'CRM_CORE'),
+  ('cus_pty_0011', 'pty_0011', DATE '2024-02-16', 2, 'KEY_ACCOUNT', False, 'NONE', False, 'CRM_CORE'),
+  ('cus_pty_0012', 'pty_0012', DATE '2024-01-27', 2, 'KEY_ACCOUNT', False, 'NONE', True, 'CRM_CORE'),
+  ('cus_pty_0013', 'pty_0013', DATE '2024-10-17', 2, 'KEY_ACCOUNT', False, 'NONE', True, 'CRM_CORE'),
+  ('cus_pty_0014', 'pty_0014', DATE '2024-06-16', 2, 'KEY_ACCOUNT', False, 'NONE', True, 'CRM_CORE'),
+  ('cus_pty_0015', 'pty_0015', DATE '2024-01-15', 2, 'KEY_ACCOUNT', False, 'NONE', False, 'CRM_CORE'),
+  ('cus_pty_0016', 'pty_0016', DATE '2024-09-21', 2, 'KEY_ACCOUNT', True, 'LIFE_EVENT', True, 'CRM_CORE');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_customer.fair_value_assessment (fair_value_assessment_id, line_of_business_code, assessment_period, avg_premium, avg_claims_paid, claims_acceptance_rate, avg_settlement_days, complaint_ratio, fair_value_ratio, fair_value_outcome_code, attested_by, attested_at, source_system_code) VALUES
+  ('fva_COMMERCIAL_PROPERTY_2026H1', 'COMMERCIAL_PROPERTY', '2026-H1', 140517.87, 76096.1, 0.9722, 45, 18.8679, 0.5415, 'MONITOR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE'),
+  ('fva_GENERAL_LIABILITY_2026H1', 'GENERAL_LIABILITY', '2026-H1', 98781.44, 49081.98, 1.0, 45, 0.0, 0.4969, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE'),
+  ('fva_MARINE_CARGO_2026H1', 'MARINE_CARGO', '2026-H1', 73899.93, 45669.34, 1.0, 45, 0.0, 0.618, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE'),
+  ('fva_MOTOR_2026H1', 'MOTOR', '2026-H1', 23954.91, 11791.43, 0.9688, 45, 0.0, 0.4922, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE');

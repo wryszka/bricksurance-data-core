@@ -153,3 +153,42 @@ Model v0.13.0, deployed, **smoke 60/60 pass**. Extended the `investment` domain 
   world_engine BEFORE deploy, or new tables deploy empty (WP3 tables were empty until
   world_engine re-run).
 - S2 workbench migration and ESTATE_MANIFEST wiring remain out of scope (publish-only).
+
+---
+
+## 2026-08-28 — Phase 6 (WP4 Customer & Conduct) COMPLETE
+
+Model v0.14.0, deployed, **smoke 67/67 pass**. New `customer` domain + extend `conduct` (D4).
+- Entities: customer (thin over party; vulnerable_flag/basis + marketing_consent all PII;
+  NO protected-characteristic proxies by design), fair_value_assessment (attested Consumer
+  Duty artifact). Extended conduct.complaint (+complaint_outcome_code, +fos_referred).
+  Code sets: vulnerability_basis (FCA 4-driver, the single estate-wide taxonomy),
+  complaint_outcome, fair_value_outcome.
+- vw_fair_value_latest computes fair value LIVE per LOB from premium_earning + claims +
+  complaints (no hardcoded numbers). conduct_metrics (uphold rate, FOS, redress).
+- **Fair value is price AND benefit AND service:** MONITOR fires on thin benefit
+  (<0.15) OR poor claims acceptance (<0.90) OR high complaints (>10/1000). Commercial
+  Property lands MONITOR honestly via its complaint ratio (18.9/1000) — the demo amber,
+  data-driven not fabricated. Seed entity outcome == live view outcome (same rule, smoke
+  checks they agree).
+- PII conformance smoke checks: no protected-characteristic proxy columns; vulnerable_flag
+  classified pii (codifies pricing gen1's C6 lesson as a design rule).
+- App refreshed to v0.14.0. Vulnerability taxonomy created here as the canonical estate-wide
+  code set (claims workbench to consume the same when it migrates).
+
+## 2026-08-28 — Ontos adoption (planned, not built)
+
+User decided to adopt **Ontos** (databrickslabs/ontos) — see [[reference-ontos-databricks-labs]].
+**Chosen approach = Track B (deploy-first):** stand Ontos up on serverless first, THEN make
+our model compatible with it. **Atlas stays as-is — do NOT slim or change it** (user:
+"atlas stays for now, we don't need to change it").
+- Our ontology JSON stays canonical/open; Ontos is a NEW export target (like the
+  databricks/snowflake bindings) — nothing existing is lost.
+- Track B steps: provision Lakebase (FEVM addon) → clone databrickslabs/ontos → configure
+  its DAB (catalog/schema vars + .env) → deploy as a DBX App → grant SP read on bricksurance_*.
+- Then compatibility: tools/export_ontos.py emits ODCS contracts + ODPS products + RDF/SKOS
+  concepts from build/ontology JSON and loads them via Ontos's REST API (confirm exact
+  create endpoints via its /docs).
+- Ontos is Databricks-licensed (proprietary); our model stays Apache-open. Ontos needs
+  Postgres/Lakebase (more infra than Atlas). Slotted after the remaining Gen2 WPs unless
+  pulled forward.

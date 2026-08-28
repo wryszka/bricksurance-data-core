@@ -1,4 +1,4 @@
-# Genie instructions — Bricksurance Data Core v0.13.0
+# Genie instructions — Bricksurance Data Core v0.14.0
 
 You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses. When presenting results, always resolve identifier columns (anything ending _id) to business names or labels by joining the referenced table - e.g. party_id -> party.name - and never show raw surrogate ids unless the user asks for them.
 
@@ -18,6 +18,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.claim_transaction_type` — Kinds of claim financial movement. Claims finance is transactional: case reserves, payments and recoveries are signed movements, and figures such as outstanding or incurred are always derived by summation. Grain: One row per claim transaction type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.commission_type` — Kinds of intermediary remuneration. Commission is transactional - signed movements, never overwritten balances - and disclosable by design. Grain: One row per commission type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.complaint_category` — Root category of a customer complaint, aligned to UK FCA complaints reporting groupings. Grain: One row per complaint category code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.complaint_outcome` — How a complaint was resolved on its merits - distinct from its handling status. Grain: One row per complaint outcome code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.complaint_status` — Handling status of a complaint, through to ombudsman referral. Grain: One row per complaint status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.consent_purpose` — Purposes a data subject can consent to, per the processing register. Grain: One row per consent purpose code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.consent_status` — State of a consent record; withdrawal is an auditable event, not a deletion. Grain: One row per consent status code.
@@ -35,6 +36,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.endorsement_type` — Kinds of mid-term change to a policy. The premium effect of an endorsement is always booked as premium transactions; the endorsement records the contractual change itself. Grain: One row per endorsement type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.event_source_system` — Where a policy lifecycle event originated - the channel or system that raised it. Distinct from source_system (system of record for a row); this names the actor's channel so delegated and agentic business is visible in the spine. Grain: One row per event source system code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.expense_type` — Kinds of operating expense allocated to lines of business - the missing half of the combined ratio. Grain: One row per expense type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.fair_value_outcome` — The verdict of a product fair-value assessment under Consumer Duty - whether the price paid is justified by the benefit delivered. Grain: One row per fair value outcome code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.flood_band` — Flood risk banding for a location, low to very high. A modelled hazard classification, not a live flood state. Grain: One row per flood band code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.fraud_signal_type` — Kinds of fraud indicator on a claim. Signals inform investigation; they never auto-decide. Grain: One row per fraud signal type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.hazard_source` — Provenance of a geospatial hazard rating - which external model or authority the banding came from. Provenance travels with the enrichment. Grain: One row per hazard source code.
@@ -84,6 +86,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.urbanity` — Settlement type of a postcode, urban to rural, used as a rating and accumulation dimension. Grain: One row per urbanity code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.uw_submission_status` — Status of a direct underwriting submission as it moves from received to a quote or a decline - the grain before a quote exists. Grain: One row per underwriting submission status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.valuation_measure` — Financial measures produced by valuation processes across regimes. One code set serves life and non-life, Solvency II and IFRS 17: a measure is a defined quantity, and new regimes add codes, not tables. Grain: One row per valuation measure code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.vulnerability_basis` — The driver of a customer's vulnerability, on the FCA's four-driver framework. The single estate-wide taxonomy - claims, customer and conduct all use these codes. A vulnerability flag is a duty-of-care signal, never a pricing input. Grain: One row per vulnerability basis code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.data_dictionary` — Machine-readable dictionary of every entity and attribute in the model, generated from the specs. Include this table in every data share so the semantics travel with the data. Grain: One row per attribute per entity per model version.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim` — A demand for indemnity under a policy arising from a loss event. The claim record holds the event and handling state; all financial development lives in claim transactions. Grain: One row per claim per source system.
 - `lr_serverless_aws_us_catalog.bricksurance_claim.claim_feature` — A feature (head of damage) within a claim - a sub-claim that reserves and settles on its own, e.g. own damage versus third-party injury under one motor claim. Financial development still flows through claim transactions; the feature gives claims and reserving teams the grain they actually work at. Grain: One row per feature per claim.
@@ -95,6 +98,8 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_claim.litigation` — Legal proceedings arising from a claim - status, jurisdiction and the legal reserve. Litigation is a material driver of claim cost and duration; modelling it lets the claims workbench track defended matters distinctly. Grain: One row per suit per claim.
 - `lr_serverless_aws_us_catalog.bricksurance_conduct.complaint` — A customer complaint, categorised per UK FCA reporting groupings and tracked through to ombudsman referral. The conduct domain is where fair treatment becomes measurable. Grain: One row per complaint per source system.
 - `lr_serverless_aws_us_catalog.bricksurance_content.document` — Governed unstructured content: policy wordings, schedules, claim evidence, survey reports, MRC slips. The extracted text is carried in the row so LLM tools search and cite documents under the same classification and lineage as structured data; binary originals live in a Volume referenced by path. Grain: One row per document version.
+- `lr_serverless_aws_us_catalog.bricksurance_customer.customer` — A policyholder as a customer - a thin dimension over party that adds tenure, segment and duty-of-care attributes. A party exists once; the customer view adds the relationship. Vulnerability is a duty-of-care signal, never a pricing input, and no protected-characteristic proxies are held here by design. Grain: One row per customer (policyholder party).
+- `lr_serverless_aws_us_catalog.bricksurance_customer.fair_value_assessment` — A governed, attested Consumer Duty fair-value assessment for a product line in a period - price paid versus benefit delivered, with the verdict and who attested it. This is the board-level artifact: a versioned, owned, dated record, its numbers computed from premium and claims (see vw_fair_value_latest), not asserted. Grain: One row per line of business per assessment period.
 - `lr_serverless_aws_us_catalog.bricksurance_distribution.commission_transaction` — A signed intermediary remuneration movement on a policy. Transactional like all money in this model; disclosable commission is a query, not a project. Grain: One row per commission movement per policy per intermediary.
 - `lr_serverless_aws_us_catalog.bricksurance_enrichment.credit_bureau_summary` — A banded summary of a party's consumer credit standing from a bureau pull. Banded, not raw, and held only where a lawful basis and disclosure exist. Personal data - classified accordingly. Grain: One row per party per bureau pull.
 - `lr_serverless_aws_us_catalog.bricksurance_enrichment.geospatial_hazard` — Modelled peril hazard for a location - flood, subsidence, crime and coastal exposure - with the source it came from. Used in property rating and catastrophe accumulation. A modelled classification, not a live event state. Grain: One row per location key per hazard source.
@@ -244,6 +249,15 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - MEASURE(ceded_premium): Premium ceded to reinsurers, in original currency.
   - MEASURE(average_ceded_share): Effective ceded share - ceded premium over gross premium.
   - MEASURE(ceded_policy_count): Number of distinct policies with ceded premium.
+- `lr_serverless_aws_us_catalog.bricksurance_semantics.conduct_metrics` — Conduct KPIs over complaints - volumes, uphold rate, ombudsman-referral rate and redress, by category and outcome. The customer-fairness scoreboard alongside the fair-value view. Query measures with MEASURE(name).
+  - dimension complaint_category_code: Root category of the complaint (FCA grouping).
+  - dimension complaint_outcome_code: How the complaint resolved on its merits.
+  - dimension received_month: Calendar month the complaint was received.
+  - MEASURE(complaint_count): Number of complaints.
+  - MEASURE(upheld_count): Complaints upheld in full or part.
+  - MEASURE(uphold_rate): Upheld over all complaints.
+  - MEASURE(fos_referred_count): Complaints referred to the Financial Ombudsman Service.
+  - MEASURE(total_redress): Total redress paid, in stated currency.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.financial_position` — Financial-statement line items assembled from the ledger via the statement mapping - the balance sheet and income statement in business language, by legal entity and regime. Query MEASURE(line_amount) grouped by statement and line; constrain currency_code and reporting_regime.
   - dimension statement_type: Balance sheet, income statement or cash flow.
   - dimension reporting_regime: Presentation regime; constrain this.
@@ -361,6 +375,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Claim Transaction Type: CASE_RESERVE_MOVEMENT (Case Reserve Movement), INDEMNITY_PAYMENT (Indemnity Payment), EXPENSE_PAYMENT (Expense Payment), RECOVERY (Recovery).
 - Commission Type: NEW_BUSINESS (New Business Commission), RENEWAL (Renewal Commission), PROFIT (Profit Commission), CLAWBACK (Clawback).
 - Complaint Category: CLAIMS_HANDLING (Claims Handling), SALES_AND_ADVICE (Sales & Advice), ADMIN_AND_SERVICE (Administration & Service), PRICING_AND_RENEWAL (Pricing & Renewal).
+- Complaint Outcome: UPHELD (Upheld), PARTIAL (Partially Upheld), NOT_UPHELD (Not Upheld), PENDING (Pending).
 - Complaint Status: OPEN (Open), UPHELD (Upheld), NOT_UPHELD (Not Upheld), REFERRED_FOS (Referred to FOS).
 - Consent Purpose: MARKETING (Marketing), DATA_SHARING (Data Sharing), PROFILING (Profiling).
 - Consent Status: GRANTED (Granted), WITHDRAWN (Withdrawn), EXPIRED (Expired).
@@ -378,6 +393,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Endorsement Type: MID_TERM_ADJUSTMENT (Mid-term Adjustment), COVERAGE_CHANGE (Coverage Change), SUM_INSURED_CHANGE (Sum Insured Change), EXTENSION (Extension), CANCELLATION (Cancellation).
 - Event Source System: UW_WORKBENCH (Underwriting Workbench), PORTAL (Customer Portal), BROKER_MCP (Broker (MCP)), BORDEREAU (Bordereau), BATCH (Batch), MIGRATION (Migration).
 - Expense Type: ACQUISITION (Acquisition Expense), OPERATING (Operating Expense), CLAIMS_HANDLING (Claims Handling Expense).
+- Fair Value Outcome: FAIR (Fair Value), MONITOR (Monitor), ACTION (Action Required).
 - Flood Band: LOW (Low), MODERATE (Moderate), HIGH (High), VERY_HIGH (Very High).
 - Fraud Signal Type: LATE_REPORTING (Late Reporting), PRIOR_CLAIMS (Prior Claims Pattern), VELOCITY (Velocity), DOC_INCONSISTENCY (Document Inconsistency), NETWORK_LINK (Network Link).
 - Hazard Source: ENV_AGENCY (Environment Agency), BGS (Geological Survey), CAT_MODEL (Cat Model), INTERNAL (Internal).
@@ -427,3 +443,4 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Urbanity: URBAN_MAJOR (Major Urban), URBAN (Urban), SUBURBAN (Suburban), RURAL (Rural).
 - Underwriting Submission Status: RECEIVED (Received), IN_APPETITE (In Appetite), REFERRED (Referred), QUOTED (Quoted), DECLINED (Declined), WITHDRAWN (Withdrawn).
 - Valuation Measure: BEL (Best Estimate Liability), RISK_MARGIN (Risk Margin), TECHNICAL_PROVISION (Technical Provision), CASE_RESERVE_TOTAL (Case Reserves (Total)), IBNR (IBNR), SCR (Solvency Capital Requirement), OWN_FUNDS (Own Funds), CSM (Contractual Service Margin), RISK_ADJUSTMENT (Risk Adjustment), MCR (Minimum Capital Requirement), ELIGIBLE_OWN_FUNDS_T1 (Eligible Own Funds - Tier 1), SCR_COVERAGE_RATIO (SCR Coverage Ratio), LRC (Liability for Remaining Coverage), LIC (Liability for Incurred Claims), DAC (Deferred Acquisition Costs), UPR (Unearned Premium Reserve).
+- Vulnerability Basis: HEALTH (Health), LIFE_EVENT (Life Event), RESILIENCE (Resilience), CAPABILITY (Capability), NONE (None identified).

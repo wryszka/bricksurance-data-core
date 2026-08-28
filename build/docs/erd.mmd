@@ -69,6 +69,11 @@ erDiagram
         string label
         string description
     }
+    complaint_outcome {
+        string complaint_outcome_code PK
+        string label
+        string description
+    }
     complaint_status {
         string complaint_status_code PK
         string label
@@ -151,6 +156,11 @@ erDiagram
     }
     expense_type {
         string expense_type_code PK
+        string label
+        string description
+    }
+    fair_value_outcome {
+        string fair_value_outcome_code PK
         string label
         string description
     }
@@ -399,6 +409,11 @@ erDiagram
         string label
         string description
     }
+    vulnerability_basis {
+        string vulnerability_basis_code PK
+        string label
+        string description
+    }
     data_dictionary {
         string entity_name PK
         string attribute_name PK
@@ -502,6 +517,8 @@ erDiagram
         string complaint_status_code
         date received_date
         date closed_date
+        string complaint_outcome_code
+        boolean fos_referred
         decimal redress_amount
         string currency_code
         string source_system_code
@@ -517,6 +534,32 @@ erDiagram
         string extracted_text
         string volume_path
         date created_date
+        string source_system_code
+    }
+    customer {
+        string customer_id PK
+        string party_id
+        date first_policy_date
+        integer tenure_years
+        string segment
+        boolean vulnerable_flag
+        string vulnerability_basis_code
+        boolean marketing_consent
+        string source_system_code
+    }
+    fair_value_assessment {
+        string fair_value_assessment_id PK
+        string line_of_business_code
+        string assessment_period
+        decimal avg_premium
+        decimal avg_claims_paid
+        decimal claims_acceptance_rate
+        integer avg_settlement_days
+        decimal complaint_ratio
+        decimal fair_value_ratio
+        string fair_value_outcome_code
+        string attested_by
+        date attested_at
         string source_system_code
     }
     commission_transaction {
@@ -1361,6 +1404,7 @@ erDiagram
     complaint }o--|| claim : claim_id
     complaint }o--|| complaint_category : complaint_category_code
     complaint }o--|| complaint_status : complaint_status_code
+    complaint }o--|| complaint_outcome : complaint_outcome_code
     complaint }o--|| currency : currency_code
     complaint }o--|| source_system : source_system_code
     document }o--|| document_type : document_type_code
@@ -1369,6 +1413,12 @@ erDiagram
     document }o--|| claim : claim_id
     document }o--|| submission : submission_id
     document }o--|| source_system : source_system_code
+    customer }o--|| party : party_id
+    customer }o--|| vulnerability_basis : vulnerability_basis_code
+    customer }o--|| source_system : source_system_code
+    fair_value_assessment }o--|| line_of_business : line_of_business_code
+    fair_value_assessment }o--|| fair_value_outcome : fair_value_outcome_code
+    fair_value_assessment }o--|| source_system : source_system_code
     commission_transaction }o--|| policy : policy_id
     commission_transaction }o--|| party : party_id
     commission_transaction }o--|| commission_type : commission_type_code

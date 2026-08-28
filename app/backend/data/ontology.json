@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with an indicative Lloyd's Core Data Record crosswalk. The crosswalk is a hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names, not a verified extract from the licensed models; element names are cited only, and the licensed standards are not reproduced.",
   "domains": [
@@ -560,6 +560,34 @@
     },
     {
       "kind": "code_set",
+      "name": "complaint_outcome",
+      "title": "Complaint Outcome",
+      "description": "How a complaint was resolved on its merits - distinct from its handling status.\n",
+      "codes": [
+        {
+          "code": "UPHELD",
+          "label": "Upheld",
+          "description": "The complaint was upheld in the complainant's favour."
+        },
+        {
+          "code": "PARTIAL",
+          "label": "Partially Upheld",
+          "description": "The complaint was partially upheld."
+        },
+        {
+          "code": "NOT_UPHELD",
+          "label": "Not Upheld",
+          "description": "The complaint was not upheld."
+        },
+        {
+          "code": "PENDING",
+          "label": "Pending",
+          "description": "Outcome not yet determined."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "complaint_status",
       "title": "Complaint Status",
       "description": "Handling status of a complaint, through to ombudsman referral.",
@@ -1094,6 +1122,29 @@
           "code": "CLAIMS_HANDLING",
           "label": "Claims Handling Expense",
           "description": "Unallocated claims handling cost (ULAE)."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "fair_value_outcome",
+      "title": "Fair Value Outcome",
+      "description": "The verdict of a product fair-value assessment under Consumer Duty - whether the price paid is justified by the benefit delivered.\n",
+      "codes": [
+        {
+          "code": "FAIR",
+          "label": "Fair Value",
+          "description": "Price and benefit are aligned; fair value confirmed."
+        },
+        {
+          "code": "MONITOR",
+          "label": "Monitor",
+          "description": "A watch item; benefit-to-price warrants monitoring."
+        },
+        {
+          "code": "ACTION",
+          "label": "Action Required",
+          "description": "Fair value not evidenced; remedial action required."
         }
       ]
     },
@@ -2722,6 +2773,39 @@
           "description": "Premium received but not yet earned."
         }
       ]
+    },
+    {
+      "kind": "code_set",
+      "name": "vulnerability_basis",
+      "title": "Vulnerability Basis",
+      "description": "The driver of a customer's vulnerability, on the FCA's four-driver framework. The single estate-wide taxonomy - claims, customer and conduct all use these codes. A vulnerability flag is a duty-of-care signal, never a pricing input.\n",
+      "codes": [
+        {
+          "code": "HEALTH",
+          "label": "Health",
+          "description": "A health condition or disability affecting the ability to engage."
+        },
+        {
+          "code": "LIFE_EVENT",
+          "label": "Life Event",
+          "description": "A major life event such as bereavement or job loss."
+        },
+        {
+          "code": "RESILIENCE",
+          "label": "Resilience",
+          "description": "Low financial or emotional resilience to withstand shocks."
+        },
+        {
+          "code": "CAPABILITY",
+          "label": "Capability",
+          "description": "Low knowledge, confidence or capability in financial matters."
+        },
+        {
+          "code": "NONE",
+          "label": "None identified",
+          "description": "No vulnerability driver identified."
+        }
+      ]
     }
   ],
   "entities": [
@@ -3459,6 +3543,20 @@
           "classification": "internal"
         },
         {
+          "name": "complaint_outcome_code",
+          "code_set": "complaint_outcome",
+          "required": false,
+          "description": "How the complaint resolved on its merits (upheld / partial / not upheld).",
+          "classification": "internal"
+        },
+        {
+          "name": "fos_referred",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the complaint was referred to the Financial Ombudsman Service.",
+          "classification": "internal"
+        },
+        {
           "name": "redress_amount",
           "type": "decimal(18,2)",
           "required": false,
@@ -3600,6 +3698,208 @@
         }
       ],
       "owner": "Chief Data Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "customer",
+      "domain": "customer",
+      "title": "Customer",
+      "description": "A policyholder as a customer - a thin dimension over party that adds tenure, segment and duty-of-care attributes. A party exists once; the customer view adds the relationship. Vulnerability is a duty-of-care signal, never a pricing input, and no protected-characteristic proxies are held here by design.\n",
+      "grain": "One row per customer (policyholder party).",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "customer_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the customer.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The party this customer record is a view over.",
+          "classification": "internal"
+        },
+        {
+          "name": "first_policy_date",
+          "type": "date",
+          "required": false,
+          "description": "Date of the customer's first policy - the start of tenure.",
+          "classification": "internal"
+        },
+        {
+          "name": "tenure_years",
+          "type": "integer",
+          "required": false,
+          "description": "Years since first policy, derived from the renewal chain.",
+          "classification": "internal"
+        },
+        {
+          "name": "segment",
+          "type": "string",
+          "required": false,
+          "description": "Customer segment used for service and value analysis (not pricing).",
+          "classification": "internal"
+        },
+        {
+          "name": "vulnerable_flag",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether a vulnerability has been identified - a duty-of-care signal.",
+          "classification": "pii"
+        },
+        {
+          "name": "vulnerability_basis_code",
+          "code_set": "vulnerability_basis",
+          "required": false,
+          "description": "The driver of vulnerability, on the FCA four-driver framework.",
+          "classification": "pii"
+        },
+        {
+          "name": "marketing_consent",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the customer consented to marketing.",
+          "classification": "pii"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the customer is held in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "customer_id"
+        ],
+        "natural": [
+          "party_id"
+        ]
+      },
+      "owner": "Chief Customer Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "fair_value_assessment",
+      "domain": "customer",
+      "title": "Fair Value Assessment",
+      "description": "A governed, attested Consumer Duty fair-value assessment for a product line in a period - price paid versus benefit delivered, with the verdict and who attested it. This is the board-level artifact: a versioned, owned, dated record, its numbers computed from premium and claims (see vw_fair_value_latest), not asserted.\n",
+      "grain": "One row per line of business per assessment period.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "fair_value_assessment_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the assessment.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Product line assessed.",
+          "classification": "internal"
+        },
+        {
+          "name": "assessment_period",
+          "type": "string",
+          "required": true,
+          "description": "Period assessed, e.g. 2026-H1.",
+          "classification": "internal"
+        },
+        {
+          "name": "avg_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Average earned premium per policy in the period.",
+          "classification": "confidential"
+        },
+        {
+          "name": "avg_claims_paid",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Average claims incurred per policy in the period (the benefit).",
+          "classification": "confidential"
+        },
+        {
+          "name": "claims_acceptance_rate",
+          "type": "decimal(6,4)",
+          "required": false,
+          "description": "Share of claims accepted (not declined).",
+          "classification": "internal"
+        },
+        {
+          "name": "avg_settlement_days",
+          "type": "integer",
+          "required": false,
+          "description": "Average days from report to settlement.",
+          "classification": "internal"
+        },
+        {
+          "name": "complaint_ratio",
+          "type": "decimal(8,4)",
+          "required": false,
+          "description": "Complaints per 1,000 policies in the period.",
+          "classification": "internal"
+        },
+        {
+          "name": "fair_value_ratio",
+          "type": "decimal(8,4)",
+          "required": false,
+          "description": "Benefit-to-price ratio (claims incurred over earned premium).",
+          "classification": "confidential"
+        },
+        {
+          "name": "fair_value_outcome_code",
+          "code_set": "fair_value_outcome",
+          "required": true,
+          "description": "The fair-value verdict - fair, monitor or action.",
+          "classification": "internal"
+        },
+        {
+          "name": "attested_by",
+          "type": "string",
+          "required": false,
+          "description": "Role that attested the assessment.",
+          "classification": "internal"
+        },
+        {
+          "name": "attested_at",
+          "type": "date",
+          "required": false,
+          "description": "Date of attestation.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the assessment is recorded in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "fair_value_assessment_id"
+        ],
+        "natural": [
+          "line_of_business_code",
+          "assessment_period"
+        ]
+      },
+      "owner": "Chief Customer Officer"
     },
     {
       "kind": "entity",
@@ -10057,6 +10357,15 @@
     },
     {
       "kind": "view",
+      "name": "vw_fair_value_latest",
+      "domain": "semantics",
+      "title": "Fair Value (live, by product line)",
+      "description": "Consumer Duty fair value computed live by product line: earned premium, claims incurred (the benefit), the benefit-to-price ratio and a verdict. No hardcoded numbers - it derives from the premium_earning view and claim transactions, so a product's fair value moves as the book does. The attested snapshot lives in customer.fair_value_assessment; this is the always-current computation behind it.\n",
+      "grain": "One row per line of business.",
+      "sql": "WITH prem AS (\n  SELECT line_of_business_code,\n         SUM(earned_premium) AS earned_premium,\n         COUNT(DISTINCT policy_id) AS policies\n  FROM {semantics.premium_earning}\n  GROUP BY line_of_business_code\n),\nclm AS (\n  SELECT p.line_of_business_code,\n         SUM(ct.amount) AS claims_incurred,\n         COUNT(DISTINCT CASE WHEN c.claim_status_code = 'DECLINED' THEN c.claim_id END) AS declined,\n         COUNT(DISTINCT c.claim_id) AS claims\n  FROM {claim.claim_transaction} ct\n  JOIN {claim.claim} c ON c.claim_id = ct.claim_id\n  JOIN {policy.policy} p ON p.policy_id = c.policy_id\n  GROUP BY p.line_of_business_code\n),\ncmp AS (\n  SELECT p.line_of_business_code, COUNT(*) AS complaints\n  FROM {conduct.complaint} cp\n  JOIN {policy.policy} p ON p.policy_id = cp.policy_id\n  GROUP BY p.line_of_business_code\n)\nSELECT\n  prem.line_of_business_code,\n  CAST(prem.earned_premium AS DECIMAL(18,2)) AS earned_premium,\n  CAST(COALESCE(clm.claims_incurred, 0) AS DECIMAL(18,2)) AS claims_incurred,\n  prem.policies,\n  CAST(COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) AS DECIMAL(8,4)) AS fair_value_ratio,\n  CAST(1.0 - COALESCE(clm.declined, 0) / NULLIF(clm.claims, 0) AS DECIMAL(6,4)) AS claims_acceptance_rate,\n  CAST(COALESCE(cmp.complaints, 0) / NULLIF(prem.policies, 0) * 1000 AS DECIMAL(8,4)) AS complaint_ratio,\n  CASE\n    WHEN COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) > 1.10 THEN 'ACTION'\n    WHEN COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) < 0.15\n      OR (1.0 - COALESCE(clm.declined, 0) / NULLIF(clm.claims, 0)) < 0.90\n      OR COALESCE(cmp.complaints, 0) / NULLIF(prem.policies, 0) * 1000 > 10 THEN 'MONITOR'\n    ELSE 'FAIR'\n  END AS fair_value_outcome_code\nFROM prem\nLEFT JOIN clm ON clm.line_of_business_code = prem.line_of_business_code\nLEFT JOIN cmp ON cmp.line_of_business_code = prem.line_of_business_code\n"
+    },
+    {
+      "kind": "view",
       "name": "vw_premium_proof",
       "domain": "semantics",
       "title": "Premium Proof (written = earned + unearned)",
@@ -10478,6 +10787,60 @@
           "name": "ceded_policy_count",
           "expr": "COUNT(DISTINCT policy_number)",
           "description": "Number of distinct policies with ceded premium."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "conduct_metrics",
+      "domain": "semantics",
+      "title": "Conduct Metrics",
+      "description": "Conduct KPIs over complaints - volumes, uphold rate, ombudsman-referral rate and redress, by category and outcome. The customer-fairness scoreboard alongside the fair-value view. Query measures with MEASURE(name).\n",
+      "owner": "Chief Customer Officer",
+      "certification": "draft",
+      "source": "conduct.complaint",
+      "dimensions": [
+        {
+          "name": "complaint_category_code",
+          "expr": "complaint_category_code",
+          "description": "Root category of the complaint (FCA grouping)."
+        },
+        {
+          "name": "complaint_outcome_code",
+          "expr": "complaint_outcome_code",
+          "description": "How the complaint resolved on its merits."
+        },
+        {
+          "name": "received_month",
+          "expr": "DATE_TRUNC('MONTH', received_date)",
+          "description": "Calendar month the complaint was received."
+        }
+      ],
+      "measures": [
+        {
+          "name": "complaint_count",
+          "expr": "COUNT(complaint_id)",
+          "description": "Number of complaints."
+        },
+        {
+          "name": "upheld_count",
+          "expr": "COUNT(CASE WHEN complaint_outcome_code IN ('UPHELD', 'PARTIAL') THEN complaint_id END)",
+          "description": "Complaints upheld in full or part."
+        },
+        {
+          "name": "uphold_rate",
+          "expr": "COUNT(CASE WHEN complaint_outcome_code IN ('UPHELD', 'PARTIAL') THEN complaint_id END) / NULLIF(COUNT(complaint_id), 0)",
+          "description": "Upheld over all complaints."
+        },
+        {
+          "name": "fos_referred_count",
+          "expr": "COUNT(CASE WHEN fos_referred THEN complaint_id END)",
+          "description": "Complaints referred to the Financial Ombudsman Service."
+        },
+        {
+          "name": "total_redress",
+          "expr": "SUM(redress_amount)",
+          "description": "Total redress paid, in stated currency."
         }
       ]
     },
@@ -11761,6 +12124,13 @@
     },
     {
       "from_entity": "complaint",
+      "attribute": "complaint_outcome_code",
+      "to": "complaint_outcome",
+      "to_kind": "code_set",
+      "to_attribute": "complaint_outcome_code"
+    },
+    {
+      "from_entity": "complaint",
       "attribute": "currency_code",
       "to": "currency",
       "to_kind": "code_set",
@@ -11810,6 +12180,48 @@
     },
     {
       "from_entity": "document",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "customer",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "customer",
+      "attribute": "vulnerability_basis_code",
+      "to": "vulnerability_basis",
+      "to_kind": "code_set",
+      "to_attribute": "vulnerability_basis_code"
+    },
+    {
+      "from_entity": "customer",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "fair_value_assessment",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "fair_value_assessment",
+      "attribute": "fair_value_outcome_code",
+      "to": "fair_value_outcome",
+      "to_kind": "code_set",
+      "to_attribute": "fair_value_outcome_code"
+    },
+    {
+      "from_entity": "fair_value_assessment",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",

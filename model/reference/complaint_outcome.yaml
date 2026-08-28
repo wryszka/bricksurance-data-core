@@ -1,0 +1,18 @@
+kind: code_set
+name: complaint_outcome
+title: Complaint Outcome
+description: >
+  How a complaint was resolved on its merits - distinct from its handling status.
+codes:
+  - code: UPHELD
+    label: Upheld
+    description: The complaint was upheld in the complainant's favour.
+  - code: PARTIAL
+    label: Partially Upheld
+    description: The complaint was partially upheld.
+  - code: NOT_UPHELD
+    label: Not Upheld
+    description: The complaint was not upheld.
+  - code: PENDING
+    label: Pending
+    description: Outcome not yet determined.

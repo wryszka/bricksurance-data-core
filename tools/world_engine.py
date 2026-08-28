@@ -156,7 +156,9 @@ class World:
                      # renewal loop (WP5)
                      "retention_response_curve", "renewal_case",
                      # assets & ALM (WP3)
-                     "instrument", "position", "asset_cashflow", "asset_valuation_run"):
+                     "instrument", "position", "asset_cashflow", "asset_valuation_run",
+                     # customer & conduct (WP4)
+                     "customer", "fair_value_assessment"):
             self.t[name] = []
 
     def n(self, base):
@@ -1239,7 +1241,91 @@ def build_world(scale):
     add_premium_finance(w)
     add_renewal(w)
     add_assets(w)
+    add_customer_conduct(w)
     return w
+
+
+def add_customer_conduct(w):
+    """WP4 - customers over policyholders, Consumer Duty fair-value assessments computed
+    from the book, and complaint outcomes/FOS. New customer domain + extend conduct
+    (DECISIONS D4). No protected-characteristic proxies. Deterministic (no rng)."""
+    pol_by_id = {p["policy_id"]: p for p in w.t["policy"]}
+    # policyholder party -> their policies (via party_role)
+    holder_policies = {}
+    for pr in w.t["party_role"]:
+        if pr.get("party_role_type_code") == "POLICYHOLDER" and pr.get("policy_id"):
+            holder_policies.setdefault(pr["party_id"], []).append(pr["policy_id"])
+
+    for i, (party_id, pids) in enumerate(sorted(holder_policies.items())):
+        incs = [pol_by_id[p]["inception_date"] for p in pids if p in pol_by_id]
+        first = min(incs) if incs else date(2026, 1, 1)
+        tenure = max(0, 2026 - first.year)
+        vulnerable = (i % 9 == 0)
+        w.add("customer", customer_id=f"cus_{party_id}", party_id=party_id,
+              first_policy_date=first, tenure_years=tenure,
+              segment=("KEY_ACCOUNT" if len(pids) >= 3 else "STANDARD"),
+              vulnerable_flag=vulnerable,
+              vulnerability_basis_code=("LIFE_EVENT" if vulnerable else "NONE"),
+              marketing_consent=(i % 4 != 0), source_system_code="CRM_CORE")
+
+    # complaint outcomes + FOS on the existing complaints (mutate in place)
+    outcomes = ["UPHELD", "NOT_UPHELD", "PARTIAL", "NOT_UPHELD"]
+    for j, c in enumerate(w.t["complaint"]):
+        c["complaint_outcome_code"] = outcomes[j % len(outcomes)]
+        c["fos_referred"] = (j == 0)   # one FOS referral (matches the seeded FOS complaint)
+
+    # per-LOB aggregates for fair value (written-premium basis for the attested snapshot)
+    written, claims_inc, pols, declined, clms = {}, {}, {}, {}, {}
+    for pt in w.t["premium_transaction"]:
+        if pt.get("premium_transaction_type_code") == "WRITTEN":
+            lob = pol_by_id[pt["policy_id"]]["line_of_business_code"]
+            written[lob] = written.get(lob, 0) + float(pt.get("amount") or 0)
+    for p in w.t["policy"]:
+        pols[p["line_of_business_code"]] = pols.get(p["line_of_business_code"], 0) + 1
+    claim_lob = {c["claim_id"]: pol_by_id[c["policy_id"]]["line_of_business_code"]
+                 for c in w.t["claim"] if c["policy_id"] in pol_by_id}
+    for c in w.t["claim"]:
+        lob = claim_lob.get(c["claim_id"])
+        if not lob:
+            continue
+        clms[lob] = clms.get(lob, 0) + 1
+        if c.get("claim_status_code") == "DECLINED":
+            declined[lob] = declined.get(lob, 0) + 1
+    for ct in w.t["claim_transaction"]:
+        lob = claim_lob.get(ct["claim_id"])
+        if lob:
+            claims_inc[lob] = claims_inc.get(lob, 0) + float(ct.get("amount") or 0)
+    complaints_lob = {}
+    for c in w.t["complaint"]:
+        pid = c.get("policy_id")
+        if pid and pid in pol_by_id:
+            lob = pol_by_id[pid]["line_of_business_code"]
+            complaints_lob[lob] = complaints_lob.get(lob, 0) + 1
+
+    for lob in sorted(pols):
+        wp = written.get(lob, 0)
+        ci = claims_inc.get(lob, 0)
+        n = pols.get(lob, 1)
+        ratio = round(ci / wp, 4) if wp else 0.0
+        acc = round(1.0 - declined.get(lob, 0) / max(clms.get(lob, 0), 1), 4)
+        cratio = round(complaints_lob.get(lob, 0) / n * 1000, 4)
+        # Fair value = price AND benefit AND service. MONITOR on any concern:
+        # thin benefit, poor claims acceptance, or elevated complaints. Same rule as
+        # vw_fair_value_latest.
+        if ratio > 1.10:
+            outcome = "ACTION"
+        elif ratio < 0.15 or acc < 0.90 or cratio > 10:
+            outcome = "MONITOR"
+        else:
+            outcome = "FAIR"
+        w.add("fair_value_assessment", fair_value_assessment_id=f"fva_{lob}_2026H1",
+              line_of_business_code=lob, assessment_period="2026-H1",
+              avg_premium=round(wp / n, 2), avg_claims_paid=round(ci / n, 2),
+              claims_acceptance_rate=acc, avg_settlement_days=45,
+              complaint_ratio=cratio,
+              fair_value_ratio=ratio, fair_value_outcome_code=outcome,
+              attested_by="Chief Customer Officer", attested_at=date(2026, 7, 15),
+              source_system_code="CONDUCT_CORE")
 
 
 def add_assets(w):
@@ -1973,7 +2059,9 @@ def main():
              # renewal loop (WP5)
              "retention_response_curve", "renewal_case",
              # assets & ALM (WP3): instrument before position/cashflow
-             "instrument", "position", "asset_cashflow", "asset_valuation_run"]
+             "instrument", "position", "asset_cashflow", "asset_valuation_run",
+             # customer & conduct (WP4)
+             "customer", "fair_value_assessment"]
     missing = set(order) - set(entities)
     assert not missing, f"world emits unknown entities: {missing}"
 

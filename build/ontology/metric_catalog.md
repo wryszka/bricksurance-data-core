@@ -1,6 +1,6 @@
 # Bricksurance Data Core - Metric Catalog
 
-*Generated from model v0.13.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+*Generated from model v0.14.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
 
 ## Policy Lifecycle Metrics (`policy_lifecycle.lifecycle_metrics`)
 
@@ -96,6 +96,22 @@ Outward reinsurance KPIs over the cession bordereau: gross and ceded premium by 
 | `ceded_premium` | Premium ceded to reinsurers, in original currency. | `SUM(ceded_premium)` |
 | `average_ceded_share` | Effective ceded share - ceded premium over gross premium. | `SUM(ceded_premium) / NULLIF(SUM(gross_premium), 0)` |
 | `ceded_policy_count` | Number of distinct policies with ceded premium. | `COUNT(DISTINCT policy_number)` |
+
+## Conduct Metrics (`semantics.conduct_metrics`)
+
+Conduct KPIs over complaints - volumes, uphold rate, ombudsman-referral rate and redress, by category and outcome. The customer-fairness scoreboard alongside the fair-value view. Query measures with MEASURE(name).
+
+**Owner:** Chief Customer Officer · **Certification:** draft · **Source:** `conduct.complaint`
+
+**Dimensions:** complaint_category_code, complaint_outcome_code, received_month
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `complaint_count` | Number of complaints. | `COUNT(complaint_id)` |
+| `upheld_count` | Complaints upheld in full or part. | `COUNT(CASE WHEN complaint_outcome_code IN ('UPHELD', 'PARTIAL') THEN complaint_id END)` |
+| `uphold_rate` | Upheld over all complaints. | `COUNT(CASE WHEN complaint_outcome_code IN ('UPHELD', 'PARTIAL') THEN complaint_id END) / NULLIF(COUNT(complaint_id), 0)` |
+| `fos_referred_count` | Complaints referred to the Financial Ombudsman Service. | `COUNT(CASE WHEN fos_referred THEN complaint_id END)` |
+| `total_redress` | Total redress paid, in stated currency. | `SUM(redress_amount)` |
 
 ## Financial Position (`semantics.financial_position`)
 

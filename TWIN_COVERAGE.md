@@ -4,7 +4,7 @@
 Kept current so "where are we on the twin" never needs an estate sweep. Maintained per
 phase of `specs/SPEC_DATACORE_GEN2_EXPANSION.md`.*
 
-Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3**.
+Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3, WP4**.
 
 | Function | Status | Backed by |
 |---|---|---|
@@ -17,7 +17,7 @@ Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3**.
 | Reserving | 🟢 occupied | reserve_estimate, loss_development, reserving_metrics |
 | Finance / IFRS17 / S2 (liabilities) | 🟢 occupied | ledger, valuation_result, contract_group, csm_movement, statement_line |
 | Assets / ALM | 🟢 occupied (WP3) | instrument, position, asset_cashflow, asset_valuation_run; fn_duration/gap/stress; vw_s2_market_inputs, vw_alm_annuity_match (annuity gap ~0.8y) |
-| Customer / conduct | 🟡 thin | conduct.complaint, party — *WP4 will occupy (customer + fair value)* |
+| Customer / conduct | 🟢 occupied (WP4) | customer (over party), fair_value_assessment (attested), complaint (+outcome/FOS), vw_fair_value_latest, conduct_metrics; one MONITOR amber |
 | Renewal / retention | 🟢 occupied (WP5) | renewal_case, retention_response_curve, renewal_metrics; advance_period closed loop (retention responds to price: 3%→95%, 25%→54%) |
 | Delegated authority | 🔴 empty | *WP6* |
 | Model / AI governance | 🟢 occupied | model_asset/version, feature_*, model_score, monitor_metric |
@@ -34,9 +34,9 @@ Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3**.
 | WP2 | premium accounting & earning | ✅ **done** — smoke 54/54 |
 | WP5 | renewal & retention loop | ✅ **done** — advance_period deterministic; retention responds to price |
 | WP3 | assets & ALM | ✅ **done** — duration gap ~0.8y, stress verified |
-| WP4 | customer & conduct | ⬜ next |
-| WP6 | delegated authority | ⬜ (independent; pull-forward candidate) |
+| WP4 | customer & conduct | ✅ **done** — fair value live + attested, PII-conformant |
+| WP6 | delegated authority | ⬜ next |
 | WP7/8 | semantics, Genie, golden-thread v2, publication contracts | ⬜ |
 
 **Empty → occupied so far this spec:** policy administration (WP1), premium/billing (WP2),
-renewal loop (WP5). **Still empty:** delegated authority (WP6). **Still thin (customer/conduct):** WP4 next.
+renewal loop (WP5), assets/ALM (WP3), customer/conduct (WP4). **Still empty:** delegated authority (WP6) — next.

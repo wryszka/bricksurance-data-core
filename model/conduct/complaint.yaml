@@ -58,6 +58,16 @@ attributes:
     required: false
     description: Date resolved or referred; empty while open.
     classification: internal
+  - name: complaint_outcome_code
+    code_set: complaint_outcome
+    required: false
+    description: How the complaint resolved on its merits (upheld / partial / not upheld).
+    classification: internal
+  - name: fos_referred
+    type: boolean
+    required: false
+    description: Whether the complaint was referred to the Financial Ombudsman Service.
+    classification: internal
   - name: redress_amount
     type: decimal(18,2)
     required: false

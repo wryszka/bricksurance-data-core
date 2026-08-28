@@ -1,0 +1,16 @@
+kind: code_set
+name: fair_value_outcome
+title: Fair Value Outcome
+description: >
+  The verdict of a product fair-value assessment under Consumer Duty - whether the
+  price paid is justified by the benefit delivered.
+codes:
+  - code: FAIR
+    label: Fair Value
+    description: Price and benefit are aligned; fair value confirmed.
+  - code: MONITOR
+    label: Monitor
+    description: A watch item; benefit-to-price warrants monitoring.
+  - code: ACTION
+    label: Action Required
+    description: Fair value not evidenced; remedial action required.
