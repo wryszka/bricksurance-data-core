@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.14.0. Do not edit.*
+*Generated from model v0.15.0. Do not edit.*
 
 ## Account Type (`reference.account_type`)
 
@@ -85,6 +85,62 @@ Kinds of actuarial assumption governed through the assumption-set maker/checker 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** assumption_type_code
+
+## Bordereau Status (`reference.bordereau_status`)
+
+Processing status of a received bordereau submission.
+
+**Grain:** One row per bordereau status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| bordereau_status_code | string | yes | Code value; referenced by bordereau_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** bordereau_status_code
+
+## Bordereau Type (`reference.bordereau_type`)
+
+The kind of bordereau a coverholder submits under a binding authority.
+
+**Grain:** One row per bordereau type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| bordereau_type_code | string | yes | Code value; referenced by bordereau_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** bordereau_type_code
+
+## Breach Status (`reference.breach_status`)
+
+Lifecycle of an authority breach - detected, waived under governance, or remediated.
+
+**Grain:** One row per breach status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| breach_status_code | string | yes | Code value; referenced by breach_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** breach_status_code
+
+## Authority Breach Type (`reference.breach_type`)
+
+The kind of binding-authority limit a bordereau risk breaches.
+
+**Grain:** One row per authority breach type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| breach_type_code | string | yes | Code value; referenced by breach_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** breach_type_code
 
 ## Business Event Type (`reference.business_event_type`)
 
@@ -305,6 +361,20 @@ Kinds of cover that can be granted under a policy. A policy bundles one or more 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** coverage_type_code
+
+## Coverholder Status (`reference.coverholder_status`)
+
+Approval standing of a coverholder to bind delegated authority.
+
+**Grain:** One row per coverholder status code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| coverholder_status_code | string | yes | Code value; referenced by coverholder_status_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** coverholder_status_code
 
 ## Credit Rating (`reference.credit_rating`)
 
@@ -1475,6 +1545,179 @@ A governed, attested Consumer Duty fair-value assessment for a product line in a
 
 **Primary key:** fair_value_assessment_id
 **Natural key:** line_of_business_code, assessment_period
+
+## Authority Breach (`delegated_authority.authority_breach`)
+
+A breach of a binder's authority detected on a bordereau risk - the governed record that carries the waiver. Detection is deterministic (see vw_authority_breach); the waiver is maker/checker, with the approver recorded. AI narrates; it never decides.
+
+**Grain:** One row per detected breach.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| authority_breach_id | string | yes | Identifier for the breach. | internal |  |  |
+| binder_id | string | yes | The binder breached. | internal |  |  |
+| bordereau_risk_row_id | string |  | The risk row that breached, where applicable. | internal |  |  |
+| breach_type_code | string | yes | Kind of breach. | internal |  |  |
+| detected_by | string |  | The detector that raised it (e.g. vw_authority_breach / a governed function). | internal |  |  |
+| detail | string |  | What was observed, in business language. | internal |  |  |
+| breach_status_code | string | yes | Open, waived or remediated. | internal |  |  |
+| waived_by | string |  | Role that waived the breach under maker/checker, where waived. | internal |  |  |
+| source_system_code | string | yes | System the breach record is held in. | internal |  |  |
+
+**Primary key:** authority_breach_id
+
+## Binding Authority (`delegated_authority.binding_authority`)
+
+A binder - the contract granting a coverholder authority to bind risks within limits (line size, aggregate, line of business, territory, claims authority). Breaches are measured against these limits.
+
+**Grain:** One row per binding authority (binder).
+
+**Standards:** Lloyds Cdr: Binding Authority / UMR
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| binder_id | string | yes | Identifier for the binder. | internal |  |  |
+| coverholder_id | string | yes | The coverholder the authority is granted to. | internal |  |  |
+| umr | string | yes | Unique Market Reference for the binder (format-correct, synthetic). | internal |  | UMR |
+| inception_date | date | yes | Binder inception date. | internal |  |  |
+| expiry_date | date | yes | Binder expiry date. | internal |  |  |
+| territory_scope | string |  | Permitted territories as a comma-separated country list; risks outside breach TERRITORY. | internal |  |  |
+| max_line_size | decimal(18,2) |  | Maximum sum insured the coverholder may bind on one risk. | confidential |  |  |
+| aggregate_limit | decimal(18,2) |  | Maximum cumulative written premium under the binder. | confidential |  |  |
+| premium_estimate | decimal(18,2) |  | Estimated premium income for the binder period. | confidential |  |  |
+| commission_pct | decimal(6,4) |  | Coverholder commission rate on written premium. | confidential |  |  |
+| claims_authority_limit | decimal(18,2) |  | Maximum claim the coverholder may settle without referral. | confidential |  |  |
+| currency_code | string | yes | Currency of the binder limits. | internal |  |  |
+| source_system_code | string | yes | System of record the binder is held in. | internal |  |  |
+
+**Primary key:** binder_id
+**Natural key:** umr
+
+## Binding Authority Line of Business (`delegated_authority.binding_authority_lob`)
+
+A line of business permitted under a binder - the many-to-many scope resolved relationally (flattened from lob_scope). A risk in a line not listed here breaches LOB.
+
+**Grain:** One row per line of business per binder.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| binding_authority_lob_id | string | yes | Identifier for the scope row. | internal |  |  |
+| binder_id | string | yes | The binder. | internal |  |  |
+| line_of_business_code | string | yes | A line of business the binder permits. | internal |  |  |
+
+**Primary key:** binding_authority_lob_id
+**Natural key:** binder_id, line_of_business_code
+
+## Bordereau Claim Row (`delegated_authority.bordereau_claim_row`)
+
+A claim movement on a claims bordereau, mapped to Lloyd's CDR claims fields.
+
+**Grain:** One row per claim movement per claims bordereau.
+
+**Standards:** Lloyds Cdr: Claims bordereau row (CDR v3.x)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| bordereau_claim_row_id | string | yes | Identifier for the claim row. | internal |  |  |
+| submission_id | string | yes | The claims bordereau this row belongs to. | internal |  |  |
+| risk_reference | string | yes | Risk reference the claim relates to. | confidential |  | Risk Reference |
+| claim_reference | string | yes | Coverholder's claim reference. | confidential |  | Claim Reference |
+| cause_of_loss_code | string |  | Peril / cause of loss. | internal |  | Cause of Loss |
+| loss_date | date |  | Date of loss. | internal |  | Date of Loss |
+| paid_amount | decimal(18,2) |  | Amount paid in the period. | confidential |  | Paid This Period |
+| outstanding_amount | decimal(18,2) |  | Outstanding reserve at period end. | confidential |  | Outstanding Reserve |
+| currency_code | string | yes | Currency of the amounts. | internal |  | Original Currency |
+
+**Primary key:** bordereau_claim_row_id
+
+## Bordereau Premium Row (`delegated_authority.bordereau_premium_row`)
+
+A premium movement on a premium bordereau, mapped to Lloyd's CDR premium fields.
+
+**Grain:** One row per premium movement per premium bordereau.
+
+**Standards:** Lloyds Cdr: Premium bordereau row (CDR v3.x)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| bordereau_premium_row_id | string | yes | Identifier for the premium row. | internal |  |  |
+| submission_id | string | yes | The premium bordereau this row belongs to. | internal |  |  |
+| risk_reference | string | yes | Risk reference the premium relates to. | confidential |  | Risk Reference |
+| gross_premium | decimal(18,2) |  | Gross written premium in the period. | confidential |  | Gross Premium |
+| commission_amount | decimal(18,2) |  | Coverholder commission on the premium. | confidential |  | Commission |
+| net_premium | decimal(18,2) |  | Premium net of commission, payable to the insurer. | confidential |  | Net Premium |
+| currency_code | string | yes | Currency of the amounts. | internal |  | Settlement Currency |
+
+**Primary key:** bordereau_premium_row_id
+
+## Bordereau Risk Row (`delegated_authority.bordereau_risk_row`)
+
+A single risk on a risk bordereau, mapped attribute-by-attribute to Lloyd's Core Data Record fields. Risk rows enter the same policy event spine (a BOUND event with source BORDEREAU), so delegated business is one twin, not a side door.
+
+**Grain:** One row per risk per risk bordereau.
+
+**Standards:** Lloyds Cdr: Risk bordereau row (CDR v3.x)
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| bordereau_risk_row_id | string | yes | Identifier for the risk row. | internal |  |  |
+| submission_id | string | yes | The risk bordereau this row belongs to. | internal |  |  |
+| policy_id | string |  | The policy this risk was bound as in the spine (delegated business). | internal |  |  |
+| risk_reference | string | yes | Coverholder's risk reference. | confidential |  | Unique Market Reference / Risk Reference |
+| insured_name | string |  | Name of the insured. | pii |  | Insured/Reinsured Full Name |
+| line_of_business_code | string | yes | Line of business of the risk. | internal |  | Class of Business |
+| risk_inception_date | date | yes | Inception date of the risk. | internal |  | Inception Date |
+| risk_expiry_date | date | yes | Expiry date of the risk. | internal |  | Expiry Date |
+| risk_country_code | string |  | Country the risk is located in. | internal |  | Location of Risk - Country |
+| postcode | string |  | Risk location postcode. | confidential |  | Location of Risk - Postcode |
+| sum_insured | decimal(18,2) |  | Sum insured / limit for the risk. | confidential |  | Sum Insured / Limit |
+| gross_premium | decimal(18,2) |  | Gross written premium for the risk. | confidential |  | Gross Premium |
+| currency_code | string | yes | Currency of the amounts. | internal |  | Original Currency |
+
+**Primary key:** bordereau_risk_row_id
+
+## Bordereau Submission (`delegated_authority.bordereau_submission`)
+
+One bordereau file received from a coverholder under a binder for a period - its type, timeliness and data quality. The unit the "which coverholders are late / dirty" view works from.
+
+**Grain:** One row per bordereau file received.
+
+**Standards:** Lloyds Cdr: Bordereau submission
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| submission_id | string | yes | Identifier for the submission. | internal |  |  |
+| binder_id | string | yes | Binder the bordereau is submitted under. | internal |  |  |
+| bordereau_type_code | string | yes | Kind of bordereau (risk, premium, claims). | internal |  |  |
+| period_month | date | yes | Reporting month the bordereau covers. | internal |  |  |
+| received_date | date |  | Date the file was received. | internal |  |  |
+| due_date | date | yes | Date the file was due. | internal |  |  |
+| bordereau_status_code | string | yes | Processing status of the submission. | internal |  |  |
+| row_count | integer |  | Number of rows in the file. | internal |  |  |
+| dq_score | decimal(6,4) |  | Data-quality score for the submission, 0 to 1. | internal |  |  |
+| source_system_code | string | yes | System the submission was received into. | internal |  |  |
+
+**Primary key:** submission_id
+
+## Coverholder (`delegated_authority.coverholder`)
+
+A party granted delegated authority to bind risks on the insurer's behalf. The centre of the delegated-authority book: binders, bordereaux and breaches all hang off the coverholder.
+
+**Grain:** One row per coverholder.
+
+**Standards:** Lloyds Cdr: Coverholder concept
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| coverholder_id | string | yes | Identifier for the coverholder. | internal |  |  |
+| party_id | string | yes | The party acting as coverholder. | internal |  |  |
+| domicile | string |  | Country the coverholder is domiciled in. | internal |  |  |
+| coverholder_status_code | string | yes | Approval standing to bind delegated authority. | internal |  |  |
+| audit_last_date | date |  | Date of the last delegated-authority audit. | internal |  |  |
+| source_system_code | string | yes | System of record the coverholder is held in. | internal |  |  |
+
+**Primary key:** coverholder_id
+**Natural key:** party_id
 
 ## Commission Transaction (`distribution.commission_transaction`)
 

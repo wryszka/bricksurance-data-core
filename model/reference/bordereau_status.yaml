@@ -1,0 +1,18 @@
+kind: code_set
+name: bordereau_status
+title: Bordereau Status
+description: >
+  Processing status of a received bordereau submission.
+codes:
+  - code: RECEIVED
+    label: Received
+    description: File received; not yet mapped to the canonical model.
+  - code: MAPPED
+    label: Mapped
+    description: Columns mapped to the canonical bordereau row shape.
+  - code: QUARANTINED
+    label: Quarantined
+    description: Held back due to data-quality failures or column drift.
+  - code: ACCEPTED
+    label: Accepted
+    description: Validated and accepted into the book.

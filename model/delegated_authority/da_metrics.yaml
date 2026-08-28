@@ -1,0 +1,42 @@
+kind: metric_view
+name: da_metrics
+domain: delegated_authority
+title: Delegated Authority Metrics
+description: >
+  Delegated-authority oversight KPIs over bordereau submissions - outstanding files,
+  submission lag, and data-quality by coverholder and type. Open-breach count comes
+  from vw_authority_breach; binder utilisation from premium vs estimate. Query measures
+  with MEASURE(name).
+owner: Head of Delegated Authority
+certification: draft
+source: delegated_authority.bordereau_submission
+joins:
+  - name: binding_authority
+    source: delegated_authority.binding_authority
+    condition: source.binder_id = binding_authority.binder_id
+dimensions:
+  - name: bordereau_type_code
+    expr: source.bordereau_type_code
+    description: Kind of bordereau.
+  - name: bordereau_status_code
+    expr: source.bordereau_status_code
+    description: Processing status.
+  - name: period_month
+    expr: source.period_month
+    description: Reporting month.
+  - name: umr
+    expr: binding_authority.umr
+    description: Binder UMR.
+measures:
+  - name: submission_count
+    expr: COUNT(submission_id)
+    description: Number of bordereau submissions.
+  - name: outstanding_count
+    expr: COUNT(CASE WHEN bordereau_status_code IN ('RECEIVED', 'QUARANTINED') THEN submission_id END)
+    description: Submissions not yet accepted.
+  - name: avg_submission_lag_days
+    expr: AVG(datediff(received_date, due_date))
+    description: Average days received after due (negative = early).
+  - name: avg_dq_score
+    expr: AVG(dq_score)
+    description: Average data-quality score.

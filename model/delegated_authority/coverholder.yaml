@@ -1,0 +1,50 @@
+kind: entity
+name: coverholder
+domain: delegated_authority
+title: Coverholder
+description: >
+  A party granted delegated authority to bind risks on the insurer's behalf. The
+  centre of the delegated-authority book: binders, bordereaux and breaches all hang
+  off the coverholder.
+grain: One row per coverholder.
+standards:
+  lloyds_cdr: Coverholder concept
+tags:
+  maturity: draft
+crosswalk_status: mapped
+attributes:
+  - name: coverholder_id
+    type: string
+    required: true
+    description: Identifier for the coverholder.
+    classification: internal
+  - name: party_id
+    references: party
+    type: string
+    required: true
+    description: The party acting as coverholder.
+    classification: internal
+  - name: domicile
+    code_set: country
+    required: false
+    description: Country the coverholder is domiciled in.
+    classification: internal
+  - name: coverholder_status_code
+    code_set: coverholder_status
+    required: true
+    description: Approval standing to bind delegated authority.
+    classification: internal
+  - name: audit_last_date
+    type: date
+    required: false
+    description: Date of the last delegated-authority audit.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the coverholder is held in.
+    classification: internal
+keys:
+  primary: [coverholder_id]
+  natural: [party_id]
+owner: Head of Delegated Authority

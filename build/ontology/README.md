@@ -2,7 +2,7 @@
 
 `bricksurance-data-core.ontology.json` is the **entire semantic model in one
 platform-neutral file** (format `bricksurance-data-core/ontology-v1`,
-v0.14.0): 91 entities, 83 code sets, 11 views, 17 metric views, 15 functions, 328 relationships.
+v0.15.0): 99 entities, 88 code sets, 12 views, 18 metric views, 15 functions, 356 relationships.
 
 ## What is in it
 

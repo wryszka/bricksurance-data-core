@@ -4,11 +4,11 @@
 Kept current so "where are we on the twin" never needs an estate sweep. Maintained per
 phase of `specs/SPEC_DATACORE_GEN2_EXPANSION.md`.*
 
-Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3, WP4**.
+Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3, WP4, WP6**.
 
 | Function | Status | Backed by |
 |---|---|---|
-| Distribution / broking | 🟡 thin | distribution.commission_transaction; broker as party role |
+| Distribution / broking | 🟢 occupied | commission_transaction; broker party role; delegated coverholders + binders (WP6) |
 | Underwriting / pricing | 🟢 occupied | product, appetite_rule, referral_rule/event, pricing (rating factors), enrichment |
 | **Policy administration** | 🟢 **occupied (WP1)** | **policy_lifecycle: policy_event (hash-chained), policy_version (SCD2), renewal_chain; vw_policy_current; fn_verify_event_chain** |
 | Premium / billing | 🟢 occupied (WP2) | premium_transaction (+IPT/commission/broker/event link), premium_earning, vw_premium_proof, premium_metrics, fn_earn_premium |
@@ -19,7 +19,7 @@ Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3, WP4
 | Assets / ALM | 🟢 occupied (WP3) | instrument, position, asset_cashflow, asset_valuation_run; fn_duration/gap/stress; vw_s2_market_inputs, vw_alm_annuity_match (annuity gap ~0.8y) |
 | Customer / conduct | 🟢 occupied (WP4) | customer (over party), fair_value_assessment (attested), complaint (+outcome/FOS), vw_fair_value_latest, conduct_metrics; one MONITOR amber |
 | Renewal / retention | 🟢 occupied (WP5) | renewal_case, retention_response_curve, renewal_metrics; advance_period closed loop (retention responds to price: 3%→95%, 25%→54%) |
-| Delegated authority | 🔴 empty | *WP6* |
+| Delegated authority | 🟢 occupied (WP6) | coverholder, binding_authority(+lob), bordereau_submission + risk/premium/claim rows (Lloyd's CDR-mapped), authority_breach; vw_authority_breach (live), da_metrics |
 | Model / AI governance | 🟢 occupied | model_asset/version, feature_*, model_score, monitor_metric |
 | Investment income / valuation | 🟢 occupied (WP3) | positions time series + asset valuation runs |
 
@@ -35,8 +35,8 @@ Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3, WP4
 | WP5 | renewal & retention loop | ✅ **done** — advance_period deterministic; retention responds to price |
 | WP3 | assets & ALM | ✅ **done** — duration gap ~0.8y, stress verified |
 | WP4 | customer & conduct | ✅ **done** — fair value live + attested, PII-conformant |
-| WP6 | delegated authority | ⬜ next |
-| WP7/8 | semantics, Genie, golden-thread v2, publication contracts | ⬜ |
+| WP6 | delegated authority | ✅ **done** — CDR crosswalk, live breach+waiver, in the spine |
+| WP7/8 | semantics, Genie, golden-thread v2, publication contracts | ⬜ next (final) |
 
 **Empty → occupied so far this spec:** policy administration (WP1), premium/billing (WP2),
-renewal loop (WP5), assets/ALM (WP3), customer/conduct (WP4). **Still empty:** delegated authority (WP6) — next.
+renewal loop (WP5), assets/ALM (WP3), customer/conduct (WP4), delegated authority (WP6). **Nothing empty** — WP7/8 (golden thread v2 + publication contracts) closes the program.

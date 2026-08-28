@@ -1,0 +1,62 @@
+kind: entity
+name: bordereau_premium_row
+domain: delegated_authority
+title: Bordereau Premium Row
+description: >
+  A premium movement on a premium bordereau, mapped to Lloyd's CDR premium fields.
+grain: One row per premium movement per premium bordereau.
+standards:
+  lloyds_cdr: Premium bordereau row (CDR v3.x)
+tags:
+  maturity: draft
+crosswalk_status: mapped
+attributes:
+  - name: bordereau_premium_row_id
+    type: string
+    required: true
+    description: Identifier for the premium row.
+    classification: internal
+  - name: submission_id
+    references: bordereau_submission
+    type: string
+    required: true
+    description: The premium bordereau this row belongs to.
+    classification: internal
+  - name: risk_reference
+    type: string
+    required: true
+    description: Risk reference the premium relates to.
+    classification: confidential
+    standards:
+      lloyds_cdr: Risk Reference
+  - name: gross_premium
+    type: decimal(18,2)
+    required: false
+    description: Gross written premium in the period.
+    classification: confidential
+    standards:
+      lloyds_cdr: Gross Premium
+  - name: commission_amount
+    type: decimal(18,2)
+    required: false
+    description: Coverholder commission on the premium.
+    classification: confidential
+    standards:
+      lloyds_cdr: Commission
+  - name: net_premium
+    type: decimal(18,2)
+    required: false
+    description: Premium net of commission, payable to the insurer.
+    classification: confidential
+    standards:
+      lloyds_cdr: Net Premium
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the amounts.
+    classification: internal
+    standards:
+      lloyds_cdr: Settlement Currency
+keys:
+  primary: [bordereau_premium_row_id]
+owner: Head of Delegated Authority

@@ -1,0 +1,15 @@
+kind: code_set
+name: bordereau_type
+title: Bordereau Type
+description: >
+  The kind of bordereau a coverholder submits under a binding authority.
+codes:
+  - code: RISK
+    label: Risk Bordereau
+    description: Risks written in the period (the policies bound).
+  - code: PREMIUM
+    label: Premium Bordereau
+    description: Premium written and ceded in the period.
+  - code: CLAIMS
+    label: Claims Bordereau
+    description: Claims activity in the period.

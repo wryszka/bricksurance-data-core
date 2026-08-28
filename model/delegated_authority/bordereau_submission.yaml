@@ -1,0 +1,69 @@
+kind: entity
+name: bordereau_submission
+domain: delegated_authority
+title: Bordereau Submission
+description: >
+  One bordereau file received from a coverholder under a binder for a period - its
+  type, timeliness and data quality. The unit the "which coverholders are late / dirty"
+  view works from.
+grain: One row per bordereau file received.
+standards:
+  lloyds_cdr: Bordereau submission
+tags:
+  maturity: draft
+crosswalk_status: mapped
+attributes:
+  - name: submission_id
+    type: string
+    required: true
+    description: Identifier for the submission.
+    classification: internal
+  - name: binder_id
+    references: binding_authority
+    type: string
+    required: true
+    description: Binder the bordereau is submitted under.
+    classification: internal
+  - name: bordereau_type_code
+    code_set: bordereau_type
+    required: true
+    description: Kind of bordereau (risk, premium, claims).
+    classification: internal
+  - name: period_month
+    type: date
+    required: true
+    description: Reporting month the bordereau covers.
+    classification: internal
+  - name: received_date
+    type: date
+    required: false
+    description: Date the file was received.
+    classification: internal
+  - name: due_date
+    type: date
+    required: true
+    description: Date the file was due.
+    classification: internal
+  - name: bordereau_status_code
+    code_set: bordereau_status
+    required: true
+    description: Processing status of the submission.
+    classification: internal
+  - name: row_count
+    type: integer
+    required: false
+    description: Number of rows in the file.
+    classification: internal
+  - name: dq_score
+    type: decimal(6,4)
+    required: false
+    description: Data-quality score for the submission, 0 to 1.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the submission was received into.
+    classification: internal
+keys:
+  primary: [submission_id]
+owner: Head of Delegated Authority

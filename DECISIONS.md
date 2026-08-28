@@ -190,5 +190,35 @@ our model compatible with it. **Atlas stays as-is — do NOT slim or change it**
   concepts from build/ontology JSON and loads them via Ontos's REST API (confirm exact
   create endpoints via its /docs).
 - Ontos is Databricks-licensed (proprietary); our model stays Apache-open. Ontos needs
-  Postgres/Lakebase (more infra than Atlas). Slotted after the remaining Gen2 WPs unless
-  pulled forward.
+  Postgres/Lakebase (more infra than Atlas).
+- **Decisions 2026-08-28:** (1) provision a **NEW DEDICATED Lakebase instance** for Ontos —
+  the two existing instances (motor-pricing-online-store, pricing-upt-online-store-live)
+  are the pricing workbench's, don't co-opt them; (2) **use the smallest capacity + every
+  scale-to-zero / auto-stop option** (instances expose effective_stopped; stop when idle —
+  do NOT run nonstop unless crucial) per the cost pillar; (3) **sequencing: finish the Gen2
+  WPs (WP6, WP7/8) FIRST**, then do the Ontos deploy as a clean separate spike.
+- Ontos repo cloned to ~/vibe/ontos for inspection. Deploy = its own DAB (`src/databricks.yaml`,
+  bundle deploy) → App named "ontos"; requires a UC volume + Lakebase; auth via App implicit SDK.
+
+---
+
+## 2026-08-28 — Phase 7 (WP6 Delegated Authority) COMPLETE
+
+Model v0.15.0, deployed, **smoke 74/74 pass**. New `delegated_authority` domain (the spec's
+GTM prize).
+- Entities: coverholder, binding_authority (+binding_authority_lob membership, flattening
+  lob_scope per D9), bordereau_submission, bordereau_risk_row / bordereau_premium_row /
+  bordereau_claim_row (**mapped attribute-by-attribute to Lloyd's CDR v3.x**, crosswalk_status:
+  mapped — the generated data_dictionary IS the CDR crosswalk), authority_breach.
+  Code sets: coverholder_status, bordereau_type, bordereau_status, breach_type, breach_status.
+- vw_authority_breach = LIVE detection (LINE_SIZE + LOB, inline — no fn call per the deploy-order
+  rule). da_metrics (submissions, lag, DQ). authority_breach carries the maker/checker waiver.
+- **Delegated business enters the WP1 spine:** add_delegated runs BEFORE add_lifecycle, mints
+  12 delegated policies (POL-BDX, non-CP LOBs to protect WP4's amber) whose BOUND event is
+  stamped source=BORDEREAU. Deliberate dirt: 2 late submissions, 1 quarantined column-drift,
+  1 line-size breach (8m > 5m), 1 LOB breach (GL under a MOTOR-only binder). One breach WAIVED.
+- Policy count 172 → **184**; updated the hardcoded smoke count + excluded POL-BDX from the
+  core-book-quote check and the telematics-coverage check (delegated/bordereau motor arrives
+  without telematics — realistic; the coverholder doesn't send it).
+- App refreshed to v0.15.0. NON-GOAL held: no DA workbench app, no un-stubbing the console's
+  LLM mapping (that's an Atlas change — Atlas stays untouched per user).

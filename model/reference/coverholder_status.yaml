@@ -1,0 +1,15 @@
+kind: code_set
+name: coverholder_status
+title: Coverholder Status
+description: >
+  Approval standing of a coverholder to bind delegated authority.
+codes:
+  - code: APPROVED
+    label: Approved
+    description: Approved to bind within the terms of its binding authorities.
+  - code: CONDITIONS
+    label: Approved with Conditions
+    description: Approved subject to conditions or enhanced oversight.
+  - code: SUSPENDED
+    label: Suspended
+    description: Binding authority suspended pending review.

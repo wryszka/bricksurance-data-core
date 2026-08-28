@@ -1,0 +1,15 @@
+kind: code_set
+name: breach_status
+title: Breach Status
+description: >
+  Lifecycle of an authority breach - detected, waived under governance, or remediated.
+codes:
+  - code: OPEN
+    label: Open
+    description: Detected and unresolved.
+  - code: WAIVED
+    label: Waived
+    description: Waived under maker/checker governance, with the approver recorded.
+  - code: REMEDIATED
+    label: Remediated
+    description: Corrected at source (e.g. terms amended or risk removed).

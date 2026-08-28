@@ -29,6 +29,26 @@ erDiagram
         string label
         string description
     }
+    bordereau_status {
+        string bordereau_status_code PK
+        string label
+        string description
+    }
+    bordereau_type {
+        string bordereau_type_code PK
+        string label
+        string description
+    }
+    breach_status {
+        string breach_status_code PK
+        string label
+        string description
+    }
+    breach_type {
+        string breach_type_code PK
+        string label
+        string description
+    }
     business_event_type {
         string business_event_type_code PK
         string label
@@ -101,6 +121,11 @@ erDiagram
     }
     coverage_type {
         string coverage_type_code PK
+        string label
+        string description
+    }
+    coverholder_status {
+        string coverholder_status_code PK
         string label
         string description
     }
@@ -560,6 +585,92 @@ erDiagram
         string fair_value_outcome_code
         string attested_by
         date attested_at
+        string source_system_code
+    }
+    authority_breach {
+        string authority_breach_id PK
+        string binder_id
+        string bordereau_risk_row_id
+        string breach_type_code
+        string detected_by
+        string detail
+        string breach_status_code
+        string waived_by
+        string source_system_code
+    }
+    binding_authority {
+        string binder_id PK
+        string coverholder_id
+        string umr
+        date inception_date
+        date expiry_date
+        string territory_scope
+        decimal max_line_size
+        decimal aggregate_limit
+        decimal premium_estimate
+        decimal commission_pct
+        decimal claims_authority_limit
+        string currency_code
+        string source_system_code
+    }
+    binding_authority_lob {
+        string binding_authority_lob_id PK
+        string binder_id
+        string line_of_business_code
+    }
+    bordereau_claim_row {
+        string bordereau_claim_row_id PK
+        string submission_id
+        string risk_reference
+        string claim_reference
+        string cause_of_loss_code
+        date loss_date
+        decimal paid_amount
+        decimal outstanding_amount
+        string currency_code
+    }
+    bordereau_premium_row {
+        string bordereau_premium_row_id PK
+        string submission_id
+        string risk_reference
+        decimal gross_premium
+        decimal commission_amount
+        decimal net_premium
+        string currency_code
+    }
+    bordereau_risk_row {
+        string bordereau_risk_row_id PK
+        string submission_id
+        string policy_id
+        string risk_reference
+        string insured_name
+        string line_of_business_code
+        date risk_inception_date
+        date risk_expiry_date
+        string risk_country_code
+        string postcode
+        decimal sum_insured
+        decimal gross_premium
+        string currency_code
+    }
+    bordereau_submission {
+        string submission_id PK
+        string binder_id
+        string bordereau_type_code
+        date period_month
+        date received_date
+        date due_date
+        string bordereau_status_code
+        integer row_count
+        decimal dq_score
+        string source_system_code
+    }
+    coverholder {
+        string coverholder_id PK
+        string party_id
+        string domicile
+        string coverholder_status_code
+        date audit_last_date
         string source_system_code
     }
     commission_transaction {
@@ -1419,6 +1530,34 @@ erDiagram
     fair_value_assessment }o--|| line_of_business : line_of_business_code
     fair_value_assessment }o--|| fair_value_outcome : fair_value_outcome_code
     fair_value_assessment }o--|| source_system : source_system_code
+    authority_breach }o--|| binding_authority : binder_id
+    authority_breach }o--|| bordereau_risk_row : bordereau_risk_row_id
+    authority_breach }o--|| breach_type : breach_type_code
+    authority_breach }o--|| breach_status : breach_status_code
+    authority_breach }o--|| source_system : source_system_code
+    binding_authority }o--|| coverholder : coverholder_id
+    binding_authority }o--|| currency : currency_code
+    binding_authority }o--|| source_system : source_system_code
+    binding_authority_lob }o--|| binding_authority : binder_id
+    binding_authority_lob }o--|| line_of_business : line_of_business_code
+    bordereau_claim_row }o--|| bordereau_submission : submission_id
+    bordereau_claim_row }o--|| cause_of_loss : cause_of_loss_code
+    bordereau_claim_row }o--|| currency : currency_code
+    bordereau_premium_row }o--|| bordereau_submission : submission_id
+    bordereau_premium_row }o--|| currency : currency_code
+    bordereau_risk_row }o--|| bordereau_submission : submission_id
+    bordereau_risk_row }o--|| policy : policy_id
+    bordereau_risk_row }o--|| line_of_business : line_of_business_code
+    bordereau_risk_row }o--|| country : risk_country_code
+    bordereau_risk_row }o--|| currency : currency_code
+    bordereau_submission }o--|| binding_authority : binder_id
+    bordereau_submission }o--|| bordereau_type : bordereau_type_code
+    bordereau_submission }o--|| bordereau_status : bordereau_status_code
+    bordereau_submission }o--|| source_system : source_system_code
+    coverholder }o--|| party : party_id
+    coverholder }o--|| country : domicile
+    coverholder }o--|| coverholder_status : coverholder_status_code
+    coverholder }o--|| source_system : source_system_code
     commission_transaction }o--|| policy : policy_id
     commission_transaction }o--|| party : party_id
     commission_transaction }o--|| commission_type : commission_type_code

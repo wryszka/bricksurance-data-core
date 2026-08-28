@@ -1,0 +1,63 @@
+kind: entity
+name: authority_breach
+domain: delegated_authority
+title: Authority Breach
+description: >
+  A breach of a binder's authority detected on a bordereau risk - the governed record
+  that carries the waiver. Detection is deterministic (see vw_authority_breach); the
+  waiver is maker/checker, with the approver recorded. AI narrates; it never decides.
+grain: One row per detected breach.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: authority_breach_id
+    type: string
+    required: true
+    description: Identifier for the breach.
+    classification: internal
+  - name: binder_id
+    references: binding_authority
+    type: string
+    required: true
+    description: The binder breached.
+    classification: internal
+  - name: bordereau_risk_row_id
+    references: bordereau_risk_row
+    type: string
+    required: false
+    description: The risk row that breached, where applicable.
+    classification: internal
+  - name: breach_type_code
+    code_set: breach_type
+    required: true
+    description: Kind of breach.
+    classification: internal
+  - name: detected_by
+    type: string
+    required: false
+    description: The detector that raised it (e.g. vw_authority_breach / a governed function).
+    classification: internal
+  - name: detail
+    type: string
+    required: false
+    description: What was observed, in business language.
+    classification: internal
+  - name: breach_status_code
+    code_set: breach_status
+    required: true
+    description: Open, waived or remediated.
+    classification: internal
+  - name: waived_by
+    type: string
+    required: false
+    description: Role that waived the breach under maker/checker, where waived.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the breach record is held in.
+    classification: internal
+keys:
+  primary: [authority_breach_id]
+owner: Head of Delegated Authority

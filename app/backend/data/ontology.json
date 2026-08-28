@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with an indicative Lloyd's Core Data Record crosswalk. The crosswalk is a hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names, not a verified extract from the licensed models; element names are cited only, and the licensed standards are not reproduced.",
   "domains": [
@@ -271,6 +271,108 @@
           "code": "ECONOMIC",
           "label": "Economic",
           "description": "Economic assumptions such as discount and inflation bases."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "bordereau_status",
+      "title": "Bordereau Status",
+      "description": "Processing status of a received bordereau submission.\n",
+      "codes": [
+        {
+          "code": "RECEIVED",
+          "label": "Received",
+          "description": "File received; not yet mapped to the canonical model."
+        },
+        {
+          "code": "MAPPED",
+          "label": "Mapped",
+          "description": "Columns mapped to the canonical bordereau row shape."
+        },
+        {
+          "code": "QUARANTINED",
+          "label": "Quarantined",
+          "description": "Held back due to data-quality failures or column drift."
+        },
+        {
+          "code": "ACCEPTED",
+          "label": "Accepted",
+          "description": "Validated and accepted into the book."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "bordereau_type",
+      "title": "Bordereau Type",
+      "description": "The kind of bordereau a coverholder submits under a binding authority.\n",
+      "codes": [
+        {
+          "code": "RISK",
+          "label": "Risk Bordereau",
+          "description": "Risks written in the period (the policies bound)."
+        },
+        {
+          "code": "PREMIUM",
+          "label": "Premium Bordereau",
+          "description": "Premium written and ceded in the period."
+        },
+        {
+          "code": "CLAIMS",
+          "label": "Claims Bordereau",
+          "description": "Claims activity in the period."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "breach_status",
+      "title": "Breach Status",
+      "description": "Lifecycle of an authority breach - detected, waived under governance, or remediated.\n",
+      "codes": [
+        {
+          "code": "OPEN",
+          "label": "Open",
+          "description": "Detected and unresolved."
+        },
+        {
+          "code": "WAIVED",
+          "label": "Waived",
+          "description": "Waived under maker/checker governance, with the approver recorded."
+        },
+        {
+          "code": "REMEDIATED",
+          "label": "Remediated",
+          "description": "Corrected at source (e.g. terms amended or risk removed)."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "breach_type",
+      "title": "Authority Breach Type",
+      "description": "The kind of binding-authority limit a bordereau risk breaches.\n",
+      "codes": [
+        {
+          "code": "LINE_SIZE",
+          "label": "Line Size",
+          "description": "A risk exceeds the maximum line size permitted by the binder."
+        },
+        {
+          "code": "TERRITORY",
+          "label": "Territory",
+          "description": "A risk falls outside the binder's territorial scope."
+        },
+        {
+          "code": "LOB",
+          "label": "Line of Business",
+          "description": "A risk is in a line of business outside the binder's scope."
+        },
+        {
+          "code": "AGGREGATE",
+          "label": "Aggregate",
+          "description": "Cumulative written premium exceeds the binder's aggregate limit."
         }
       ]
     },
@@ -767,6 +869,29 @@
           "code": "CARGO",
           "label": "Cargo",
           "description": "Loss of or damage to goods in transit."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "coverholder_status",
+      "title": "Coverholder Status",
+      "description": "Approval standing of a coverholder to bind delegated authority.\n",
+      "codes": [
+        {
+          "code": "APPROVED",
+          "label": "Approved",
+          "description": "Approved to bind within the terms of its binding authorities."
+        },
+        {
+          "code": "CONDITIONS",
+          "label": "Approved with Conditions",
+          "description": "Approved subject to conditions or enhanced oversight."
+        },
+        {
+          "code": "SUSPENDED",
+          "label": "Suspended",
+          "description": "Binding authority suspended pending review."
         }
       ]
     },
@@ -3900,6 +4025,763 @@
         ]
       },
       "owner": "Chief Customer Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "authority_breach",
+      "domain": "delegated_authority",
+      "title": "Authority Breach",
+      "description": "A breach of a binder's authority detected on a bordereau risk - the governed record that carries the waiver. Detection is deterministic (see vw_authority_breach); the waiver is maker/checker, with the approver recorded. AI narrates; it never decides.\n",
+      "grain": "One row per detected breach.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "authority_breach_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the breach.",
+          "classification": "internal"
+        },
+        {
+          "name": "binder_id",
+          "references": "binding_authority",
+          "type": "string",
+          "required": true,
+          "description": "The binder breached.",
+          "classification": "internal"
+        },
+        {
+          "name": "bordereau_risk_row_id",
+          "references": "bordereau_risk_row",
+          "type": "string",
+          "required": false,
+          "description": "The risk row that breached, where applicable.",
+          "classification": "internal"
+        },
+        {
+          "name": "breach_type_code",
+          "code_set": "breach_type",
+          "required": true,
+          "description": "Kind of breach.",
+          "classification": "internal"
+        },
+        {
+          "name": "detected_by",
+          "type": "string",
+          "required": false,
+          "description": "The detector that raised it (e.g. vw_authority_breach / a governed function).",
+          "classification": "internal"
+        },
+        {
+          "name": "detail",
+          "type": "string",
+          "required": false,
+          "description": "What was observed, in business language.",
+          "classification": "internal"
+        },
+        {
+          "name": "breach_status_code",
+          "code_set": "breach_status",
+          "required": true,
+          "description": "Open, waived or remediated.",
+          "classification": "internal"
+        },
+        {
+          "name": "waived_by",
+          "type": "string",
+          "required": false,
+          "description": "Role that waived the breach under maker/checker, where waived.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the breach record is held in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "authority_breach_id"
+        ]
+      },
+      "owner": "Head of Delegated Authority"
+    },
+    {
+      "kind": "entity",
+      "name": "binding_authority",
+      "domain": "delegated_authority",
+      "title": "Binding Authority",
+      "description": "A binder - the contract granting a coverholder authority to bind risks within limits (line size, aggregate, line of business, territory, claims authority). Breaches are measured against these limits.\n",
+      "grain": "One row per binding authority (binder).",
+      "standards": {
+        "lloyds_cdr": "Binding Authority / UMR"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "mapped",
+      "attributes": [
+        {
+          "name": "binder_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the binder.",
+          "classification": "internal"
+        },
+        {
+          "name": "coverholder_id",
+          "references": "coverholder",
+          "type": "string",
+          "required": true,
+          "description": "The coverholder the authority is granted to.",
+          "classification": "internal"
+        },
+        {
+          "name": "umr",
+          "type": "string",
+          "required": true,
+          "description": "Unique Market Reference for the binder (format-correct, synthetic).",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "UMR"
+          }
+        },
+        {
+          "name": "inception_date",
+          "type": "date",
+          "required": true,
+          "description": "Binder inception date.",
+          "classification": "internal"
+        },
+        {
+          "name": "expiry_date",
+          "type": "date",
+          "required": true,
+          "description": "Binder expiry date.",
+          "classification": "internal"
+        },
+        {
+          "name": "territory_scope",
+          "type": "string",
+          "required": false,
+          "description": "Permitted territories as a comma-separated country list; risks outside breach TERRITORY.",
+          "classification": "internal"
+        },
+        {
+          "name": "max_line_size",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Maximum sum insured the coverholder may bind on one risk.",
+          "classification": "confidential"
+        },
+        {
+          "name": "aggregate_limit",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Maximum cumulative written premium under the binder.",
+          "classification": "confidential"
+        },
+        {
+          "name": "premium_estimate",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Estimated premium income for the binder period.",
+          "classification": "confidential"
+        },
+        {
+          "name": "commission_pct",
+          "type": "decimal(6,4)",
+          "required": false,
+          "description": "Coverholder commission rate on written premium.",
+          "classification": "confidential"
+        },
+        {
+          "name": "claims_authority_limit",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Maximum claim the coverholder may settle without referral.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the binder limits.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the binder is held in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "binder_id"
+        ],
+        "natural": [
+          "umr"
+        ]
+      },
+      "owner": "Head of Delegated Authority"
+    },
+    {
+      "kind": "entity",
+      "name": "binding_authority_lob",
+      "domain": "delegated_authority",
+      "title": "Binding Authority Line of Business",
+      "description": "A line of business permitted under a binder - the many-to-many scope resolved relationally (flattened from lob_scope). A risk in a line not listed here breaches LOB.\n",
+      "grain": "One row per line of business per binder.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "binding_authority_lob_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the scope row.",
+          "classification": "internal"
+        },
+        {
+          "name": "binder_id",
+          "references": "binding_authority",
+          "type": "string",
+          "required": true,
+          "description": "The binder.",
+          "classification": "internal"
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "A line of business the binder permits.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "binding_authority_lob_id"
+        ],
+        "natural": [
+          "binder_id",
+          "line_of_business_code"
+        ]
+      },
+      "owner": "Head of Delegated Authority"
+    },
+    {
+      "kind": "entity",
+      "name": "bordereau_claim_row",
+      "domain": "delegated_authority",
+      "title": "Bordereau Claim Row",
+      "description": "A claim movement on a claims bordereau, mapped to Lloyd's CDR claims fields.\n",
+      "grain": "One row per claim movement per claims bordereau.",
+      "standards": {
+        "lloyds_cdr": "Claims bordereau row (CDR v3.x)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "mapped",
+      "attributes": [
+        {
+          "name": "bordereau_claim_row_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the claim row.",
+          "classification": "internal"
+        },
+        {
+          "name": "submission_id",
+          "references": "bordereau_submission",
+          "type": "string",
+          "required": true,
+          "description": "The claims bordereau this row belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "risk_reference",
+          "type": "string",
+          "required": true,
+          "description": "Risk reference the claim relates to.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Risk Reference"
+          }
+        },
+        {
+          "name": "claim_reference",
+          "type": "string",
+          "required": true,
+          "description": "Coverholder's claim reference.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Claim Reference"
+          }
+        },
+        {
+          "name": "cause_of_loss_code",
+          "code_set": "cause_of_loss",
+          "required": false,
+          "description": "Peril / cause of loss.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Cause of Loss"
+          }
+        },
+        {
+          "name": "loss_date",
+          "type": "date",
+          "required": false,
+          "description": "Date of loss.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Date of Loss"
+          }
+        },
+        {
+          "name": "paid_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Amount paid in the period.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Paid This Period"
+          }
+        },
+        {
+          "name": "outstanding_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Outstanding reserve at period end.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Outstanding Reserve"
+          }
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amounts.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Original Currency"
+          }
+        }
+      ],
+      "keys": {
+        "primary": [
+          "bordereau_claim_row_id"
+        ]
+      },
+      "owner": "Head of Delegated Authority"
+    },
+    {
+      "kind": "entity",
+      "name": "bordereau_premium_row",
+      "domain": "delegated_authority",
+      "title": "Bordereau Premium Row",
+      "description": "A premium movement on a premium bordereau, mapped to Lloyd's CDR premium fields.\n",
+      "grain": "One row per premium movement per premium bordereau.",
+      "standards": {
+        "lloyds_cdr": "Premium bordereau row (CDR v3.x)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "mapped",
+      "attributes": [
+        {
+          "name": "bordereau_premium_row_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the premium row.",
+          "classification": "internal"
+        },
+        {
+          "name": "submission_id",
+          "references": "bordereau_submission",
+          "type": "string",
+          "required": true,
+          "description": "The premium bordereau this row belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "risk_reference",
+          "type": "string",
+          "required": true,
+          "description": "Risk reference the premium relates to.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Risk Reference"
+          }
+        },
+        {
+          "name": "gross_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Gross written premium in the period.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Gross Premium"
+          }
+        },
+        {
+          "name": "commission_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Coverholder commission on the premium.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Commission"
+          }
+        },
+        {
+          "name": "net_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Premium net of commission, payable to the insurer.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Net Premium"
+          }
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amounts.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Settlement Currency"
+          }
+        }
+      ],
+      "keys": {
+        "primary": [
+          "bordereau_premium_row_id"
+        ]
+      },
+      "owner": "Head of Delegated Authority"
+    },
+    {
+      "kind": "entity",
+      "name": "bordereau_risk_row",
+      "domain": "delegated_authority",
+      "title": "Bordereau Risk Row",
+      "description": "A single risk on a risk bordereau, mapped attribute-by-attribute to Lloyd's Core Data Record fields. Risk rows enter the same policy event spine (a BOUND event with source BORDEREAU), so delegated business is one twin, not a side door.\n",
+      "grain": "One row per risk per risk bordereau.",
+      "standards": {
+        "lloyds_cdr": "Risk bordereau row (CDR v3.x)"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "mapped",
+      "attributes": [
+        {
+          "name": "bordereau_risk_row_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the risk row.",
+          "classification": "internal"
+        },
+        {
+          "name": "submission_id",
+          "references": "bordereau_submission",
+          "type": "string",
+          "required": true,
+          "description": "The risk bordereau this row belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": false,
+          "description": "The policy this risk was bound as in the spine (delegated business).",
+          "classification": "internal"
+        },
+        {
+          "name": "risk_reference",
+          "type": "string",
+          "required": true,
+          "description": "Coverholder's risk reference.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Unique Market Reference / Risk Reference"
+          }
+        },
+        {
+          "name": "insured_name",
+          "type": "string",
+          "required": false,
+          "description": "Name of the insured.",
+          "classification": "pii",
+          "standards": {
+            "lloyds_cdr": "Insured/Reinsured Full Name"
+          }
+        },
+        {
+          "name": "line_of_business_code",
+          "code_set": "line_of_business",
+          "required": true,
+          "description": "Line of business of the risk.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Class of Business"
+          }
+        },
+        {
+          "name": "risk_inception_date",
+          "type": "date",
+          "required": true,
+          "description": "Inception date of the risk.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Inception Date"
+          }
+        },
+        {
+          "name": "risk_expiry_date",
+          "type": "date",
+          "required": true,
+          "description": "Expiry date of the risk.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Expiry Date"
+          }
+        },
+        {
+          "name": "risk_country_code",
+          "code_set": "country",
+          "required": false,
+          "description": "Country the risk is located in.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Location of Risk - Country"
+          }
+        },
+        {
+          "name": "postcode",
+          "type": "string",
+          "required": false,
+          "description": "Risk location postcode.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Location of Risk - Postcode"
+          }
+        },
+        {
+          "name": "sum_insured",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Sum insured / limit for the risk.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Sum Insured / Limit"
+          }
+        },
+        {
+          "name": "gross_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Gross written premium for the risk.",
+          "classification": "confidential",
+          "standards": {
+            "lloyds_cdr": "Gross Premium"
+          }
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the amounts.",
+          "classification": "internal",
+          "standards": {
+            "lloyds_cdr": "Original Currency"
+          }
+        }
+      ],
+      "keys": {
+        "primary": [
+          "bordereau_risk_row_id"
+        ]
+      },
+      "owner": "Head of Delegated Authority"
+    },
+    {
+      "kind": "entity",
+      "name": "bordereau_submission",
+      "domain": "delegated_authority",
+      "title": "Bordereau Submission",
+      "description": "One bordereau file received from a coverholder under a binder for a period - its type, timeliness and data quality. The unit the \"which coverholders are late / dirty\" view works from.\n",
+      "grain": "One row per bordereau file received.",
+      "standards": {
+        "lloyds_cdr": "Bordereau submission"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "mapped",
+      "attributes": [
+        {
+          "name": "submission_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the submission.",
+          "classification": "internal"
+        },
+        {
+          "name": "binder_id",
+          "references": "binding_authority",
+          "type": "string",
+          "required": true,
+          "description": "Binder the bordereau is submitted under.",
+          "classification": "internal"
+        },
+        {
+          "name": "bordereau_type_code",
+          "code_set": "bordereau_type",
+          "required": true,
+          "description": "Kind of bordereau (risk, premium, claims).",
+          "classification": "internal"
+        },
+        {
+          "name": "period_month",
+          "type": "date",
+          "required": true,
+          "description": "Reporting month the bordereau covers.",
+          "classification": "internal"
+        },
+        {
+          "name": "received_date",
+          "type": "date",
+          "required": false,
+          "description": "Date the file was received.",
+          "classification": "internal"
+        },
+        {
+          "name": "due_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the file was due.",
+          "classification": "internal"
+        },
+        {
+          "name": "bordereau_status_code",
+          "code_set": "bordereau_status",
+          "required": true,
+          "description": "Processing status of the submission.",
+          "classification": "internal"
+        },
+        {
+          "name": "row_count",
+          "type": "integer",
+          "required": false,
+          "description": "Number of rows in the file.",
+          "classification": "internal"
+        },
+        {
+          "name": "dq_score",
+          "type": "decimal(6,4)",
+          "required": false,
+          "description": "Data-quality score for the submission, 0 to 1.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the submission was received into.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "submission_id"
+        ]
+      },
+      "owner": "Head of Delegated Authority"
+    },
+    {
+      "kind": "entity",
+      "name": "coverholder",
+      "domain": "delegated_authority",
+      "title": "Coverholder",
+      "description": "A party granted delegated authority to bind risks on the insurer's behalf. The centre of the delegated-authority book: binders, bordereaux and breaches all hang off the coverholder.\n",
+      "grain": "One row per coverholder.",
+      "standards": {
+        "lloyds_cdr": "Coverholder concept"
+      },
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "mapped",
+      "attributes": [
+        {
+          "name": "coverholder_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the coverholder.",
+          "classification": "internal"
+        },
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "The party acting as coverholder.",
+          "classification": "internal"
+        },
+        {
+          "name": "domicile",
+          "code_set": "country",
+          "required": false,
+          "description": "Country the coverholder is domiciled in.",
+          "classification": "internal"
+        },
+        {
+          "name": "coverholder_status_code",
+          "code_set": "coverholder_status",
+          "required": true,
+          "description": "Approval standing to bind delegated authority.",
+          "classification": "internal"
+        },
+        {
+          "name": "audit_last_date",
+          "type": "date",
+          "required": false,
+          "description": "Date of the last delegated-authority audit.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the coverholder is held in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "coverholder_id"
+        ],
+        "natural": [
+          "party_id"
+        ]
+      },
+      "owner": "Head of Delegated Authority"
     },
     {
       "kind": "entity",
@@ -10285,6 +11167,15 @@
   "views": [
     {
       "kind": "view",
+      "name": "vw_authority_breach",
+      "domain": "delegated_authority",
+      "title": "Authority Breach (live detection)",
+      "description": "Live detection of line-size and line-of-business breaches on bordereau risk rows, computed by comparing each risk against its binder's limits - no stored state. The governed authority_breach table records the tracked/waived ones; this view is the always-current detector behind \"which coverholders are outside authority right now\".\n",
+      "grain": "One row per breaching risk row per breach type.",
+      "sql": "SELECT\n  r.bordereau_risk_row_id,\n  b.binder_id,\n  b.umr,\n  'LINE_SIZE' AS breach_type_code,\n  r.sum_insured AS observed_value,\n  b.max_line_size AS limit_value\nFROM {delegated_authority.bordereau_risk_row} r\nJOIN {delegated_authority.bordereau_submission} s ON s.submission_id = r.submission_id\nJOIN {delegated_authority.binding_authority} b ON b.binder_id = s.binder_id\nWHERE b.max_line_size IS NOT NULL AND r.sum_insured > b.max_line_size\nUNION ALL\nSELECT\n  r.bordereau_risk_row_id,\n  b.binder_id,\n  b.umr,\n  'LOB' AS breach_type_code,\n  NULL AS observed_value,\n  NULL AS limit_value\nFROM {delegated_authority.bordereau_risk_row} r\nJOIN {delegated_authority.bordereau_submission} s ON s.submission_id = r.submission_id\nJOIN {delegated_authority.binding_authority} b ON b.binder_id = s.binder_id\nWHERE NOT EXISTS (\n  SELECT 1 FROM {delegated_authority.binding_authority_lob} bl\n  WHERE bl.binder_id = b.binder_id AND bl.line_of_business_code = r.line_of_business_code\n)\n"
+    },
+    {
+      "kind": "view",
       "name": "cession_bordereau_line",
       "domain": "exchange",
       "title": "Cession Bordereau Line (outbound)",
@@ -10384,6 +11275,67 @@
     }
   ],
   "metric_views": [
+    {
+      "kind": "metric_view",
+      "name": "da_metrics",
+      "domain": "delegated_authority",
+      "title": "Delegated Authority Metrics",
+      "description": "Delegated-authority oversight KPIs over bordereau submissions - outstanding files, submission lag, and data-quality by coverholder and type. Open-breach count comes from vw_authority_breach; binder utilisation from premium vs estimate. Query measures with MEASURE(name).\n",
+      "owner": "Head of Delegated Authority",
+      "certification": "draft",
+      "source": "delegated_authority.bordereau_submission",
+      "joins": [
+        {
+          "name": "binding_authority",
+          "source": "delegated_authority.binding_authority",
+          "condition": "source.binder_id = binding_authority.binder_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "bordereau_type_code",
+          "expr": "source.bordereau_type_code",
+          "description": "Kind of bordereau."
+        },
+        {
+          "name": "bordereau_status_code",
+          "expr": "source.bordereau_status_code",
+          "description": "Processing status."
+        },
+        {
+          "name": "period_month",
+          "expr": "source.period_month",
+          "description": "Reporting month."
+        },
+        {
+          "name": "umr",
+          "expr": "binding_authority.umr",
+          "description": "Binder UMR."
+        }
+      ],
+      "measures": [
+        {
+          "name": "submission_count",
+          "expr": "COUNT(submission_id)",
+          "description": "Number of bordereau submissions."
+        },
+        {
+          "name": "outstanding_count",
+          "expr": "COUNT(CASE WHEN bordereau_status_code IN ('RECEIVED', 'QUARANTINED') THEN submission_id END)",
+          "description": "Submissions not yet accepted."
+        },
+        {
+          "name": "avg_submission_lag_days",
+          "expr": "AVG(datediff(received_date, due_date))",
+          "description": "Average days received after due (negative = early)."
+        },
+        {
+          "name": "avg_dq_score",
+          "expr": "AVG(dq_score)",
+          "description": "Average data-quality score."
+        }
+      ]
+    },
     {
       "kind": "metric_view",
       "name": "lifecycle_metrics",
@@ -12222,6 +13174,202 @@
     },
     {
       "from_entity": "fair_value_assessment",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "authority_breach",
+      "attribute": "binder_id",
+      "to": "binding_authority",
+      "to_kind": "entity",
+      "to_attribute": "binder_id"
+    },
+    {
+      "from_entity": "authority_breach",
+      "attribute": "bordereau_risk_row_id",
+      "to": "bordereau_risk_row",
+      "to_kind": "entity",
+      "to_attribute": "bordereau_risk_row_id"
+    },
+    {
+      "from_entity": "authority_breach",
+      "attribute": "breach_type_code",
+      "to": "breach_type",
+      "to_kind": "code_set",
+      "to_attribute": "breach_type_code"
+    },
+    {
+      "from_entity": "authority_breach",
+      "attribute": "breach_status_code",
+      "to": "breach_status",
+      "to_kind": "code_set",
+      "to_attribute": "breach_status_code"
+    },
+    {
+      "from_entity": "authority_breach",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "binding_authority",
+      "attribute": "coverholder_id",
+      "to": "coverholder",
+      "to_kind": "entity",
+      "to_attribute": "coverholder_id"
+    },
+    {
+      "from_entity": "binding_authority",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "binding_authority",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "binding_authority_lob",
+      "attribute": "binder_id",
+      "to": "binding_authority",
+      "to_kind": "entity",
+      "to_attribute": "binder_id"
+    },
+    {
+      "from_entity": "binding_authority_lob",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "bordereau_claim_row",
+      "attribute": "submission_id",
+      "to": "bordereau_submission",
+      "to_kind": "entity",
+      "to_attribute": "submission_id"
+    },
+    {
+      "from_entity": "bordereau_claim_row",
+      "attribute": "cause_of_loss_code",
+      "to": "cause_of_loss",
+      "to_kind": "code_set",
+      "to_attribute": "cause_of_loss_code"
+    },
+    {
+      "from_entity": "bordereau_claim_row",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "bordereau_premium_row",
+      "attribute": "submission_id",
+      "to": "bordereau_submission",
+      "to_kind": "entity",
+      "to_attribute": "submission_id"
+    },
+    {
+      "from_entity": "bordereau_premium_row",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "bordereau_risk_row",
+      "attribute": "submission_id",
+      "to": "bordereau_submission",
+      "to_kind": "entity",
+      "to_attribute": "submission_id"
+    },
+    {
+      "from_entity": "bordereau_risk_row",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "bordereau_risk_row",
+      "attribute": "line_of_business_code",
+      "to": "line_of_business",
+      "to_kind": "code_set",
+      "to_attribute": "line_of_business_code"
+    },
+    {
+      "from_entity": "bordereau_risk_row",
+      "attribute": "risk_country_code",
+      "to": "country",
+      "to_kind": "code_set",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "bordereau_risk_row",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "bordereau_submission",
+      "attribute": "binder_id",
+      "to": "binding_authority",
+      "to_kind": "entity",
+      "to_attribute": "binder_id"
+    },
+    {
+      "from_entity": "bordereau_submission",
+      "attribute": "bordereau_type_code",
+      "to": "bordereau_type",
+      "to_kind": "code_set",
+      "to_attribute": "bordereau_type_code"
+    },
+    {
+      "from_entity": "bordereau_submission",
+      "attribute": "bordereau_status_code",
+      "to": "bordereau_status",
+      "to_kind": "code_set",
+      "to_attribute": "bordereau_status_code"
+    },
+    {
+      "from_entity": "bordereau_submission",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "coverholder",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "coverholder",
+      "attribute": "domicile",
+      "to": "country",
+      "to_kind": "entity",
+      "to_attribute": "country_code"
+    },
+    {
+      "from_entity": "coverholder",
+      "attribute": "coverholder_status_code",
+      "to": "coverholder_status",
+      "to_kind": "code_set",
+      "to_attribute": "coverholder_status_code"
+    },
+    {
+      "from_entity": "coverholder",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",

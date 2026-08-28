@@ -27,7 +27,13 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_party.party (party_id
   ('pty_0017', 'PERSON', 'Anna Novak', 'GB', 'DATA_CORE'),
   ('pty_0018', 'PERSON', 'James Whitfield', 'GB', 'DATA_CORE'),
   ('pty_0019', 'PERSON', 'Claire Dubois', 'FR', 'DATA_CORE'),
-  ('pty_0020', 'MACHINE_AGENT', 'Athena Procurement Agent v2 (for Kestrel Foods Group)', 'GB', 'DATA_CORE');
+  ('pty_0020', 'MACHINE_AGENT', 'Athena Procurement Agent v2 (for Kestrel Foods Group)', 'GB', 'DATA_CORE'),
+  ('pty_0021', 'ORGANISATION', 'Harbourline Underwriting Ltd', 'GB', 'DATA_CORE'),
+  ('pty_0022', 'ORGANISATION', 'Pennine Cover Partners', 'GB', 'DATA_CORE'),
+  ('pty_0023', 'ORGANISATION', 'Zuiderzee Volmacht BV', 'DE', 'DATA_CORE'),
+  ('pty_0024', 'ORGANISATION', 'Celtic Fleet MGA', 'IE', 'DATA_CORE'),
+  ('pty_0025', 'ORGANISATION', 'Alpine Specialty AG', 'CH', 'DATA_CORE'),
+  ('pty_0026', 'ORGANISATION', 'Meridian Cargo Cover', 'GB', 'DATA_CORE');
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_product.product (product_id, product_code, name, line_of_business_code, product_status_code, base_rate, currency_code, source_system_code) VALUES
   ('prd_0001', 'CP-STD', 'Commercial Property Standard', 'COMMERCIAL_PROPERTY', 'ACTIVE', 0.014, 'GBP', 'PAS_CORE'),
@@ -241,7 +247,19 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_policy.policy (policy
   ('pol_0169', 'POL-2026-900010', 'le_se', 'PAS_CORE', 'COMMERCIAL_PROPERTY', 'EXPIRED', DATE '2026-11-11', DATE '2027-11-10', 2026, 'GBP', NULL),
   ('pol_0170', 'POL-2026-900011', 'le_se', 'PAS_CORE', 'GENERAL_LIABILITY', 'EXPIRED', DATE '2026-12-12', DATE '2027-12-11', 2026, 'GBP', NULL),
   ('pol_0171', 'POL-2026-900012', 'le_se', 'PAS_CORE', 'MOTOR', 'EXPIRED', DATE '2026-01-13', DATE '2027-01-12', 2026, 'GBP', NULL),
-  ('pol_0172', 'POL-2026-900013', 'le_se', 'PAS_CORE', 'MARINE_CARGO', 'EXPIRED', DATE '2026-02-14', DATE '2027-02-13', 2026, 'GBP', NULL);
+  ('pol_0172', 'POL-2026-900013', 'le_se', 'PAS_CORE', 'MARINE_CARGO', 'EXPIRED', DATE '2026-02-14', DATE '2027-02-13', 2026, 'GBP', NULL),
+  ('pol_0173', 'POL-BDX-2026-001', 'le_se', 'DA_CORE', 'MARINE_CARGO', 'IN_FORCE', DATE '2026-01-01', DATE '2026-12-31', 2026, 'GBP', NULL),
+  ('pol_0174', 'POL-BDX-2026-002', 'le_se', 'DA_CORE', 'GENERAL_LIABILITY', 'IN_FORCE', DATE '2026-02-01', DATE '2027-01-31', 2026, 'GBP', NULL),
+  ('pol_0175', 'POL-BDX-2026-003', 'le_se', 'DA_CORE', 'MARINE_CARGO', 'IN_FORCE', DATE '2026-03-01', DATE '2027-02-28', 2026, 'GBP', NULL),
+  ('pol_0176', 'POL-BDX-2026-004', 'le_se', 'DA_CORE', 'GENERAL_LIABILITY', 'IN_FORCE', DATE '2026-04-01', DATE '2027-03-31', 2026, 'GBP', NULL),
+  ('pol_0177', 'POL-BDX-2026-005', 'le_se', 'DA_CORE', 'GENERAL_LIABILITY', 'IN_FORCE', DATE '2026-05-01', DATE '2027-04-30', 2026, 'GBP', NULL),
+  ('pol_0178', 'POL-BDX-2026-006', 'le_se', 'DA_CORE', 'MARINE_CARGO', 'IN_FORCE', DATE '2026-06-01', DATE '2027-05-31', 2026, 'GBP', NULL),
+  ('pol_0179', 'POL-BDX-2026-007', 'le_se', 'DA_CORE', 'MARINE_CARGO', 'IN_FORCE', DATE '2026-07-01', DATE '2027-06-30', 2026, 'GBP', NULL),
+  ('pol_0180', 'POL-BDX-2026-008', 'le_se', 'DA_CORE', 'GENERAL_LIABILITY', 'IN_FORCE', DATE '2026-08-01', DATE '2027-07-31', 2026, 'GBP', NULL),
+  ('pol_0181', 'POL-BDX-2026-009', 'le_se', 'DA_CORE', 'MARINE_CARGO', 'IN_FORCE', DATE '2026-09-01', DATE '2027-08-31', 2026, 'GBP', NULL),
+  ('pol_0182', 'POL-BDX-2026-010', 'le_se', 'DA_CORE', 'MOTOR', 'IN_FORCE', DATE '2026-10-01', DATE '2027-09-30', 2026, 'GBP', NULL),
+  ('pol_0183', 'POL-BDX-2026-011', 'le_se', 'DA_CORE', 'GENERAL_LIABILITY', 'IN_FORCE', DATE '2026-11-01', DATE '2027-10-31', 2026, 'GBP', NULL),
+  ('pol_0184', 'POL-BDX-2026-012', 'le_se', 'DA_CORE', 'MARINE_CARGO', 'IN_FORCE', DATE '2026-12-01', DATE '2027-11-30', 2026, 'GBP', NULL);
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_policy.quote (quote_id, quote_number, policy_id, line_of_business_code, quote_status_code, quote_date, requested_inception_date, quoted_gross_premium, rated_gross_premium, rating_engine_config_id, model_version_id, conversion_flag, currency_code, source_system_code, product_id, distribution_channel_code) VALUES
   ('quo_0001', 'QUO-2026-000001', 'pol_0001', 'COMMERCIAL_PROPERTY', 'CONVERTED', DATE '2025-12-18', DATE '2026-01-01', 120000.0, 120000.0, NULL, NULL, True, 'GBP', 'PAS_CORE', 'prd_0001', 'DIRECT'),
@@ -11308,7 +11326,31 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_policy_lifecycle.poli
   ('evt_pol_0172_02', 'pol_0172', 2, 'BOUND', TIMESTAMP '2026-02-14 10:00:00', DATE '2026-02-14', NULL, NULL, 'UW_WORKBENCH', 'HUMAN', 'U. Marsh (senior underwriter)', NULL, NULL, NULL, NULL, '263fe34909c1ca5fca8b97e93bed72d6fb1bd5698ce74d3fa0231b7464efcc91', '33aa00ead2d283c42498e381d57fc9a9fcb8f080de860c41b268fcbd4d66709e', 'PAS_CORE'),
   ('evt_pol_0172_03', 'pol_0172', 3, 'ISSUED', TIMESTAMP '2026-02-14 11:00:00', DATE '2026-02-14', NULL, NULL, 'MIGRATION', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, '33aa00ead2d283c42498e381d57fc9a9fcb8f080de860c41b268fcbd4d66709e', 'a61f1f9f2dfd62e660ddcc80bff8e1e79ffd693888797d7c59ebdec6ab6626fd', 'PAS_CORE'),
   ('evt_pol_0172_04', 'pol_0172', 4, 'MTA_APPLIED', TIMESTAMP '2026-05-15 14:00:00', DATE '2026-05-15', NULL, NULL, 'PORTAL', 'HUMAN', 'POL-2026-900013', 5486.24, 342890.2, 'Mid-term sum insured revision.', 'Insured requested sum insured increase', 'a61f1f9f2dfd62e660ddcc80bff8e1e79ffd693888797d7c59ebdec6ab6626fd', 'a62cf98c92ac8e9405b87827efc76227a8ca9451a73d8888043011dd71011701', 'PAS_CORE'),
-  ('evt_pol_0172_05', 'pol_0172', 5, 'EXPIRED', TIMESTAMP '2027-02-13 10:00:00', DATE '2027-02-13', NULL, NULL, 'BATCH', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, 'a62cf98c92ac8e9405b87827efc76227a8ca9451a73d8888043011dd71011701', 'a472c158e0b01b86798733dc052bd37582f133bea69da5e1406b178495400b08', 'PAS_CORE');
+  ('evt_pol_0172_05', 'pol_0172', 5, 'EXPIRED', TIMESTAMP '2027-02-13 10:00:00', DATE '2027-02-13', NULL, NULL, 'BATCH', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, 'a62cf98c92ac8e9405b87827efc76227a8ca9451a73d8888043011dd71011701', 'a472c158e0b01b86798733dc052bd37582f133bea69da5e1406b178495400b08', 'PAS_CORE'),
+  ('evt_pol_0173_01', 'pol_0173', 1, 'BOUND', TIMESTAMP '2026-01-01 10:00:00', DATE '2026-01-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, '71dcb515485c8f29123002079c3b2c07cd1e04a04f8197fc758d8fab7714dc64', 'PAS_CORE'),
+  ('evt_pol_0173_02', 'pol_0173', 2, 'ISSUED', TIMESTAMP '2026-01-01 11:00:00', DATE '2026-01-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, '71dcb515485c8f29123002079c3b2c07cd1e04a04f8197fc758d8fab7714dc64', '20a5a65b5e366e7b038201e548cd0aeb8fc226168cdb5af47211b38dd2976128', 'PAS_CORE'),
+  ('evt_pol_0174_01', 'pol_0174', 1, 'BOUND', TIMESTAMP '2026-02-01 10:00:00', DATE '2026-02-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, '4bf48bc59606ea74b3cae7f5900c4ee42a3b6050b3c01ecfbe9194d2b77acb68', 'PAS_CORE'),
+  ('evt_pol_0174_02', 'pol_0174', 2, 'ISSUED', TIMESTAMP '2026-02-01 11:00:00', DATE '2026-02-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, '4bf48bc59606ea74b3cae7f5900c4ee42a3b6050b3c01ecfbe9194d2b77acb68', '8cb7b532f74c9161a585a17f8b2b5beaafabb341533a3279d69f3ccdf0016324', 'PAS_CORE'),
+  ('evt_pol_0175_01', 'pol_0175', 1, 'BOUND', TIMESTAMP '2026-03-01 10:00:00', DATE '2026-03-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, 'fb2e558c56a5a67915e01e3bad088000b29f6cbd8013cf03e3f890b8ff87f55b', 'PAS_CORE'),
+  ('evt_pol_0175_02', 'pol_0175', 2, 'ISSUED', TIMESTAMP '2026-03-01 11:00:00', DATE '2026-03-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, 'fb2e558c56a5a67915e01e3bad088000b29f6cbd8013cf03e3f890b8ff87f55b', '716502ca7d3132bca5ed806943a481efe06062d3446997e345c72c0e2eaa99c7', 'PAS_CORE'),
+  ('evt_pol_0176_01', 'pol_0176', 1, 'BOUND', TIMESTAMP '2026-04-01 10:00:00', DATE '2026-04-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, 'a02e0e43ab360e6ff7840ebe76b6130dbd446dc247d576b09914fe2b1ae7fcad', 'PAS_CORE'),
+  ('evt_pol_0176_02', 'pol_0176', 2, 'ISSUED', TIMESTAMP '2026-04-01 11:00:00', DATE '2026-04-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, 'a02e0e43ab360e6ff7840ebe76b6130dbd446dc247d576b09914fe2b1ae7fcad', '94f54244b279d6d19a9c36b918d859621273b32fa987b554c2fc9f222b9f154f', 'PAS_CORE'),
+  ('evt_pol_0177_01', 'pol_0177', 1, 'BOUND', TIMESTAMP '2026-05-01 10:00:00', DATE '2026-05-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, '3e5477eee07721362d330e014f289b945775076841e39188abc4ea65bcb94c2c', 'PAS_CORE'),
+  ('evt_pol_0177_02', 'pol_0177', 2, 'ISSUED', TIMESTAMP '2026-05-01 11:00:00', DATE '2026-05-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, '3e5477eee07721362d330e014f289b945775076841e39188abc4ea65bcb94c2c', '06912e58974c6551df99765e4e1b0474e8dd2fb43315ce2330f56aa928e16ea2', 'PAS_CORE'),
+  ('evt_pol_0178_01', 'pol_0178', 1, 'BOUND', TIMESTAMP '2026-06-01 10:00:00', DATE '2026-06-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, 'd8f0c64c35cfb0c2f667f4a0732a1acbaf1652a6b5a6aaffa2b1c12f1740b3b1', 'PAS_CORE'),
+  ('evt_pol_0178_02', 'pol_0178', 2, 'ISSUED', TIMESTAMP '2026-06-01 11:00:00', DATE '2026-06-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, 'd8f0c64c35cfb0c2f667f4a0732a1acbaf1652a6b5a6aaffa2b1c12f1740b3b1', 'ca6c3dfc9c0f33410ae50472dfe3bae625bc31721d37047196814fed3b00ff61', 'PAS_CORE'),
+  ('evt_pol_0179_01', 'pol_0179', 1, 'BOUND', TIMESTAMP '2026-07-01 10:00:00', DATE '2026-07-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, 'e0ef6c36e40e9e1d6666846336a91f79aea859808f38afbae8bf398d69a907ad', 'PAS_CORE'),
+  ('evt_pol_0179_02', 'pol_0179', 2, 'ISSUED', TIMESTAMP '2026-07-01 11:00:00', DATE '2026-07-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, 'e0ef6c36e40e9e1d6666846336a91f79aea859808f38afbae8bf398d69a907ad', 'cb74147b2a256e0b27e4c50847365d0604d16fffc22081f4b214acf268842040', 'PAS_CORE'),
+  ('evt_pol_0180_01', 'pol_0180', 1, 'BOUND', TIMESTAMP '2026-08-01 10:00:00', DATE '2026-08-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, 'd2bc85aa2b13f18b9b391f5c90047fbc1875e68b7ddce99e9b8088fd3c067bce', 'PAS_CORE'),
+  ('evt_pol_0180_02', 'pol_0180', 2, 'ISSUED', TIMESTAMP '2026-08-01 11:00:00', DATE '2026-08-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, 'd2bc85aa2b13f18b9b391f5c90047fbc1875e68b7ddce99e9b8088fd3c067bce', 'c3752e3f8b60f92612b8480ffef492b8e659d24c877bb31c092e5466705c8ded', 'PAS_CORE'),
+  ('evt_pol_0181_01', 'pol_0181', 1, 'BOUND', TIMESTAMP '2026-09-01 10:00:00', DATE '2026-09-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, '67f35e47a1d80d6bd69b161f7749aded6b62de44f019c63206850d0b191a2f3f', 'PAS_CORE'),
+  ('evt_pol_0181_02', 'pol_0181', 2, 'ISSUED', TIMESTAMP '2026-09-01 11:00:00', DATE '2026-09-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, '67f35e47a1d80d6bd69b161f7749aded6b62de44f019c63206850d0b191a2f3f', '19c8044922ede977679f2b16b24463ef2fd36f7d34a4a618e8a06953f04e1c27', 'PAS_CORE'),
+  ('evt_pol_0182_01', 'pol_0182', 1, 'BOUND', TIMESTAMP '2026-10-01 10:00:00', DATE '2026-10-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, '0581e29b8d268d1a3d71df46a9bd145af3a80867d1de0e9290e759a62c955a1a', 'PAS_CORE'),
+  ('evt_pol_0182_02', 'pol_0182', 2, 'ISSUED', TIMESTAMP '2026-10-01 11:00:00', DATE '2026-10-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, '0581e29b8d268d1a3d71df46a9bd145af3a80867d1de0e9290e759a62c955a1a', '4d42787a86fb41a6140cf9ac86d4450eb14e162314a518d9071a52c1e99c8d7a', 'PAS_CORE'),
+  ('evt_pol_0183_01', 'pol_0183', 1, 'BOUND', TIMESTAMP '2026-11-01 10:00:00', DATE '2026-11-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, '410804d7853fd99c503bccac5e121ad4d271a79d7fec1b23168376a4b94e3806', 'PAS_CORE'),
+  ('evt_pol_0183_02', 'pol_0183', 2, 'ISSUED', TIMESTAMP '2026-11-01 11:00:00', DATE '2026-11-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, '410804d7853fd99c503bccac5e121ad4d271a79d7fec1b23168376a4b94e3806', 'bfb6c72a7f7867b6bd2139762b86637f7c3be6a836593861f4eecfe925ee4fc0', 'PAS_CORE'),
+  ('evt_pol_0184_01', 'pol_0184', 1, 'BOUND', TIMESTAMP '2026-12-01 10:00:00', DATE '2026-12-01', NULL, NULL, 'BORDEREAU', 'AGENT', 'coverholder', NULL, NULL, NULL, NULL, NULL, '7b15731886e4d73ca6b5ee97c0aafbb4a27db8d3b9d29ab3e5908882897d7804', 'PAS_CORE'),
+  ('evt_pol_0184_02', 'pol_0184', 2, 'ISSUED', TIMESTAMP '2026-12-01 11:00:00', DATE '2026-12-01', NULL, NULL, 'BORDEREAU', 'SYSTEM', NULL, NULL, NULL, NULL, NULL, '7b15731886e4d73ca6b5ee97c0aafbb4a27db8d3b9d29ab3e5908882897d7804', '7426f1c086da1c4073173bf47c06805bbc38b5aa452addc69cf9194e710b280b', 'PAS_CORE');
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_policy_lifecycle.policy_version (policy_version_id, policy_id, policy_number, legal_entity_id, underwriting_year, renews_policy_id, version_no, valid_from, valid_to, is_current, created_by_event_id, policy_status_code, line_of_business_code, inception_date, expiry_date, sum_insured_amount, annual_premium, currency_code, source_system_code) VALUES
   ('pvr_pol_0001_1', 'pol_0001', 'POL-2026-000001', 'le_se', 2026, NULL, 1, DATE '2026-01-01', DATE '2026-02-13', False, 'evt_pol_0001_02', 'IN_FORCE', 'COMMERCIAL_PROPERTY', DATE '2026-01-01', DATE '2026-12-31', 2400000.0, 120000.0, 'GBP', 'PAS_CORE'),
@@ -11535,7 +11577,19 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_policy_lifecycle.poli
   ('pvr_pol_0171_1', 'pol_0171', 'POL-2026-900012', 'le_se', 2026, NULL, 1, DATE '2026-01-13', DATE '2026-04-12', False, 'evt_pol_0171_02', 'EXPIRED', 'MOTOR', DATE '2026-01-13', DATE '2027-01-12', 325080.6, 16254.03, 'GBP', 'PAS_CORE'),
   ('pvr_pol_0171_2', 'pol_0171', 'POL-2026-900012', 'le_se', 2026, NULL, 2, DATE '2026-04-13', NULL, True, 'evt_pol_0171_04', 'EXPIRED', 'MOTOR', DATE '2026-01-13', DATE '2027-01-12', 406350.75, 17554.35, 'GBP', 'PAS_CORE'),
   ('pvr_pol_0172_1', 'pol_0172', 'POL-2026-900013', 'le_se', 2026, NULL, 1, DATE '2026-02-14', DATE '2026-05-14', False, 'evt_pol_0172_02', 'EXPIRED', 'MARINE_CARGO', DATE '2026-02-14', DATE '2027-02-13', 1371560.8, 68578.04, 'GBP', 'PAS_CORE'),
-  ('pvr_pol_0172_2', 'pol_0172', 'POL-2026-900013', 'le_se', 2026, NULL, 2, DATE '2026-05-15', NULL, True, 'evt_pol_0172_04', 'EXPIRED', 'MARINE_CARGO', DATE '2026-02-14', DATE '2027-02-13', 1714451.0, 74064.28, 'GBP', 'PAS_CORE');
+  ('pvr_pol_0172_2', 'pol_0172', 'POL-2026-900013', 'le_se', 2026, NULL, 2, DATE '2026-05-15', NULL, True, 'evt_pol_0172_04', 'EXPIRED', 'MARINE_CARGO', DATE '2026-02-14', DATE '2027-02-13', 1714451.0, 74064.28, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0173_1', 'pol_0173', 'POL-BDX-2026-001', 'le_se', 2026, NULL, 1, DATE '2026-01-01', NULL, True, 'evt_pol_0173_01', 'IN_FORCE', 'MARINE_CARGO', DATE '2026-01-01', DATE '2026-12-31', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0174_1', 'pol_0174', 'POL-BDX-2026-002', 'le_se', 2026, NULL, 1, DATE '2026-02-01', NULL, True, 'evt_pol_0174_01', 'IN_FORCE', 'GENERAL_LIABILITY', DATE '2026-02-01', DATE '2027-01-31', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0175_1', 'pol_0175', 'POL-BDX-2026-003', 'le_se', 2026, NULL, 1, DATE '2026-03-01', NULL, True, 'evt_pol_0175_01', 'IN_FORCE', 'MARINE_CARGO', DATE '2026-03-01', DATE '2027-02-28', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0176_1', 'pol_0176', 'POL-BDX-2026-004', 'le_se', 2026, NULL, 1, DATE '2026-04-01', NULL, True, 'evt_pol_0176_01', 'IN_FORCE', 'GENERAL_LIABILITY', DATE '2026-04-01', DATE '2027-03-31', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0177_1', 'pol_0177', 'POL-BDX-2026-005', 'le_se', 2026, NULL, 1, DATE '2026-05-01', NULL, True, 'evt_pol_0177_01', 'IN_FORCE', 'GENERAL_LIABILITY', DATE '2026-05-01', DATE '2027-04-30', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0178_1', 'pol_0178', 'POL-BDX-2026-006', 'le_se', 2026, NULL, 1, DATE '2026-06-01', NULL, True, 'evt_pol_0178_01', 'IN_FORCE', 'MARINE_CARGO', DATE '2026-06-01', DATE '2027-05-31', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0179_1', 'pol_0179', 'POL-BDX-2026-007', 'le_se', 2026, NULL, 1, DATE '2026-07-01', NULL, True, 'evt_pol_0179_01', 'IN_FORCE', 'MARINE_CARGO', DATE '2026-07-01', DATE '2027-06-30', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0180_1', 'pol_0180', 'POL-BDX-2026-008', 'le_se', 2026, NULL, 1, DATE '2026-08-01', NULL, True, 'evt_pol_0180_01', 'IN_FORCE', 'GENERAL_LIABILITY', DATE '2026-08-01', DATE '2027-07-31', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0181_1', 'pol_0181', 'POL-BDX-2026-009', 'le_se', 2026, NULL, 1, DATE '2026-09-01', NULL, True, 'evt_pol_0181_01', 'IN_FORCE', 'MARINE_CARGO', DATE '2026-09-01', DATE '2027-08-31', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0182_1', 'pol_0182', 'POL-BDX-2026-010', 'le_se', 2026, NULL, 1, DATE '2026-10-01', NULL, True, 'evt_pol_0182_01', 'IN_FORCE', 'MOTOR', DATE '2026-10-01', DATE '2027-09-30', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0183_1', 'pol_0183', 'POL-BDX-2026-011', 'le_se', 2026, NULL, 1, DATE '2026-11-01', NULL, True, 'evt_pol_0183_01', 'IN_FORCE', 'GENERAL_LIABILITY', DATE '2026-11-01', DATE '2027-10-31', NULL, 0, 'GBP', 'PAS_CORE'),
+  ('pvr_pol_0184_1', 'pol_0184', 'POL-BDX-2026-012', 'le_se', 2026, NULL, 1, DATE '2026-12-01', NULL, True, 'evt_pol_0184_01', 'IN_FORCE', 'MARINE_CARGO', DATE '2026-12-01', DATE '2027-11-30', NULL, 0, 'GBP', 'PAS_CORE');
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_policy_lifecycle.renewal_chain (renewal_chain_id, policy_id, chain_id, predecessor_policy_id, renewal_number) VALUES
   ('rnc_pol_0001', 'pol_0001', 'pol_0001', NULL, 0),
@@ -11709,7 +11763,19 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_policy_lifecycle.rene
   ('rnc_pol_0169', 'pol_0169', 'pol_0169', NULL, 0),
   ('rnc_pol_0170', 'pol_0170', 'pol_0170', NULL, 0),
   ('rnc_pol_0171', 'pol_0171', 'pol_0171', NULL, 0),
-  ('rnc_pol_0172', 'pol_0172', 'pol_0172', NULL, 0);
+  ('rnc_pol_0172', 'pol_0172', 'pol_0172', NULL, 0),
+  ('rnc_pol_0173', 'pol_0173', 'pol_0173', NULL, 0),
+  ('rnc_pol_0174', 'pol_0174', 'pol_0174', NULL, 0),
+  ('rnc_pol_0175', 'pol_0175', 'pol_0175', NULL, 0),
+  ('rnc_pol_0176', 'pol_0176', 'pol_0176', NULL, 0),
+  ('rnc_pol_0177', 'pol_0177', 'pol_0177', NULL, 0),
+  ('rnc_pol_0178', 'pol_0178', 'pol_0178', NULL, 0),
+  ('rnc_pol_0179', 'pol_0179', 'pol_0179', NULL, 0),
+  ('rnc_pol_0180', 'pol_0180', 'pol_0180', NULL, 0),
+  ('rnc_pol_0181', 'pol_0181', 'pol_0181', NULL, 0),
+  ('rnc_pol_0182', 'pol_0182', 'pol_0182', NULL, 0),
+  ('rnc_pol_0183', 'pol_0183', 'pol_0183', NULL, 0),
+  ('rnc_pol_0184', 'pol_0184', 'pol_0184', NULL, 0);
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_renewal.retention_response_curve (retention_response_curve_id, segment, price_walk_band, renewal_probability, observations) VALUES
   ('rrc_MOTOR_0_5', 'MOTOR', '0-5%', 0.92, 200),
@@ -14524,6 +14590,152 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_customer.customer (cu
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_customer.fair_value_assessment (fair_value_assessment_id, line_of_business_code, assessment_period, avg_premium, avg_claims_paid, claims_acceptance_rate, avg_settlement_days, complaint_ratio, fair_value_ratio, fair_value_outcome_code, attested_by, attested_at, source_system_code) VALUES
   ('fva_COMMERCIAL_PROPERTY_2026H1', 'COMMERCIAL_PROPERTY', '2026-H1', 140517.87, 76096.1, 0.9722, 45, 18.8679, 0.5415, 'MONITOR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE'),
-  ('fva_GENERAL_LIABILITY_2026H1', 'GENERAL_LIABILITY', '2026-H1', 98781.44, 49081.98, 1.0, 45, 0.0, 0.4969, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE'),
-  ('fva_MARINE_CARGO_2026H1', 'MARINE_CARGO', '2026-H1', 73899.93, 45669.34, 1.0, 45, 0.0, 0.618, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE'),
-  ('fva_MOTOR_2026H1', 'MOTOR', '2026-H1', 23954.91, 11791.43, 0.9688, 45, 0.0, 0.4922, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE');
+  ('fva_GENERAL_LIABILITY_2026H1', 'GENERAL_LIABILITY', '2026-H1', 87805.72, 43628.43, 1.0, 45, 0.0, 0.4969, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE'),
+  ('fva_MARINE_CARGO_2026H1', 'MARINE_CARGO', '2026-H1', 62814.94, 38818.94, 1.0, 45, 0.0, 0.618, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE'),
+  ('fva_MOTOR_2026H1', 'MOTOR', '2026-H1', 23434.15, 11535.1, 0.9688, 45, 0.0, 0.4922, 'FAIR', 'Chief Customer Officer', DATE '2026-07-15', 'CONDUCT_CORE');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_delegated_authority.coverholder (coverholder_id, party_id, domicile, coverholder_status_code, audit_last_date, source_system_code) VALUES
+  ('cvh_0001', 'pty_0021', 'GB', 'APPROVED', DATE '2025-09-15', 'DA_CORE'),
+  ('cvh_0002', 'pty_0022', 'GB', 'APPROVED', DATE '2025-10-15', 'DA_CORE'),
+  ('cvh_0003', 'pty_0023', 'DE', 'APPROVED', DATE '2025-11-15', 'DA_CORE'),
+  ('cvh_0004', 'pty_0024', 'IE', 'APPROVED', DATE '2025-12-15', 'DA_CORE'),
+  ('cvh_0005', 'pty_0025', 'CH', 'CONDITIONS', DATE '2025-09-15', 'DA_CORE'),
+  ('cvh_0006', 'pty_0026', 'GB', 'APPROVED', DATE '2025-10-15', 'DA_CORE');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_delegated_authority.binding_authority (binder_id, coverholder_id, umr, inception_date, expiry_date, territory_scope, max_line_size, aggregate_limit, premium_estimate, commission_pct, claims_authority_limit, currency_code, source_system_code) VALUES
+  ('bnd_0001', 'cvh_0001', 'B000025ONTOS000', DATE '2026-01-01', DATE '2026-12-31', 'GB,IE,DE,CH,FR', 5000000.0, 25000000.0, 4000000.0, 0.225, 100000.0, 'GBP', 'DA_CORE'),
+  ('bnd_0002', 'cvh_0002', 'B000125ONTOS001', DATE '2026-01-01', DATE '2026-12-31', 'GB,IE,DE,CH,FR', 5000000.0, 25000000.0, 4000000.0, 0.225, 100000.0, 'GBP', 'DA_CORE'),
+  ('bnd_0003', 'cvh_0003', 'B000225ONTOS002', DATE '2026-01-01', DATE '2026-12-31', 'GB,IE,DE,CH,FR', 5000000.0, 25000000.0, 4000000.0, 0.225, 100000.0, 'GBP', 'DA_CORE'),
+  ('bnd_0004', 'cvh_0004', 'B000325ONTOS003', DATE '2026-01-01', DATE '2026-12-31', 'GB,IE,DE,CH,FR', 5000000.0, 25000000.0, 4000000.0, 0.225, 100000.0, 'GBP', 'DA_CORE'),
+  ('bnd_0005', 'cvh_0005', 'B000425ONTOS004', DATE '2026-01-01', DATE '2026-12-31', 'GB,IE,DE,CH,FR', 5000000.0, 25000000.0, 4000000.0, 0.225, 100000.0, 'GBP', 'DA_CORE'),
+  ('bnd_0006', 'cvh_0006', 'B000525ONTOS005', DATE '2026-01-01', DATE '2026-12-31', 'GB,IE,DE,CH,FR', 5000000.0, 25000000.0, 4000000.0, 0.225, 100000.0, 'GBP', 'DA_CORE');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_delegated_authority.binding_authority_lob (binding_authority_lob_id, binder_id, line_of_business_code) VALUES
+  ('bal_0001', 'bnd_0001', 'MARINE_CARGO'),
+  ('bal_0002', 'bnd_0002', 'GENERAL_LIABILITY'),
+  ('bal_0003', 'bnd_0002', 'MOTOR'),
+  ('bal_0004', 'bnd_0003', 'MARINE_CARGO'),
+  ('bal_0005', 'bnd_0003', 'MOTOR'),
+  ('bal_0006', 'bnd_0004', 'MOTOR'),
+  ('bal_0007', 'bnd_0004', 'MOTOR'),
+  ('bal_0008', 'bnd_0005', 'GENERAL_LIABILITY'),
+  ('bal_0009', 'bnd_0005', 'MOTOR'),
+  ('bal_0010', 'bnd_0006', 'MARINE_CARGO'),
+  ('bal_0011', 'bnd_0006', 'MOTOR');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_delegated_authority.bordereau_submission (submission_id, binder_id, bordereau_type_code, period_month, received_date, due_date, bordereau_status_code, row_count, dq_score, source_system_code) VALUES
+  ('bdx_0001', 'bnd_0001', 'RISK', DATE '2026-01-01', DATE '2026-01-17', DATE '2026-01-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0002', 'bnd_0001', 'RISK', DATE '2026-02-01', DATE '2026-02-17', DATE '2026-02-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0003', 'bnd_0001', 'RISK', DATE '2026-03-01', DATE '2026-03-17', DATE '2026-03-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0004', 'bnd_0001', 'RISK', DATE '2026-04-01', DATE '2026-04-17', DATE '2026-04-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0005', 'bnd_0001', 'RISK', DATE '2026-05-01', DATE '2026-05-17', DATE '2026-05-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0006', 'bnd_0001', 'RISK', DATE '2026-06-01', DATE '2026-06-17', DATE '2026-06-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0007', 'bnd_0001', 'RISK', DATE '2026-07-01', DATE '2026-07-17', DATE '2026-07-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0008', 'bnd_0001', 'RISK', DATE '2026-08-01', DATE '2026-08-17', DATE '2026-08-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0009', 'bnd_0001', 'RISK', DATE '2026-09-01', DATE '2026-09-17', DATE '2026-09-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0010', 'bnd_0001', 'RISK', DATE '2026-10-01', DATE '2026-10-17', DATE '2026-10-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0011', 'bnd_0001', 'RISK', DATE '2026-11-01', DATE '2026-11-17', DATE '2026-11-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0012', 'bnd_0001', 'RISK', DATE '2026-12-01', DATE '2026-12-17', DATE '2026-12-15', 'ACCEPTED', 2, 0.92, 'DA_CORE'),
+  ('bdx_0013', 'bnd_0001', 'PREMIUM', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0014', 'bnd_0001', 'CLAIMS', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0015', 'bnd_0002', 'RISK', DATE '2026-01-01', DATE '2026-01-17', DATE '2026-01-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0016', 'bnd_0002', 'RISK', DATE '2026-02-01', DATE '2026-02-17', DATE '2026-02-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0017', 'bnd_0002', 'RISK', DATE '2026-03-01', DATE '2026-03-17', DATE '2026-03-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0018', 'bnd_0002', 'RISK', DATE '2026-04-01', DATE '2026-04-17', DATE '2026-04-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0019', 'bnd_0002', 'RISK', DATE '2026-05-01', DATE '2026-05-24', DATE '2026-05-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0020', 'bnd_0002', 'RISK', DATE '2026-06-01', DATE '2026-06-24', DATE '2026-06-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0021', 'bnd_0002', 'RISK', DATE '2026-07-01', DATE '2026-07-17', DATE '2026-07-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0022', 'bnd_0002', 'RISK', DATE '2026-08-01', DATE '2026-08-17', DATE '2026-08-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0023', 'bnd_0002', 'RISK', DATE '2026-09-01', DATE '2026-09-17', DATE '2026-09-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0024', 'bnd_0002', 'RISK', DATE '2026-10-01', DATE '2026-10-17', DATE '2026-10-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0025', 'bnd_0002', 'RISK', DATE '2026-11-01', DATE '2026-11-17', DATE '2026-11-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0026', 'bnd_0002', 'RISK', DATE '2026-12-01', DATE '2026-12-17', DATE '2026-12-15', 'ACCEPTED', 2, 0.92, 'DA_CORE'),
+  ('bdx_0027', 'bnd_0002', 'PREMIUM', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0028', 'bnd_0002', 'CLAIMS', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0029', 'bnd_0003', 'RISK', DATE '2026-01-01', DATE '2026-01-17', DATE '2026-01-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0030', 'bnd_0003', 'RISK', DATE '2026-02-01', DATE '2026-02-17', DATE '2026-02-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0031', 'bnd_0003', 'RISK', DATE '2026-03-01', DATE '2026-03-17', DATE '2026-03-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0032', 'bnd_0003', 'RISK', DATE '2026-04-01', DATE '2026-04-17', DATE '2026-04-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0033', 'bnd_0003', 'RISK', DATE '2026-05-01', DATE '2026-05-17', DATE '2026-05-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0034', 'bnd_0003', 'RISK', DATE '2026-06-01', DATE '2026-06-17', DATE '2026-06-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0035', 'bnd_0003', 'RISK', DATE '2026-07-01', DATE '2026-07-17', DATE '2026-07-15', 'QUARANTINED', 1, 0.62, 'DA_CORE'),
+  ('bdx_0036', 'bnd_0003', 'RISK', DATE '2026-08-01', DATE '2026-08-17', DATE '2026-08-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0037', 'bnd_0003', 'RISK', DATE '2026-09-01', DATE '2026-09-17', DATE '2026-09-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0038', 'bnd_0003', 'RISK', DATE '2026-10-01', DATE '2026-10-17', DATE '2026-10-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0039', 'bnd_0003', 'RISK', DATE '2026-11-01', DATE '2026-11-17', DATE '2026-11-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0040', 'bnd_0003', 'RISK', DATE '2026-12-01', DATE '2026-12-17', DATE '2026-12-15', 'ACCEPTED', 2, 0.92, 'DA_CORE'),
+  ('bdx_0041', 'bnd_0003', 'PREMIUM', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0042', 'bnd_0003', 'CLAIMS', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0043', 'bnd_0004', 'RISK', DATE '2026-01-01', DATE '2026-01-17', DATE '2026-01-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0044', 'bnd_0004', 'RISK', DATE '2026-02-01', DATE '2026-02-17', DATE '2026-02-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0045', 'bnd_0004', 'RISK', DATE '2026-03-01', DATE '2026-03-17', DATE '2026-03-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0046', 'bnd_0004', 'RISK', DATE '2026-04-01', DATE '2026-04-17', DATE '2026-04-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0047', 'bnd_0004', 'RISK', DATE '2026-05-01', DATE '2026-05-17', DATE '2026-05-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0048', 'bnd_0004', 'RISK', DATE '2026-06-01', DATE '2026-06-17', DATE '2026-06-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0049', 'bnd_0004', 'RISK', DATE '2026-07-01', DATE '2026-07-17', DATE '2026-07-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0050', 'bnd_0004', 'RISK', DATE '2026-08-01', DATE '2026-08-17', DATE '2026-08-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0051', 'bnd_0004', 'RISK', DATE '2026-09-01', DATE '2026-09-17', DATE '2026-09-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0052', 'bnd_0004', 'RISK', DATE '2026-10-01', DATE '2026-10-17', DATE '2026-10-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0053', 'bnd_0004', 'RISK', DATE '2026-11-01', DATE '2026-11-17', DATE '2026-11-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0054', 'bnd_0004', 'RISK', DATE '2026-12-01', DATE '2026-12-17', DATE '2026-12-15', 'ACCEPTED', 2, 0.92, 'DA_CORE'),
+  ('bdx_0055', 'bnd_0004', 'PREMIUM', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0056', 'bnd_0004', 'CLAIMS', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0057', 'bnd_0005', 'RISK', DATE '2026-01-01', DATE '2026-01-17', DATE '2026-01-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0058', 'bnd_0005', 'RISK', DATE '2026-02-01', DATE '2026-02-17', DATE '2026-02-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0059', 'bnd_0005', 'RISK', DATE '2026-03-01', DATE '2026-03-17', DATE '2026-03-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0060', 'bnd_0005', 'RISK', DATE '2026-04-01', DATE '2026-04-17', DATE '2026-04-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0061', 'bnd_0005', 'RISK', DATE '2026-05-01', DATE '2026-05-24', DATE '2026-05-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0062', 'bnd_0005', 'RISK', DATE '2026-06-01', DATE '2026-06-24', DATE '2026-06-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0063', 'bnd_0005', 'RISK', DATE '2026-07-01', DATE '2026-07-17', DATE '2026-07-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0064', 'bnd_0005', 'RISK', DATE '2026-08-01', DATE '2026-08-17', DATE '2026-08-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0065', 'bnd_0005', 'RISK', DATE '2026-09-01', DATE '2026-09-17', DATE '2026-09-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0066', 'bnd_0005', 'RISK', DATE '2026-10-01', DATE '2026-10-17', DATE '2026-10-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0067', 'bnd_0005', 'RISK', DATE '2026-11-01', DATE '2026-11-17', DATE '2026-11-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0068', 'bnd_0005', 'RISK', DATE '2026-12-01', DATE '2026-12-17', DATE '2026-12-15', 'ACCEPTED', 2, 0.92, 'DA_CORE'),
+  ('bdx_0069', 'bnd_0005', 'PREMIUM', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0070', 'bnd_0005', 'CLAIMS', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0071', 'bnd_0006', 'RISK', DATE '2026-01-01', DATE '2026-01-17', DATE '2026-01-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0072', 'bnd_0006', 'RISK', DATE '2026-02-01', DATE '2026-02-17', DATE '2026-02-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0073', 'bnd_0006', 'RISK', DATE '2026-03-01', DATE '2026-03-17', DATE '2026-03-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0074', 'bnd_0006', 'RISK', DATE '2026-04-01', DATE '2026-04-17', DATE '2026-04-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0075', 'bnd_0006', 'RISK', DATE '2026-05-01', DATE '2026-05-17', DATE '2026-05-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0076', 'bnd_0006', 'RISK', DATE '2026-06-01', DATE '2026-06-17', DATE '2026-06-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0077', 'bnd_0006', 'RISK', DATE '2026-07-01', DATE '2026-07-17', DATE '2026-07-15', 'ACCEPTED', 1, 0.92, 'DA_CORE'),
+  ('bdx_0078', 'bnd_0006', 'RISK', DATE '2026-08-01', DATE '2026-08-17', DATE '2026-08-15', 'ACCEPTED', 1, 0.93, 'DA_CORE'),
+  ('bdx_0079', 'bnd_0006', 'RISK', DATE '2026-09-01', DATE '2026-09-17', DATE '2026-09-15', 'ACCEPTED', 1, 0.94, 'DA_CORE'),
+  ('bdx_0080', 'bnd_0006', 'RISK', DATE '2026-10-01', DATE '2026-10-17', DATE '2026-10-15', 'ACCEPTED', 1, 0.9, 'DA_CORE'),
+  ('bdx_0081', 'bnd_0006', 'RISK', DATE '2026-11-01', DATE '2026-11-17', DATE '2026-11-15', 'ACCEPTED', 1, 0.91, 'DA_CORE'),
+  ('bdx_0082', 'bnd_0006', 'RISK', DATE '2026-12-01', DATE '2026-12-17', DATE '2026-12-15', 'ACCEPTED', 2, 0.92, 'DA_CORE'),
+  ('bdx_0083', 'bnd_0006', 'PREMIUM', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE'),
+  ('bdx_0084', 'bnd_0006', 'CLAIMS', DATE '2026-06-01', DATE '2026-07-05', DATE '2026-07-15', 'ACCEPTED', 3, 0.95, 'DA_CORE');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_delegated_authority.bordereau_risk_row (bordereau_risk_row_id, submission_id, policy_id, risk_reference, insured_name, line_of_business_code, risk_inception_date, risk_expiry_date, risk_country_code, postcode, sum_insured, gross_premium, currency_code) VALUES
+  ('brr_0001', 'bdx_0012', 'pol_0173', 'POL-BDX-2026-001-R', 'Insured 1 Ltd', 'MARINE_CARGO', DATE '2026-01-01', DATE '2026-12-31', 'GB', 'EC3M 5AD', 1000000, 12000.0, 'GBP'),
+  ('brr_0002', 'bdx_0026', 'pol_0174', 'POL-BDX-2026-002-R', 'Insured 2 Ltd', 'GENERAL_LIABILITY', DATE '2026-02-01', DATE '2027-01-31', 'GB', 'EC3M 5AD', 1250000, 15000.0, 'GBP'),
+  ('brr_0003', 'bdx_0040', 'pol_0175', 'POL-BDX-2026-003-R', 'Insured 3 Ltd', 'MARINE_CARGO', DATE '2026-03-01', DATE '2027-02-28', 'GB', 'EC3M 5AD', 1500000, 18000.0, 'GBP'),
+  ('brr_0004', 'bdx_0054', 'pol_0176', 'POL-BDX-2026-004-R', 'Insured 4 Ltd', 'GENERAL_LIABILITY', DATE '2026-04-01', DATE '2027-03-31', 'GB', 'EC3M 5AD', 1750000, 21000.0, 'GBP'),
+  ('brr_0005', 'bdx_0068', 'pol_0177', 'POL-BDX-2026-005-R', 'Insured 5 Ltd', 'GENERAL_LIABILITY', DATE '2026-05-01', DATE '2027-04-30', 'GB', 'EC3M 5AD', 2000000, 24000.0, 'GBP'),
+  ('brr_0006', 'bdx_0082', 'pol_0178', 'POL-BDX-2026-006-R', 'Insured 6 Ltd', 'MARINE_CARGO', DATE '2026-06-01', DATE '2027-05-31', 'GB', 'EC3M 5AD', 8000000.0, 96000.0, 'GBP'),
+  ('brr_0007', 'bdx_0012', 'pol_0179', 'POL-BDX-2026-007-R', 'Insured 7 Ltd', 'MARINE_CARGO', DATE '2026-07-01', DATE '2027-06-30', 'GB', 'EC3M 5AD', 2500000, 30000.0, 'GBP'),
+  ('brr_0008', 'bdx_0026', 'pol_0180', 'POL-BDX-2026-008-R', 'Insured 8 Ltd', 'GENERAL_LIABILITY', DATE '2026-08-01', DATE '2027-07-31', 'GB', 'EC3M 5AD', 2750000, 33000.0, 'GBP'),
+  ('brr_0009', 'bdx_0040', 'pol_0181', 'POL-BDX-2026-009-R', 'Insured 9 Ltd', 'MARINE_CARGO', DATE '2026-09-01', DATE '2027-08-31', 'GB', 'EC3M 5AD', 3000000, 36000.0, 'GBP'),
+  ('brr_0010', 'bdx_0054', 'pol_0182', 'POL-BDX-2026-010-R', 'Insured 10 Ltd', 'MOTOR', DATE '2026-10-01', DATE '2027-09-30', 'GB', 'EC3M 5AD', 3250000, 39000.0, 'GBP'),
+  ('brr_0011', 'bdx_0068', 'pol_0183', 'POL-BDX-2026-011-R', 'Insured 11 Ltd', 'GENERAL_LIABILITY', DATE '2026-11-01', DATE '2027-10-31', 'GB', 'EC3M 5AD', 3500000, 42000.0, 'GBP'),
+  ('brr_0012', 'bdx_0082', 'pol_0184', 'POL-BDX-2026-012-R', 'Insured 12 Ltd', 'MARINE_CARGO', DATE '2026-12-01', DATE '2027-11-30', 'GB', 'EC3M 5AD', 3750000, 45000.0, 'GBP');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_delegated_authority.bordereau_premium_row (bordereau_premium_row_id, submission_id, risk_reference, gross_premium, commission_amount, net_premium, currency_code) VALUES
+  ('bpr_0001', 'bdx_0012', 'POL-BDX-2026-001-R', 25000.0, 5625.0, 19375.0, 'GBP'),
+  ('bpr_0002', 'bdx_0026', 'POL-BDX-2026-002-R', 25000.0, 5625.0, 19375.0, 'GBP'),
+  ('bpr_0003', 'bdx_0040', 'POL-BDX-2026-003-R', 25000.0, 5625.0, 19375.0, 'GBP'),
+  ('bpr_0004', 'bdx_0054', 'POL-BDX-2026-004-R', 25000.0, 5625.0, 19375.0, 'GBP'),
+  ('bpr_0005', 'bdx_0068', 'POL-BDX-2026-005-R', 25000.0, 5625.0, 19375.0, 'GBP'),
+  ('bpr_0006', 'bdx_0082', 'POL-BDX-2026-006-R', 25000.0, 5625.0, 19375.0, 'GBP');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_delegated_authority.bordereau_claim_row (bordereau_claim_row_id, submission_id, risk_reference, claim_reference, cause_of_loss_code, loss_date, paid_amount, outstanding_amount, currency_code) VALUES
+  ('bcr_0001', 'bdx_0012', 'POL-BDX-2026-001-R', 'POL-BDX-2026-001-C1', 'WATER_DAMAGE', DATE '2026-05-20', 8000.0, 12000.0, 'GBP'),
+  ('bcr_0002', 'bdx_0026', 'POL-BDX-2026-002-R', 'POL-BDX-2026-002-C1', 'WATER_DAMAGE', DATE '2026-05-20', 8000.0, 12000.0, 'GBP'),
+  ('bcr_0003', 'bdx_0040', 'POL-BDX-2026-003-R', 'POL-BDX-2026-003-C1', 'WATER_DAMAGE', DATE '2026-05-20', 8000.0, 12000.0, 'GBP');
+
+INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_delegated_authority.authority_breach (authority_breach_id, binder_id, bordereau_risk_row_id, breach_type_code, detected_by, detail, breach_status_code, waived_by, source_system_code) VALUES
+  ('abr_0001', 'bnd_0006', 'brr_0006', 'LINE_SIZE', 'vw_authority_breach', 'Risk sum insured 8,000,000 exceeds the 5,000,000 line size.', 'OPEN', NULL, 'DA_CORE'),
+  ('abr_0002', 'bnd_0004', NULL, 'AGGREGATE', 'da_monitor', 'Cumulative written premium approached the aggregate limit; reviewed and accepted.', 'WAIVED', 'Head of Delegated Authority', 'DA_CORE');

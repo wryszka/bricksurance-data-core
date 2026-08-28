@@ -1,0 +1,18 @@
+kind: code_set
+name: breach_type
+title: Authority Breach Type
+description: >
+  The kind of binding-authority limit a bordereau risk breaches.
+codes:
+  - code: LINE_SIZE
+    label: Line Size
+    description: A risk exceeds the maximum line size permitted by the binder.
+  - code: TERRITORY
+    label: Territory
+    description: A risk falls outside the binder's territorial scope.
+  - code: LOB
+    label: Line of Business
+    description: A risk is in a line of business outside the binder's scope.
+  - code: AGGREGATE
+    label: Aggregate
+    description: Cumulative written premium exceeds the binder's aggregate limit.

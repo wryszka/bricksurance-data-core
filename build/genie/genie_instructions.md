@@ -1,4 +1,4 @@
-# Genie instructions — Bricksurance Data Core v0.14.0
+# Genie instructions — Bricksurance Data Core v0.15.0
 
 You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses. When presenting results, always resolve identifier columns (anything ending _id) to business names or labels by joining the referenced table - e.g. party_id -> party.name - and never show raw surrogate ids unless the user asks for them.
 
@@ -10,6 +10,10 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.asset_class` — Investment asset classes held to back liabilities and capital, aligned to Solvency II asset categories at a working level. Grain: One row per asset class code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.assumption_status` — Maker/checker lifecycle of an assumption set. Only one set per assumption type is APPROVED and in force at a time; superseded sets remain queryable for reproducibility. Grain: One row per assumption status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.assumption_type` — Kinds of actuarial assumption governed through the assumption-set maker/checker process. Grain: One row per assumption type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.bordereau_status` — Processing status of a received bordereau submission. Grain: One row per bordereau status code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.bordereau_type` — The kind of bordereau a coverholder submits under a binding authority. Grain: One row per bordereau type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.breach_status` — Lifecycle of an authority breach - detected, waived under governance, or remediated. Grain: One row per breach status code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.breach_type` — The kind of binding-authority limit a bordereau risk breaches. Grain: One row per authority breach type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.business_event_type` — Kinds of business event captured on the event stream - the near-real-time face of the model. Extend per domain as processes come online. Grain: One row per business event type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.cause_of_loss` — The peril or event that gave rise to a claim. Aligned to ACORD cause-of-loss vocabulary; one primary cause per claim. Grain: One row per cause of loss code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.claim_feature_type` — Kinds of feature (head of damage) a claim can split into - the sub-claims that reserve and settle independently under one claim. Grain: One row per claim feature type code.
@@ -25,6 +29,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.contact_point_type` — Kinds of contact point held for a party. Grain: One row per contact point type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.country` — Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes. A governed subset, extended when the business enters a market. Grain: One row per country code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.coverage_type` — Kinds of cover that can be granted under a policy. A policy bundles one or more coverages; limits, deductibles and claims attach at coverage level. Grain: One row per coverage type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.coverholder_status` — Approval standing of a coverholder to bind delegated authority. Grain: One row per coverholder status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.credit_rating` — Credit quality banding of a fixed-income instrument, best to sub-investment. Grain: One row per credit rating code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.credit_score_band` — Banded consumer credit rating from a bureau summary. Banded, never the raw score, so the attribute can be used in rating without holding fine-grained bureau data. Bureau data is used only where permitted and disclosed. Grain: One row per credit score band code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.csm_movement_type` — Steps in the IFRS 17 contractual service margin roll-forward. The closing CSM is the signed sum of these movements over the opening balance - a balance derived from movements, never overwritten. Grain: One row per csm movement type code.
@@ -100,6 +105,14 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_content.document` — Governed unstructured content: policy wordings, schedules, claim evidence, survey reports, MRC slips. The extracted text is carried in the row so LLM tools search and cite documents under the same classification and lineage as structured data; binary originals live in a Volume referenced by path. Grain: One row per document version.
 - `lr_serverless_aws_us_catalog.bricksurance_customer.customer` — A policyholder as a customer - a thin dimension over party that adds tenure, segment and duty-of-care attributes. A party exists once; the customer view adds the relationship. Vulnerability is a duty-of-care signal, never a pricing input, and no protected-characteristic proxies are held here by design. Grain: One row per customer (policyholder party).
 - `lr_serverless_aws_us_catalog.bricksurance_customer.fair_value_assessment` — A governed, attested Consumer Duty fair-value assessment for a product line in a period - price paid versus benefit delivered, with the verdict and who attested it. This is the board-level artifact: a versioned, owned, dated record, its numbers computed from premium and claims (see vw_fair_value_latest), not asserted. Grain: One row per line of business per assessment period.
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.authority_breach` — A breach of a binder's authority detected on a bordereau risk - the governed record that carries the waiver. Detection is deterministic (see vw_authority_breach); the waiver is maker/checker, with the approver recorded. AI narrates; it never decides. Grain: One row per detected breach.
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.binding_authority` — A binder - the contract granting a coverholder authority to bind risks within limits (line size, aggregate, line of business, territory, claims authority). Breaches are measured against these limits. Grain: One row per binding authority (binder).
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.binding_authority_lob` — A line of business permitted under a binder - the many-to-many scope resolved relationally (flattened from lob_scope). A risk in a line not listed here breaches LOB. Grain: One row per line of business per binder.
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.bordereau_claim_row` — A claim movement on a claims bordereau, mapped to Lloyd's CDR claims fields. Grain: One row per claim movement per claims bordereau.
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.bordereau_premium_row` — A premium movement on a premium bordereau, mapped to Lloyd's CDR premium fields. Grain: One row per premium movement per premium bordereau.
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.bordereau_risk_row` — A single risk on a risk bordereau, mapped attribute-by-attribute to Lloyd's Core Data Record fields. Risk rows enter the same policy event spine (a BOUND event with source BORDEREAU), so delegated business is one twin, not a side door. Grain: One row per risk per risk bordereau.
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.bordereau_submission` — One bordereau file received from a coverholder under a binder for a period - its type, timeliness and data quality. The unit the "which coverholders are late / dirty" view works from. Grain: One row per bordereau file received.
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.coverholder` — A party granted delegated authority to bind risks on the insurer's behalf. The centre of the delegated-authority book: binders, bordereaux and breaches all hang off the coverholder. Grain: One row per coverholder.
 - `lr_serverless_aws_us_catalog.bricksurance_distribution.commission_transaction` — A signed intermediary remuneration movement on a policy. Transactional like all money in this model; disclosable commission is a query, not a project. Grain: One row per commission movement per policy per intermediary.
 - `lr_serverless_aws_us_catalog.bricksurance_enrichment.credit_bureau_summary` — A banded summary of a party's consumer credit standing from a bureau pull. Banded, not raw, and held only where a lawful basis and disclosure exist. Personal data - classified accordingly. Grain: One row per party per bureau pull.
 - `lr_serverless_aws_us_catalog.bricksurance_enrichment.geospatial_hazard` — Modelled peril hazard for a location - flood, subsidence, crime and coastal exposure - with the source it came from. Used in property rating and catastrophe accumulation. A modelled classification, not a live event state. Grain: One row per location key per hazard source.
@@ -187,6 +200,15 @@ Foreign-key relationships are declared on the tables; use them for joins. Resolv
 
 For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric views below over hand-written aggregations. Query measures with MEASURE(<name>) and GROUP BY dimensions. Amounts are in original currency: always group by or filter on currency_code before summing money.
 
+- `lr_serverless_aws_us_catalog.bricksurance_delegated_authority.da_metrics` — Delegated-authority oversight KPIs over bordereau submissions - outstanding files, submission lag, and data-quality by coverholder and type. Open-breach count comes from vw_authority_breach; binder utilisation from premium vs estimate. Query measures with MEASURE(name).
+  - dimension bordereau_type_code: Kind of bordereau.
+  - dimension bordereau_status_code: Processing status.
+  - dimension period_month: Reporting month.
+  - dimension umr: Binder UMR.
+  - MEASURE(submission_count): Number of bordereau submissions.
+  - MEASURE(outstanding_count): Submissions not yet accepted.
+  - MEASURE(avg_submission_lag_days): Average days received after due (negative = early).
+  - MEASURE(avg_dq_score): Average data-quality score.
 - `lr_serverless_aws_us_catalog.bricksurance_policy_lifecycle.lifecycle_metrics` — Flow KPIs over the policy event spine - new business, renewals, lapses, cancellations and mid-term adjustments by line, period, channel and actor. Retention is chain-based (renewed over invited). Point-in-time policies-in-force is answered from vw_policy_current (status = IN_FORCE), not here. Query measures with MEASURE(name).
   - dimension policy_event_type_code: The kind of lifecycle event.
   - dimension line_of_business_code: Line of business of the policy the event concerns.
@@ -367,6 +389,10 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Asset Class: GOVERNMENT_BOND (Government Bond), CORPORATE_BOND (Corporate Bond), EQUITY (Equity), PROPERTY (Property), CASH_AND_DEPOSITS (Cash & Deposits), COLLECTIVE_INVESTMENT (Collective Investment).
 - Assumption Status: DRAFT (Draft), PENDING_APPROVAL (Pending Approval), APPROVED (Approved), REJECTED (Rejected), SUPERSEDED (Superseded).
 - Assumption Type: MORTALITY (Mortality), LAPSE (Lapse), EXPENSE (Expense), ECONOMIC (Economic).
+- Bordereau Status: RECEIVED (Received), MAPPED (Mapped), QUARANTINED (Quarantined), ACCEPTED (Accepted).
+- Bordereau Type: RISK (Risk Bordereau), PREMIUM (Premium Bordereau), CLAIMS (Claims Bordereau).
+- Breach Status: OPEN (Open), WAIVED (Waived), REMEDIATED (Remediated).
+- Authority Breach Type: LINE_SIZE (Line Size), TERRITORY (Territory), LOB (Line of Business), AGGREGATE (Aggregate).
 - Business Event Type: QUOTE_REQUESTED (Quote Requested), POLICY_BOUND (Policy Bound), FNOL (First Notification of Loss), CLAIM_PAYMENT (Claim Payment), COMPLAINT_RECEIVED (Complaint Received), BORDEREAU_RECEIVED (Bordereau Received).
 - Cause of Loss: FIRE (Fire), FLOOD (Flood), STORM (Storm), WATER_DAMAGE (Water Damage), THEFT (Theft), COLLISION (Collision), LIABILITY_INCIDENT (Liability Incident), FREEZE (Freeze).
 - Claim Feature Type: OWN_DAMAGE (Own Damage), THIRD_PARTY_PROPERTY (Third Party Property), THIRD_PARTY_INJURY (Third Party Injury), BUSINESS_INTERRUPTION (Business Interruption), LEGAL_EXPENSES (Legal Expenses), PROPERTY_MATERIAL_DAMAGE (Property Material Damage).
@@ -382,6 +408,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Contact Point Type: EMAIL (Email), PHONE (Phone), POSTAL_ADDRESS (Postal Address).
 - Country: GB (United Kingdom), IE (Ireland), DE (Germany), FR (France), CH (Switzerland), US (United States).
 - Coverage Type: BUILDINGS (Buildings), CONTENTS (Contents), BUSINESS_INTERRUPTION (Business Interruption), MOTOR_OWN_DAMAGE (Motor Own Damage), MOTOR_TPL (Motor Third-Party Liability), PUBLIC_LIABILITY (Public Liability), CARGO (Cargo).
+- Coverholder Status: APPROVED (Approved), CONDITIONS (Approved with Conditions), SUSPENDED (Suspended).
 - Credit Rating: AAA (AAA), AA (AA), A (A), BBB (BBB), BB (BB), NR (Not Rated).
 - Credit Score Band: EXCELLENT (Excellent), GOOD (Good), FAIR (Fair), POOR (Poor), THIN_FILE (Thin File).
 - CSM Movement Type: OPENING (Opening Balance), NEW_BUSINESS (New Business), INTEREST_ACCRETION (Interest Accretion), EXPERIENCE_ADJUSTMENT (Experience Adjustment), RELEASE (Release to P&L).

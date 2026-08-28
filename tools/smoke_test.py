@@ -71,8 +71,8 @@ def main():
         (f"{n_fks} foreign-key relationships (from the model)",
          f"SELECT COUNT(*) FROM {cat}.information_schema.table_constraints "
          f"WHERE constraint_schema LIKE '{prefix}%' AND constraint_schema NOT LIKE '%partner\\_re' AND constraint_type = 'FOREIGN KEY'", str(n_fks)),
-        ("172 policies (60 core book + 112 reserving-history)",
-         f"SELECT COUNT(*) FROM {q('policy', 'policy')}", "172"),
+        ("184 policies (60 core book + 112 reserving-history + 12 delegated/bordereau)",
+         f"SELECT COUNT(*) FROM {q('policy', 'policy')}", "184"),
         ("130 claims (18 core + reserving development history)",
          f"SELECT COUNT(*) FROM {q('claim', 'claim')}", "130"),
         ("dictionary covers every deployed column",
@@ -98,7 +98,7 @@ def main():
          f"FROM {q('exchange', 'cession_bordereau_line')}", "true"),
         ("every core-book policy converted from exactly one quote",
          f"SELECT COUNT(*) = (SELECT COUNT(*) FROM {q('policy', 'policy')} "
-         f"WHERE policy_number NOT LIKE 'POL-%-9%') "
+         f"WHERE policy_number NOT LIKE 'POL-%-9%' AND policy_number NOT LIKE 'POL-BDX%') "
          f"AND COUNT(DISTINCT policy_id) = COUNT(*) "
          f"FROM {q('policy', 'quote')} WHERE quote_status_code = 'CONVERTED'", "true"),
         ("bound submission thread resolves to the golden-thread treaty",
@@ -210,10 +210,11 @@ def main():
         ("referral rulebook: exactly one current version per rule (SCD2 integrity)",
          f"SELECT COUNT(*) FROM (SELECT rule_key, SUM(CAST(is_current AS INT)) c "
          f"FROM {q('product', 'referral_rule')} GROUP BY rule_key) WHERE c <> 1", "0"),
-        ("enrichment coverage: telematics covers every motor policy",
+        ("enrichment coverage: telematics covers every direct motor policy",
          f"SELECT (SELECT subject_count FROM {q('semantics', 'enrichment_coverage')} "
          f"WHERE enrichment_source = 'motor_telematics_aggregate') = "
-         f"(SELECT COUNT(*) FROM {q('policy', 'policy')} WHERE line_of_business_code = 'MOTOR')", "true"),
+         f"(SELECT COUNT(*) FROM {q('policy', 'policy')} WHERE line_of_business_code = 'MOTOR' "
+         f"AND policy_number NOT LIKE 'POL-BDX%')", "true"),
         ("governed tool: champion score resolves for a scored quote",
          f"SELECT {q('model', 'fn_champion_score')}('QUOTE', "
          f"(SELECT subject_id FROM {q('model', 'model_score')} WHERE subject_kind_code = 'QUOTE' LIMIT 1)) "
@@ -321,6 +322,29 @@ def main():
         ("every customer maps to a real party",
          f"SELECT COUNT(*) FROM {q('customer', 'customer')} c "
          f"LEFT JOIN {q('party', 'party')} p ON p.party_id = c.party_id WHERE p.party_id IS NULL", "0"),
+        # ---- WP6 delegated authority & bordereaux -------------------------
+        ("delegated business enters the policy spine sourced from the bordereau",
+         f"SELECT COUNT(DISTINCT policy_id) FROM {q('policy_lifecycle', 'policy_event')} "
+         f"WHERE event_source_system_code = 'BORDEREAU' AND policy_event_type_code = 'BOUND'", "12"),
+        ("live breach detection finds the line-size breach and an LOB breach",
+         f"SELECT COUNT(*) >= 1 AND SUM(CASE WHEN breach_type_code='LINE_SIZE' THEN 1 ELSE 0 END) >= 1 "
+         f"AND SUM(CASE WHEN breach_type_code='LOB' THEN 1 ELSE 0 END) >= 1 "
+         f"FROM {q('delegated_authority', 'vw_authority_breach')}", "true"),
+        ("a breach is waived under maker/checker with the approver recorded",
+         f"SELECT COUNT(*) FROM {q('delegated_authority', 'authority_breach')} "
+         f"WHERE breach_status_code = 'WAIVED' AND waived_by IS NOT NULL", "1"),
+        ("Lloyd's CDR crosswalk generated for the risk bordereau row",
+         f"SELECT COUNT(*) FROM {q('reference', 'data_dictionary')} "
+         f"WHERE entity_name = 'bordereau_risk_row' AND lloyds_cdr_ref <> ''", None),
+        ("bordereau dirt is present (a quarantined column-drift submission)",
+         f"SELECT COUNT(*) >= 1 FROM {q('delegated_authority', 'bordereau_submission')} "
+         f"WHERE bordereau_status_code = 'QUARANTINED'", "true"),
+        ("delegated authority metric answers submission volume",
+         f"SELECT MEASURE(submission_count) > 0 FROM {q('delegated_authority', 'da_metrics')}", "true"),
+        ("every binder has at least one permitted line of business",
+         f"SELECT COUNT(*) FROM {q('delegated_authority', 'binding_authority')} b "
+         f"LEFT JOIN {q('delegated_authority', 'binding_authority_lob')} l ON l.binder_id = b.binder_id "
+         f"WHERE l.binder_id IS NULL", "0"),
     ]
 
     failures = 0

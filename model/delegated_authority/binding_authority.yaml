@@ -1,0 +1,87 @@
+kind: entity
+name: binding_authority
+domain: delegated_authority
+title: Binding Authority
+description: >
+  A binder - the contract granting a coverholder authority to bind risks within
+  limits (line size, aggregate, line of business, territory, claims authority).
+  Breaches are measured against these limits.
+grain: One row per binding authority (binder).
+standards:
+  lloyds_cdr: Binding Authority / UMR
+tags:
+  maturity: draft
+crosswalk_status: mapped
+attributes:
+  - name: binder_id
+    type: string
+    required: true
+    description: Identifier for the binder.
+    classification: internal
+  - name: coverholder_id
+    references: coverholder
+    type: string
+    required: true
+    description: The coverholder the authority is granted to.
+    classification: internal
+  - name: umr
+    type: string
+    required: true
+    description: Unique Market Reference for the binder (format-correct, synthetic).
+    classification: internal
+    standards:
+      lloyds_cdr: UMR
+  - name: inception_date
+    type: date
+    required: true
+    description: Binder inception date.
+    classification: internal
+  - name: expiry_date
+    type: date
+    required: true
+    description: Binder expiry date.
+    classification: internal
+  - name: territory_scope
+    type: string
+    required: false
+    description: Permitted territories as a comma-separated country list; risks outside breach TERRITORY.
+    classification: internal
+  - name: max_line_size
+    type: decimal(18,2)
+    required: false
+    description: Maximum sum insured the coverholder may bind on one risk.
+    classification: confidential
+  - name: aggregate_limit
+    type: decimal(18,2)
+    required: false
+    description: Maximum cumulative written premium under the binder.
+    classification: confidential
+  - name: premium_estimate
+    type: decimal(18,2)
+    required: false
+    description: Estimated premium income for the binder period.
+    classification: confidential
+  - name: commission_pct
+    type: decimal(6,4)
+    required: false
+    description: Coverholder commission rate on written premium.
+    classification: confidential
+  - name: claims_authority_limit
+    type: decimal(18,2)
+    required: false
+    description: Maximum claim the coverholder may settle without referral.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the binder limits.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the binder is held in.
+    classification: internal
+keys:
+  primary: [binder_id]
+  natural: [umr]
+owner: Head of Delegated Authority

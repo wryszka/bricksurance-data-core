@@ -1,6 +1,21 @@
 # Bricksurance Data Core - Metric Catalog
 
-*Generated from model v0.14.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+*Generated from model v0.15.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+
+## Delegated Authority Metrics (`delegated_authority.da_metrics`)
+
+Delegated-authority oversight KPIs over bordereau submissions - outstanding files, submission lag, and data-quality by coverholder and type. Open-breach count comes from vw_authority_breach; binder utilisation from premium vs estimate. Query measures with MEASURE(name).
+
+**Owner:** Head of Delegated Authority · **Certification:** draft · **Source:** `delegated_authority.bordereau_submission`
+
+**Dimensions:** bordereau_type_code, bordereau_status_code, period_month, umr
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `submission_count` | Number of bordereau submissions. | `COUNT(submission_id)` |
+| `outstanding_count` | Submissions not yet accepted. | `COUNT(CASE WHEN bordereau_status_code IN ('RECEIVED', 'QUARANTINED') THEN submission_id END)` |
+| `avg_submission_lag_days` | Average days received after due (negative = early). | `AVG(datediff(received_date, due_date))` |
+| `avg_dq_score` | Average data-quality score. | `AVG(dq_score)` |
 
 ## Policy Lifecycle Metrics (`policy_lifecycle.lifecycle_metrics`)
 

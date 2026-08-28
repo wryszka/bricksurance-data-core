@@ -158,7 +158,11 @@ class World:
                      # assets & ALM (WP3)
                      "instrument", "position", "asset_cashflow", "asset_valuation_run",
                      # customer & conduct (WP4)
-                     "customer", "fair_value_assessment"):
+                     "customer", "fair_value_assessment",
+                     # delegated authority (WP6)
+                     "coverholder", "binding_authority", "binding_authority_lob",
+                     "bordereau_submission", "bordereau_risk_row",
+                     "bordereau_premium_row", "bordereau_claim_row", "authority_breach"):
             self.t[name] = []
 
     def n(self, base):
@@ -1237,6 +1241,7 @@ def build_world(scale):
               csm_movement_type_code=mtype, amount=amt, currency_code="GBP")
 
     add_extensions(w)
+    add_delegated(w)      # before lifecycle so delegated policies get the event spine
     add_lifecycle(w)
     add_premium_finance(w)
     add_renewal(w)
@@ -1516,6 +1521,132 @@ def add_premium_finance(w):
             pt["commission_rate"] = 0.0
 
 
+def add_delegated(w):
+    """WP6 - delegated authority & bordereaux. Coverholders, binders, monthly bordereaux
+    (with realistic dirt), CDR-mapped risk/premium/claim rows, and deliberate authority
+    breaches. Delegated risks are real policies (non-Commercial-Property LOBs, so WP4's
+    fair-value amber is untouched) that enter the WP1 spine with source BORDEREAU.
+    Runs BEFORE add_lifecycle. Deterministic (no rng)."""
+    COVERHOLDERS = [
+        ("Harbourline Underwriting Ltd", "GB", "MARINE_CARGO"),
+        ("Pennine Cover Partners", "GB", "GENERAL_LIABILITY"),
+        ("Zuiderzee Volmacht BV", "NL" if False else "DE", "MARINE_CARGO"),
+        ("Celtic Fleet MGA", "IE", "MOTOR"),
+        ("Alpine Specialty AG", "CH", "GENERAL_LIABILITY"),
+        ("Meridian Cargo Cover", "GB", "MARINE_CARGO"),
+    ]
+    binders = []
+    for i, (name, country, lob) in enumerate(COVERHOLDERS):
+        pid = w.nid("pty")
+        w.add("party", party_id=pid, party_type_code="ORGANISATION", name=name,
+              country_code=country, source_system_code="DATA_CORE")
+        chid = w.nid("cvh")
+        status = "CONDITIONS" if i == 4 else "APPROVED"
+        w.add("coverholder", coverholder_id=chid, party_id=pid, domicile=country,
+              coverholder_status_code=status, audit_last_date=date(2025, 9 + (i % 4), 15),
+              source_system_code="DA_CORE")
+        bid = w.nid("bnd")
+        max_line = 5_000_000.00
+        w.add("binding_authority", binder_id=bid, coverholder_id=chid,
+              umr=f"B{i:04d}25ONTOS{i:03d}", inception_date=date(2026, 1, 1),
+              expiry_date=date(2026, 12, 31), territory_scope="GB,IE,DE,CH,FR",
+              max_line_size=max_line, aggregate_limit=25_000_000.00,
+              premium_estimate=4_000_000.00, commission_pct=0.2250,
+              claims_authority_limit=100_000.00, currency_code="GBP",
+              source_system_code="DA_CORE")
+        # permitted LOBs: the coverholder's primary line (binder #0 deliberately
+        # permits ONLY marine so its GL risk trips an LOB breach)
+        permitted = [lob] if i == 0 else [lob, "MOTOR"]
+        for plob in permitted:
+            w.add("binding_authority_lob", binding_authority_lob_id=w.nid("bal"),
+                  binder_id=bid, line_of_business_code=plob)
+        binders.append((bid, chid, name, lob, max_line))
+
+    # delegated policies (enter the spine, non-CP LOBs) + their risk rows
+    LOBS = ["MARINE_CARGO", "GENERAL_LIABILITY", "MOTOR"]
+    delegated_policies = []
+    for k in range(12):
+        bid, chid, chname, blob, max_line = binders[k % len(binders)]
+        # most risks in the binder's LOB; k==3 deliberately GL under the marine-only binder
+        lob = "GENERAL_LIABILITY" if k == 3 else blob
+        pid = w.nid("pol")
+        pnum = f"POL-BDX-2026-{k + 1:03d}"
+        inc = date(2026, (k % 12) + 1, 1)
+        exp = date(inc.year + 1, inc.month, 1) - timedelta(days=1)
+        w.add("policy", policy_id=pid, policy_number=pnum, source_system_code="DA_CORE",
+              line_of_business_code=lob, policy_status_code="IN_FORCE",
+              inception_date=inc, expiry_date=exp, underwriting_year=2026,
+              currency_code="GBP", renews_policy_id=None, legal_entity_id="le_se")
+        delegated_policies.append((pid, pnum, bid, chid, chname, lob, inc, exp))
+
+    # bordereau submissions: 12 monthly RISK per coverholder + one PREMIUM + one CLAIMS.
+    # Dirt: 2 late, 1 quarantined (column drift), varied DQ.
+    sub_by_binder_latest = {}
+    for bi, (bid, chid, name, lob, max_line) in enumerate(binders):
+        for m in range(1, 13):
+            due = date(2026, m, 15)
+            late = (bi in (1, 4) and m in (5, 6))          # two coverholders late in spring
+            drift = (bi == 2 and m == 7)                    # one column-drift month
+            received = due + timedelta(days=(9 if late else 2))
+            status = "QUARANTINED" if drift else "ACCEPTED"
+            dq = 0.62 if drift else round(0.90 + (m % 5) / 100.0, 4)
+            sid = w.nid("bdx")
+            w.add("bordereau_submission", submission_id=sid, binder_id=bid,
+                  bordereau_type_code="RISK", period_month=date(2026, m, 1),
+                  received_date=received, due_date=due, bordereau_status_code=status,
+                  row_count=(2 if m == 12 else 1), dq_score=dq, source_system_code="DA_CORE")
+            sub_by_binder_latest[bid] = sid   # keep the last month's RISK submission
+        # a premium + a claims bordereau per coverholder
+        for bt in ("PREMIUM", "CLAIMS"):
+            w.add("bordereau_submission", submission_id=w.nid("bdx"), binder_id=bid,
+                  bordereau_type_code=bt, period_month=date(2026, 6, 1),
+                  received_date=date(2026, 7, 5), due_date=date(2026, 7, 15),
+                  bordereau_status_code="ACCEPTED", row_count=3, dq_score=0.95,
+                  source_system_code="DA_CORE")
+
+    # risk rows: one per delegated policy on its binder's latest RISK submission
+    line_breach_row = None
+    for j, (pid, pnum, bid, chid, chname, lob, inc, exp) in enumerate(delegated_policies):
+        sid = sub_by_binder_latest[bid]
+        # k==5 deliberately exceeds the 5m line size -> LINE_SIZE breach
+        sum_insured = 8_000_000.00 if j == 5 else round(1_000_000 + j * 250_000, 2)
+        rid = w.nid("brr")
+        if j == 5:
+            line_breach_row = (rid, bid)
+        w.add("bordereau_risk_row", bordereau_risk_row_id=rid, submission_id=sid,
+              policy_id=pid, risk_reference=f"{pnum}-R", insured_name=f"Insured {j + 1} Ltd",
+              line_of_business_code=lob, risk_inception_date=inc, risk_expiry_date=exp,
+              risk_country_code="GB", postcode="EC3M 5AD", sum_insured=sum_insured,
+              gross_premium=round(sum_insured * 0.012, 2), currency_code="GBP")
+
+    # a few premium + claim rows
+    for j in range(6):
+        pid, pnum, bid, chid, chname, lob, inc, exp = delegated_policies[j]
+        w.add("bordereau_premium_row", bordereau_premium_row_id=w.nid("bpr"),
+              submission_id=sub_by_binder_latest[bid], risk_reference=f"{pnum}-R",
+              gross_premium=25000.0, commission_amount=5625.0, net_premium=19375.0,
+              currency_code="GBP")
+    for j in range(3):
+        pid, pnum, bid, chid, chname, lob, inc, exp = delegated_policies[j]
+        w.add("bordereau_claim_row", bordereau_claim_row_id=w.nid("bcr"),
+              submission_id=sub_by_binder_latest[bid], risk_reference=f"{pnum}-R",
+              claim_reference=f"{pnum}-C1", cause_of_loss_code="WATER_DAMAGE",
+              loss_date=date(2026, 5, 20), paid_amount=8000.0, outstanding_amount=12000.0,
+              currency_code="GBP")
+
+    # governed breach records: one OPEN (line size), one WAIVED (maker/checker)
+    if line_breach_row:
+        w.add("authority_breach", authority_breach_id=w.nid("abr"), binder_id=line_breach_row[1],
+              bordereau_risk_row_id=line_breach_row[0], breach_type_code="LINE_SIZE",
+              detected_by="vw_authority_breach", detail="Risk sum insured 8,000,000 exceeds the 5,000,000 line size.",
+              breach_status_code="OPEN", waived_by=None, source_system_code="DA_CORE")
+    w.add("authority_breach", authority_breach_id=w.nid("abr"), binder_id=binders[3][0],
+          bordereau_risk_row_id=None, breach_type_code="AGGREGATE",
+          detail="Cumulative written premium approached the aggregate limit; reviewed and accepted.",
+          detected_by="da_monitor", breach_status_code="WAIVED",
+          waived_by="Head of Delegated Authority", source_system_code="DA_CORE")
+
+
 def add_lifecycle(w):
     """WP1 — back-generate the policy lifecycle event spine, versions and renewal
     chains for the existing book, then attach claims to the version in force at loss.
@@ -1569,12 +1700,19 @@ def add_lifecycle(w):
         def at(d, hour=12):
             return datetime.combine(d, datetime.min.time()).replace(hour=hour)
 
+        delegated = p["policy_number"].startswith("POL-BDX")
         q_date = inc - timedelta(days=14)
-        emit("QUOTED", q_date, at(q_date, 9), source="UW_WORKBENCH",
-             actor_t="AGENT", actor_id="bricksurance-uw-agent v1")
-        bound_id = emit("BOUND", inc, at(inc, 10), source="UW_WORKBENCH",
-                        actor_t="HUMAN", actor_id="U. Marsh (senior underwriter)")
-        emit("ISSUED", inc, at(inc, 11))
+        if delegated:
+            # delegated business enters the SAME spine, sourced from the bordereau
+            bound_id = emit("BOUND", inc, at(inc, 10), source="BORDEREAU",
+                            actor_t="AGENT", actor_id="coverholder")
+            emit("ISSUED", inc, at(inc, 11), source="BORDEREAU")
+        else:
+            emit("QUOTED", q_date, at(q_date, 9), source="UW_WORKBENCH",
+                 actor_t="AGENT", actor_id="bricksurance-uw-agent v1")
+            bound_id = emit("BOUND", inc, at(inc, 10), source="UW_WORKBENCH",
+                            actor_t="HUMAN", actor_id="U. Marsh (senior underwriter)")
+            emit("ISSUED", inc, at(inc, 11))
 
         base_prem = round(prem_by_policy.get(pid, 0) or 0, 2)
         base_si = round(base_prem * 20, 2) if base_prem else None
@@ -2061,7 +2199,11 @@ def main():
              # assets & ALM (WP3): instrument before position/cashflow
              "instrument", "position", "asset_cashflow", "asset_valuation_run",
              # customer & conduct (WP4)
-             "customer", "fair_value_assessment"]
+             "customer", "fair_value_assessment",
+             # delegated authority (WP6): coverholder before binder before bordereaux
+             "coverholder", "binding_authority", "binding_authority_lob",
+             "bordereau_submission", "bordereau_risk_row",
+             "bordereau_premium_row", "bordereau_claim_row", "authority_breach"]
     missing = set(order) - set(entities)
     assert not missing, f"world emits unknown entities: {missing}"
 

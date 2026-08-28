@@ -1,0 +1,32 @@
+kind: entity
+name: binding_authority_lob
+domain: delegated_authority
+title: Binding Authority Line of Business
+description: >
+  A line of business permitted under a binder - the many-to-many scope resolved
+  relationally (flattened from lob_scope). A risk in a line not listed here breaches LOB.
+grain: One row per line of business per binder.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: binding_authority_lob_id
+    type: string
+    required: true
+    description: Identifier for the scope row.
+    classification: internal
+  - name: binder_id
+    references: binding_authority
+    type: string
+    required: true
+    description: The binder.
+    classification: internal
+  - name: line_of_business_code
+    code_set: line_of_business
+    required: true
+    description: A line of business the binder permits.
+    classification: internal
+keys:
+  primary: [binding_authority_lob_id]
+  natural: [binder_id, line_of_business_code]
+owner: Head of Delegated Authority
