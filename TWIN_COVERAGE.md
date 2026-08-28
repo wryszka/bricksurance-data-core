@@ -4,7 +4,7 @@
 Kept current so "where are we on the twin" never needs an estate sweep. Maintained per
 phase of `specs/SPEC_DATACORE_GEN2_EXPANSION.md`.*
 
-Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3, WP4, WP6**.
+Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3, WP4, WP6, WP7/8 — COMPLETE**.
 
 | Function | Status | Backed by |
 |---|---|---|
@@ -36,7 +36,7 @@ Last updated: 2026-08-28 · model **v0.13.0** · after **WP1, WP2, WP5, WP3, WP4
 | WP3 | assets & ALM | ✅ **done** — duration gap ~0.8y, stress verified |
 | WP4 | customer & conduct | ✅ **done** — fair value live + attested, PII-conformant |
 | WP6 | delegated authority | ✅ **done** — CDR crosswalk, live breach+waiver, in the spine |
-| WP7/8 | semantics, Genie, golden-thread v2, publication contracts | ⬜ next (final) |
+| WP7/8 | golden-thread v2 + publication contracts | ✅ **done** — vw_golden_thread (10 hops), publication surfaces, estate_published_surfaces.yaml |
 
 **Empty → occupied so far this spec:** policy administration (WP1), premium/billing (WP2),
 renewal loop (WP5), assets/ALM (WP3), customer/conduct (WP4), delegated authority (WP6). **Nothing empty** — WP7/8 (golden thread v2 + publication contracts) closes the program.

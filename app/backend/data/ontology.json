@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with an indicative Lloyd's Core Data Record crosswalk. The crosswalk is a hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names, not a verified extract from the licensed models; element names are cited only, and the licensed standards are not reproduced.",
   "domains": [
@@ -11176,6 +11176,24 @@
     },
     {
       "kind": "view",
+      "name": "vw_binder_status",
+      "domain": "delegated_authority",
+      "title": "Binder Status (published)",
+      "description": "Per-binder oversight summary the estate consumes: coverholder, utilisation (written premium vs estimate), bordereaux outstanding and open breaches. Publication contract for the delegated-authority workbench to re-point at.\n",
+      "grain": "One row per binder.",
+      "sql": "SELECT\n  b.binder_id, b.umr, ch.coverholder_id, p.name AS coverholder_name,\n  b.premium_estimate,\n  (SELECT COUNT(*) FROM {delegated_authority.bordereau_submission} s\n   WHERE s.binder_id = b.binder_id AND s.bordereau_status_code IN ('RECEIVED','QUARANTINED')) AS bordereaux_outstanding,\n  (SELECT COUNT(*) FROM {delegated_authority.authority_breach} ab\n   WHERE ab.binder_id = b.binder_id AND ab.breach_status_code = 'OPEN') AS open_breaches\nFROM {delegated_authority.binding_authority} b\nJOIN {delegated_authority.coverholder} ch ON ch.coverholder_id = b.coverholder_id\nJOIN {party.party} p ON p.party_id = ch.party_id\n"
+    },
+    {
+      "kind": "view",
+      "name": "vw_breach_open",
+      "domain": "delegated_authority",
+      "title": "Open Breaches (published)",
+      "description": "Open authority breaches across all binders - the \"who is outside authority right now\" list. Publication contract. Union of the governed open records and any live-detected breaches not yet recorded.\n",
+      "grain": "One row per open breach.",
+      "sql": "SELECT ab.authority_breach_id, ab.binder_id, ab.breach_type_code, ab.detail,\n       ab.detected_by, ab.breach_status_code\nFROM {delegated_authority.authority_breach} ab\nWHERE ab.breach_status_code = 'OPEN'\n"
+    },
+    {
+      "kind": "view",
       "name": "cession_bordereau_line",
       "domain": "exchange",
       "title": "Cession Bordereau Line (outbound)",
@@ -11191,6 +11209,15 @@
       "description": "Current policy state reconstructed from the version history - the projection that proves the event spine is complete. Selects exactly the columns of the policy table from the current version of each policy; it must reconcile row-for-row with policy. Consumers wanting \"the policy as it is now\" can read this or the policy table interchangeably; the audit truth is the event stream.\n",
       "grain": "One row per policy (its current version).",
       "sql": "SELECT\n  policy_id,\n  policy_number,\n  legal_entity_id,\n  source_system_code,\n  line_of_business_code,\n  policy_status_code,\n  inception_date,\n  expiry_date,\n  underwriting_year,\n  currency_code,\n  renews_policy_id\nFROM {policy_lifecycle.policy_version}\nWHERE is_current = TRUE\n"
+    },
+    {
+      "kind": "view",
+      "name": "vw_retention_curve",
+      "domain": "renewal",
+      "title": "Retention Curve (published)",
+      "description": "The retention response curve by segment and price-walk band - the demand signal the pricing/renewal workstream consumes to optimise renewal prices. Publication contract.\n",
+      "grain": "One row per segment per price-walk band.",
+      "sql": "SELECT segment, price_walk_band, renewal_probability, observations\nFROM {renewal.retention_response_curve}\nORDER BY segment, price_walk_band\n"
     },
     {
       "kind": "view",
@@ -11254,6 +11281,15 @@
       "description": "Consumer Duty fair value computed live by product line: earned premium, claims incurred (the benefit), the benefit-to-price ratio and a verdict. No hardcoded numbers - it derives from the premium_earning view and claim transactions, so a product's fair value moves as the book does. The attested snapshot lives in customer.fair_value_assessment; this is the always-current computation behind it.\n",
       "grain": "One row per line of business.",
       "sql": "WITH prem AS (\n  SELECT line_of_business_code,\n         SUM(earned_premium) AS earned_premium,\n         COUNT(DISTINCT policy_id) AS policies\n  FROM {semantics.premium_earning}\n  GROUP BY line_of_business_code\n),\nclm AS (\n  SELECT p.line_of_business_code,\n         SUM(ct.amount) AS claims_incurred,\n         COUNT(DISTINCT CASE WHEN c.claim_status_code = 'DECLINED' THEN c.claim_id END) AS declined,\n         COUNT(DISTINCT c.claim_id) AS claims\n  FROM {claim.claim_transaction} ct\n  JOIN {claim.claim} c ON c.claim_id = ct.claim_id\n  JOIN {policy.policy} p ON p.policy_id = c.policy_id\n  GROUP BY p.line_of_business_code\n),\ncmp AS (\n  SELECT p.line_of_business_code, COUNT(*) AS complaints\n  FROM {conduct.complaint} cp\n  JOIN {policy.policy} p ON p.policy_id = cp.policy_id\n  GROUP BY p.line_of_business_code\n)\nSELECT\n  prem.line_of_business_code,\n  CAST(prem.earned_premium AS DECIMAL(18,2)) AS earned_premium,\n  CAST(COALESCE(clm.claims_incurred, 0) AS DECIMAL(18,2)) AS claims_incurred,\n  prem.policies,\n  CAST(COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) AS DECIMAL(8,4)) AS fair_value_ratio,\n  CAST(1.0 - COALESCE(clm.declined, 0) / NULLIF(clm.claims, 0) AS DECIMAL(6,4)) AS claims_acceptance_rate,\n  CAST(COALESCE(cmp.complaints, 0) / NULLIF(prem.policies, 0) * 1000 AS DECIMAL(8,4)) AS complaint_ratio,\n  CASE\n    WHEN COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) > 1.10 THEN 'ACTION'\n    WHEN COALESCE(clm.claims_incurred, 0) / NULLIF(prem.earned_premium, 0) < 0.15\n      OR (1.0 - COALESCE(clm.declined, 0) / NULLIF(clm.claims, 0)) < 0.90\n      OR COALESCE(cmp.complaints, 0) / NULLIF(prem.policies, 0) * 1000 > 10 THEN 'MONITOR'\n    ELSE 'FAIR'\n  END AS fair_value_outcome_code\nFROM prem\nLEFT JOIN clm ON clm.line_of_business_code = prem.line_of_business_code\nLEFT JOIN cmp ON cmp.line_of_business_code = prem.line_of_business_code\n"
+    },
+    {
+      "kind": "view",
+      "name": "vw_golden_thread",
+      "domain": "semantics",
+      "title": "Golden Thread (end-to-end digital twin)",
+      "description": "The full digital twin walked end to end for the hero policy: quote -> bind -> MTA -> earn -> loss -> as-at version -> cede -> reserve -> capital -> fair value. One row per hop, and every hop is a real key join across domains (not a narrative) - the proof that underwriting, claims, finance, reinsurance, reserving and conduct are one governed estate. Hero: POL-2026-000001 / CLM-2026-000001 / TR-QS-PROP-2026.\n",
+      "grain": "One row per hop of the golden thread.",
+      "sql": "WITH hero AS (\n  SELECT policy_id FROM {policy.policy} WHERE policy_number = 'POL-2026-000001'\n)\nSELECT 1 AS hop_order, 'Quote' AS hop, 'quote for the hero risk' AS detail,\n       CAST((SELECT quoted_gross_premium FROM {policy.quote}\n             WHERE policy_id = (SELECT policy_id FROM hero) LIMIT 1) AS DECIMAL(18,2)) AS amount\nUNION ALL\nSELECT 2, 'Bind', 'policy bound (lifecycle event)',\n       CAST((SELECT COUNT(*) FROM {policy_lifecycle.policy_event}\n             WHERE policy_id = (SELECT policy_id FROM hero)\n               AND policy_event_type_code = 'BOUND') AS DECIMAL(18,2))\nUNION ALL\nSELECT 3, 'MTA', 'mid-term sum-insured change before the loss',\n       CAST((SELECT sum_insured_delta FROM {policy_lifecycle.policy_event}\n             WHERE policy_id = (SELECT policy_id FROM hero)\n               AND policy_event_type_code = 'MTA_APPLIED' LIMIT 1) AS DECIMAL(18,2))\nUNION ALL\nSELECT 4, 'Earn', 'earned premium to date',\n       CAST((SELECT earned_premium FROM {semantics.premium_earning}\n             WHERE policy_id = (SELECT policy_id FROM hero) LIMIT 1) AS DECIMAL(18,2))\nUNION ALL\nSELECT 5, 'Loss / reserve', 'hero claim outstanding case reserve (derived)',\n       CAST((SELECT SUM(ct.amount) FROM {claim.claim_transaction} ct\n             JOIN {claim.claim} c ON c.claim_id = ct.claim_id\n             WHERE c.claim_number = 'CLM-2026-000001'\n               AND ct.claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT') AS DECIMAL(18,2))\nUNION ALL\nSELECT 6, 'As-at version', 'policy version in force at the loss',\n       CAST((SELECT pv.version_no FROM {claim.claim} c\n             JOIN {policy_lifecycle.policy_version} pv ON pv.policy_version_id = c.policy_version_id\n             WHERE c.claim_number = 'CLM-2026-000001') AS DECIMAL(18,2))\nUNION ALL\nSELECT 7, 'Cede', 'quota share ceded to the treaty',\n       CAST((SELECT ces.ceded_share FROM {reinsurance.cession} ces\n             WHERE ces.policy_id = (SELECT policy_id FROM hero) LIMIT 1) AS DECIMAL(18,2))\nUNION ALL\nSELECT 8, 'Reserve (actuarial)', 'commercial property ultimate (chain ladder)',\n       CAST((SELECT SUM(ultimate_loss) FROM {reserving.reserve_estimate}\n             WHERE line_of_business_code = 'COMMERCIAL_PROPERTY' AND reserving_method_code = 'CHAIN_LADDER') AS DECIMAL(18,2))\nUNION ALL\nSELECT 9, 'Capital', 'commercial property published case reserve (GBP)',\n       CAST((SELECT amount FROM {finance.valuation_result}\n             WHERE valuation_measure_code = 'CASE_RESERVE_TOTAL'\n               AND line_of_business_code = 'COMMERCIAL_PROPERTY' AND currency_code = 'GBP' LIMIT 1) AS DECIMAL(18,2))\nUNION ALL\nSELECT 10, 'Fair value', 'commercial property Consumer Duty verdict (0=fair,1=monitor)',\n       CAST((SELECT CASE WHEN fair_value_outcome_code = 'FAIR' THEN 0 ELSE 1 END\n             FROM {semantics.vw_fair_value_latest}\n             WHERE line_of_business_code = 'COMMERCIAL_PROPERTY') AS DECIMAL(18,2))\n"
     },
     {
       "kind": "view",

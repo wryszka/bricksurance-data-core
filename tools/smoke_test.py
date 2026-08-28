@@ -345,6 +345,21 @@ def main():
          f"SELECT COUNT(*) FROM {q('delegated_authority', 'binding_authority')} b "
          f"LEFT JOIN {q('delegated_authority', 'binding_authority_lob')} l ON l.binder_id = b.binder_id "
          f"WHERE l.binder_id IS NULL", "0"),
+        # ---- WP7/8 golden thread v2 + publication contracts --------------
+        ("golden thread walks end to end (10 hops, every hop a real join, none null)",
+         f"SELECT COUNT(*) = 10 AND SUM(CASE WHEN amount IS NULL THEN 1 ELSE 0 END) = 0 "
+         f"FROM {q('semantics', 'vw_golden_thread')}", "true"),
+        ("golden thread: the hero loss reserve hop derives 270000",
+         f"SELECT CAST(amount AS INT) FROM {q('semantics', 'vw_golden_thread')} WHERE hop_order = 5", "270000"),
+        ("golden thread: the cede hop resolves the 30% quota share",
+         f"SELECT CAST(amount AS DECIMAL(10,4)) FROM {q('semantics', 'vw_golden_thread')} WHERE hop_order = 7", "0.3000"),
+        ("published binder-status surface returns a row per binder",
+         f"SELECT COUNT(*) = (SELECT COUNT(*) FROM {q('delegated_authority', 'binding_authority')}) "
+         f"FROM {q('delegated_authority', 'vw_binder_status')}", "true"),
+        ("published open-breach surface lists the open breach",
+         f"SELECT COUNT(*) >= 1 FROM {q('delegated_authority', 'vw_breach_open')}", "true"),
+        ("published retention-curve surface returns the full curve",
+         f"SELECT COUNT(*) > 0 FROM {q('renewal', 'vw_retention_curve')}", "true"),
     ]
 
     failures = 0

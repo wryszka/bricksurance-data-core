@@ -1,0 +1,58 @@
+# Estate published surfaces — Bricksurance Data Core
+#
+# The governed views the data core PUBLISHES for the rest of the estate to consume,
+# so a workbench migration is a RE-POINT, not a rebuild. Local stand-in for the Group
+# Control Tower's ESTATE_MANIFEST.yaml (which lives in the actuarial-workbench-hub repo);
+# wire the tower to these when the workbenches consolidate. See DECISIONS.md D6.
+#
+# Generated context: model v0.15.0. Catalog lr_serverless_aws_us_catalog.
+# Every surface below is a governed view/table with an owner and a Genie space.
+
+model: bricksurance-data-core
+version: "0.15.0"
+catalog: lr_serverless_aws_us_catalog
+
+published_surfaces:
+  policy_lifecycle:
+    - name: policy_lifecycle.policy_event
+      surface: the append-only, hash-chained policy administration spine (the shared key fabric)
+      consumers: [underwriting, claims, delegated_authority, group_control_tower]
+    - name: policy_lifecycle.vw_policy_current
+      surface: current policy state derived from the event stream (byte-matches policy)
+      consumers: [all workbenches]
+    - name: policy_lifecycle.renewal_chain
+      surface: renewal chain membership (customer tenure, renewal loop)
+      consumers: [renewal, customer]
+  premium:
+    - name: semantics.vw_premium_proof
+      surface: written = earned + unearned, residual 0 by LOB (the earning reconciliation)
+      consumers: [finance, ifrs17]
+    - name: semantics.premium_earning
+      surface: written/earned/unearned per policy (the earning engine; fn_earn_premium)
+      consumers: [ifrs17, finance]
+  assets_alm:
+    - name: semantics.vw_s2_market_inputs
+      surface: Solvency II market-risk stress inputs (+/-100bps)
+      consumers: [solvency2]
+    - name: semantics.vw_alm_annuity_match
+      surface: annuity portfolio asset cashflows by year (the ALM match)
+      consumers: [lifecast]
+  customer_conduct:
+    - name: semantics.vw_fair_value_latest
+      surface: live Consumer Duty fair value by product line (one MONITOR amber)
+      consumers: [customer, board_reporting]
+  renewal:
+    - name: renewal.vw_retention_curve
+      surface: retention response by segment and price-walk band
+      consumers: [pricing_gen2]
+  delegated_authority:
+    - name: delegated_authority.vw_binder_status
+      surface: per-binder utilisation, outstanding bordereaux, open breaches
+      consumers: [delegated_authority_workbench]
+    - name: delegated_authority.vw_breach_open
+      surface: open authority breaches across binders
+      consumers: [delegated_authority_workbench, governance]
+  twin:
+    - name: semantics.vw_golden_thread
+      surface: the digital twin walked end to end for the hero (quote -> ... -> fair value), every hop a real join
+      consumers: [group_control_tower, demo]

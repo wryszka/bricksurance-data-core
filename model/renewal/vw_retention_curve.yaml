@@ -1,0 +1,12 @@
+kind: view
+name: vw_retention_curve
+domain: renewal
+title: Retention Curve (published)
+description: >
+  The retention response curve by segment and price-walk band - the demand signal the
+  pricing/renewal workstream consumes to optimise renewal prices. Publication contract.
+grain: One row per segment per price-walk band.
+sql: |
+  SELECT segment, price_walk_band, renewal_probability, observations
+  FROM {renewal.retention_response_curve}
+  ORDER BY segment, price_walk_band

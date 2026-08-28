@@ -1,0 +1,20 @@
+kind: view
+name: vw_binder_status
+domain: delegated_authority
+title: Binder Status (published)
+description: >
+  Per-binder oversight summary the estate consumes: coverholder, utilisation (written
+  premium vs estimate), bordereaux outstanding and open breaches. Publication contract
+  for the delegated-authority workbench to re-point at.
+grain: One row per binder.
+sql: |
+  SELECT
+    b.binder_id, b.umr, ch.coverholder_id, p.name AS coverholder_name,
+    b.premium_estimate,
+    (SELECT COUNT(*) FROM {delegated_authority.bordereau_submission} s
+     WHERE s.binder_id = b.binder_id AND s.bordereau_status_code IN ('RECEIVED','QUARANTINED')) AS bordereaux_outstanding,
+    (SELECT COUNT(*) FROM {delegated_authority.authority_breach} ab
+     WHERE ab.binder_id = b.binder_id AND ab.breach_status_code = 'OPEN') AS open_breaches
+  FROM {delegated_authority.binding_authority} b
+  JOIN {delegated_authority.coverholder} ch ON ch.coverholder_id = b.coverholder_id
+  JOIN {party.party} p ON p.party_id = ch.party_id

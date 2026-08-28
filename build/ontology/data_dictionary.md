@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.15.0. Do not edit.*
+*Generated from model v0.16.0. Do not edit.*
 
 ## Account Type (`reference.account_type`)
 

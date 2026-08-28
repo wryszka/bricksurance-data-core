@@ -222,3 +222,25 @@ GTM prize).
   without telematics — realistic; the coverholder doesn't send it).
 - App refreshed to v0.15.0. NON-GOAL held: no DA workbench app, no un-stubbing the console's
   LLM mapping (that's an Atlas change — Atlas stays untouched per user).
+
+---
+
+## 2026-08-28 — Phase 8 (WP7/8) COMPLETE — Gen2 Expansion program DONE
+
+Model v0.16.0, deployed, **smoke 80/80 pass**.
+- **vw_golden_thread**: the digital twin walked end to end for the hero — quote → bind →
+  MTA → earn → loss/reserve → as-at version → cede → reserve → capital → fair value.
+  10 hops, every hop a real cross-domain key join (verified: loss reserve 270000, cede 0.30).
+- Publication contracts (WP8): vw_binder_status, vw_breach_open (delegated), vw_retention_curve
+  (renewal), plus the already-published vw_policy_current/premium_proof/s2_market_inputs/
+  alm_annuity_match/fair_value_latest. **estate_published_surfaces.yaml** = local manifest of
+  every published surface + its consumers (stand-in for the tower's ESTATE_MANIFEST, D6).
+- Genie context auto-regenerates in build/genie on every generate (new domains included);
+  creating new Genie SPACES on the workspace deferred (30-table limit needs deliberate design).
+- Golden-thread v2 delivered as a DATA view (Atlas untouched per user); the console flow
+  update is a future Atlas change, not done here.
+
+**GEN2 EXPANSION COMPLETE — model v0.16.0.** 7 WPs shipped (WP1 policy lifecycle, WP2 premium,
+WP5 renewal, WP3 assets/ALM, WP4 customer/conduct, WP6 delegated authority, WP7/8 semantics+
+publication). The twin has no empty functions left. Next per user: the Ontos Track-B deploy
+(new dedicated scale-to-zero Lakebase).

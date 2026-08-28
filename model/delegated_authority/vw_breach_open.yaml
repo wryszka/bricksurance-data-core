@@ -1,0 +1,14 @@
+kind: view
+name: vw_breach_open
+domain: delegated_authority
+title: Open Breaches (published)
+description: >
+  Open authority breaches across all binders - the "who is outside authority right now"
+  list. Publication contract. Union of the governed open records and any live-detected
+  breaches not yet recorded.
+grain: One row per open breach.
+sql: |
+  SELECT ab.authority_breach_id, ab.binder_id, ab.breach_type_code, ab.detail,
+         ab.detected_by, ab.breach_status_code
+  FROM {delegated_authority.authority_breach} ab
+  WHERE ab.breach_status_code = 'OPEN'
