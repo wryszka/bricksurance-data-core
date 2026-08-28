@@ -1,6 +1,6 @@
 # Bricksurance Data Core - Metric Catalog
 
-*Generated from model v0.12.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+*Generated from model v0.13.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
 
 ## Policy Lifecycle Metrics (`policy_lifecycle.lifecycle_metrics`)
 
@@ -67,6 +67,20 @@ Catastrophe accumulation KPIs over event losses - gross loss, ceded recovery and
 | `gross_loss_total` | Total gross loss across events, in original currency. | `SUM(gross_loss_amount)` |
 | `ceded_recovery_total` | Total reinsurance recovery on those losses, in original currency. | `SUM(ceded_loss_amount)` |
 | `net_retained_total` | Net retained loss after reinsurance recovery, in original currency. | `SUM(gross_loss_amount - ceded_loss_amount)` |
+
+## Asset Metrics (`semantics.asset_metrics`)
+
+Asset-side KPIs over the latest positions - market value, book value and the rating mix by portfolio and instrument type. Portfolio duration and stress are governed functions (fn_duration, fn_stress_mv), not measures. Amounts are in original currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
+
+**Owner:** Chief Investment Officer · **Certification:** draft · **Source:** `investment.position`
+
+**Dimensions:** portfolio_code, instrument_type_code, credit_rating_code, as_of_month, currency_code
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `asset_market_value` | Market value of holdings, in original currency. | `SUM(market_value)` |
+| `asset_book_value` | Amortised book value of holdings, in original currency. | `SUM(book_value)` |
+| `position_count` | Number of positions. | `COUNT(position_id)` |
 
 ## Cession Metrics (`semantics.cession_metrics`)
 

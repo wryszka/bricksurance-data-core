@@ -1,0 +1,23 @@
+kind: view
+name: vw_alm_annuity_match
+domain: semantics
+title: ALM Annuity Match (published)
+description: >
+  Asset cashflows of the annuity (matching-adjustment) portfolio by future year -
+  the asset leg LifeCast matches its annuity liability cashflows against. The
+  liability leg is supplied by the LifeCast model; this publishes the asset side
+  and the bucketed profile so the duration gap is inspectable. Publication contract.
+grain: One row per future year for the ANNUITY_MA portfolio.
+sql: |
+  SELECT
+    YEAR(ac.cashflow_month) AS cashflow_year,
+    CAST(SUM((COALESCE(ac.coupon_amount,0) + COALESCE(ac.redemption_amount,0)) * pos.nominal)
+      AS DECIMAL(18,2)) AS asset_cashflow
+  FROM {investment.asset_cashflow} ac
+  JOIN (SELECT instrument_id, nominal FROM {investment.position}
+        WHERE portfolio_code = 'ANNUITY_MA'
+          AND as_of_month = (SELECT MAX(as_of_month) FROM {investment.position}
+                             WHERE portfolio_code = 'ANNUITY_MA')) pos
+    ON pos.instrument_id = ac.instrument_id
+  WHERE ac.cashflow_month > current_date()
+  GROUP BY YEAR(ac.cashflow_month)

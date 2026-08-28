@@ -1,0 +1,26 @@
+kind: function
+name: fn_stress_mv
+domain: investment
+description: >
+  Portfolio market value after a parallel interest-rate shock, via first-order
+  duration sensitivity: stressed MV = MV * (1 - duration * shock). A stylised,
+  standard-formula-grade sensitivity (no convexity), labelled as such. Feeds the
+  Solvency II market-risk inputs.
+inputs:
+  - name: in_portfolio_code
+    type: string
+    description: Portfolio to stress.
+  - name: in_shock_bps
+    type: integer
+    description: Parallel rate shock in basis points (e.g. 100 for +1%).
+returns:
+  type: decimal(18,2)
+  description: Stressed market value in reporting currency.
+sql: |
+  (SELECT CAST(COALESCE(SUM(market_value), 0)
+     * (1 - {investment.fn_duration}(in_portfolio_code) * (in_shock_bps / 10000.0))
+     AS DECIMAL(18,2))
+   FROM {investment.position}
+   WHERE portfolio_code = in_portfolio_code
+     AND as_of_month = (SELECT MAX(as_of_month) FROM {investment.position}
+                        WHERE portfolio_code = in_portfolio_code))

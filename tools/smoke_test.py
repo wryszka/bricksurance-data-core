@@ -282,6 +282,21 @@ def main():
          f"SELECT COUNT(*) FROM {q('renewal', 'renewal_case')} rc "
          f"LEFT JOIN {q('policy', 'policy')} p ON p.policy_id = rc.policy_id "
          f"WHERE p.policy_id IS NULL", "0"),
+        # ---- WP3 assets & ALM --------------------------------------------
+        ("governed tool: annuity portfolio duration is plausible (fn_duration 5-15y)",
+         f"SELECT {q('investment', 'fn_duration')}('ANNUITY_MA') BETWEEN 5 AND 15", "true"),
+        ("governed tool: +100bps stress reduces market value below -100bps (fn_stress_mv)",
+         f"SELECT {q('investment', 'fn_stress_mv')}('ANNUITY_MA', 100) < "
+         f"{q('investment', 'fn_stress_mv')}('ANNUITY_MA', -100)", "true"),
+        ("governed tool: annuity duration gap vs 9y liability is nonzero (fn_duration_gap)",
+         f"SELECT ABS({q('investment', 'fn_duration_gap')}('ANNUITY_MA', 9.0)) > 0.1", "true"),
+        ("published S2 market input: interest-up loss is positive for the annuity portfolio",
+         f"SELECT interest_up_loss > 0 FROM {q('semantics', 'vw_s2_market_inputs')} "
+         f"WHERE portfolio_code = 'ANNUITY_MA'", "true"),
+        ("published ALM view returns annuity asset cashflows by year",
+         f"SELECT COUNT(*) > 0 FROM {q('semantics', 'vw_alm_annuity_match')}", "true"),
+        ("asset metric view answers market value",
+         f"SELECT MEASURE(asset_market_value) > 0 FROM {q('semantics', 'asset_metrics')}", "true"),
     ]
 
     failures = 0

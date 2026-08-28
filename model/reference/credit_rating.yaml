@@ -1,0 +1,24 @@
+kind: code_set
+name: credit_rating
+title: Credit Rating
+description: >
+  Credit quality banding of a fixed-income instrument, best to sub-investment.
+codes:
+  - code: AAA
+    label: AAA
+    description: Highest credit quality.
+  - code: AA
+    label: AA
+    description: Very high credit quality.
+  - code: A
+    label: A
+    description: High credit quality.
+  - code: BBB
+    label: BBB
+    description: Good credit quality; lowest investment grade.
+  - code: BB
+    label: BB
+    description: Sub-investment grade (speculative).
+  - code: NR
+    label: Not Rated
+    description: No credit rating (e.g. equity, property, cash).

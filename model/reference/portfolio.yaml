@@ -1,0 +1,16 @@
+kind: code_set
+name: portfolio
+title: Portfolio
+description: >
+  The asset portfolios the balance sheet is managed in. The annuity portfolio is
+  cashflow-matched under the matching adjustment; surplus is free assets.
+codes:
+  - code: GENERAL
+    label: General Account
+    description: Backs general (P&C and non-matched) liabilities.
+  - code: ANNUITY_MA
+    label: Annuity (Matching Adjustment)
+    description: Backs annuity liabilities under a matching-adjustment portfolio.
+  - code: SURPLUS
+    label: Surplus
+    description: Free assets in excess of liabilities.

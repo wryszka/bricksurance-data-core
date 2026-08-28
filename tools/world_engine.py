@@ -154,7 +154,9 @@ class World:
                      # policy lifecycle spine (WP1)
                      "policy_event", "policy_version", "renewal_chain",
                      # renewal loop (WP5)
-                     "retention_response_curve", "renewal_case"):
+                     "retention_response_curve", "renewal_case",
+                     # assets & ALM (WP3)
+                     "instrument", "position", "asset_cashflow", "asset_valuation_run"):
             self.t[name] = []
 
     def n(self, base):
@@ -1236,7 +1238,94 @@ def build_world(scale):
     add_lifecycle(w)
     add_premium_finance(w)
     add_renewal(w)
+    add_assets(w)
     return w
+
+
+def add_assets(w):
+    """WP3 - the asset side of the balance sheet + ALM. Extends the investment domain
+    (DECISIONS D3). A stylised-but-real asset universe: government/corporate bonds
+    with coupon+redemption cashflows, equity, property and cash across three
+    portfolios. The ANNUITY_MA portfolio is built long (~8-9y) so the duration gap
+    vs the ~9y annuity liability is nonzero and interesting. Deterministic (no rng).
+    """
+    MONTH_ENDS = [date(2026, m, 28) for m in range(1, 7)]   # 6 month-ends of history
+    latest = MONTH_ENDS[-1]
+
+    def price_for(itype, i):
+        # deterministic clean price around par / index level
+        return 0.95 + ((i * 7) % 11) / 100.0
+
+    instruments = []
+    # 80 govt + 80 corp bonds, 25 equity, 10 cash, 5 property = 200
+    for i in range(200):
+        if i < 80:
+            itype, rating = "GOVT_BOND", ("AAA" if i % 3 == 0 else "AA")
+            issuer = ["UK Gilt", "German Bund", "French OAT", "EU Bond"][i % 4]
+        elif i < 160:
+            itype = "CORP_BOND"
+            rating = ["AA", "A", "A", "BBB", "BBB", "BB"][i % 6]
+            issuer = ["Utilities plc", "Telecom SA", "Bank AG", "Retail Group",
+                      "Energy Co", "Infra Fund"][i % 6]
+        elif i < 185:
+            itype, rating, issuer = "EQUITY", "NR", ["Index ETF", "Bank AG", "Pharma SE"][i % 3]
+        elif i < 195:
+            itype, rating, issuer = "CASH", "NR", "Cash deposit"
+        else:
+            itype, rating, issuer = "PROPERTY_FUND", "NR", "UK Property Fund"
+        ccy = ["GBP", "GBP", "EUR"][i % 3]
+        coupon = None
+        maturity = None
+        ma_elig = itype in ("GOVT_BOND", "CORP_BOND")
+        if itype in ("GOVT_BOND", "CORP_BOND"):
+            coupon = round(0.01 + ((i * 13) % 40) / 1000.0, 4)   # 1.0%..4.9%
+            # split bonds: long-dated go to the annuity portfolio
+            if i % 2 == 0:
+                maturity = date(2034 + (i % 7), (i % 12) + 1, 15)   # 2034-2040 (long)
+                portfolio = "ANNUITY_MA"
+            else:
+                maturity = date(2028 + (i % 5), (i % 12) + 1, 15)   # 2028-2032 (short/med)
+                portfolio = "GENERAL"
+        elif itype == "CASH":
+            portfolio = "GENERAL"
+        else:
+            portfolio = "SURPLUS"
+        iid = f"ins_{i:04d}"
+        instruments.append((iid, itype, portfolio, coupon, maturity, ccy))
+        w.add("instrument", instrument_id=iid, instrument_type_code=itype, issuer=issuer,
+              credit_rating_code=rating, coupon_rate=coupon, maturity_date=maturity,
+              currency_code=ccy, ma_eligible=ma_elig, source_system_code="INV_CORE")
+
+    # positions across 6 month-ends; nominal scaled so annuity portfolio is sizeable
+    for (iid, itype, portfolio, coupon, maturity, ccy) in instruments:
+        base_nominal = {"GOVT_BOND": 5_000_000, "CORP_BOND": 3_000_000, "EQUITY": 1_500_000,
+                        "CASH": 2_000_000, "PROPERTY_FUND": 4_000_000}[itype]
+        for me in MONTH_ENDS:
+            price = price_for(itype, hash(iid) % 100) if False else price_for(itype, int(iid.split('_')[-1]))
+            mv = round(base_nominal * price, 2)
+            w.add("position", position_id=f"pos_{iid}_{me.isoformat()}", portfolio_code=portfolio,
+                  instrument_id=iid, as_of_month=me, nominal=float(base_nominal),
+                  market_value=mv, book_value=float(base_nominal), currency_code=ccy,
+                  source_system_code="INV_CORE")
+
+    # asset cashflows per bond: annual coupon (per unit) + redemption (per unit) at maturity
+    for (iid, itype, portfolio, coupon, maturity, ccy) in instruments:
+        if itype not in ("GOVT_BOND", "CORP_BOND") or not maturity or not coupon:
+            continue
+        yr = 2027
+        while yr <= maturity.year:
+            cf_month = date(yr, maturity.month, 15)
+            redemption = 1.0 if yr == maturity.year else None
+            w.add("asset_cashflow", asset_cashflow_id=f"acf_{iid}_{yr}", instrument_id=iid,
+                  cashflow_month=cf_month, coupon_amount=round(coupon, 4),
+                  redemption_amount=redemption, currency_code=ccy)
+            yr += 1
+
+    for me in (date(2026, 3, 31), latest):
+        w.add("asset_valuation_run", asset_valuation_run_id=f"avr_{me.isoformat()}",
+              as_of_date=me, curve_set="EIOPA RFR 2026-06",
+              run_hash=hashlib.sha256(me.isoformat().encode()).hexdigest()[:16],
+              source_system_code="INV_CORE")
 
 
 # Retention response curve: renewal probability by segment (LOB) and price-walk band.
@@ -1882,7 +1971,9 @@ def main():
              # policy lifecycle spine (events before versions; renewal_chain last)
              "policy_event", "policy_version", "renewal_chain",
              # renewal loop (WP5)
-             "retention_response_curve", "renewal_case"]
+             "retention_response_curve", "renewal_case",
+             # assets & ALM (WP3): instrument before position/cashflow
+             "instrument", "position", "asset_cashflow", "asset_valuation_run"]
     missing = set(order) - set(entities)
     assert not missing, f"world emits unknown entities: {missing}"
 

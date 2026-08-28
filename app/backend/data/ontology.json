@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with an indicative Lloyd's Core Data Record crosswalk. The crosswalk is a hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names, not a verified extract from the licensed models; element names are cited only, and the licensed standards are not reproduced.",
   "domains": [
@@ -744,6 +744,44 @@
     },
     {
       "kind": "code_set",
+      "name": "credit_rating",
+      "title": "Credit Rating",
+      "description": "Credit quality banding of a fixed-income instrument, best to sub-investment.\n",
+      "codes": [
+        {
+          "code": "AAA",
+          "label": "AAA",
+          "description": "Highest credit quality."
+        },
+        {
+          "code": "AA",
+          "label": "AA",
+          "description": "Very high credit quality."
+        },
+        {
+          "code": "A",
+          "label": "A",
+          "description": "High credit quality."
+        },
+        {
+          "code": "BBB",
+          "label": "BBB",
+          "description": "Good credit quality; lowest investment grade."
+        },
+        {
+          "code": "BB",
+          "label": "BB",
+          "description": "Sub-investment grade (speculative)."
+        },
+        {
+          "code": "NR",
+          "label": "Not Rated",
+          "description": "No credit rating (e.g. equity, property, cash)."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
       "name": "credit_score_band",
       "title": "Credit Score Band",
       "description": "Banded consumer credit rating from a bureau summary. Banded, never the raw score, so the attribute can be used in rating without holding fine-grained bureau data. Bureau data is used only where permitted and disclosed.\n",
@@ -1145,6 +1183,39 @@
           "code": "INTERNAL",
           "label": "Internal",
           "description": "Insurer's own derived hazard model."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "instrument_type",
+      "title": "Instrument Type",
+      "description": "Kinds of investment instrument the asset side of the balance sheet holds.\n",
+      "codes": [
+        {
+          "code": "GOVT_BOND",
+          "label": "Government Bond",
+          "description": "Sovereign or supranational fixed-income security."
+        },
+        {
+          "code": "CORP_BOND",
+          "label": "Corporate Bond",
+          "description": "Corporate fixed-income security."
+        },
+        {
+          "code": "EQUITY",
+          "label": "Equity",
+          "description": "Listed equity holding."
+        },
+        {
+          "code": "CASH",
+          "label": "Cash",
+          "description": "Cash and cash equivalents."
+        },
+        {
+          "code": "PROPERTY_FUND",
+          "label": "Property Fund",
+          "description": "Pooled real-estate investment."
         }
       ]
     },
@@ -1800,6 +1871,29 @@
           "code": "LAPSED",
           "label": "Lapsed",
           "description": "Cover terminated for non-payment of premium."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "portfolio",
+      "title": "Portfolio",
+      "description": "The asset portfolios the balance sheet is managed in. The annuity portfolio is cashflow-matched under the matching adjustment; surplus is free assets.\n",
+      "codes": [
+        {
+          "code": "GENERAL",
+          "label": "General Account",
+          "description": "Backs general (P&C and non-matched) liabilities."
+        },
+        {
+          "code": "ANNUITY_MA",
+          "label": "Annuity (Matching Adjustment)",
+          "description": "Backs annuity liabilities under a matching-adjustment portfolio."
+        },
+        {
+          "code": "SURPLUS",
+          "label": "Surplus",
+          "description": "Free assets in excess of liabilities."
         }
       ]
     },
@@ -5242,6 +5336,207 @@
     },
     {
       "kind": "entity",
+      "name": "asset_cashflow",
+      "domain": "investment",
+      "title": "Asset Cashflow",
+      "description": "A projected future cashflow of an instrument - coupon and/or redemption in a month. The input to duration, matching and ALM: the asset leg the annuity liability cashflows are matched against.\n",
+      "grain": "One row per instrument per future cashflow month.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "asset_cashflow_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the cashflow.",
+          "classification": "internal"
+        },
+        {
+          "name": "instrument_id",
+          "references": "instrument",
+          "type": "string",
+          "required": true,
+          "description": "Instrument the cashflow belongs to.",
+          "classification": "internal"
+        },
+        {
+          "name": "cashflow_month",
+          "type": "date",
+          "required": true,
+          "description": "Month the cashflow occurs in.",
+          "classification": "internal"
+        },
+        {
+          "name": "coupon_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Coupon paid in the month, per unit nominal held (portfolio-scaled downstream).",
+          "classification": "confidential"
+        },
+        {
+          "name": "redemption_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Principal redeemed in the month, per unit nominal.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the cashflow.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "asset_cashflow_id"
+        ]
+      },
+      "owner": "Chief Investment Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "asset_valuation_run",
+      "domain": "investment",
+      "title": "Asset Valuation Run",
+      "description": "A dated valuation of the asset portfolios against a curve set - the governed run behind position market values and the stress inputs. Named distinctly from the actuarial life.valuation_run to avoid collision.\n",
+      "grain": "One row per asset valuation run.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "asset_valuation_run_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the run.",
+          "classification": "internal"
+        },
+        {
+          "name": "as_of_date",
+          "type": "date",
+          "required": true,
+          "description": "Valuation date.",
+          "classification": "internal"
+        },
+        {
+          "name": "curve_set",
+          "type": "string",
+          "required": false,
+          "description": "Discount curve set used (e.g. EIOPA RFR 2026-06), reused from solvency2.",
+          "classification": "internal"
+        },
+        {
+          "name": "run_hash",
+          "type": "string",
+          "required": false,
+          "description": "Hash of the run inputs for reproducibility.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the run was executed in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "asset_valuation_run_id"
+        ]
+      },
+      "owner": "Chief Investment Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "instrument",
+      "domain": "investment",
+      "title": "Instrument",
+      "description": "An investment instrument the group can hold - its terms and credit quality. The reference detail behind holdings and positions; a stylised but real asset universe (standard-formula grade), not a full security master.\n",
+      "grain": "One row per instrument.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "instrument_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the instrument.",
+          "classification": "internal"
+        },
+        {
+          "name": "instrument_type_code",
+          "code_set": "instrument_type",
+          "required": true,
+          "description": "Kind of instrument.",
+          "classification": "internal"
+        },
+        {
+          "name": "issuer",
+          "type": "string",
+          "required": false,
+          "description": "Issuer name.",
+          "classification": "internal"
+        },
+        {
+          "name": "credit_rating_code",
+          "code_set": "credit_rating",
+          "required": false,
+          "description": "Credit quality banding.",
+          "classification": "internal"
+        },
+        {
+          "name": "coupon_rate",
+          "type": "decimal(8,4)",
+          "required": false,
+          "description": "Annual coupon rate for fixed income; empty for non-coupon assets.",
+          "classification": "internal"
+        },
+        {
+          "name": "maturity_date",
+          "type": "date",
+          "required": false,
+          "description": "Redemption date for fixed income; empty for perpetual/equity/cash.",
+          "classification": "internal"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Instrument currency.",
+          "classification": "internal"
+        },
+        {
+          "name": "ma_eligible",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the instrument is eligible for a matching-adjustment portfolio.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the instrument is held in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "instrument_id"
+        ]
+      },
+      "owner": "Chief Investment Officer"
+    },
+    {
+      "kind": "entity",
       "name": "investment_holding",
       "domain": "investment",
       "title": "Investment Holding",
@@ -5395,6 +5690,95 @@
       "keys": {
         "primary": [
           "investment_transaction_id"
+        ]
+      },
+      "owner": "Chief Investment Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "position",
+      "domain": "investment",
+      "title": "Position",
+      "description": "The holding of an instrument in a portfolio as at a month-end - nominal, market and book value. The time series that duration, yield and stress are computed over.\n",
+      "grain": "One row per portfolio per instrument per as-of month.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "position_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the position row.",
+          "classification": "internal"
+        },
+        {
+          "name": "portfolio_code",
+          "code_set": "portfolio",
+          "required": true,
+          "description": "Portfolio the position sits in.",
+          "classification": "internal"
+        },
+        {
+          "name": "instrument_id",
+          "references": "instrument",
+          "type": "string",
+          "required": true,
+          "description": "Instrument held.",
+          "classification": "internal"
+        },
+        {
+          "name": "as_of_month",
+          "type": "date",
+          "required": true,
+          "description": "Month-end the position is struck at.",
+          "classification": "internal"
+        },
+        {
+          "name": "nominal",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Nominal / face amount held, in instrument currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "market_value",
+          "type": "decimal(18,2)",
+          "required": true,
+          "description": "Market value of the holding, in instrument currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "book_value",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Amortised book value of the holding, in instrument currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the values.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System of record the position is held in.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "position_id"
+        ],
+        "natural": [
+          "portfolio_code",
+          "instrument_id",
+          "as_of_month"
         ]
       },
       "owner": "Chief Investment Officer"
@@ -9664,12 +10048,30 @@
     },
     {
       "kind": "view",
+      "name": "vw_alm_annuity_match",
+      "domain": "semantics",
+      "title": "ALM Annuity Match (published)",
+      "description": "Asset cashflows of the annuity (matching-adjustment) portfolio by future year - the asset leg LifeCast matches its annuity liability cashflows against. The liability leg is supplied by the LifeCast model; this publishes the asset side and the bucketed profile so the duration gap is inspectable. Publication contract.\n",
+      "grain": "One row per future year for the ANNUITY_MA portfolio.",
+      "sql": "SELECT\n  YEAR(ac.cashflow_month) AS cashflow_year,\n  CAST(SUM((COALESCE(ac.coupon_amount,0) + COALESCE(ac.redemption_amount,0)) * pos.nominal)\n    AS DECIMAL(18,2)) AS asset_cashflow\nFROM {investment.asset_cashflow} ac\nJOIN (SELECT instrument_id, nominal FROM {investment.position}\n      WHERE portfolio_code = 'ANNUITY_MA'\n        AND as_of_month = (SELECT MAX(as_of_month) FROM {investment.position}\n                           WHERE portfolio_code = 'ANNUITY_MA')) pos\n  ON pos.instrument_id = ac.instrument_id\nWHERE ac.cashflow_month > current_date()\nGROUP BY YEAR(ac.cashflow_month)\n"
+    },
+    {
+      "kind": "view",
       "name": "vw_premium_proof",
       "domain": "semantics",
       "title": "Premium Proof (written = earned + unearned)",
       "description": "The premium reconciliation, by line of business and currency: written premium equals earned to date plus unearned (UPR). The residual must be zero - this is the proof that the earning engine conserves premium, shown as one number a controller can trust. Derived from the premium_earning view.\n",
       "grain": "One row per line of business per currency.",
       "sql": "SELECT\n  line_of_business_code,\n  currency_code,\n  CAST(SUM(written_premium) AS DECIMAL(18,2)) AS written_premium,\n  CAST(SUM(earned_premium) AS DECIMAL(18,2)) AS earned_premium,\n  CAST(SUM(unearned_premium) AS DECIMAL(18,2)) AS unearned_premium,\n  CAST(SUM(written_premium) - SUM(earned_premium) - SUM(unearned_premium)\n    AS DECIMAL(18,2)) AS residual\nFROM {semantics.premium_earning}\nGROUP BY line_of_business_code, currency_code\n"
+    },
+    {
+      "kind": "view",
+      "name": "vw_s2_market_inputs",
+      "domain": "semantics",
+      "title": "Solvency II Market Inputs (published)",
+      "description": "Published market-risk inputs for the Solvency II workbench: portfolio market value and the interest-rate stress at +/-100bps, via first-order duration sensitivity (stylised, standard-formula grade, no convexity). The interest-up loss is the interest-rate capital proxy. Self-contained (duration inlined) so it is a pure view; fn_duration / fn_stress_mv are the callable-tool equivalents. Publication contract - the S2 workbench re-points here rather than assuming numbers; migrating that workbench is out of scope.\n",
+      "grain": "One row per asset portfolio.",
+      "sql": "WITH latest AS (\n  SELECT portfolio_code, MAX(as_of_month) AS m\n  FROM {investment.position} GROUP BY portfolio_code\n),\nmv AS (\n  SELECT p.portfolio_code, SUM(p.market_value) AS base_mv\n  FROM {investment.position} p\n  JOIN latest l ON l.portfolio_code = p.portfolio_code AND p.as_of_month = l.m\n  GROUP BY p.portfolio_code\n),\ndur AS (\n  SELECT p.portfolio_code,\n    SUM((datediff(ac.cashflow_month, current_date()) / 365.0)\n        * (COALESCE(ac.coupon_amount,0) + COALESCE(ac.redemption_amount,0)) * p.nominal)\n    / NULLIF(SUM((COALESCE(ac.coupon_amount,0) + COALESCE(ac.redemption_amount,0)) * p.nominal), 0)\n      AS duration\n  FROM {investment.position} p\n  JOIN latest l ON l.portfolio_code = p.portfolio_code AND p.as_of_month = l.m\n  JOIN {investment.asset_cashflow} ac ON ac.instrument_id = p.instrument_id\n    AND ac.cashflow_month > current_date()\n  GROUP BY p.portfolio_code\n)\nSELECT\n  mv.portfolio_code,\n  CAST(mv.base_mv AS DECIMAL(18,2)) AS base_market_value,\n  CAST(mv.base_mv * (1 - COALESCE(dur.duration,0) * 0.01) AS DECIMAL(18,2)) AS mv_rates_up_100bps,\n  CAST(mv.base_mv * (1 + COALESCE(dur.duration,0) * 0.01) AS DECIMAL(18,2)) AS mv_rates_down_100bps,\n  CAST(mv.base_mv * COALESCE(dur.duration,0) * 0.01 AS DECIMAL(18,2)) AS interest_up_loss\nFROM mv LEFT JOIN dur ON dur.portfolio_code = mv.portfolio_code\n"
     }
   ],
   "metric_views": [
@@ -9949,6 +10351,67 @@
           "name": "net_retained_total",
           "expr": "SUM(gross_loss_amount - ceded_loss_amount)",
           "description": "Net retained loss after reinsurance recovery, in original currency."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "asset_metrics",
+      "domain": "semantics",
+      "title": "Asset Metrics",
+      "description": "Asset-side KPIs over the latest positions - market value, book value and the rating mix by portfolio and instrument type. Portfolio duration and stress are governed functions (fn_duration, fn_stress_mv), not measures. Amounts are in original currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "owner": "Chief Investment Officer",
+      "certification": "draft",
+      "source": "investment.position",
+      "joins": [
+        {
+          "name": "instrument",
+          "source": "investment.instrument",
+          "condition": "source.instrument_id = instrument.instrument_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "portfolio_code",
+          "expr": "source.portfolio_code",
+          "description": "Asset portfolio."
+        },
+        {
+          "name": "instrument_type_code",
+          "expr": "instrument.instrument_type_code",
+          "description": "Kind of instrument."
+        },
+        {
+          "name": "credit_rating_code",
+          "expr": "instrument.credit_rating_code",
+          "description": "Credit quality banding."
+        },
+        {
+          "name": "as_of_month",
+          "expr": "source.as_of_month",
+          "description": "Month-end the position is struck at. Filter to the latest for a point-in-time view."
+        },
+        {
+          "name": "currency_code",
+          "expr": "source.currency_code",
+          "description": "Currency of the values. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "asset_market_value",
+          "expr": "SUM(market_value)",
+          "description": "Market value of holdings, in original currency."
+        },
+        {
+          "name": "asset_book_value",
+          "expr": "SUM(book_value)",
+          "description": "Amortised book value of holdings, in original currency."
+        },
+        {
+          "name": "position_count",
+          "expr": "COUNT(position_id)",
+          "description": "Number of positions."
         }
       ]
     },
@@ -10771,6 +11234,70 @@
         "description": "Net of all posting lines for the entity; 0.00 when the ledger balances."
       },
       "sql": "(SELECT COALESCE(SUM(jl.amount), 0)\n FROM {finance.journal_line} jl\n JOIN {finance.journal} j ON j.journal_id = jl.journal_id\n WHERE j.legal_entity_id = in_legal_entity_id)\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_duration",
+      "domain": "investment",
+      "description": "Cashflow-weighted mean time to cashflow (a stylised Macaulay duration, in years) for a portfolio, derived live from asset cashflows weighted by the nominal held in the latest positions. Standard-formula grade and labelled as such - not a discounted-yield duration. Feeds duration gap and interest stress.\n",
+      "inputs": [
+        {
+          "name": "in_portfolio_code",
+          "type": "string",
+          "description": "Portfolio to measure, e.g. ANNUITY_MA."
+        }
+      ],
+      "returns": {
+        "type": "decimal(10,4)",
+        "description": "Weighted mean years to cashflow; 0 if the portfolio has no future cashflows."
+      },
+      "sql": "(SELECT CAST(COALESCE(\n   SUM((datediff(ac.cashflow_month, current_date()) / 365.0)\n       * (COALESCE(ac.coupon_amount,0) + COALESCE(ac.redemption_amount,0)) * pos.nominal)\n   / NULLIF(SUM((COALESCE(ac.coupon_amount,0) + COALESCE(ac.redemption_amount,0)) * pos.nominal), 0), 0)\n   AS DECIMAL(10,4))\n FROM {investment.asset_cashflow} ac\n JOIN (SELECT instrument_id, nominal FROM {investment.position} p\n       WHERE p.portfolio_code = in_portfolio_code\n         AND p.as_of_month = (SELECT MAX(as_of_month) FROM {investment.position}\n                              WHERE portfolio_code = in_portfolio_code)) pos\n   ON pos.instrument_id = ac.instrument_id\n WHERE ac.cashflow_month > current_date())\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_duration_gap",
+      "domain": "investment",
+      "description": "The duration gap between a portfolio's assets and a liability duration passed in (years). Positive means assets are longer than liabilities. This is the ALM headline: how well the annuity assets match the annuity liabilities.\n",
+      "inputs": [
+        {
+          "name": "in_portfolio_code",
+          "type": "string",
+          "description": "Portfolio to measure."
+        },
+        {
+          "name": "in_liability_duration_years",
+          "type": "decimal(10,4)",
+          "description": "Liability duration to compare against (from the actuarial model)."
+        }
+      ],
+      "returns": {
+        "type": "decimal(10,4)",
+        "description": "Asset duration minus liability duration, in years."
+      },
+      "sql": "({investment.fn_duration}(in_portfolio_code) - in_liability_duration_years)\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_stress_mv",
+      "domain": "investment",
+      "description": "Portfolio market value after a parallel interest-rate shock, via first-order duration sensitivity: stressed MV = MV * (1 - duration * shock). A stylised, standard-formula-grade sensitivity (no convexity), labelled as such. Feeds the Solvency II market-risk inputs.\n",
+      "inputs": [
+        {
+          "name": "in_portfolio_code",
+          "type": "string",
+          "description": "Portfolio to stress."
+        },
+        {
+          "name": "in_shock_bps",
+          "type": "integer",
+          "description": "Parallel rate shock in basis points (e.g. 100 for +1%)."
+        }
+      ],
+      "returns": {
+        "type": "decimal(18,2)",
+        "description": "Stressed market value in reporting currency."
+      },
+      "sql": "(SELECT CAST(COALESCE(SUM(market_value), 0)\n   * (1 - {investment.fn_duration}(in_portfolio_code) * (in_shock_bps / 10000.0))\n   AS DECIMAL(18,2))\n FROM {investment.position}\n WHERE portfolio_code = in_portfolio_code\n   AND as_of_month = (SELECT MAX(as_of_month) FROM {investment.position}\n                      WHERE portfolio_code = in_portfolio_code))\n"
     },
     {
       "kind": "function",
@@ -11856,6 +12383,55 @@
       "to_attribute": "currency_code"
     },
     {
+      "from_entity": "asset_cashflow",
+      "attribute": "instrument_id",
+      "to": "instrument",
+      "to_kind": "entity",
+      "to_attribute": "instrument_id"
+    },
+    {
+      "from_entity": "asset_cashflow",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "asset_valuation_run",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "instrument",
+      "attribute": "instrument_type_code",
+      "to": "instrument_type",
+      "to_kind": "code_set",
+      "to_attribute": "instrument_type_code"
+    },
+    {
+      "from_entity": "instrument",
+      "attribute": "credit_rating_code",
+      "to": "credit_rating",
+      "to_kind": "code_set",
+      "to_attribute": "credit_rating_code"
+    },
+    {
+      "from_entity": "instrument",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "instrument",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
       "from_entity": "investment_holding",
       "attribute": "legal_entity_id",
       "to": "legal_entity",
@@ -11906,6 +12482,34 @@
     },
     {
       "from_entity": "investment_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "position",
+      "attribute": "portfolio_code",
+      "to": "portfolio",
+      "to_kind": "code_set",
+      "to_attribute": "portfolio_code"
+    },
+    {
+      "from_entity": "position",
+      "attribute": "instrument_id",
+      "to": "instrument",
+      "to_kind": "entity",
+      "to_attribute": "instrument_id"
+    },
+    {
+      "from_entity": "position",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "position",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",

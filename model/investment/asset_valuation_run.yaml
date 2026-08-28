@@ -1,0 +1,41 @@
+kind: entity
+name: asset_valuation_run
+domain: investment
+title: Asset Valuation Run
+description: >
+  A dated valuation of the asset portfolios against a curve set - the governed
+  run behind position market values and the stress inputs. Named distinctly from
+  the actuarial life.valuation_run to avoid collision.
+grain: One row per asset valuation run.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: asset_valuation_run_id
+    type: string
+    required: true
+    description: Identifier for the run.
+    classification: internal
+  - name: as_of_date
+    type: date
+    required: true
+    description: Valuation date.
+    classification: internal
+  - name: curve_set
+    type: string
+    required: false
+    description: Discount curve set used (e.g. EIOPA RFR 2026-06), reused from solvency2.
+    classification: internal
+  - name: run_hash
+    type: string
+    required: false
+    description: Hash of the run inputs for reproducibility.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the run was executed in.
+    classification: internal
+keys:
+  primary: [asset_valuation_run_id]
+owner: Chief Investment Officer

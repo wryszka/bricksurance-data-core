@@ -1,0 +1,61 @@
+kind: entity
+name: instrument
+domain: investment
+title: Instrument
+description: >
+  An investment instrument the group can hold - its terms and credit quality.
+  The reference detail behind holdings and positions; a stylised but real asset
+  universe (standard-formula grade), not a full security master.
+grain: One row per instrument.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: instrument_id
+    type: string
+    required: true
+    description: Identifier for the instrument.
+    classification: internal
+  - name: instrument_type_code
+    code_set: instrument_type
+    required: true
+    description: Kind of instrument.
+    classification: internal
+  - name: issuer
+    type: string
+    required: false
+    description: Issuer name.
+    classification: internal
+  - name: credit_rating_code
+    code_set: credit_rating
+    required: false
+    description: Credit quality banding.
+    classification: internal
+  - name: coupon_rate
+    type: decimal(8,4)
+    required: false
+    description: Annual coupon rate for fixed income; empty for non-coupon assets.
+    classification: internal
+  - name: maturity_date
+    type: date
+    required: false
+    description: Redemption date for fixed income; empty for perpetual/equity/cash.
+    classification: internal
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Instrument currency.
+    classification: internal
+  - name: ma_eligible
+    type: boolean
+    required: false
+    description: Whether the instrument is eligible for a matching-adjustment portfolio.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the instrument is held in.
+    classification: internal
+keys:
+  primary: [instrument_id]
+owner: Chief Investment Officer

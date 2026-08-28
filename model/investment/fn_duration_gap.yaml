@@ -1,0 +1,19 @@
+kind: function
+name: fn_duration_gap
+domain: investment
+description: >
+  The duration gap between a portfolio's assets and a liability duration passed in
+  (years). Positive means assets are longer than liabilities. This is the ALM
+  headline: how well the annuity assets match the annuity liabilities.
+inputs:
+  - name: in_portfolio_code
+    type: string
+    description: Portfolio to measure.
+  - name: in_liability_duration_years
+    type: decimal(10,4)
+    description: Liability duration to compare against (from the actuarial model).
+returns:
+  type: decimal(10,4)
+  description: Asset duration minus liability duration, in years.
+sql: |
+  ({investment.fn_duration}(in_portfolio_code) - in_liability_duration_years)

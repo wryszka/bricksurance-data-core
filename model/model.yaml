@@ -1,6 +1,6 @@
 model: bricksurance-data-core
 title: Bricksurance Data Core
-version: 0.12.0
+version: 0.13.0
 description: >
   An open, business-first semantic data model for insurance, aligned to ACORD
   terminology with a crosswalk to the Lloyd's Core Data Record. Platform

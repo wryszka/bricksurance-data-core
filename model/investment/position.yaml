@@ -1,0 +1,63 @@
+kind: entity
+name: position
+domain: investment
+title: Position
+description: >
+  The holding of an instrument in a portfolio as at a month-end - nominal, market
+  and book value. The time series that duration, yield and stress are computed
+  over.
+grain: One row per portfolio per instrument per as-of month.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: position_id
+    type: string
+    required: true
+    description: Identifier for the position row.
+    classification: internal
+  - name: portfolio_code
+    code_set: portfolio
+    required: true
+    description: Portfolio the position sits in.
+    classification: internal
+  - name: instrument_id
+    references: instrument
+    type: string
+    required: true
+    description: Instrument held.
+    classification: internal
+  - name: as_of_month
+    type: date
+    required: true
+    description: Month-end the position is struck at.
+    classification: internal
+  - name: nominal
+    type: decimal(18,2)
+    required: false
+    description: Nominal / face amount held, in instrument currency.
+    classification: confidential
+  - name: market_value
+    type: decimal(18,2)
+    required: true
+    description: Market value of the holding, in instrument currency.
+    classification: confidential
+  - name: book_value
+    type: decimal(18,2)
+    required: false
+    description: Amortised book value of the holding, in instrument currency.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the values.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System of record the position is held in.
+    classification: internal
+keys:
+  primary: [position_id]
+  natural: [portfolio_code, instrument_id, as_of_month]
+owner: Chief Investment Officer

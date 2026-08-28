@@ -1,4 +1,4 @@
-# Genie instructions — Bricksurance Data Core v0.12.0
+# Genie instructions — Bricksurance Data Core v0.13.0
 
 You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses. When presenting results, always resolve identifier columns (anything ending _id) to business names or labels by joining the referenced table - e.g. party_id -> party.name - and never show raw surrogate ids unless the user asks for them.
 
@@ -24,6 +24,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.contact_point_type` — Kinds of contact point held for a party. Grain: One row per contact point type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.country` — Countries the group operates or insures risks in, as ISO 3166-1 alpha-2 codes. A governed subset, extended when the business enters a market. Grain: One row per country code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.coverage_type` — Kinds of cover that can be granted under a policy. A policy bundles one or more coverages; limits, deductibles and claims attach at coverage level. Grain: One row per coverage type code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.credit_rating` — Credit quality banding of a fixed-income instrument, best to sub-investment. Grain: One row per credit rating code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.credit_score_band` — Banded consumer credit rating from a bureau summary. Banded, never the raw score, so the attribute can be used in rating without holding fine-grained bureau data. Bureau data is used only where permitted and disclosed. Grain: One row per credit score band code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.csm_movement_type` — Steps in the IFRS 17 contractual service margin roll-forward. The closing CSM is the signed sum of these movements over the opening balance - a balance derived from movements, never overwritten. Grain: One row per csm movement type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.currency` — Transaction currencies used by the group, as ISO 4217 alphabetic codes. This is deliberately a governed subset, not the full ISO list: a currency is added here when the business starts writing in it. Grain: One row per currency code.
@@ -37,6 +38,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.flood_band` — Flood risk banding for a location, low to very high. A modelled hazard classification, not a live flood state. Grain: One row per flood band code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.fraud_signal_type` — Kinds of fraud indicator on a claim. Signals inform investigation; they never auto-decide. Grain: One row per fraud signal type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.hazard_source` — Provenance of a geospatial hazard rating - which external model or authority the banding came from. Provenance travels with the enrichment. Grain: One row per hazard source code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.instrument_type` — Kinds of investment instrument the asset side of the balance sheet holds. Grain: One row per instrument type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.insured_object_type` — Kinds of object or exposure a policy can insure. Extend with new codes as new lines of business are written (vessels, livestock, cyber estates...). Grain: One row per insured object type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.investment_transaction_type` — Movements on investment holdings. Income and gains flow to the income statement; purchases and sales move the balance sheet. Grain: One row per investment transaction type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.legal_entity_type` — The role a legal entity plays in the group's reporting structure. The group holding consolidates its subsidiaries; each subsidiary reports solo. Grain: One row per legal entity type code.
@@ -55,6 +57,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.period_status` — Lifecycle of an accounting period; postings are only allowed while OPEN. Grain: One row per accounting period status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.policy_event_type` — The kinds of lifecycle event a policy can undergo. Every workbench uses these codes - no local variants - so the policy administration spine reads the same everywhere. Grain: One row per policy event type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.policy_status` — Lifecycle status of a policy contract. Status reflects the contract as a whole; coverage-level suspension is modelled on the coverage entity. Grain: One row per policy status code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.portfolio` — The asset portfolios the balance sheet is managed in. The annuity portfolio is cashflow-matched under the matching adjustment; surplus is free assets. Grain: One row per portfolio code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.premium_transaction_type` — Kinds of premium movement. Premium is always modelled as signed transactions; balances such as gross written premium are derived by summation, never overwritten. Grain: One row per premium transaction type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.product_status` — Lifecycle status of an insurance product. Grain: One row per product status code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.quote_status` — Lifecycle status of a quotation. A quote that converts is linked to the resulting policy; premium only ever arises on the policy, never the quote. Grain: One row per quote status code.
@@ -115,8 +118,12 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_finance.statement_line` — The mapping from ledger accounts to financial-statement line items - how the chart of accounts becomes a balance sheet, income statement and cash flow. Different regimes present differently, so a line carries its regime; this is what lets the same ledger produce a Solvency II balance sheet and an IFRS/statutory one. Grain: One row per statement line item per account per regime.
 - `lr_serverless_aws_us_catalog.bricksurance_finance.tax_transaction` — A tax movement for a legal entity - insurance premium tax, corporation tax, deferred tax. IPT in particular is a real line on every premium; this makes the tax position queryable rather than buried. Grain: One row per tax movement per entity.
 - `lr_serverless_aws_us_catalog.bricksurance_finance.valuation_result` — A published valuation figure: one measure (BEL, technical provision, IBNR, SCR, CSM...) for one line of business and cohort, produced by exactly one auditable valuation run. One shape serves life and non-life, Solvency II and IFRS 17 - new regimes add measure codes, not tables. Grain: One row per valuation run per line of business per measure per cohort.
+- `lr_serverless_aws_us_catalog.bricksurance_investment.asset_cashflow` — A projected future cashflow of an instrument - coupon and/or redemption in a month. The input to duration, matching and ALM: the asset leg the annuity liability cashflows are matched against. Grain: One row per instrument per future cashflow month.
+- `lr_serverless_aws_us_catalog.bricksurance_investment.asset_valuation_run` — A dated valuation of the asset portfolios against a curve set - the governed run behind position market values and the stress inputs. Named distinctly from the actuarial life.valuation_run to avoid collision. Grain: One row per asset valuation run.
+- `lr_serverless_aws_us_catalog.bricksurance_investment.instrument` — An investment instrument the group can hold - its terms and credit quality. The reference detail behind holdings and positions; a stylised but real asset universe (standard-formula grade), not a full security master. Grain: One row per instrument.
 - `lr_serverless_aws_us_catalog.bricksurance_investment.investment_holding` — An investment asset held by a legal entity - the asset side of the balance sheet. Book cost and market value are carried here; income and revaluations are transactional. Without this domain there is no balance sheet and no asset-liability conversation. Grain: One row per holding per legal entity.
 - `lr_serverless_aws_us_catalog.bricksurance_investment.investment_transaction` — A movement on an investment holding - purchase, sale, coupon, dividend or fair-value revaluation. Investment income and gains (the P&L line) and the movement in asset values (the balance sheet) are both derived from these. Grain: One row per investment movement.
+- `lr_serverless_aws_us_catalog.bricksurance_investment.position` — The holding of an instrument in a portfolio as at a month-end - nominal, market and book value. The time series that duration, yield and stress are computed over. Grain: One row per portfolio per instrument per as-of month.
 - `lr_serverless_aws_us_catalog.bricksurance_life.assumption_set` — A versioned, governed set of actuarial assumptions (mortality, lapse, expense, economic). Sets move through a maker/checker lifecycle; valuation runs record exactly which approved set they used, which is what makes any past result reproducible. Grain: One row per assumption set version per assumption type.
 - `lr_serverless_aws_us_catalog.bricksurance_life.model_point` — A grouped model point for life valuation: policies compressed into cohorts (attained age by outstanding term) at a valuation date. Model points are derived from in-force life policies; the grouping is proven back to the policy count and sum assured it represents. Grain: One row per cohort per line of business per valuation date.
 - `lr_serverless_aws_us_catalog.bricksurance_life.scenario_set` — A delivered economic scenario set (risk-free curves, equity paths) used by stochastic valuation. Registered with a lifecycle so exactly one set is active for production runs, and every run records which set it used. Grain: One row per delivered scenario set.
@@ -218,6 +225,15 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - MEASURE(gross_loss_total): Total gross loss across events, in original currency.
   - MEASURE(ceded_recovery_total): Total reinsurance recovery on those losses, in original currency.
   - MEASURE(net_retained_total): Net retained loss after reinsurance recovery, in original currency.
+- `lr_serverless_aws_us_catalog.bricksurance_semantics.asset_metrics` — Asset-side KPIs over the latest positions - market value, book value and the rating mix by portfolio and instrument type. Portfolio duration and stress are governed functions (fn_duration, fn_stress_mv), not measures. Amounts are in original currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
+  - dimension portfolio_code: Asset portfolio.
+  - dimension instrument_type_code: Kind of instrument.
+  - dimension credit_rating_code: Credit quality banding.
+  - dimension as_of_month: Month-end the position is struck at. Filter to the latest for a point-in-time view.
+  - dimension currency_code: Currency of the values. Group by this before summing money.
+  - MEASURE(asset_market_value): Market value of holdings, in original currency.
+  - MEASURE(asset_book_value): Amortised book value of holdings, in original currency.
+  - MEASURE(position_count): Number of positions.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.cession_metrics` — Outward reinsurance KPIs over the cession bordereau: gross and ceded premium by treaty and period. Amounts are in original transaction currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
   - dimension treaty_reference: Treaty the premium is ceded to.
   - dimension reporting_month: Bordereau reporting month.
@@ -351,6 +367,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Contact Point Type: EMAIL (Email), PHONE (Phone), POSTAL_ADDRESS (Postal Address).
 - Country: GB (United Kingdom), IE (Ireland), DE (Germany), FR (France), CH (Switzerland), US (United States).
 - Coverage Type: BUILDINGS (Buildings), CONTENTS (Contents), BUSINESS_INTERRUPTION (Business Interruption), MOTOR_OWN_DAMAGE (Motor Own Damage), MOTOR_TPL (Motor Third-Party Liability), PUBLIC_LIABILITY (Public Liability), CARGO (Cargo).
+- Credit Rating: AAA (AAA), AA (AA), A (A), BBB (BBB), BB (BB), NR (Not Rated).
 - Credit Score Band: EXCELLENT (Excellent), GOOD (Good), FAIR (Fair), POOR (Poor), THIN_FILE (Thin File).
 - CSM Movement Type: OPENING (Opening Balance), NEW_BUSINESS (New Business), INTEREST_ACCRETION (Interest Accretion), EXPERIENCE_ADJUSTMENT (Experience Adjustment), RELEASE (Release to P&L).
 - Currency: GBP (Pound Sterling), EUR (Euro), USD (US Dollar), CHF (Swiss Franc).
@@ -364,6 +381,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Flood Band: LOW (Low), MODERATE (Moderate), HIGH (High), VERY_HIGH (Very High).
 - Fraud Signal Type: LATE_REPORTING (Late Reporting), PRIOR_CLAIMS (Prior Claims Pattern), VELOCITY (Velocity), DOC_INCONSISTENCY (Document Inconsistency), NETWORK_LINK (Network Link).
 - Hazard Source: ENV_AGENCY (Environment Agency), BGS (Geological Survey), CAT_MODEL (Cat Model), INTERNAL (Internal).
+- Instrument Type: GOVT_BOND (Government Bond), CORP_BOND (Corporate Bond), EQUITY (Equity), CASH (Cash), PROPERTY_FUND (Property Fund).
 - Insured Object Type: BUILDING (Building), VEHICLE (Vehicle), CARGO_SHIPMENT (Cargo Shipment), LIABILITY_EXPOSURE (Liability Exposure).
 - Investment Transaction Type: PURCHASE (Purchase), SALE (Sale), COUPON (Coupon / Interest), DIVIDEND (Dividend), FAIR_VALUE_MOVEMENT (Fair Value Movement).
 - Legal Entity Type: GROUP_HOLDING (Group Holding Company), INSURANCE_SUBSIDIARY (Insurance Subsidiary), REINSURANCE_SUBSIDIARY (Reinsurance Subsidiary), SERVICE_COMPANY (Service Company).
@@ -382,6 +400,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Accounting Period Status: OPEN (Open), CLOSED (Closed), LOCKED (Locked).
 - Policy Event Type: QUOTED (Quoted), BOUND (Bound), ISSUED (Issued), ENDORSED (Endorsed), MTA_REQUESTED (MTA Requested), MTA_APPLIED (MTA Applied), RENEWAL_INVITED (Renewal Invited), RENEWED (Renewed), LAPSED (Lapsed), CANCELLED_INSURED (Cancelled by Insured), CANCELLED_INSURER (Cancelled by Insurer), CANCELLED_NONPAYMENT (Cancelled for Non-Payment), REINSTATED (Reinstated), NTU (Not Taken Up), EXPIRED (Expired).
 - Policy Status: QUOTED (Quoted), BOUND (Bound), IN_FORCE (In Force), EXPIRED (Expired), CANCELLED (Cancelled), LAPSED (Lapsed).
+- Portfolio: GENERAL (General Account), ANNUITY_MA (Annuity (Matching Adjustment)), SURPLUS (Surplus).
 - Premium Transaction Type: WRITTEN (Written Premium), ADJUSTMENT (Adjustment Premium), RETURN (Return Premium).
 - Product Status: PILOT (Pilot), ACTIVE (Active), CLOSED_TO_NEW (Closed to New Business), WITHDRAWN (Withdrawn).
 - Quote Status: OPEN (Open), OFFERED (Offered), CONVERTED (Converted), DECLINED_BY_INSURER (Declined by Insurer), REJECTED_BY_CUSTOMER (Rejected by Customer), EXPIRED (Expired).

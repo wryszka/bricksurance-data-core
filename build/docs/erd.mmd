@@ -99,6 +99,11 @@ erDiagram
         string label
         string description
     }
+    credit_rating {
+        string credit_rating_code PK
+        string label
+        string description
+    }
     credit_score_band {
         string credit_score_band_code PK
         string label
@@ -161,6 +166,11 @@ erDiagram
     }
     hazard_source {
         string hazard_source_code PK
+        string label
+        string description
+    }
+    instrument_type {
+        string instrument_type_code PK
         string label
         string description
     }
@@ -251,6 +261,11 @@ erDiagram
     }
     policy_status {
         string policy_status_code PK
+        string label
+        string description
+    }
+    portfolio {
+        string portfolio_code PK
         string label
         string description
     }
@@ -728,6 +743,32 @@ erDiagram
         decimal amount
         string currency_code
     }
+    asset_cashflow {
+        string asset_cashflow_id PK
+        string instrument_id
+        date cashflow_month
+        decimal coupon_amount
+        decimal redemption_amount
+        string currency_code
+    }
+    asset_valuation_run {
+        string asset_valuation_run_id PK
+        date as_of_date
+        string curve_set
+        string run_hash
+        string source_system_code
+    }
+    instrument {
+        string instrument_id PK
+        string instrument_type_code
+        string issuer
+        string credit_rating_code
+        decimal coupon_rate
+        date maturity_date
+        string currency_code
+        boolean ma_eligible
+        string source_system_code
+    }
     investment_holding {
         string investment_holding_id PK
         string legal_entity_id
@@ -747,6 +788,17 @@ erDiagram
         decimal amount
         string currency_code
         date transaction_date
+        string source_system_code
+    }
+    position {
+        string position_id PK
+        string portfolio_code
+        string instrument_id
+        date as_of_month
+        decimal nominal
+        decimal market_value
+        decimal book_value
+        string currency_code
         string source_system_code
     }
     assumption_set {
@@ -1398,6 +1450,13 @@ erDiagram
     valuation_result }o--|| line_of_business : line_of_business_code
     valuation_result }o--|| valuation_measure : valuation_measure_code
     valuation_result }o--|| currency : currency_code
+    asset_cashflow }o--|| instrument : instrument_id
+    asset_cashflow }o--|| currency : currency_code
+    asset_valuation_run }o--|| source_system : source_system_code
+    instrument }o--|| instrument_type : instrument_type_code
+    instrument }o--|| credit_rating : credit_rating_code
+    instrument }o--|| currency : currency_code
+    instrument }o--|| source_system : source_system_code
     investment_holding }o--|| legal_entity : legal_entity_id
     investment_holding }o--|| asset_class : asset_class_code
     investment_holding }o--|| currency : currency_code
@@ -1406,6 +1465,10 @@ erDiagram
     investment_transaction }o--|| investment_transaction_type : investment_transaction_type_code
     investment_transaction }o--|| currency : currency_code
     investment_transaction }o--|| source_system : source_system_code
+    position }o--|| portfolio : portfolio_code
+    position }o--|| instrument : instrument_id
+    position }o--|| currency : currency_code
+    position }o--|| source_system : source_system_code
     assumption_set }o--|| assumption_type : assumption_type_code
     assumption_set }o--|| assumption_status : assumption_status_code
     assumption_set }o--|| source_system : source_system_code

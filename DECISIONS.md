@@ -127,3 +127,29 @@ Model v0.12.0, deployed, **smoke 54/54 pass**.
   spine + re-materialising versions) is intentionally deferred to a workbench runtime;
   data-core stays declarative and rebuildable.
 - App refreshed to v0.12.0 + redeployed.
+
+---
+
+## 2026-08-28 — Phase 5 (WP3 Assets & ALM) COMPLETE
+
+Model v0.13.0, deployed, **smoke 60/60 pass**. Extended the `investment` domain (D3).
+- Entities: instrument, position (time series), asset_cashflow, asset_valuation_run
+  (renamed from spec's valuation_run to avoid the life.valuation_run clash). Code sets:
+  instrument_type, credit_rating, portfolio.
+- Governed tools: fn_duration (cashflow-weighted mean time, stylised Macaulay, labelled),
+  fn_duration_gap, fn_stress_mv (first-order duration sensitivity, no convexity, labelled).
+- Publication views: vw_s2_market_inputs (S2 market-risk inputs), vw_alm_annuity_match
+  (annuity asset cashflows by year). Metric: asset_metrics.
+- Seed: 200 instruments, 3 portfolios, 6 month-ends of positions, bond cashflows. The
+  ANNUITY_MA portfolio built long so **asset duration ~9.76y vs a 9.0y liability -> gap
+  ~0.76y** (nonzero and interesting, per spec ~0.8y target).
+- **GOTCHA (important, cost two redeploys):** the deploy applies files in SORTED order, so
+  `30_` views deploy BEFORE `40_` functions -> a view that CALLS a UC function fails
+  ("UNRESOLVED_ROUTINE") and aborts the whole deploy mid-run (FKs + demo data after it
+  never apply). Fix: **views must not call UC functions** — inline the math (vw_s2_market_inputs
+  now inlines duration/stress; fn_* remain as callable tools for smoke/apps). Applies to all
+  future WPs (e.g. WP6 breach views).
+- **GOTCHA reconfirmed:** generate.py wipes build/ incl. 95_demo_data.sql -> ALWAYS run
+  world_engine BEFORE deploy, or new tables deploy empty (WP3 tables were empty until
+  world_engine re-run).
+- S2 workbench migration and ESTATE_MANIFEST wiring remain out of scope (publish-only).

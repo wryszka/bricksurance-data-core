@@ -1,0 +1,21 @@
+kind: code_set
+name: instrument_type
+title: Instrument Type
+description: >
+  Kinds of investment instrument the asset side of the balance sheet holds.
+codes:
+  - code: GOVT_BOND
+    label: Government Bond
+    description: Sovereign or supranational fixed-income security.
+  - code: CORP_BOND
+    label: Corporate Bond
+    description: Corporate fixed-income security.
+  - code: EQUITY
+    label: Equity
+    description: Listed equity holding.
+  - code: CASH
+    label: Cash
+    description: Cash and cash equivalents.
+  - code: PROPERTY_FUND
+    label: Property Fund
+    description: Pooled real-estate investment.

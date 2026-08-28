@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.12.0. Do not edit.*
+*Generated from model v0.13.0. Do not edit.*
 
 ## Account Type (`reference.account_type`)
 
@@ -292,6 +292,20 @@ Kinds of cover that can be granted under a policy. A policy bundles one or more 
 
 **Primary key:** coverage_type_code
 
+## Credit Rating (`reference.credit_rating`)
+
+Credit quality banding of a fixed-income instrument, best to sub-investment.
+
+**Grain:** One row per credit rating code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| credit_rating_code | string | yes | Code value; referenced by credit_rating_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** credit_rating_code
+
 ## Credit Score Band (`reference.credit_score_band`)
 
 Banded consumer credit rating from a bureau summary. Banded, never the raw score, so the attribute can be used in rating without holding fine-grained bureau data. Bureau data is used only where permitted and disclosed.
@@ -477,6 +491,20 @@ Provenance of a geospatial hazard rating - which external model or authority the
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** hazard_source_code
+
+## Instrument Type (`reference.instrument_type`)
+
+Kinds of investment instrument the asset side of the balance sheet holds.
+
+**Grain:** One row per instrument type code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| instrument_type_code | string | yes | Code value; referenced by instrument_type_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** instrument_type_code
 
 ## Insured Object Type (`reference.insured_object_type`)
 
@@ -739,6 +767,20 @@ Lifecycle status of a policy contract. Status reflects the contract as a whole; 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** policy_status_code
+
+## Portfolio (`reference.portfolio`)
+
+The asset portfolios the balance sheet is managed in. The annuity portfolio is cashflow-matched under the matching adjustment; surplus is free assets.
+
+**Grain:** One row per portfolio code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| portfolio_code | string | yes | Code value; referenced by portfolio_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** portfolio_code
 
 ## Premium Transaction Type (`reference.premium_transaction_type`)
 
@@ -1781,6 +1823,59 @@ A published valuation figure: one measure (BEL, technical provision, IBNR, SCR, 
 
 **Primary key:** valuation_result_id
 
+## Asset Cashflow (`investment.asset_cashflow`)
+
+A projected future cashflow of an instrument - coupon and/or redemption in a month. The input to duration, matching and ALM: the asset leg the annuity liability cashflows are matched against.
+
+**Grain:** One row per instrument per future cashflow month.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| asset_cashflow_id | string | yes | Identifier for the cashflow. | internal |  |  |
+| instrument_id | string | yes | Instrument the cashflow belongs to. | internal |  |  |
+| cashflow_month | date | yes | Month the cashflow occurs in. | internal |  |  |
+| coupon_amount | decimal(18,2) |  | Coupon paid in the month, per unit nominal held (portfolio-scaled downstream). | confidential |  |  |
+| redemption_amount | decimal(18,2) |  | Principal redeemed in the month, per unit nominal. | confidential |  |  |
+| currency_code | string | yes | Currency of the cashflow. | internal |  |  |
+
+**Primary key:** asset_cashflow_id
+
+## Asset Valuation Run (`investment.asset_valuation_run`)
+
+A dated valuation of the asset portfolios against a curve set - the governed run behind position market values and the stress inputs. Named distinctly from the actuarial life.valuation_run to avoid collision.
+
+**Grain:** One row per asset valuation run.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| asset_valuation_run_id | string | yes | Identifier for the run. | internal |  |  |
+| as_of_date | date | yes | Valuation date. | internal |  |  |
+| curve_set | string |  | Discount curve set used (e.g. EIOPA RFR 2026-06), reused from solvency2. | internal |  |  |
+| run_hash | string |  | Hash of the run inputs for reproducibility. | internal |  |  |
+| source_system_code | string | yes | System the run was executed in. | internal |  |  |
+
+**Primary key:** asset_valuation_run_id
+
+## Instrument (`investment.instrument`)
+
+An investment instrument the group can hold - its terms and credit quality. The reference detail behind holdings and positions; a stylised but real asset universe (standard-formula grade), not a full security master.
+
+**Grain:** One row per instrument.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| instrument_id | string | yes | Identifier for the instrument. | internal |  |  |
+| instrument_type_code | string | yes | Kind of instrument. | internal |  |  |
+| issuer | string |  | Issuer name. | internal |  |  |
+| credit_rating_code | string |  | Credit quality banding. | internal |  |  |
+| coupon_rate | decimal(8,4) |  | Annual coupon rate for fixed income; empty for non-coupon assets. | internal |  |  |
+| maturity_date | date |  | Redemption date for fixed income; empty for perpetual/equity/cash. | internal |  |  |
+| currency_code | string | yes | Instrument currency. | internal |  |  |
+| ma_eligible | boolean |  | Whether the instrument is eligible for a matching-adjustment portfolio. | internal |  |  |
+| source_system_code | string | yes | System of record the instrument is held in. | internal |  |  |
+
+**Primary key:** instrument_id
+
 ## Investment Holding (`investment.investment_holding`)
 
 An investment asset held by a legal entity - the asset side of the balance sheet. Book cost and market value are carried here; income and revaluations are transactional. Without this domain there is no balance sheet and no asset-liability conversation.
@@ -1819,6 +1914,27 @@ A movement on an investment holding - purchase, sale, coupon, dividend or fair-v
 | source_system_code | string | yes | System of record. | internal |  |  |
 
 **Primary key:** investment_transaction_id
+
+## Position (`investment.position`)
+
+The holding of an instrument in a portfolio as at a month-end - nominal, market and book value. The time series that duration, yield and stress are computed over.
+
+**Grain:** One row per portfolio per instrument per as-of month.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| position_id | string | yes | Identifier for the position row. | internal |  |  |
+| portfolio_code | string | yes | Portfolio the position sits in. | internal |  |  |
+| instrument_id | string | yes | Instrument held. | internal |  |  |
+| as_of_month | date | yes | Month-end the position is struck at. | internal |  |  |
+| nominal | decimal(18,2) |  | Nominal / face amount held, in instrument currency. | confidential |  |  |
+| market_value | decimal(18,2) | yes | Market value of the holding, in instrument currency. | confidential |  |  |
+| book_value | decimal(18,2) |  | Amortised book value of the holding, in instrument currency. | confidential |  |  |
+| currency_code | string | yes | Currency of the values. | internal |  |  |
+| source_system_code | string | yes | System of record the position is held in. | internal |  |  |
+
+**Primary key:** position_id
+**Natural key:** portfolio_code, instrument_id, as_of_month
 
 ## Assumption Set (`life.assumption_set`)
 

@@ -1,0 +1,47 @@
+kind: entity
+name: asset_cashflow
+domain: investment
+title: Asset Cashflow
+description: >
+  A projected future cashflow of an instrument - coupon and/or redemption in a
+  month. The input to duration, matching and ALM: the asset leg the annuity
+  liability cashflows are matched against.
+grain: One row per instrument per future cashflow month.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: asset_cashflow_id
+    type: string
+    required: true
+    description: Identifier for the cashflow.
+    classification: internal
+  - name: instrument_id
+    references: instrument
+    type: string
+    required: true
+    description: Instrument the cashflow belongs to.
+    classification: internal
+  - name: cashflow_month
+    type: date
+    required: true
+    description: Month the cashflow occurs in.
+    classification: internal
+  - name: coupon_amount
+    type: decimal(18,2)
+    required: false
+    description: Coupon paid in the month, per unit nominal held (portfolio-scaled downstream).
+    classification: confidential
+  - name: redemption_amount
+    type: decimal(18,2)
+    required: false
+    description: Principal redeemed in the month, per unit nominal.
+    classification: confidential
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the cashflow.
+    classification: internal
+keys:
+  primary: [asset_cashflow_id]
+owner: Chief Investment Officer
