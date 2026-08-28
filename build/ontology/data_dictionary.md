@@ -1,6 +1,6 @@
 # Bricksurance Data Core — Data Dictionary
 
-*Generated from model v0.11.0. Do not edit.*
+*Generated from model v0.12.0. Do not edit.*
 
 ## Account Type (`reference.account_type`)
 
@@ -855,6 +855,20 @@ How a fired referral was resolved - what the underwriter decided after the rule 
 | description | string | yes | Business definition of the code. |  |  |  |
 
 **Primary key:** referral_outcome_code
+
+## Renewal Outcome (`reference.renewal_outcome`)
+
+How a renewal cycle resolved - renewed, or lapsed with the reason. Separating price-driven lapse from other lapse is what makes retention analysis and the renewal loop meaningful.
+
+**Grain:** One row per renewal outcome code.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| renewal_outcome_code | string | yes | Code value; referenced by renewal_outcome_code columns across the model. |  |  |  |
+| label | string | yes | Short human-readable name for the code. |  |  |  |
+| description | string | yes | Business definition of the code. |  |  |  |
+
+**Primary key:** renewal_outcome_code
 
 ## Reporting Level (`reference.reporting_level`)
 
@@ -2245,6 +2259,13 @@ A signed premium movement on a policy. Premium is transactional by design: figur
 | premium_transaction_type_code | string | yes | Kind of premium movement. | internal |  |  |
 | amount | decimal(18,2) | yes | Signed amount of the movement in the transaction currency: written and positive adjustments positive, returns negative. | confidential |  |  |
 | currency_code | string | yes | Currency of the amount. | internal |  |  |
+| policy_event_id | string |  | The policy lifecycle event that gave rise to this movement (WP1 spine) - every premium movement is caused by an event (bind, MTA, cancellation). | internal |  |  |
+| ipt_amount | decimal(18,2) |  | Insurance premium tax on the movement, in the transaction currency. | confidential |  |  |
+| commission_amount | decimal(18,2) |  | Broker commission on the movement, in the transaction currency. | confidential |  |  |
+| commission_rate | decimal(6,4) |  | Commission rate applied to the gross premium on this movement. | confidential |  |  |
+| broker_party_id | string |  | Broker party the commission is payable to, where the business is intermediated. | internal |  |  |
+| inception_date | date |  | Cover start date the premium is earned from. | internal |  |  |
+| expiry_date | date |  | Cover end date the premium is earned to. | internal |  |  |
 | transaction_date | date | yes | Date the movement was booked. | internal |  |  |
 | source_system_code | string | yes | System of record the movement originates from. | internal |  |  |
 
@@ -2763,6 +2784,47 @@ A layer of a treaty programme: limit and attachment for non-proportional forms, 
 | reinstatement_premium_rate | decimal(5,4) |  | Reinstatement premium as a fraction of the layer premium. | confidential |  |  |
 
 **Primary key:** treaty_layer_id
+
+## Renewal Case (`renewal.renewal_case`)
+
+One policy's renewal cycle - the invitation, the price offered versus the prior premium (the price walk), a synthetic competitor reference, and the outcome. This is the unit the renewal loop acts on: change the renewal price and the outcome draw changes next period.
+
+**Grain:** One row per policy per renewal cycle.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| renewal_case_id | string | yes | Identifier for the renewal case. | internal |  |  |
+| policy_id | string | yes | The policy up for renewal. | internal |  |  |
+| chain_id | string | yes | Renewal chain the policy belongs to (from renewal_chain). | internal |  |  |
+| invited_date | date | yes | Date the renewal invitation was issued. | internal |  |  |
+| expiry_date | date | yes | Expiry date of the term being renewed. | internal |  |  |
+| prior_premium | decimal(18,2) |  | Premium on the expiring term, in policy currency. | confidential |  |  |
+| renewal_premium_offered | decimal(18,2) |  | Premium offered at renewal, in policy currency. | confidential |  |  |
+| price_walk_pct | decimal(7,4) |  | Offered over prior premium minus one - the price walk. | confidential |  |  |
+| competitor_ref_premium | decimal(18,2) |  | Synthetic market reference premium for comparison (illustrative). | confidential |  |  |
+| renewal_outcome_code | string | yes | How the renewal resolved. | internal |  |  |
+| outcome_date | date |  | Date the outcome was recorded. | internal |  |  |
+| currency_code | string | yes | Currency of the premiums. | internal |  |  |
+| source_system_code | string | yes | System the renewal case originates from. | internal |  |  |
+
+**Primary key:** renewal_case_id
+
+## Retention Response Curve (`renewal.retention_response_curve`)
+
+Observed renewal probability by segment and price-walk band - the demand curve the renewal loop draws outcomes from. Calibrated from the same logit machinery the gen2 pricing repo built for new-business elasticity (reused, not re-derived). Higher price walk means lower retention, monotonically, within a segment.
+
+**Grain:** One row per segment per price-walk band.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| retention_response_curve_id | string | yes | Identifier for the curve point. | internal |  |  |
+| segment | string | yes | Customer or product segment the curve applies to. | internal |  |  |
+| price_walk_band | string | yes | Price-walk band, e.g. 0-5%, 5-10%, 10-20%, 20%+. | internal |  |  |
+| renewal_probability | decimal(6,4) | yes | Modelled probability of renewal in this band, 0 to 1. | confidential |  |  |
+| observations | integer |  | Number of observed cases the point was calibrated on. | internal |  |  |
+
+**Primary key:** retention_response_curve_id
+**Natural key:** segment, price_walk_band
 
 ## Reserve Estimate (`reserving.reserve_estimate`)
 

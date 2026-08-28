@@ -1,6 +1,6 @@
 # Bricksurance Data Core - Metric Catalog
 
-*Generated from model v0.11.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+*Generated from model v0.12.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
 
 ## Policy Lifecycle Metrics (`policy_lifecycle.lifecycle_metrics`)
 
@@ -20,6 +20,23 @@ Flow KPIs over the policy event spine - new business, renewals, lapses, cancella
 | `cancelled_count` | Policies cancelled mid-term (any cause). | `COUNT(DISTINCT CASE WHEN policy_event_type_code IN ('CANCELLED_INSURED', 'CANCELLED_INSURER', 'CANCELLED_NONPAYMENT') THEN policy_id END)` |
 | `mta_count` | Mid-term adjustments applied. | `COUNT(CASE WHEN policy_event_type_code = 'MTA_APPLIED' THEN event_id END)` |
 | `retention_rate` | Renewed over invited - chain-based retention rate. | `COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWED' THEN policy_id END) / NULLIF(COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWAL_INVITED' THEN policy_id END), 0)` |
+
+## Renewal Metrics (`renewal.renewal_metrics`)
+
+Retention KPIs over renewal cases - retention rate, average price walk and the premium lost to lapse, by line, price-walk band and currency. This is the loop's scoreboard: as renewal prices change, retention and lapse value move. Query measures with MEASURE(name).
+
+**Owner:** Chief Pricing Actuary · **Certification:** draft · **Source:** `renewal.renewal_case`
+
+**Dimensions:** line_of_business_code, price_walk_band, renewal_outcome_code, currency_code
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `case_count` | Number of renewal cases. | `COUNT(renewal_case_id)` |
+| `renewed_count` | Renewal cases that renewed. | `COUNT(CASE WHEN renewal_outcome_code = 'RENEWED' THEN renewal_case_id END)` |
+| `lapsed_count` | Renewal cases that lapsed. | `COUNT(CASE WHEN renewal_outcome_code IN ('LAPSED_PRICE', 'LAPSED_OTHER') THEN renewal_case_id END)` |
+| `retention_rate` | Renewed over all resolved cases. | `COUNT(CASE WHEN renewal_outcome_code = 'RENEWED' THEN renewal_case_id END) / NULLIF(COUNT(renewal_case_id), 0)` |
+| `avg_price_walk` | Average price walk offered. | `AVG(price_walk_pct)` |
+| `lapse_gwp` | Prior premium of lapsed policies - GWP lost to lapse, original currency. | `SUM(CASE WHEN renewal_outcome_code IN ('LAPSED_PRICE', 'LAPSED_OTHER') THEN prior_premium ELSE 0 END)` |
 
 ## Reserving Metrics (`reserving.reserving_metrics`)
 
@@ -125,6 +142,21 @@ The underwriting result: earned premium, incurred claims, expenses and the loss 
 | `loss_ratio` | The loss ratio: claims incurred over EARNED premium. This is the canonical, reporting-basis definition. (underwriting_metrics.loss_ratio_written is the quick written-basis view.) Meaningful within a single currency. | `SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
 | `expense_ratio` | Expenses over earned premium. | `SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
 | `combined_ratio` | Loss ratio plus expense ratio; below 1.0 is an underwriting profit. | `(SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) + SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)` |
+
+## Premium Metrics (`semantics.premium_metrics`)
+
+Premium administration KPIs over premium movements - written premium, insurance premium tax collected, commission paid and the commission ratio, by line, period and currency. Earned premium and the written=earned+unearned proof live in the premium_earning view and vw_premium_proof. Amounts are in original currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
+
+**Owner:** Financial Controller · **Certification:** draft · **Source:** `policy.premium_transaction`
+
+**Dimensions:** transaction_month, premium_transaction_type_code, line_of_business_code, currency_code
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `gross_written_premium` | Sum of premium movements - gross written premium in original currency. | `SUM(amount)` |
+| `ipt_collected` | Insurance premium tax collected on the movements. | `SUM(ipt_amount)` |
+| `commission_total` | Broker commission on the movements. | `SUM(commission_amount)` |
+| `commission_ratio` | Commission over gross written premium. | `SUM(commission_amount) / NULLIF(SUM(amount), 0)` |
 
 ## Pricing Metrics (`semantics.pricing_metrics`)
 

@@ -1,0 +1,22 @@
+kind: function
+name: fn_earn_premium
+domain: policy
+description: >
+  Earned premium to date for a policy, derived live on a straight-line daily
+  basis over the cover period - never a stored balance. This is the governed
+  earning engine: the same math the premium_earning view uses, callable per
+  policy so any workbench earns premium the one agreed way.
+inputs:
+  - name: in_policy_id
+    type: string
+    description: The policy to earn premium for.
+returns:
+  type: decimal(18,2)
+  description: Gross earned premium to date in policy currency; 0 if none written.
+sql: |
+  (SELECT CAST(COALESCE(SUM(pt.amount * LEAST(1.0, GREATEST(0.0,
+        (datediff(LEAST(current_date(), p.expiry_date), p.inception_date) + 1) / 365.0))), 0)
+      AS DECIMAL(18,2))
+   FROM {policy.premium_transaction} pt
+   JOIN {policy.policy} p ON p.policy_id = pt.policy_id
+   WHERE pt.policy_id = in_policy_id)

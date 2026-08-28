@@ -1,0 +1,48 @@
+kind: metric_view
+name: renewal_metrics
+domain: renewal
+title: Renewal Metrics
+description: >
+  Retention KPIs over renewal cases - retention rate, average price walk and the
+  premium lost to lapse, by line, price-walk band and currency. This is the loop's
+  scoreboard: as renewal prices change, retention and lapse value move. Query
+  measures with MEASURE(name).
+owner: Chief Pricing Actuary
+certification: draft
+source: renewal.renewal_case
+joins:
+  - name: policy
+    source: policy.policy
+    condition: source.policy_id = policy.policy_id
+dimensions:
+  - name: line_of_business_code
+    expr: policy.line_of_business_code
+    description: Line of business of the renewing policy.
+  - name: price_walk_band
+    expr: CASE WHEN source.price_walk_pct < 0.05 THEN '0-5%' WHEN source.price_walk_pct < 0.10 THEN '5-10%' WHEN source.price_walk_pct < 0.20 THEN '10-20%' ELSE '20%+' END
+    description: Price-walk band derived from the offered-over-prior increase.
+  - name: renewal_outcome_code
+    expr: source.renewal_outcome_code
+    description: How the renewal resolved.
+  - name: currency_code
+    expr: source.currency_code
+    description: Currency of the premiums. Group by this before summing money.
+measures:
+  - name: case_count
+    expr: COUNT(renewal_case_id)
+    description: Number of renewal cases.
+  - name: renewed_count
+    expr: COUNT(CASE WHEN renewal_outcome_code = 'RENEWED' THEN renewal_case_id END)
+    description: Renewal cases that renewed.
+  - name: lapsed_count
+    expr: COUNT(CASE WHEN renewal_outcome_code IN ('LAPSED_PRICE', 'LAPSED_OTHER') THEN renewal_case_id END)
+    description: Renewal cases that lapsed.
+  - name: retention_rate
+    expr: COUNT(CASE WHEN renewal_outcome_code = 'RENEWED' THEN renewal_case_id END) / NULLIF(COUNT(renewal_case_id), 0)
+    description: Renewed over all resolved cases.
+  - name: avg_price_walk
+    expr: AVG(price_walk_pct)
+    description: Average price walk offered.
+  - name: lapse_gwp
+    expr: SUM(CASE WHEN renewal_outcome_code IN ('LAPSED_PRICE', 'LAPSED_OTHER') THEN prior_premium ELSE 0 END)
+    description: Prior premium of lapsed policies - GWP lost to lapse, original currency.

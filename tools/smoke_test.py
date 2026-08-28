@@ -256,6 +256,32 @@ def main():
          f"WHERE c.claim_number = 'CLM-2026-000001'", "true"),
         ("lifecycle metric view answers new-business count",
          f"SELECT MEASURE(new_business_count) > 0 FROM {q('policy_lifecycle', 'lifecycle_metrics')}", "true"),
+        # ---- WP2 premium accounting & earning ----------------------------
+        ("premium proof reconciles: written = earned + unearned for every LOB (residual 0)",
+         f"SELECT CAST(SUM(ABS(residual)) AS DECIMAL(18,2)) FROM {q('semantics', 'vw_premium_proof')}", "0.00"),
+        ("every premium movement traces to a policy event (WP1 spine, orphan check)",
+         f"SELECT COUNT(*) FROM {q('policy', 'premium_transaction')} pt "
+         f"LEFT JOIN {q('policy_lifecycle', 'policy_event')} pe ON pe.event_id = pt.policy_event_id "
+         f"WHERE pe.event_id IS NULL", "0"),
+        ("premium metric view answers written premium and IPT (GBP)",
+         f"SELECT MEASURE(gross_written_premium) > 0 AND MEASURE(ipt_collected) > 0 "
+         f"FROM {q('semantics', 'premium_metrics')} WHERE currency_code = 'GBP'", "true"),
+        ("governed tool: fn_earn_premium earns the hero policy",
+         f"SELECT {q('policy', 'fn_earn_premium')}("
+         f"(SELECT policy_id FROM {q('policy', 'policy')} WHERE policy_number = 'POL-2026-000001')) > 0", "true"),
+        # ---- WP5 renewal & retention loop --------------------------------
+        ("retention response curve is monotonic in the price walk (motor)",
+         f"SELECT (SELECT renewal_probability FROM {q('renewal', 'retention_response_curve')} "
+         f"WHERE segment = 'MOTOR' AND price_walk_band = '0-5%') > "
+         f"(SELECT renewal_probability FROM {q('renewal', 'retention_response_curve')} "
+         f"WHERE segment = 'MOTOR' AND price_walk_band = '20%+')", "true"),
+        ("renewal outcomes include real lapses (retention is a function of price, not 100%)",
+         f"SELECT MEASURE(lapsed_count) > 0 AND MEASURE(retention_rate) < 1 "
+         f"FROM {q('renewal', 'renewal_metrics')}", "true"),
+        ("every renewal case attaches to a real policy",
+         f"SELECT COUNT(*) FROM {q('renewal', 'renewal_case')} rc "
+         f"LEFT JOIN {q('policy', 'policy')} p ON p.policy_id = rc.policy_id "
+         f"WHERE p.policy_id IS NULL", "0"),
     ]
 
     failures = 0

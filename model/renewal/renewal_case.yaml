@@ -1,0 +1,83 @@
+kind: entity
+name: renewal_case
+domain: renewal
+title: Renewal Case
+description: >
+  One policy's renewal cycle - the invitation, the price offered versus the prior
+  premium (the price walk), a synthetic competitor reference, and the outcome.
+  This is the unit the renewal loop acts on: change the renewal price and the
+  outcome draw changes next period.
+grain: One row per policy per renewal cycle.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: renewal_case_id
+    type: string
+    required: true
+    description: Identifier for the renewal case.
+    classification: internal
+  - name: policy_id
+    references: policy
+    type: string
+    required: true
+    description: The policy up for renewal.
+    classification: internal
+  - name: chain_id
+    type: string
+    required: true
+    description: Renewal chain the policy belongs to (from renewal_chain).
+    classification: internal
+  - name: invited_date
+    type: date
+    required: true
+    description: Date the renewal invitation was issued.
+    classification: internal
+  - name: expiry_date
+    type: date
+    required: true
+    description: Expiry date of the term being renewed.
+    classification: internal
+  - name: prior_premium
+    type: decimal(18,2)
+    required: false
+    description: Premium on the expiring term, in policy currency.
+    classification: confidential
+  - name: renewal_premium_offered
+    type: decimal(18,2)
+    required: false
+    description: Premium offered at renewal, in policy currency.
+    classification: confidential
+  - name: price_walk_pct
+    type: decimal(7,4)
+    required: false
+    description: Offered over prior premium minus one - the price walk.
+    classification: confidential
+  - name: competitor_ref_premium
+    type: decimal(18,2)
+    required: false
+    description: Synthetic market reference premium for comparison (illustrative).
+    classification: confidential
+  - name: renewal_outcome_code
+    code_set: renewal_outcome
+    required: true
+    description: How the renewal resolved.
+    classification: internal
+  - name: outcome_date
+    type: date
+    required: false
+    description: Date the outcome was recorded.
+    classification: internal
+  - name: currency_code
+    code_set: currency
+    required: true
+    description: Currency of the premiums.
+    classification: internal
+  - name: source_system_code
+    code_set: source_system
+    required: true
+    description: System the renewal case originates from.
+    classification: internal
+keys:
+  primary: [renewal_case_id]
+owner: Chief Pricing Actuary

@@ -152,7 +152,9 @@ class World:
                      # underwriting depth
                      "uw_submission", "referral_rule", "referral_event",
                      # policy lifecycle spine (WP1)
-                     "policy_event", "policy_version", "renewal_chain"):
+                     "policy_event", "policy_version", "renewal_chain",
+                     # renewal loop (WP5)
+                     "retention_response_curve", "renewal_case"):
             self.t[name] = []
 
     def n(self, base):
@@ -168,6 +170,9 @@ class World:
 
 
 def build_world(scale):
+    # Reseed so build_world is deterministic per call (idempotent across repeated
+    # calls in one process) - the closed loop and any tool can rebuild identically.
+    rng.seed(20260707)
     w = World(scale)
     pid = {}
 
@@ -1229,7 +1234,111 @@ def build_world(scale):
 
     add_extensions(w)
     add_lifecycle(w)
+    add_premium_finance(w)
+    add_renewal(w)
     return w
+
+
+# Retention response curve: renewal probability by segment (LOB) and price-walk band.
+# Monotonically decreasing in the walk within each segment. Calibrated shape reused
+# from the gen2 pricing elasticity work (values illustrative, deterministic).
+RETENTION_CURVE = {
+    "MOTOR": {"0-5%": 0.92, "5-10%": 0.84, "10-20%": 0.70, "20%+": 0.52},
+    "COMMERCIAL_PROPERTY": {"0-5%": 0.95, "5-10%": 0.90, "10-20%": 0.80, "20%+": 0.66},
+    "GENERAL_LIABILITY": {"0-5%": 0.94, "5-10%": 0.88, "10-20%": 0.77, "20%+": 0.60},
+    "MARINE_CARGO": {"0-5%": 0.93, "5-10%": 0.86, "10-20%": 0.74, "20%+": 0.58},
+}
+
+
+def _walk_band(walk):
+    return ("0-5%" if walk < 0.05 else "5-10%" if walk < 0.10
+            else "10-20%" if walk < 0.20 else "20%+")
+
+
+def add_renewal(w):
+    """WP5 - the renewal & retention loop. Seeds the retention response curve and a
+    renewal case per renewing policy, with the outcome DRAWN from the curve given the
+    price walk - so retention is a real function of price, deterministically. This is
+    the data the closed loop (tools/advance_period.py) advances.
+    """
+    # the curve, as governed data
+    for seg, bands in RETENTION_CURVE.items():
+        for band, prob in bands.items():
+            w.add("retention_response_curve",
+                  retention_response_curve_id=f"rrc_{seg}_{band}".replace("%", "").replace("-", "_"),
+                  segment=seg, price_walk_band=band, renewal_probability=prob,
+                  observations=200)
+
+    prem_by_policy = {}
+    for pt in w.t["premium_transaction"]:
+        if pt.get("premium_transaction_type_code") == "WRITTEN":
+            prem_by_policy[pt["policy_id"]] = float(pt.get("amount") or 0)
+    chain_of = {rc["policy_id"]: rc["chain_id"] for rc in w.t["renewal_chain"]}
+
+    # a renewal case for every policy with a premium (its upcoming/played renewal)
+    for p in w.t["policy"]:
+        pid = p["policy_id"]
+        prior = round(prem_by_policy.get(pid, 0) or 0, 2)
+        if not prior:
+            continue
+        lob = p["line_of_business_code"]
+        curve = RETENTION_CURVE.get(lob, RETENTION_CURVE["MOTOR"])
+        try:
+            pnum = int(pid.split("_")[-1])
+        except ValueError:
+            pnum = 0
+        # deterministic price walk in [0, 0.28], and a deterministic uniform draw
+        walk = round(((pnum * 37) % 29) / 100.0, 4)
+        band = _walk_band(walk)
+        prob = curve[band]
+        u = ((pnum * 2654435761) % 1000) / 1000.0
+        if u < prob:
+            outcome = "RENEWED"
+        else:
+            outcome = "LAPSED_PRICE" if walk >= 0.10 else "LAPSED_OTHER"
+        offered = round(prior * (1 + walk), 2)
+        comp = round(prior * (0.95 + ((pnum * 13) % 11) / 100.0), 2)
+        inv = p["expiry_date"] - timedelta(days=21)
+        w.add("renewal_case", renewal_case_id=f"rnl_{pid}", policy_id=pid,
+              chain_id=chain_of.get(pid, pid), invited_date=inv,
+              expiry_date=p["expiry_date"], prior_premium=prior,
+              renewal_premium_offered=offered, price_walk_pct=walk,
+              competitor_ref_premium=comp, renewal_outcome_code=outcome,
+              outcome_date=p["expiry_date"], currency_code=p["currency_code"],
+              source_system_code="PAS_CORE")
+
+
+def add_premium_finance(w):
+    """WP2 - enrich premium movements with the event link, IPT, commission, broker
+    and cover dates. Extends the existing premium_transaction rather than forking a
+    premium domain (DECISIONS D2). Runs after add_lifecycle so BOUND events exist.
+    """
+    pol_by_id = {p["policy_id"]: p for p in w.t["policy"]}
+    # broker per policy from the commission sub-ledger (NEW_BUSINESS / RENEWAL rows)
+    broker_by_policy = {}
+    for c in w.t["commission_transaction"]:
+        if c.get("commission_type_code") in ("NEW_BUSINESS", "RENEWAL"):
+            broker_by_policy[c["policy_id"]] = (c.get("party_id"), float(c.get("rate") or 0))
+    for pt in w.t["premium_transaction"]:
+        pid = pt["policy_id"]
+        p = pol_by_id.get(pid)
+        if not p:
+            continue
+        amount = float(pt.get("amount") or 0)
+        # every movement is caused by the bind event (evt_{pid}_02); deterministic id
+        pt["policy_event_id"] = f"evt_{pid}_02"
+        pt["inception_date"] = p["inception_date"]
+        pt["expiry_date"] = p["expiry_date"]
+        # IPT at 12% on GBP business (mirrors tax_transaction), else 0
+        pt["ipt_amount"] = round(amount * 0.12, 2) if pt.get("currency_code") == "GBP" else 0.0
+        broker = broker_by_policy.get(pid)
+        if broker and broker[0]:
+            pt["broker_party_id"] = broker[0]
+            pt["commission_rate"] = round(broker[1], 4)
+            pt["commission_amount"] = round(amount * broker[1], 2)
+        else:
+            pt["commission_amount"] = 0.0
+            pt["commission_rate"] = 0.0
 
 
 def add_lifecycle(w):
@@ -1771,7 +1880,9 @@ def main():
              # underwriting depth
              "uw_submission", "referral_rule", "referral_event",
              # policy lifecycle spine (events before versions; renewal_chain last)
-             "policy_event", "policy_version", "renewal_chain"]
+             "policy_event", "policy_version", "renewal_chain",
+             # renewal loop (WP5)
+             "retention_response_curve", "renewal_case"]
     missing = set(order) - set(entities)
     assert not missing, f"world emits unknown entities: {missing}"
 

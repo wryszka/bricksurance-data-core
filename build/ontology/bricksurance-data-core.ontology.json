@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with an indicative Lloyd's Core Data Record crosswalk. The crosswalk is a hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names, not a verified extract from the licensed models; element names are cited only, and the licensed standards are not reproduced.",
   "domains": [
@@ -61,6 +61,10 @@
     {
       "name": "pricing",
       "description": "The rating structure - factors, their levels and relativities, engine configurations and the derived factor contributions on a quote or policy. Pricing decisions become explainable data: a quoted premium decomposes into the factors and relativities that produced it, and the engine config cites the model version behind it.\n"
+    },
+    {
+      "name": "renewal",
+      "description": "The renewal and retention loop - each policy's renewal cycle (invitation, price walk, competitor reference, outcome) and the observed retention response by segment and price-walk band. This is where the twin manages business in force rather than only writing it once, and the substrate for the closed loop that lets a pricing decision change next period's book.\n"
     },
     {
       "name": "distribution",
@@ -2051,6 +2055,34 @@
           "code": "AUTO",
           "label": "Auto-Resolved",
           "description": "Resolved automatically without human intervention."
+        }
+      ]
+    },
+    {
+      "kind": "code_set",
+      "name": "renewal_outcome",
+      "title": "Renewal Outcome",
+      "description": "How a renewal cycle resolved - renewed, or lapsed with the reason. Separating price-driven lapse from other lapse is what makes retention analysis and the renewal loop meaningful.\n",
+      "codes": [
+        {
+          "code": "RENEWED",
+          "label": "Renewed",
+          "description": "The policy renewed into a successor term."
+        },
+        {
+          "code": "LAPSED_PRICE",
+          "label": "Lapsed (price)",
+          "description": "Not renewed; the customer left over price."
+        },
+        {
+          "code": "LAPSED_OTHER",
+          "label": "Lapsed (other)",
+          "description": "Not renewed for a non-price reason."
+        },
+        {
+          "code": "PENDING",
+          "label": "Pending",
+          "description": "Renewal invited; outcome not yet known."
         }
       ]
     },
@@ -7097,6 +7129,57 @@
           "classification": "internal"
         },
         {
+          "name": "policy_event_id",
+          "references": "policy_event",
+          "type": "string",
+          "required": false,
+          "description": "The policy lifecycle event that gave rise to this movement (WP1 spine) - every premium movement is caused by an event (bind, MTA, cancellation).\n",
+          "classification": "internal"
+        },
+        {
+          "name": "ipt_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Insurance premium tax on the movement, in the transaction currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "commission_amount",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Broker commission on the movement, in the transaction currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "commission_rate",
+          "type": "decimal(6,4)",
+          "required": false,
+          "description": "Commission rate applied to the gross premium on this movement.",
+          "classification": "confidential"
+        },
+        {
+          "name": "broker_party_id",
+          "references": "party",
+          "type": "string",
+          "required": false,
+          "description": "Broker party the commission is payable to, where the business is intermediated.",
+          "classification": "internal"
+        },
+        {
+          "name": "inception_date",
+          "type": "date",
+          "required": false,
+          "description": "Cover start date the premium is earned from.",
+          "classification": "internal"
+        },
+        {
+          "name": "expiry_date",
+          "type": "date",
+          "required": false,
+          "description": "Cover end date the premium is earned to.",
+          "classification": "internal"
+        },
+        {
           "name": "transaction_date",
           "type": "date",
           "required": true,
@@ -9227,6 +9310,177 @@
     },
     {
       "kind": "entity",
+      "name": "renewal_case",
+      "domain": "renewal",
+      "title": "Renewal Case",
+      "description": "One policy's renewal cycle - the invitation, the price offered versus the prior premium (the price walk), a synthetic competitor reference, and the outcome. This is the unit the renewal loop acts on: change the renewal price and the outcome draw changes next period.\n",
+      "grain": "One row per policy per renewal cycle.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "renewal_case_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the renewal case.",
+          "classification": "internal"
+        },
+        {
+          "name": "policy_id",
+          "references": "policy",
+          "type": "string",
+          "required": true,
+          "description": "The policy up for renewal.",
+          "classification": "internal"
+        },
+        {
+          "name": "chain_id",
+          "type": "string",
+          "required": true,
+          "description": "Renewal chain the policy belongs to (from renewal_chain).",
+          "classification": "internal"
+        },
+        {
+          "name": "invited_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the renewal invitation was issued.",
+          "classification": "internal"
+        },
+        {
+          "name": "expiry_date",
+          "type": "date",
+          "required": true,
+          "description": "Expiry date of the term being renewed.",
+          "classification": "internal"
+        },
+        {
+          "name": "prior_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Premium on the expiring term, in policy currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "renewal_premium_offered",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Premium offered at renewal, in policy currency.",
+          "classification": "confidential"
+        },
+        {
+          "name": "price_walk_pct",
+          "type": "decimal(7,4)",
+          "required": false,
+          "description": "Offered over prior premium minus one - the price walk.",
+          "classification": "confidential"
+        },
+        {
+          "name": "competitor_ref_premium",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Synthetic market reference premium for comparison (illustrative).",
+          "classification": "confidential"
+        },
+        {
+          "name": "renewal_outcome_code",
+          "code_set": "renewal_outcome",
+          "required": true,
+          "description": "How the renewal resolved.",
+          "classification": "internal"
+        },
+        {
+          "name": "outcome_date",
+          "type": "date",
+          "required": false,
+          "description": "Date the outcome was recorded.",
+          "classification": "internal"
+        },
+        {
+          "name": "currency_code",
+          "code_set": "currency",
+          "required": true,
+          "description": "Currency of the premiums.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "System the renewal case originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "renewal_case_id"
+        ]
+      },
+      "owner": "Chief Pricing Actuary"
+    },
+    {
+      "kind": "entity",
+      "name": "retention_response_curve",
+      "domain": "renewal",
+      "title": "Retention Response Curve",
+      "description": "Observed renewal probability by segment and price-walk band - the demand curve the renewal loop draws outcomes from. Calibrated from the same logit machinery the gen2 pricing repo built for new-business elasticity (reused, not re-derived). Higher price walk means lower retention, monotonically, within a segment.\n",
+      "grain": "One row per segment per price-walk band.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "crosswalk_status": "candidate",
+      "attributes": [
+        {
+          "name": "retention_response_curve_id",
+          "type": "string",
+          "required": true,
+          "description": "Identifier for the curve point.",
+          "classification": "internal"
+        },
+        {
+          "name": "segment",
+          "type": "string",
+          "required": true,
+          "description": "Customer or product segment the curve applies to.",
+          "classification": "internal"
+        },
+        {
+          "name": "price_walk_band",
+          "type": "string",
+          "required": true,
+          "description": "Price-walk band, e.g. 0-5%, 5-10%, 10-20%, 20%+.",
+          "classification": "internal"
+        },
+        {
+          "name": "renewal_probability",
+          "type": "decimal(6,4)",
+          "required": true,
+          "description": "Modelled probability of renewal in this band, 0 to 1.",
+          "classification": "confidential"
+        },
+        {
+          "name": "observations",
+          "type": "integer",
+          "required": false,
+          "description": "Number of observed cases the point was calibrated on.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "retention_response_curve_id"
+        ],
+        "natural": [
+          "segment",
+          "price_walk_band"
+        ]
+      },
+      "owner": "Chief Pricing Actuary"
+    },
+    {
+      "kind": "entity",
       "name": "reserve_estimate",
       "domain": "reserving",
       "title": "Reserve Estimate",
@@ -9407,6 +9661,15 @@
       "description": "Earned premium, incurred claims and allocated expenses as one component stream, so ratio metrics (loss, expense, combined) are defined over a single source. Expenses are allocated at line level, not underwriting year.\n",
       "grain": "One row per component per line of business (per underwriting year where applicable) per currency.",
       "sql": "SELECT line_of_business_code, underwriting_year, currency_code,\n       'EARNED' AS component, earned_premium AS amount\nFROM {semantics.premium_earning}\nUNION ALL\nSELECT p.line_of_business_code, p.underwriting_year, ct.currency_code,\n       'INCURRED' AS component, ct.amount\nFROM {claim.claim_transaction} ct\nJOIN {claim.claim} c ON c.claim_id = ct.claim_id\nJOIN {policy.policy} p ON p.policy_id = c.policy_id\nUNION ALL\nSELECT line_of_business_code, CAST(NULL AS BIGINT), currency_code,\n       'EXPENSE' AS component, amount\nFROM {finance.expense_transaction}\n"
+    },
+    {
+      "kind": "view",
+      "name": "vw_premium_proof",
+      "domain": "semantics",
+      "title": "Premium Proof (written = earned + unearned)",
+      "description": "The premium reconciliation, by line of business and currency: written premium equals earned to date plus unearned (UPR). The residual must be zero - this is the proof that the earning engine conserves premium, shown as one number a controller can trust. Derived from the premium_earning view.\n",
+      "grain": "One row per line of business per currency.",
+      "sql": "SELECT\n  line_of_business_code,\n  currency_code,\n  CAST(SUM(written_premium) AS DECIMAL(18,2)) AS written_premium,\n  CAST(SUM(earned_premium) AS DECIMAL(18,2)) AS earned_premium,\n  CAST(SUM(unearned_premium) AS DECIMAL(18,2)) AS unearned_premium,\n  CAST(SUM(written_premium) - SUM(earned_premium) - SUM(unearned_premium)\n    AS DECIMAL(18,2)) AS residual\nFROM {semantics.premium_earning}\nGROUP BY line_of_business_code, currency_code\n"
     }
   ],
   "metric_views": [
@@ -9493,6 +9756,77 @@
           "name": "retention_rate",
           "expr": "COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWED' THEN policy_id END) / NULLIF(COUNT(DISTINCT CASE WHEN policy_event_type_code = 'RENEWAL_INVITED' THEN policy_id END), 0)",
           "description": "Renewed over invited - chain-based retention rate."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "renewal_metrics",
+      "domain": "renewal",
+      "title": "Renewal Metrics",
+      "description": "Retention KPIs over renewal cases - retention rate, average price walk and the premium lost to lapse, by line, price-walk band and currency. This is the loop's scoreboard: as renewal prices change, retention and lapse value move. Query measures with MEASURE(name).\n",
+      "owner": "Chief Pricing Actuary",
+      "certification": "draft",
+      "source": "renewal.renewal_case",
+      "joins": [
+        {
+          "name": "policy",
+          "source": "policy.policy",
+          "condition": "source.policy_id = policy.policy_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "line_of_business_code",
+          "expr": "policy.line_of_business_code",
+          "description": "Line of business of the renewing policy."
+        },
+        {
+          "name": "price_walk_band",
+          "expr": "CASE WHEN source.price_walk_pct < 0.05 THEN '0-5%' WHEN source.price_walk_pct < 0.10 THEN '5-10%' WHEN source.price_walk_pct < 0.20 THEN '10-20%' ELSE '20%+' END",
+          "description": "Price-walk band derived from the offered-over-prior increase."
+        },
+        {
+          "name": "renewal_outcome_code",
+          "expr": "source.renewal_outcome_code",
+          "description": "How the renewal resolved."
+        },
+        {
+          "name": "currency_code",
+          "expr": "source.currency_code",
+          "description": "Currency of the premiums. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "case_count",
+          "expr": "COUNT(renewal_case_id)",
+          "description": "Number of renewal cases."
+        },
+        {
+          "name": "renewed_count",
+          "expr": "COUNT(CASE WHEN renewal_outcome_code = 'RENEWED' THEN renewal_case_id END)",
+          "description": "Renewal cases that renewed."
+        },
+        {
+          "name": "lapsed_count",
+          "expr": "COUNT(CASE WHEN renewal_outcome_code IN ('LAPSED_PRICE', 'LAPSED_OTHER') THEN renewal_case_id END)",
+          "description": "Renewal cases that lapsed."
+        },
+        {
+          "name": "retention_rate",
+          "expr": "COUNT(CASE WHEN renewal_outcome_code = 'RENEWED' THEN renewal_case_id END) / NULLIF(COUNT(renewal_case_id), 0)",
+          "description": "Renewed over all resolved cases."
+        },
+        {
+          "name": "avg_price_walk",
+          "expr": "AVG(price_walk_pct)",
+          "description": "Average price walk offered."
+        },
+        {
+          "name": "lapse_gwp",
+          "expr": "SUM(CASE WHEN renewal_outcome_code IN ('LAPSED_PRICE', 'LAPSED_OTHER') THEN prior_premium ELSE 0 END)",
+          "description": "Prior premium of lapsed policies - GWP lost to lapse, original currency."
         }
       ]
     },
@@ -9930,6 +10264,67 @@
           "name": "combined_ratio",
           "expr": "(SUM(CASE WHEN component = 'INCURRED' THEN amount ELSE 0 END) + SUM(CASE WHEN component = 'EXPENSE' THEN amount ELSE 0 END)) / NULLIF(SUM(CASE WHEN component = 'EARNED' THEN amount ELSE 0 END), 0)",
           "description": "Loss ratio plus expense ratio; below 1.0 is an underwriting profit."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "premium_metrics",
+      "domain": "semantics",
+      "title": "Premium Metrics",
+      "description": "Premium administration KPIs over premium movements - written premium, insurance premium tax collected, commission paid and the commission ratio, by line, period and currency. Earned premium and the written=earned+unearned proof live in the premium_earning view and vw_premium_proof. Amounts are in original currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).\n",
+      "owner": "Financial Controller",
+      "certification": "draft",
+      "source": "policy.premium_transaction",
+      "joins": [
+        {
+          "name": "policy",
+          "source": "policy.policy",
+          "condition": "source.policy_id = policy.policy_id"
+        }
+      ],
+      "dimensions": [
+        {
+          "name": "transaction_month",
+          "expr": "DATE_TRUNC('MONTH', source.transaction_date)",
+          "description": "Calendar month the movement was booked in."
+        },
+        {
+          "name": "premium_transaction_type_code",
+          "expr": "source.premium_transaction_type_code",
+          "description": "Kind of premium movement (written, adjustment, return)."
+        },
+        {
+          "name": "line_of_business_code",
+          "expr": "policy.line_of_business_code",
+          "description": "Line of business of the policy the premium is for."
+        },
+        {
+          "name": "currency_code",
+          "expr": "source.currency_code",
+          "description": "Original currency of the movement. Group by this before summing money."
+        }
+      ],
+      "measures": [
+        {
+          "name": "gross_written_premium",
+          "expr": "SUM(amount)",
+          "description": "Sum of premium movements - gross written premium in original currency."
+        },
+        {
+          "name": "ipt_collected",
+          "expr": "SUM(ipt_amount)",
+          "description": "Insurance premium tax collected on the movements."
+        },
+        {
+          "name": "commission_total",
+          "expr": "SUM(commission_amount)",
+          "description": "Broker commission on the movements."
+        },
+        {
+          "name": "commission_ratio",
+          "expr": "SUM(commission_amount) / NULLIF(SUM(amount), 0)",
+          "description": "Commission over gross written premium."
         }
       ]
     },
@@ -10399,6 +10794,24 @@
         "description": "Latest champion score for the subject; empty if none scored."
       },
       "sql": "(SELECT ms.score\n FROM {model.model_score} ms\n JOIN {model.model_version} mv ON mv.model_version_id = ms.model_version_id\n WHERE mv.model_status_code = 'CHAMPION'\n   AND ms.subject_kind_code = in_subject_kind\n   AND ms.subject_id = in_subject_id\n ORDER BY ms.scored_at DESC\n LIMIT 1)\n"
+    },
+    {
+      "kind": "function",
+      "name": "fn_earn_premium",
+      "domain": "policy",
+      "description": "Earned premium to date for a policy, derived live on a straight-line daily basis over the cover period - never a stored balance. This is the governed earning engine: the same math the premium_earning view uses, callable per policy so any workbench earns premium the one agreed way.\n",
+      "inputs": [
+        {
+          "name": "in_policy_id",
+          "type": "string",
+          "description": "The policy to earn premium for."
+        }
+      ],
+      "returns": {
+        "type": "decimal(18,2)",
+        "description": "Gross earned premium to date in policy currency; 0 if none written."
+      },
+      "sql": "(SELECT CAST(COALESCE(SUM(pt.amount * LEAST(1.0, GREATEST(0.0,\n      (datediff(LEAST(current_date(), p.expiry_date), p.inception_date) + 1) / 365.0))), 0)\n    AS DECIMAL(18,2))\n FROM {policy.premium_transaction} pt\n JOIN {policy.policy} p ON p.policy_id = pt.policy_id\n WHERE pt.policy_id = in_policy_id)\n"
     },
     {
       "kind": "function",
@@ -12025,6 +12438,20 @@
     },
     {
       "from_entity": "premium_transaction",
+      "attribute": "policy_event_id",
+      "to": "policy_event",
+      "to_kind": "entity",
+      "to_attribute": "event_id"
+    },
+    {
+      "from_entity": "premium_transaction",
+      "attribute": "broker_party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "premium_transaction",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",
@@ -12624,6 +13051,34 @@
       "to": "treaty",
       "to_kind": "entity",
       "to_attribute": "treaty_id"
+    },
+    {
+      "from_entity": "renewal_case",
+      "attribute": "policy_id",
+      "to": "policy",
+      "to_kind": "entity",
+      "to_attribute": "policy_id"
+    },
+    {
+      "from_entity": "renewal_case",
+      "attribute": "renewal_outcome_code",
+      "to": "renewal_outcome",
+      "to_kind": "code_set",
+      "to_attribute": "renewal_outcome_code"
+    },
+    {
+      "from_entity": "renewal_case",
+      "attribute": "currency_code",
+      "to": "currency",
+      "to_kind": "code_set",
+      "to_attribute": "currency_code"
+    },
+    {
+      "from_entity": "renewal_case",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
     },
     {
       "from_entity": "reserve_estimate",

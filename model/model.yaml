@@ -1,6 +1,6 @@
 model: bricksurance-data-core
 title: Bricksurance Data Core
-version: 0.11.0
+version: 0.12.0
 description: >
   An open, business-first semantic data model for insurance, aligned to ACORD
   terminology with a crosswalk to the Lloyd's Core Data Record. Platform
@@ -91,6 +91,13 @@ domains:
       Pricing decisions become explainable data: a quoted premium decomposes into
       the factors and relativities that produced it, and the engine config cites
       the model version behind it.
+  - name: renewal
+    description: >
+      The renewal and retention loop - each policy's renewal cycle (invitation,
+      price walk, competitor reference, outcome) and the observed retention
+      response by segment and price-walk band. This is where the twin manages
+      business in force rather than only writing it once, and the substrate for
+      the closed loop that lets a pricing decision change next period's book.
   - name: distribution
     description: >
       How business reaches the insurer - channels and intermediary

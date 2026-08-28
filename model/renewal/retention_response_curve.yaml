@@ -1,0 +1,43 @@
+kind: entity
+name: retention_response_curve
+domain: renewal
+title: Retention Response Curve
+description: >
+  Observed renewal probability by segment and price-walk band - the demand curve
+  the renewal loop draws outcomes from. Calibrated from the same logit machinery
+  the gen2 pricing repo built for new-business elasticity (reused, not re-derived).
+  Higher price walk means lower retention, monotonically, within a segment.
+grain: One row per segment per price-walk band.
+tags:
+  maturity: draft
+crosswalk_status: candidate
+attributes:
+  - name: retention_response_curve_id
+    type: string
+    required: true
+    description: Identifier for the curve point.
+    classification: internal
+  - name: segment
+    type: string
+    required: true
+    description: Customer or product segment the curve applies to.
+    classification: internal
+  - name: price_walk_band
+    type: string
+    required: true
+    description: Price-walk band, e.g. 0-5%, 5-10%, 10-20%, 20%+.
+    classification: internal
+  - name: renewal_probability
+    type: decimal(6,4)
+    required: true
+    description: Modelled probability of renewal in this band, 0 to 1.
+    classification: confidential
+  - name: observations
+    type: integer
+    required: false
+    description: Number of observed cases the point was calibrated on.
+    classification: internal
+keys:
+  primary: [retention_response_curve_id]
+  natural: [segment, price_walk_band]
+owner: Chief Pricing Actuary

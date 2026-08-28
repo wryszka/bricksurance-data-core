@@ -1,0 +1,20 @@
+kind: code_set
+name: renewal_outcome
+title: Renewal Outcome
+description: >
+  How a renewal cycle resolved - renewed, or lapsed with the reason. Separating
+  price-driven lapse from other lapse is what makes retention analysis and the
+  renewal loop meaningful.
+codes:
+  - code: RENEWED
+    label: Renewed
+    description: The policy renewed into a successor term.
+  - code: LAPSED_PRICE
+    label: Lapsed (price)
+    description: Not renewed; the customer left over price.
+  - code: LAPSED_OTHER
+    label: Lapsed (other)
+    description: Not renewed for a non-price reason.
+  - code: PENDING
+    label: Pending
+    description: Renewal invited; outcome not yet known.

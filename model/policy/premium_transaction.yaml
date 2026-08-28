@@ -47,6 +47,45 @@ attributes:
     required: true
     description: Currency of the amount.
     classification: internal
+  - name: policy_event_id
+    references: policy_event
+    type: string
+    required: false
+    description: >
+      The policy lifecycle event that gave rise to this movement (WP1 spine) -
+      every premium movement is caused by an event (bind, MTA, cancellation).
+    classification: internal
+  - name: ipt_amount
+    type: decimal(18,2)
+    required: false
+    description: Insurance premium tax on the movement, in the transaction currency.
+    classification: confidential
+  - name: commission_amount
+    type: decimal(18,2)
+    required: false
+    description: Broker commission on the movement, in the transaction currency.
+    classification: confidential
+  - name: commission_rate
+    type: decimal(6,4)
+    required: false
+    description: Commission rate applied to the gross premium on this movement.
+    classification: confidential
+  - name: broker_party_id
+    references: party
+    type: string
+    required: false
+    description: Broker party the commission is payable to, where the business is intermediated.
+    classification: internal
+  - name: inception_date
+    type: date
+    required: false
+    description: Cover start date the premium is earned from.
+    classification: internal
+  - name: expiry_date
+    type: date
+    required: false
+    description: Cover end date the premium is earned to.
+    classification: internal
   - name: transaction_date
     type: date
     required: true

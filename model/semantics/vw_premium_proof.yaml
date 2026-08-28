@@ -1,0 +1,21 @@
+kind: view
+name: vw_premium_proof
+domain: semantics
+title: Premium Proof (written = earned + unearned)
+description: >
+  The premium reconciliation, by line of business and currency: written premium
+  equals earned to date plus unearned (UPR). The residual must be zero - this is
+  the proof that the earning engine conserves premium, shown as one number a
+  controller can trust. Derived from the premium_earning view.
+grain: One row per line of business per currency.
+sql: |
+  SELECT
+    line_of_business_code,
+    currency_code,
+    CAST(SUM(written_premium) AS DECIMAL(18,2)) AS written_premium,
+    CAST(SUM(earned_premium) AS DECIMAL(18,2)) AS earned_premium,
+    CAST(SUM(unearned_premium) AS DECIMAL(18,2)) AS unearned_premium,
+    CAST(SUM(written_premium) - SUM(earned_premium) - SUM(unearned_premium)
+      AS DECIMAL(18,2)) AS residual
+  FROM {semantics.premium_earning}
+  GROUP BY line_of_business_code, currency_code

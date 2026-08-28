@@ -1,4 +1,4 @@
-# Genie instructions — Bricksurance Data Core v0.11.0
+# Genie instructions — Bricksurance Data Core v0.12.0
 
 You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses. When presenting results, always resolve identifier columns (anything ending _id) to business names or labels by joining the referenced table - e.g. party_id -> party.name - and never show raw surrogate ids unless the user asks for them.
 
@@ -63,6 +63,7 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reference.recovery_type` — Sources of recovery on a claim - how money comes back after a payment. The dimensional detail behind RECOVERY claim transactions. Grain: One row per recovery type code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.referral_action` — What a referral rule does when its condition is met - the action taken on a risk that trips the rule. Grain: One row per referral action code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.referral_outcome` — How a fired referral was resolved - what the underwriter decided after the rule routed the risk to them. Grain: One row per referral outcome code.
+- `lr_serverless_aws_us_catalog.bricksurance_reference.renewal_outcome` — How a renewal cycle resolved - renewed, or lapsed with the reason. Separating price-driven lapse from other lapse is what makes retention analysis and the renewal loop meaningful. Grain: One row per renewal outcome code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.reporting_level` — Whether a figure is a single entity's own return (solo) or the consolidated group position. Solvency II and statutory accounts both require both. Grain: One row per reporting level code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.reporting_regime` — The reporting framework a figure is prepared under. One valuation or statement figure means different things under different regimes; the regime is never assumed. Grain: One row per reporting regime code.
 - `lr_serverless_aws_us_catalog.bricksurance_reference.reserve_category` — The split of a case reserve by kind of cost - so indemnity, expense and legal reserves are visible separately, as claims and reserving teams hold them. Grain: One row per reserve category code.
@@ -163,6 +164,8 @@ You answer questions about the insurance business of Bricksurance SE using the c
 - `lr_serverless_aws_us_catalog.bricksurance_reinsurance.submission` — A reinsurance submission: a cedant's (or broker's) request for treaty cover, from receipt through triage, pricing and decision. A bound submission links to the treaty it produced. Cedant and broker are party roles on the submission. Grain: One row per submission per source system.
 - `lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty` — A treaty reinsurance contract under which risks are ceded to or assumed from reinsurers. Cedant and reinsurer are party roles on the treaty; which business it covers is expressed through cessions. Grain: One row per treaty contract per underwriting year.
 - `lr_serverless_aws_us_catalog.bricksurance_reinsurance.treaty_layer` — A layer of a treaty programme: limit and attachment for non-proportional forms, with reinstatement terms where they apply. Proportional treaties typically have a single layer carrying the ceded share economics on the treaty itself. Grain: One row per layer per treaty.
+- `lr_serverless_aws_us_catalog.bricksurance_renewal.renewal_case` — One policy's renewal cycle - the invitation, the price offered versus the prior premium (the price walk), a synthetic competitor reference, and the outcome. This is the unit the renewal loop acts on: change the renewal price and the outcome draw changes next period. Grain: One row per policy per renewal cycle.
+- `lr_serverless_aws_us_catalog.bricksurance_renewal.retention_response_curve` — Observed renewal probability by segment and price-walk band - the demand curve the renewal loop draws outcomes from. Calibrated from the same logit machinery the gen2 pricing repo built for new-business elasticity (reused, not re-derived). Higher price walk means lower retention, monotonically, within a segment. Grain: One row per segment per price-walk band.
 - `lr_serverless_aws_us_catalog.bricksurance_reserving.reserve_estimate` — A published reserving result: the projected ultimate loss, paid-to-date, case reserves, IBNR and total outstanding for one accident year and line of business, produced by one reserving method (chain-ladder, Bornhuetter-Ferguson) on one dated triangle. The estimate is the actuary's signed output; the method used is a governed, attestable choice, and the IBNR ties back to finance.valuation_result. Swapping method produces a new row, never an overwrite - so every basis and its result is auditable side by side. Grain: One row per accident year per line of business per method per valuation date.
 
 Foreign-key relationships are declared on the tables; use them for joins. Resolve any *_id column to a business name by joining its referenced table.
@@ -186,6 +189,17 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - MEASURE(cancelled_count): Policies cancelled mid-term (any cause).
   - MEASURE(mta_count): Mid-term adjustments applied.
   - MEASURE(retention_rate): Renewed over invited - chain-based retention rate.
+- `lr_serverless_aws_us_catalog.bricksurance_renewal.renewal_metrics` — Retention KPIs over renewal cases - retention rate, average price walk and the premium lost to lapse, by line, price-walk band and currency. This is the loop's scoreboard: as renewal prices change, retention and lapse value move. Query measures with MEASURE(name).
+  - dimension line_of_business_code: Line of business of the renewing policy.
+  - dimension price_walk_band: Price-walk band derived from the offered-over-prior increase.
+  - dimension renewal_outcome_code: How the renewal resolved.
+  - dimension currency_code: Currency of the premiums. Group by this before summing money.
+  - MEASURE(case_count): Number of renewal cases.
+  - MEASURE(renewed_count): Renewal cases that renewed.
+  - MEASURE(lapsed_count): Renewal cases that lapsed.
+  - MEASURE(retention_rate): Renewed over all resolved cases.
+  - MEASURE(avg_price_walk): Average price walk offered.
+  - MEASURE(lapse_gwp): Prior premium of lapsed policies - GWP lost to lapse, original currency.
 - `lr_serverless_aws_us_catalog.bricksurance_reserving.reserving_metrics` — Certified reserving KPIs over the loss-development triangle - cumulative paid and incurred by accident year, line of business and development lag - defined once so the reserving actuary, the finance close and Genie all read the same figures. Ultimate, IBNR and the chain-ladder / Bornhuetter-Ferguson projections are computed in the reserving notebook from these same movements and published to finance.valuation_result. Amounts are in original currency: always group by or filter on currency_code before summing. Query measures with MEASURE(name).
   - dimension accident_year: Accident year - the year the loss occurred. The rows of the triangle.
   - dimension development_lag: Development lag in years (transaction year minus accident year). The columns of the triangle.
@@ -250,6 +264,15 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - MEASURE(loss_ratio): The loss ratio: claims incurred over EARNED premium. This is the canonical, reporting-basis definition. (underwriting_metrics.loss_ratio_written is the quick written-basis view.) Meaningful within a single currency.
   - MEASURE(expense_ratio): Expenses over earned premium.
   - MEASURE(combined_ratio): Loss ratio plus expense ratio; below 1.0 is an underwriting profit.
+- `lr_serverless_aws_us_catalog.bricksurance_semantics.premium_metrics` — Premium administration KPIs over premium movements - written premium, insurance premium tax collected, commission paid and the commission ratio, by line, period and currency. Earned premium and the written=earned+unearned proof live in the premium_earning view and vw_premium_proof. Amounts are in original currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
+  - dimension transaction_month: Calendar month the movement was booked in.
+  - dimension premium_transaction_type_code: Kind of premium movement (written, adjustment, return).
+  - dimension line_of_business_code: Line of business of the policy the premium is for.
+  - dimension currency_code: Original currency of the movement. Group by this before summing money.
+  - MEASURE(gross_written_premium): Sum of premium movements - gross written premium in original currency.
+  - MEASURE(ipt_collected): Insurance premium tax collected on the movements.
+  - MEASURE(commission_total): Broker commission on the movements.
+  - MEASURE(commission_ratio): Commission over gross written premium.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.pricing_metrics` — Quote and conversion KPIs over the quote book - volumes, conversion and rated versus quoted premium by line and period. The pricing and demand view of the funnel. Amounts are in original quote currency; group by or filter on currency_code before summing money. Query measures with MEASURE(name).
   - dimension quote_month: Calendar month the quote was produced in.
   - dimension line_of_business: Line of business as its business label, e.g. 'Motor'. Filter with labels; use line_of_business_code for codes.
@@ -367,6 +390,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Recovery Type: SUBROGATION (Subrogation), SALVAGE (Salvage), CONTRIBUTION (Contribution), REINSURANCE (Reinsurance), DEDUCTIBLE (Deductible).
 - Referral Action: REFER (Refer), DECLINE (Decline), LOAD (Load), RESTRICT (Restrict), NOTIFY (Notify).
 - Referral Outcome: PENDING (Pending), ACCEPTED (Accepted), DECLINED (Declined), OVERRIDDEN (Overridden), AUTO (Auto-Resolved).
+- Renewal Outcome: RENEWED (Renewed), LAPSED_PRICE (Lapsed (price)), LAPSED_OTHER (Lapsed (other)), PENDING (Pending).
 - Reporting Level: SOLO (Solo), GROUP (Group).
 - Reporting Regime: SOLVENCY_II (Solvency II), IFRS_17 (IFRS 17), STATUTORY (Statutory / Local GAAP), MANAGEMENT (Management).
 - Reserve Category: INDEMNITY (Indemnity), EXPENSE (Expense), LEGAL (Legal), RECOVERY (Recovery).

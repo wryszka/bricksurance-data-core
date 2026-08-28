@@ -101,3 +101,29 @@ Built model v0.11.0, deployed to serverless, **smoke 47/47 pass** (40 prior + 7 
   left honest rather than fabricating lapses inconsistent with policy status.
 - App refreshed to v0.11.0 and redeployed; SP granted on bricksurance_policy_lifecycle.
 - Deploy gotcha reconfirmed: `claim` needed ALTER ADD COLUMN policy_version_id before deploy.
+
+---
+
+## 2026-08-28 — Phase 3 (WP2 Premium) + Phase 4 (WP5 Renewal) COMPLETE
+
+Model v0.12.0, deployed, **smoke 54/54 pass**.
+- **WP2 (extend, per D2):** premium_transaction gained policy_event_id (spine link),
+  ipt_amount, commission_amount/rate, broker_party_id, inception/expiry. Added
+  fn_earn_premium (governed earning engine, mirrors premium_earning), vw_premium_proof
+  (written = earned + unearned, residual 0 by LOB), premium_metrics (GWP/IPT/commission).
+  world_engine.add_premium_finance() sets IPT@12% GBP, commission from the sub-ledger,
+  event link = bind event evt_{pid}_02 (orphan check 0). Loss-ratio-on-earned already
+  lived in performance_metrics — no certified metric disturbed (logged, not forced).
+  Kept premium_transaction_type codes as-is (WRITTEN/ADJUSTMENT/RETURN; spec's
+  ADDITIONAL/REINSTATEMENT not added — ADJUSTMENT covers additional).
+- **WP5 (new thin domain):** renewal_case + retention_response_curve + renewal_metrics;
+  renewal_outcome code set. world_engine.add_renewal() draws each policy's outcome from
+  the curve given a deterministic price walk -> real lapses, retention < 100%.
+  **tools/advance_period.py = the estate's first closed loop:** retention responds to
+  price monotonically (3%->95.5%, 8%->90.9%, 15%->72.7%, 25%->54.5%) and is byte-identical
+  across two runs. **Bug fixed at source: build_world() now reseeds the RNG on entry** so
+  it is deterministic per call (was drifting across repeated in-process calls).
+- Live-workspace form of advance_period (appending RENEWED/LAPSED onto the hash-chained
+  spine + re-materialising versions) is intentionally deferred to a workbench runtime;
+  data-core stays declarative and rebuildable.
+- App refreshed to v0.12.0 + redeployed.

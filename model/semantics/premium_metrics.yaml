@@ -1,0 +1,44 @@
+kind: metric_view
+name: premium_metrics
+domain: semantics
+title: Premium Metrics
+description: >
+  Premium administration KPIs over premium movements - written premium, insurance
+  premium tax collected, commission paid and the commission ratio, by line,
+  period and currency. Earned premium and the written=earned+unearned proof live
+  in the premium_earning view and vw_premium_proof. Amounts are in original
+  currency; group by or filter on currency_code before summing money. Query
+  measures with MEASURE(name).
+owner: Financial Controller
+certification: draft
+source: policy.premium_transaction
+joins:
+  - name: policy
+    source: policy.policy
+    condition: source.policy_id = policy.policy_id
+dimensions:
+  - name: transaction_month
+    expr: DATE_TRUNC('MONTH', source.transaction_date)
+    description: Calendar month the movement was booked in.
+  - name: premium_transaction_type_code
+    expr: source.premium_transaction_type_code
+    description: Kind of premium movement (written, adjustment, return).
+  - name: line_of_business_code
+    expr: policy.line_of_business_code
+    description: Line of business of the policy the premium is for.
+  - name: currency_code
+    expr: source.currency_code
+    description: Original currency of the movement. Group by this before summing money.
+measures:
+  - name: gross_written_premium
+    expr: SUM(amount)
+    description: Sum of premium movements - gross written premium in original currency.
+  - name: ipt_collected
+    expr: SUM(ipt_amount)
+    description: Insurance premium tax collected on the movements.
+  - name: commission_total
+    expr: SUM(commission_amount)
+    description: Broker commission on the movements.
+  - name: commission_ratio
+    expr: SUM(commission_amount) / NULLIF(SUM(amount), 0)
+    description: Commission over gross written premium.

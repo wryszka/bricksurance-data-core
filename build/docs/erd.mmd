@@ -294,6 +294,11 @@ erDiagram
         string label
         string description
     }
+    renewal_outcome {
+        string renewal_outcome_code PK
+        string label
+        string description
+    }
     reporting_level {
         string reporting_level_code PK
         string label
@@ -954,6 +959,13 @@ erDiagram
         string premium_transaction_type_code
         decimal amount
         string currency_code
+        string policy_event_id
+        decimal ipt_amount
+        decimal commission_amount
+        decimal commission_rate
+        string broker_party_id
+        date inception_date
+        date expiry_date
         date transaction_date
         string source_system_code
     }
@@ -1219,6 +1231,28 @@ erDiagram
         integer reinstatement_count
         decimal reinstatement_premium_rate
     }
+    renewal_case {
+        string renewal_case_id PK
+        string policy_id
+        string chain_id
+        date invited_date
+        date expiry_date
+        decimal prior_premium
+        decimal renewal_premium_offered
+        decimal price_walk_pct
+        decimal competitor_ref_premium
+        string renewal_outcome_code
+        date outcome_date
+        string currency_code
+        string source_system_code
+    }
+    retention_response_curve {
+        string retention_response_curve_id PK
+        string segment
+        string price_walk_band
+        decimal renewal_probability
+        integer observations
+    }
     reserve_estimate {
         string reserve_estimate_id PK
         date valuation_date
@@ -1447,6 +1481,8 @@ erDiagram
     premium_transaction }o--|| coverage : coverage_id
     premium_transaction }o--|| premium_transaction_type : premium_transaction_type_code
     premium_transaction }o--|| currency : currency_code
+    premium_transaction }o--|| policy_event : policy_event_id
+    premium_transaction }o--|| party : broker_party_id
     premium_transaction }o--|| source_system : source_system_code
     quote }o--|| policy : policy_id
     quote }o--|| line_of_business : line_of_business_code
@@ -1533,6 +1569,10 @@ erDiagram
     treaty }o--|| currency : currency_code
     treaty }o--|| source_system : source_system_code
     treaty_layer }o--|| treaty : treaty_id
+    renewal_case }o--|| policy : policy_id
+    renewal_case }o--|| renewal_outcome : renewal_outcome_code
+    renewal_case }o--|| currency : currency_code
+    renewal_case }o--|| source_system : source_system_code
     reserve_estimate }o--|| line_of_business : line_of_business_code
     reserve_estimate }o--|| reserving_method : reserving_method_code
     reserve_estimate }o--|| currency : currency_code
