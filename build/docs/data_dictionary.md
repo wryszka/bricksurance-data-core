@@ -1739,6 +1739,27 @@ A signed intermediary remuneration movement on a policy. Transactional like all 
 
 **Primary key:** commission_transaction_id
 
+## Business Firmographics (`enrichment.business_firmographics`)
+
+Who a commercial client really is, according to an outside business-information provider (Dun & Bradstreet-style): industry, size and financial stress. Matched to our own party record by a global company identifier, so outside data joins our book without re-keying. Synthetic in this demo - no real provider data.
+
+**Grain:** One row per party per provider snapshot.
+
+| Attribute | Type | Required | Definition | Classification | ACORD | Lloyd's CDR |
+|---|---|---|---|---|---|---|
+| party_id | string | yes | Our party record this outside profile has been matched to. | internal |  |  |
+| global_company_id | string | yes | The provider's global company identifier (a DUNS-style 9-digit number) - the key that lets outside data line up with our book. | internal |  |  |
+| snapshot_date | date | yes | Date the provider profile was taken. | internal |  |  |
+| industry_sector | string | yes | Plain-language industry sector, e.g. Manufacturing, Retail, Food Production. | internal |  |  |
+| industry_code | string |  | UK SIC 2007 code for the company's primary activity. | internal |  |  |
+| annual_revenue_gbp | decimal(18,2) |  | Most recent reported annual revenue, in GBP. | internal |  |  |
+| employee_count | integer |  | Number of employees reported by the provider. | internal |  |  |
+| financial_stress_score | integer |  | Provider's financial-stress score, 1 (lowest risk of failure) to 100 (highest). Above 70 is treated as "under financial stress". | internal |  |  |
+| financial_stress_band | string |  | Plain-language band of the stress score - Low, Moderate or High. | internal |  |  |
+| source_system_code | string | yes | Provider the profile originates from. | internal |  |  |
+
+**Primary key:** party_id, snapshot_date
+
 ## Credit Bureau Summary (`enrichment.credit_bureau_summary`)
 
 A banded summary of a party's consumer credit standing from a bureau pull. Banded, not raw, and held only where a lawful basis and disclosure exist. Personal data - classified accordingly.

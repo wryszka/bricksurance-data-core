@@ -1520,7 +1520,8 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.source_syst
   ('RI_CORE', 'Reinsurance (Core)', 'The group''s reinsurance administration system.'),
   ('DATA_CORE', 'Data Core (Mastered)', 'Records mastered or derived inside the data layer itself, such as deduplicated golden party records.'),
   ('LIFE_CORE', 'Life Administration (Core)', 'The group''s life policy administration and valuation feed.'),
-  ('COVERHOLDER_BDX', 'Coverholder Bordereau', 'Lines reported by coverholders or brokers via bordereaux and mapped into the canonical model through the exchange domain.');
+  ('COVERHOLDER_BDX', 'Coverholder Bordereau', 'Lines reported by coverholders or brokers via bordereaux and mapped into the canonical model through the exchange domain.'),
+  ('COMPANY_DATA_PROVIDER', 'External Company Data Provider', 'Third-party business information (Dun & Bradstreet-style) matched to our commercial parties by a global company identifier. Synthetic in this demo.');
 
 INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.statement_type VALUES
   ('BALANCE_SHEET', 'Balance Sheet', 'Statement of financial position.'),
@@ -2069,6 +2070,16 @@ INSERT OVERWRITE lr_serverless_aws_us_catalog.bricksurance_reference.data_dictio
   ('commission_transaction', 'currency_code', 'string', TRUE, 'Currency of the amount.', 'internal', '', '', 'Chief Distribution Officer', 'draft', '0.16.0'),
   ('commission_transaction', 'transaction_date', 'date', TRUE, 'Date the movement was booked.', 'internal', '', '', 'Chief Distribution Officer', 'draft', '0.16.0'),
   ('commission_transaction', 'source_system_code', 'string', TRUE, 'System of record.', 'internal', '', '', 'Chief Distribution Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'party_id', 'string', TRUE, 'Our party record this outside profile has been matched to.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'global_company_id', 'string', TRUE, 'The provider''s global company identifier (a DUNS-style 9-digit number) - the key that lets outside data line up with our book.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'snapshot_date', 'date', TRUE, 'Date the provider profile was taken.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'industry_sector', 'string', TRUE, 'Plain-language industry sector, e.g. Manufacturing, Retail, Food Production.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'industry_code', 'string', FALSE, 'UK SIC 2007 code for the company''s primary activity.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'annual_revenue_gbp', 'decimal(18,2)', FALSE, 'Most recent reported annual revenue, in GBP.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'employee_count', 'integer', FALSE, 'Number of employees reported by the provider.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'financial_stress_score', 'integer', FALSE, 'Provider''s financial-stress score, 1 (lowest risk of failure) to 100 (highest). Above 70 is treated as "under financial stress".', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'financial_stress_band', 'string', FALSE, 'Plain-language band of the stress score - Low, Moderate or High.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
+  ('business_firmographics', 'source_system_code', 'string', TRUE, 'Provider the profile originates from.', 'internal', '', '', 'Chief Underwriting Officer', 'draft', '0.16.0'),
   ('credit_bureau_summary', 'credit_bureau_summary_id', 'string', TRUE, 'Identifier for the bureau summary record.', 'internal', '', '', 'Data Protection Officer', 'draft', '0.16.0'),
   ('credit_bureau_summary', 'party_id', 'string', TRUE, 'Party the bureau summary concerns.', 'internal', '', '', 'Data Protection Officer', 'draft', '0.16.0'),
   ('credit_bureau_summary', 'pull_date', 'date', TRUE, 'Date the bureau summary was obtained.', 'internal', '', '', 'Data Protection Officer', 'draft', '0.16.0'),

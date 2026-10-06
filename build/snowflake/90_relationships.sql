@@ -181,6 +181,10 @@ ALTER TABLE BRICKSURANCE.distribution.commission_transaction ADD CONSTRAINT fk_c
 
 ALTER TABLE BRICKSURANCE.distribution.commission_transaction ADD CONSTRAINT fk_commission_transaction_source_system_code FOREIGN KEY (source_system_code) REFERENCES BRICKSURANCE.reference.source_system (source_system_code);
 
+ALTER TABLE BRICKSURANCE.enrichment.business_firmographics ADD CONSTRAINT fk_business_firmographics_party_id FOREIGN KEY (party_id) REFERENCES BRICKSURANCE.party.party (party_id);
+
+ALTER TABLE BRICKSURANCE.enrichment.business_firmographics ADD CONSTRAINT fk_business_firmographics_source_system_code FOREIGN KEY (source_system_code) REFERENCES BRICKSURANCE.reference.source_system (source_system_code);
+
 ALTER TABLE BRICKSURANCE.enrichment.credit_bureau_summary ADD CONSTRAINT fk_credit_bureau_summary_party_id FOREIGN KEY (party_id) REFERENCES BRICKSURANCE.party.party (party_id);
 
 ALTER TABLE BRICKSURANCE.enrichment.credit_bureau_summary ADD CONSTRAINT fk_credit_bureau_summary_credit_score_band_code FOREIGN KEY (credit_score_band_code) REFERENCES BRICKSURANCE.reference.credit_score_band (credit_score_band_code);

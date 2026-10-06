@@ -684,6 +684,18 @@ erDiagram
         date transaction_date
         string source_system_code
     }
+    business_firmographics {
+        string party_id PK
+        string global_company_id
+        date snapshot_date PK
+        string industry_sector
+        string industry_code
+        decimal annual_revenue_gbp
+        integer employee_count
+        integer financial_stress_score
+        string financial_stress_band
+        string source_system_code
+    }
     credit_bureau_summary {
         string credit_bureau_summary_id PK
         string party_id
@@ -1563,6 +1575,8 @@ erDiagram
     commission_transaction }o--|| commission_type : commission_type_code
     commission_transaction }o--|| currency : currency_code
     commission_transaction }o--|| source_system : source_system_code
+    business_firmographics }o--|| party : party_id
+    business_firmographics }o--|| source_system : source_system_code
     credit_bureau_summary }o--|| party : party_id
     credit_bureau_summary }o--|| credit_score_band : credit_score_band_code
     credit_bureau_summary }o--|| consent : consent_id

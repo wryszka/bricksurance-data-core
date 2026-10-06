@@ -1,0 +1,17 @@
+import { chromium } from 'playwright';
+const base = process.argv[2] || 'http://localhost:8765';
+const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1440, height: 1000 } });
+const errs=[]; p.on('pageerror', e => errs.push(String(e)));
+await p.goto(`${base}/#/one-number/change`); await p.waitForSelector('.on-stage', { timeout: 30000 });
+await p.screenshot({ path: '/tmp/onenum/shots/5a-change-draft.png', fullPage: true });
+await p.click('button:has-text("Submit for approval")'); await p.waitForSelector('text=waiting for approval', { timeout: 60000 });
+await p.selectOption('.on-approve select', 'Reserving Manager');
+await p.click('button:has-text("Approve & publish")'); await p.waitForSelector('.on-approve .err, .result-note.err', { timeout: 60000 });
+await p.screenshot({ path: '/tmp/onenum/shots/5b-four-eyes.png', fullPage: true });
+await p.selectOption('.on-approve select', 'Chief Actuary');
+await p.click('button:has-text("Approve & publish")'); await p.waitForSelector('text=is now the company loss ratio', { timeout: 120000 });
+await p.click('.on-change button:has-text("Show saved answer")'); await p.waitForTimeout(3000);
+await p.screenshot({ path: '/tmp/onenum/shots/5c-published.png', fullPage: true });
+const r = await fetch(`${base}/api/one-number/reset`, { method: 'POST' }); console.log('reset', r.status);
+console.log('errors:', errs);
+await b.close();

@@ -28,3 +28,8 @@ codes:
     description: >
       Lines reported by coverholders or brokers via bordereaux and mapped
       into the canonical model through the exchange domain.
+  - code: COMPANY_DATA_PROVIDER
+    label: External Company Data Provider
+    description: >
+      Third-party business information (Dun & Bradstreet-style) matched to our
+      commercial parties by a global company identifier. Synthetic in this demo.

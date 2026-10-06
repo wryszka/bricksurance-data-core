@@ -1035,6 +1035,10 @@ if (FRONTEND / "assets").exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND / "assets"), name="assets")
 
 
+from . import one_number  # noqa: E402
+app.include_router(one_number.router)
+
+
 @app.get("/")
 def index():
     idx = FRONTEND / "index.html"

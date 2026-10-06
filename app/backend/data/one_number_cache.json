@@ -1,0 +1,273 @@
+{
+ "raw::v0::What is our Commercial Property loss ratio?": {
+  "answers": [
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "For policies matched to **Commercial Property**, **total losses = 0.00** and **total premium = 0.00**, so the **loss ratio is not available**. Based on the single result row, there is no recorded Commercial Property premium or loss in the data used for this calculation."
+    ],
+    "sql": "WITH `commercial_property_policies` AS (\n  SELECT `policy_id`\n  FROM `lr_serverless_aws_us_catalog`.`bricksurance_policy`.`policy`\n  WHERE `line_of_business_code` IS NOT NULL\n    AND `line_of_business_code` ILIKE '%Commercial Property%'\n),\n`losses` AS (\n  SELECT COALESCE(SUM(`ct`.`amount`), 0) AS `total_losses`\n  FROM `lr_serverless_aws_us_catalog`.`bricksurance_claim`.`claim_transaction` AS `ct`\n  INNER JOIN `lr_serverless_aws_us_catalog`.`bricksurance_claim`.`claim` AS `c`\n    ON `ct`.`claim_id` = `c`.`claim_id`\n  INNER JOIN `commercial_property_policies` AS `p`\n    ON `c`.`policy_id` = `p`.`policy_id`\n),\n`premium` AS (\n  SELECT COALESCE(SUM(`pt`.`amount`), 0) AS `total_premium`\n  FROM `lr_serverless_aws_us_catalog`.`bricksurance_policy`.`premium_transaction` AS `pt`\n  INNER JOIN `commercial_property_policies` AS `p`\n    ON `pt`.`policy_id` = `p`.`policy_id`\n)\nSELECT\n  `losses`.`total_losses`,\n  `premium`.`total_premium`,\n  CASE\n    WHEN `premium`.`total_premium` = 0 THEN NULL\n    ELSE 100 * (try_divide(`losses`.`total_losses`,`premium`.`total_premium`))\n  END AS `loss_ratio`\nFROM `losses`\nCROSS JOIN `premium`",
+    "columns": [
+     "total_losses",
+     "total_premium",
+     "loss_ratio"
+    ],
+    "rows": [
+     [
+      "0.00",
+      "0.00",
+      null
+     ]
+    ],
+    "live": true,
+    "seconds": 25.7
+   },
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "For policies with line of business matching **Commercial Property**, total claim losses are **0.00** and total premium is **0.00**, so the Commercial Property loss ratio is **null** and cannot be calculated from this data. The visible result shows **1 row**, and in that row both losses and premium are zero.",
+     "Would you prefer to see the loss ratio for Commercial Property policies defined by an exact line_of_business_code match instead of a text search?"
+    ],
+    "sql": "WITH `commercial_property_policies` AS (\n  SELECT `policy`.`policy_id`\n  FROM `lr_serverless_aws_us_catalog`.`bricksurance_policy`.`policy` AS `policy`\n  WHERE `policy`.`line_of_business_code` IS NOT NULL\n    AND `policy`.`line_of_business_code` ILIKE '%Commercial Property%'\n),\n`claim_losses` AS (\n  SELECT COALESCE(SUM(`ct`.`amount`), 0) AS `total_claim_loss_amount`\n  FROM `lr_serverless_aws_us_catalog`.`bricksurance_claim`.`claim_transaction` AS `ct`\n  INNER JOIN `lr_serverless_aws_us_catalog`.`bricksurance_claim`.`claim` AS `c`\n    ON `ct`.`claim_id` = `c`.`claim_id`\n  INNER JOIN `commercial_property_policies` AS `cpp`\n    ON `c`.`policy_id` = `cpp`.`policy_id`\n),\n`premium_amounts` AS (\n  SELECT COALESCE(SUM(`pt`.`amount`), 0) AS `total_premium_amount`\n  FROM `lr_serverless_aws_us_catalog`.`bricksurance_policy`.`premium_transaction` AS `pt`\n  INNER JOIN `commercial_property_policies` AS `cpp`\n    ON `pt`.`policy_id` = `cpp`.`policy_id`\n)\nSELECT\n  `claim_losses`.`total_claim_loss_amount`,\n  `premium_amounts`.`total_premium_amount`,\n  CASE\n    WHEN `premium_amounts`.`total_premium_amount` = 0 THEN NULL\n    ELSE 100 * (try_divide(`claim_losses`.`total_claim_loss_amount`,`premium_amounts`.`total_premium_amount`))\n  END AS `loss_ratio_percent`\nFROM `claim_losses`\nCROSS JOIN `premium_amounts`",
+    "columns": [
+     "total_claim_loss_amount",
+     "total_premium_amount",
+     "loss_ratio_percent"
+    ],
+    "rows": [
+     [
+      "0.00",
+      "0.00",
+      null
+     ]
+    ],
+    "live": true,
+    "seconds": 25.0
+   },
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "Your **Commercial Property loss ratio is 54.10%**, based on **$4,033,093.14** in total claim amount and **$7,454,840.21** in total premium amount. This means Commercial Property claims are a little over half of Commercial Property premium based on the data returned."
+    ],
+    "sql": "WITH `commercial_property_policies` AS ( SELECT `policy`.`policy_id` FROM `lr_serverless_aws_us_catalog`.`bricksurance_policy`.`policy` AS `policy` WHERE `policy`.`line_of_business_code` = 'COMMERCIAL_PROPERTY' ), `claim_losses` AS ( SELECT COALESCE(SUM(`ct`.`amount`), 0) AS `total_claim_amount` FROM `lr_serverless_aws_us_catalog`.`bricksurance_claim`.`claim` AS `c` INNER JOIN `lr_serverless_aws_us_catalog`.`bricksurance_claim`.`claim_transaction` AS `ct` ON `c`.`claim_id` = `ct`.`claim_id` WHERE `c`.`policy_id` IN (SELECT `policy_id` FROM `commercial_property_policies`) ), `premium_amounts` AS ( SELECT COALESCE(SUM(`pt`.`amount`), 0) AS `total_premium_amount` FROM `lr_serverless_aws_us_catalog`.`bricksurance_policy`.`premium_transaction` AS `pt` WHERE `pt`.`policy_id` IN (SELECT `policy_id` FROM `commercial_property_policies`) ) SELECT `claim_losses`.`total_claim_amount`, `premium_amounts`.`total_premium_amount`, 100 * try_divide(`claim_losses`.`total_claim_amount`, NULLIF(`premium_amounts`.`total_premium_amount`, 0)) AS `loss_ratio_pct` FROM `claim_losses` CROSS JOIN `premium_amounts`",
+    "columns": [
+     "total_claim_amount",
+     "total_premium_amount",
+     "loss_ratio_pct"
+    ],
+    "rows": [
+     [
+      "4033093.14",
+      "7454840.21",
+      "54.100330"
+     ]
+    ],
+    "live": true,
+    "seconds": 25.6
+   }
+  ],
+  "explain": [
+   "Checked against the data: our Commercial Property book is written in CHF, EUR, GBP and USD. The assistant added them together as if they were one currency.",
+   "Loss ratio calculated as total claim transaction amounts divided by total premium transaction amounts, times 100, for commercial property policies only.",
+   "Claim total sums all claim transactions, not just paid losses - likely includes reserve changes, recoveries, and expense transactions as if they were claims.",
+   "Premium total uses all premium transactions (written premium), not earned premium - mismatched timing with incurred claims.",
+   "No visibility into currency consistency across transactions, and no adjustment for IBNR, so true ultimate loss ratio is understated."
+  ]
+ },
+ "governed::v1::What is our Commercial Property loss ratio?": {
+  "answers": [
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "Commercial Property loss ratio is **66.6%** in **GBP**. This is **version 1 approved by the Chief Actuary** and includes claims paid, case reserves, and IBNR, minus recoveries, divided by earned premium."
+    ],
+    "sql": "SELECT MEASURE(`loss_ratio`) AS `loss_ratio`\nFROM `lr_serverless_aws_us_catalog`.`bricksurance_semantics`.`loss_ratio_metrics`\nWHERE `line_of_business` ILIKE '%Commercial Property%'\n  AND `currency_code` = 'GBP'\nGROUP BY ALL",
+    "columns": [
+     "loss_ratio"
+    ],
+    "rows": [
+     [
+      "0.666259"
+     ]
+    ],
+    "live": true,
+    "seconds": 19.3
+   },
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "Commercial Property loss ratio in **GBP** is **66.6%**. This is **version 1 approved by the Chief Actuary** and includes claims paid, case reserves, and IBNR, minus recoveries, divided by earned premium."
+    ],
+    "sql": "SELECT MEASURE(`loss_ratio`) AS `loss_ratio`\nFROM `lr_serverless_aws_us_catalog`.`bricksurance_semantics`.`loss_ratio_metrics`\nWHERE `line_of_business` ILIKE '%Commercial Property%'\n  AND `currency_code` = 'GBP'\nGROUP BY ALL",
+    "columns": [
+     "loss_ratio"
+    ],
+    "rows": [
+     [
+      "0.666259"
+     ]
+    ],
+    "live": true,
+    "seconds": 20.0
+   },
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "Commercial Property loss ratio is **66.6%** in **GBP**. This is **version 1 approved by the Chief Actuary** and includes claims paid, case reserves, and IBNR, minus recoveries, divided by earned premium.",
+     "Would you prefer to see the loss ratio for exactly 'Commercial Property' only, or include all lines containing 'Commercial Property' in their name?"
+    ],
+    "sql": "SELECT MEASURE(`loss_ratio`) AS `loss_ratio`\nFROM `lr_serverless_aws_us_catalog`.`bricksurance_semantics`.`loss_ratio_metrics`\nWHERE `line_of_business` ILIKE '%Commercial Property%'\n  AND `currency_code` = 'GBP'\nGROUP BY ALL",
+    "columns": [
+     "loss_ratio"
+    ],
+    "rows": [
+     [
+      "0.666259"
+     ]
+    ],
+    "live": true,
+    "seconds": 20.3
+   }
+  ],
+  "explain": [
+   "Calculated the Loss Ratio using the company's officially approved definition and methodology.",
+   "Scope was filtered specifically to the Commercial Property line of business.",
+   "Only policies and claims recorded in British Pounds (GBP) were included in this calculation.",
+   "The result reflects a single, aggregated loss ratio figure for this specific business segment and currency."
+  ]
+ },
+ "governed::v1::For Commercial Property, what is the loss ratio for clients under financial stress compared with all other clients?": {
+  "answers": [
+   {
+    "question": "For Commercial Property, what is the loss ratio for clients under financial stress compared with all other clients?",
+    "text": [
+     "For **Commercial Property** in **GBP**, the loss ratio is **70.4%** for clients **under financial stress** versus **38.5%** for **all other clients**. This is **version 1 approved by the Chief Actuary** and includes claims paid, case reserves, IBNR, and recoveries on an earned premium basis; in this result, the financially stressed group also has much higher earned premium (**\u00a35.0m** vs **\u00a30.7m**)."
+    ],
+    "sql": "SELECT CASE WHEN financial_stress_band = 'High' THEN 'Under financial stress' ELSE 'All other clients' END AS client_group, MEASURE(loss_ratio) AS loss_ratio, MEASURE(earned_premium) AS earned_premium\nFROM lr_serverless_aws_us_catalog.bricksurance_semantics.loss_ratio_metrics\nWHERE line_of_business = 'Commercial Property' AND currency_code = 'GBP'\nGROUP BY ALL",
+    "columns": [
+     "client_group",
+     "loss_ratio",
+     "earned_premium"
+    ],
+    "rows": [
+     [
+      "Under financial stress",
+      "0.704183",
+      "5038174.34"
+     ],
+     [
+      "All other clients",
+      "0.384781",
+      "678808.21"
+     ]
+    ],
+    "live": true,
+    "seconds": 24.2
+   }
+  ],
+  "explain": [
+   "We compared loss ratios for clients flagged as 'High' financial stress against all other clients, isolated to Commercial Property policies billed in GBP.",
+   "Loss ratio and earned premium were both calculated using the company's standard, approved definitions for these metrics, ensuring consistency with other official reporting.",
+   "The analysis used our certified data source for loss ratio metrics, so the figures are reliable and audit-ready.",
+   "Results are grouped simply into two segments ('Under financial stress' vs. 'All other clients') to directly compare performance between these two groups."
+  ]
+ },
+ "governed::v2::What is our Commercial Property loss ratio?": {
+  "answers": [
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "Our **Commercial Property** loss ratio is **70.9%** in **GBP**. This is **version 2 approved by the Chief Actuary** and includes claims paid, case reserves, IBNR, claims-handling costs, and recoveries against earned premium."
+    ],
+    "sql": "SELECT MEASURE(`loss_ratio`) AS `loss_ratio`\nFROM `lr_serverless_aws_us_catalog`.`bricksurance_semantics`.`loss_ratio_metrics`\nWHERE `line_of_business` ILIKE '%Commercial Property%'\n  AND `currency_code` = 'GBP'\nGROUP BY ALL",
+    "columns": [
+     "loss_ratio"
+    ],
+    "rows": [
+     [
+      "0.709242"
+     ]
+    ],
+    "live": true,
+    "seconds": 13.8
+   },
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "Commercial Property loss ratio in **GBP** is **70.9%**. This is **version 2**, approved by the Chief Actuary, and it includes claims paid, case reserves, IBNR, claims-handling costs, and recoveries against earned premium.",
+     "Would you prefer to see the loss ratio for exactly 'Commercial Property' only, or include related lines of business containing 'Commercial Property'?"
+    ],
+    "sql": "SELECT MEASURE(`loss_ratio`) AS `loss_ratio`\nFROM `lr_serverless_aws_us_catalog`.`bricksurance_semantics`.`loss_ratio_metrics`\nWHERE `line_of_business` ILIKE '%Commercial Property%'\n  AND `currency_code` = 'GBP'\nGROUP BY ALL",
+    "columns": [
+     "loss_ratio"
+    ],
+    "rows": [
+     [
+      "0.709242"
+     ]
+    ],
+    "live": true,
+    "seconds": 18.5
+   },
+   {
+    "question": "What is our Commercial Property loss ratio?",
+    "text": [
+     "Commercial Property loss ratio in **GBP** is **70.9%**. This is **version 2 approved by the Chief Actuary** and includes claims paid, case reserves, IBNR, claims-handling costs, and recoveries against earned premium."
+    ],
+    "sql": "SELECT MEASURE(`loss_ratio`) AS `loss_ratio`\nFROM `lr_serverless_aws_us_catalog`.`bricksurance_semantics`.`loss_ratio_metrics`\nWHERE `line_of_business` ILIKE '%Commercial Property%'\n  AND `currency_code` = 'GBP'\nGROUP BY ALL",
+    "columns": [
+     "loss_ratio"
+    ],
+    "rows": [
+     [
+      "0.709242"
+     ]
+    ],
+    "live": true,
+    "seconds": 13.7
+   }
+  ],
+  "explain": [
+   "Calculated the Loss Ratio using the company's single, approved definition of this metric, ensuring consistency with standard reporting.",
+   "The analysis was filtered specifically for the 'Commercial Property' line of business.",
+   "Only policies and claims recorded in British Pounds (GBP) were included in this calculation.",
+   "The result reflects an aggregated, overall loss ratio for this specific business segment and currency."
+  ]
+ },
+ "governed::v2::For Commercial Property, what is the loss ratio for clients under financial stress compared with all other clients?": {
+  "answers": [
+   {
+    "question": "For Commercial Property, what is the loss ratio for clients under financial stress compared with all other clients?",
+    "text": [
+     "For **Commercial Property** in **GBP**, clients **under financial stress** have a higher loss ratio than **all other clients**: **75.0%** versus **41.0%**. This loss ratio includes claims paid, case reserves, IBNR and claims-handling costs, net of recoveries, divided by earned premium, and is **version 2 approved by the Chief Actuary**. Across the **2 client groups** shown, the financially stressed group also has much higher earned premium: **\u00a35.0m** versus **\u00a30.7m**."
+    ],
+    "sql": "SELECT CASE WHEN `financial_stress_band` = 'High' THEN 'Under financial stress' ELSE 'All other clients' END AS `client_group`, MEASURE(`loss_ratio`) AS `loss_ratio`, MEASURE(`earned_premium`) AS `earned_premium`\nFROM `lr_serverless_aws_us_catalog`.`bricksurance_semantics`.`loss_ratio_metrics`\nWHERE `line_of_business` ILIKE '%Commercial Property%'\n  AND `currency_code` = 'GBP'\n  AND `financial_stress_band` IS NOT NULL\nGROUP BY ALL",
+    "columns": [
+     "client_group",
+     "loss_ratio",
+     "earned_premium"
+    ],
+    "rows": [
+     [
+      "Under financial stress",
+      "0.749521",
+      "5038174.34"
+     ],
+     [
+      "All other clients",
+      "0.410287",
+      "678808.21"
+     ]
+    ],
+    "live": true,
+    "seconds": 19.7
+   }
+  ],
+  "explain": [
+   "Compared loss ratio and earned premium between clients flagged as 'Under financial stress' versus all other clients, using the company's approved financial stress classification.",
+   "Analysis was scoped to Commercial Property business, with figures measured in GBP only.",
+   "Clients without a financial stress classification were excluded to ensure a clean, like-for-like comparison.",
+   "Loss ratio and earned premium were calculated using the standard, approved company metric definitions."
+  ]
+ }
+}

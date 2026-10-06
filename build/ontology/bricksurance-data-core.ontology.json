@@ -2575,6 +2575,11 @@
           "code": "COVERHOLDER_BDX",
           "label": "Coverholder Bordereau",
           "description": "Lines reported by coverholders or brokers via bordereaux and mapped into the canonical model through the exchange domain.\n"
+        },
+        {
+          "code": "COMPANY_DATA_PROVIDER",
+          "label": "External Company Data Provider",
+          "description": "Third-party business information (Dun & Bradstreet-style) matched to our commercial parties by a global company identifier. Synthetic in this demo.\n"
         }
       ]
     },
@@ -4866,6 +4871,97 @@
         ]
       },
       "owner": "Chief Distribution Officer"
+    },
+    {
+      "kind": "entity",
+      "name": "business_firmographics",
+      "domain": "enrichment",
+      "title": "Business Firmographics",
+      "description": "Who a commercial client really is, according to an outside business-information provider (Dun & Bradstreet-style): industry, size and financial stress. Matched to our own party record by a global company identifier, so outside data joins our book without re-keying. Synthetic in this demo - no real provider data.\n",
+      "grain": "One row per party per provider snapshot.",
+      "tags": {
+        "maturity": "draft"
+      },
+      "attributes": [
+        {
+          "name": "party_id",
+          "references": "party",
+          "type": "string",
+          "required": true,
+          "description": "Our party record this outside profile has been matched to.",
+          "classification": "internal"
+        },
+        {
+          "name": "global_company_id",
+          "type": "string",
+          "required": true,
+          "description": "The provider's global company identifier (a DUNS-style 9-digit number) - the key that lets outside data line up with our book.\n",
+          "classification": "internal"
+        },
+        {
+          "name": "snapshot_date",
+          "type": "date",
+          "required": true,
+          "description": "Date the provider profile was taken.",
+          "classification": "internal"
+        },
+        {
+          "name": "industry_sector",
+          "type": "string",
+          "required": true,
+          "description": "Plain-language industry sector, e.g. Manufacturing, Retail, Food Production.",
+          "classification": "internal"
+        },
+        {
+          "name": "industry_code",
+          "type": "string",
+          "required": false,
+          "description": "UK SIC 2007 code for the company's primary activity.",
+          "classification": "internal"
+        },
+        {
+          "name": "annual_revenue_gbp",
+          "type": "decimal(18,2)",
+          "required": false,
+          "description": "Most recent reported annual revenue, in GBP.",
+          "classification": "internal"
+        },
+        {
+          "name": "employee_count",
+          "type": "integer",
+          "required": false,
+          "description": "Number of employees reported by the provider.",
+          "classification": "internal"
+        },
+        {
+          "name": "financial_stress_score",
+          "type": "integer",
+          "required": false,
+          "description": "Provider's financial-stress score, 1 (lowest risk of failure) to 100 (highest). Above 70 is treated as \"under financial stress\".\n",
+          "classification": "internal"
+        },
+        {
+          "name": "financial_stress_band",
+          "type": "string",
+          "required": false,
+          "description": "Plain-language band of the stress score - Low, Moderate or High.",
+          "classification": "internal"
+        },
+        {
+          "name": "source_system_code",
+          "code_set": "source_system",
+          "required": true,
+          "description": "Provider the profile originates from.",
+          "classification": "internal"
+        }
+      ],
+      "keys": {
+        "primary": [
+          "party_id",
+          "snapshot_date"
+        ]
+      },
+      "owner": "Chief Underwriting Officer"
     },
     {
       "kind": "entity",
@@ -13441,6 +13537,20 @@
     },
     {
       "from_entity": "commission_transaction",
+      "attribute": "source_system_code",
+      "to": "source_system",
+      "to_kind": "code_set",
+      "to_attribute": "source_system_code"
+    },
+    {
+      "from_entity": "business_firmographics",
+      "attribute": "party_id",
+      "to": "party",
+      "to_kind": "entity",
+      "to_attribute": "party_id"
+    },
+    {
+      "from_entity": "business_firmographics",
       "attribute": "source_system_code",
       "to": "source_system",
       "to_kind": "code_set",
