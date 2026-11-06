@@ -21,10 +21,15 @@ interface Table { source: string; concept: string | null; conformed_view: string
 interface System { system: string; title: string; schema: string; owner: string | null; certification: string | null; description: string; tables: Table[] }
 interface CrossRow { concept: string; attribute: string; systems: Record<string, { source: string; note: string }> }
 interface Legacy { name: string; formula: string; where: string; answers: string; not: string; q2: number; q3: number }
+interface SecondRow { accident_quarter: string; motor_segment: string; earned_premium: number; incurred_claims: number; loss_ratio: number; claim_count: number }
+interface Second {
+  name: string; loaded: boolean; error?: string; mappings: string[]; systems?: string[]; mapped_columns?: number;
+  segments?: SecondRow[]; totals?: Record<string, { earned_premium: number; incurred_claims: number; loss_ratio: number }>;
+}
 interface State {
   question: string; follow_ups: { key: string; question: string }[]; valuation_date: string; approved: Definition;
   headline: Headline; segments: Segment[]; definitions: { approved: { q2: number; q3: number }; legacy: Legacy };
-  systems: System[]; crosswalk: CrossRow[]; spaces: { raw: string; governed: string }; host: string;
+  systems: System[]; crosswalk: CrossRow[]; second_insurer: Second | null; spaces: { raw: string; governed: string }; host: string;
 }
 interface Pivot extends Record<string, unknown> { q2: Partial<Measures>; q3: Partial<Measures> }
 interface Evidence {
@@ -426,6 +431,31 @@ function BeatHow({ s, refresh }: { s: State; refresh: () => void }) {
         ))}</tbody>
       </table>
       <button className="on-link" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer' : `Show all ${s.crosswalk.length} mapped attributes`}</button>
+
+      {s.second_insurer && (
+        <>
+          <h3 className="on-h3">A second insurer, the same question, two mapping files</h3>
+          <div className="on-card">
+            <div className="on-card-tag">{s.second_insurer.name} · {s.second_insurer.mappings.length} mapping files · {s.second_insurer.mapped_columns ?? '—'} mapped columns</div>
+            {s.second_insurer.loaded && s.second_insurer.totals ? (
+              <>
+                <div className="on-card-title">
+                  Motor loss ratio {pct(s.second_insurer.totals['2026Q2']?.loss_ratio)} → {pct(s.second_insurer.totals['2026Q3']?.loss_ratio)}
+                </div>
+                <table className="on-table">
+                  <thead><tr><th>Segment</th><th>Quarter</th><th>Earned</th><th>Incurred</th><th>Loss ratio</th><th>Claims</th></tr></thead>
+                  <tbody>{s.second_insurer.segments!.map((r, i) => (
+                    <tr key={i}><td>{r.motor_segment}</td><td>{r.accident_quarter}</td><td>{m(r.earned_premium)}</td><td>{m(r.incurred_claims)}</td><td>{pct(r.loss_ratio)}</td><td>{n0(r.claim_count)}</td></tr>
+                  ))}</tbody>
+                </table>
+                <div className="on-card-foot">Policy-centre and claim-centre shapes (PublicID, PolicyNumber, LossCause, TransactionType), different words again. Same concepts, same metric definition, same assistant rules. Harbour has no IBNR feed and no region dimension in this extract, and the view says so.</div>
+              </>
+            ) : (
+              <div className="on-card-foot">Mapped ({s.second_insurer.mappings.join('; ')}) but not loaded in this workspace yet.</div>
+            )}
+          </div>
+        </>
+      )}
 
       <h3 className="on-h3">What is native, what is ours, what is simulated</h3>
       <table className="on-table">

@@ -2,7 +2,7 @@
 
 The actuarial warehouse holds what neither operational system does: earned premium and vehicle-years by policy and accounting month (the earning engine output), the IBNR estimate by segment and accident quarter, and the reference dimensions the pricing team uses (segment, postcode region). Its vocabulary is the actuaries' own: 'pol ref', 'yyyymm', 'ep amt', 'veh years', 'acc qtr'.
 
-- `earned_premium_monthly.pol_ref` means **premium_earning.policy_id**:  'Pol ref' is the policy system's contract reference.
+- `earned_premium_monthly.pol_ref` means **premium_earning.policy_id**: Stable, source-agnostic identifier for the policy (same surrogate as the policy system mapping). 'Pol ref' is the policy system's contract reference.
 - `earned_premium_monthly.ep_amt` means **premium_earning.earned_premium**: Premium earned in the month, GBP, daily pro-rata over the cover period.
 - `earned_premium_monthly.yyyymm` means **premium_earning.accounting_month**: Accounting month as YYYYMM.
 - `earned_premium_monthly.yyyymm` means **premium_earning.accident_quarter**: Calendar quarter of the accounting month, e.g. 2026Q3. Same labelling as the claims accident quarter so premium and claims line up.

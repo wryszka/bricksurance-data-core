@@ -32,8 +32,15 @@ from deploy_databricks import statements  # noqa: E402  (splits a generated .sql
 CAT = "lr_serverless_aws_us_catalog"
 WAREHOUSE = "ab79eced8207d29b"
 APP_SP = "f1d8523e-773e-469f-abc2-0bd81945bf51"  # data-core-console service principal
-SCHEMAS = {"src_pas": "bricksurance_src_pas", "src_claims": "bricksurance_src_claims",
-           "src_actuarial": "bricksurance_src_actuarial"}
+BOOKS = {
+    # book: (data dir, {data subdir: schema}, mapping-file name fragments, apply 70_ metric view too?)
+    "motor": ("data/motor", {"src_pas": "bricksurance_src_pas", "src_claims": "bricksurance_src_claims",
+                             "src_actuarial": "bricksurance_src_actuarial"},
+              ("pas_motor", "clm_motor", "actuarial_motor", "motor_loss_ratio_components", "motor_performance_metrics"), False),
+    "harbour": ("data/harbour", {"harbour_pc": "bricksurance_harbour_pc", "harbour_cc": "bricksurance_harbour_cc"},
+                ("harbour_pc", "harbour_cc", "harbour_loss_ratio_components", "harbour_performance_metrics"), True),
+}
+SCHEMAS = BOOKS["motor"][1]
 TARGETS = {("PMU", "2026Q2"): (35_000_000, 25_200_000), ("PMU", "2026Q3"): (37_000_000, 31_820_000),
            ("PMO", "2026Q2"): (40_000_000, 22_000_000), ("PMO", "2026Q3"): (42_000_000, 23_940_000),
            ("CMV", "2026Q2"): (25_000_000, 16_800_000), ("CMV", "2026Q3"): (26_000_000, 19_840_000)}
@@ -62,12 +69,15 @@ def main():
     ap.add_argument("--skip-upload", action="store_true", help="tables already loaded; only apply mappings + smoke")
     ap.add_argument("--with-metric-view", action="store_true", help="also apply 70_*.sql (you will own the metric view)")
     ap.add_argument("--no-grants", action="store_true")
+    ap.add_argument("--book", default="motor", choices=sorted(BOOKS), help="motor (Bricksurance) or harbour (second insurer)")
     a = ap.parse_args()
     os.environ["DATABRICKS_CONFIG_PROFILE"] = a.profile
     w = WorkspaceClient(profile=a.profile)
     wid = a.warehouse_id
-    data = ROOT / a.data
-    print(f"Workspace {w.config.host}, warehouse {wid}")
+    data_dir, SCHEMAS, fragments, metric_too = BOOKS[a.book]
+    data = ROOT / (a.data if a.book == "motor" else data_dir)
+    a.with_metric_view = a.with_metric_view or metric_too
+    print(f"Workspace {w.config.host}, warehouse {wid}, book {a.book}")
 
     # 1-2. schemas, volumes, tables
     if not a.skip_upload:
@@ -89,6 +99,7 @@ def main():
     files = sorted(mdir.glob("50_*.sql")) + sorted(mdir.glob("60_*.sql"))
     if a.with_metric_view:
         files += sorted(mdir.glob("70_*.sql"))
+    files = [f for f in files if any(frag in f.name for frag in fragments)]
     for path in files:
         stmts = statements(path)
         t0 = time.time()
@@ -102,8 +113,17 @@ def main():
             run(w, f"GRANT USE SCHEMA, SELECT ON SCHEMA {CAT}.{schema} TO `{APP_SP}`", wid)
         print(f"  granted USE SCHEMA, SELECT on {len(SCHEMAS)} source schemas to the app SP")
 
-    # 5. smoke: targets to the penny, from the components view (what the metric view reads)
-    print("\nSmoke: segment x quarter from semantics.motor_loss_ratio_components (GBP)")
+    # 5. smoke
+    if a.book != "motor":
+        print(f"\nSmoke: {a.book} loss ratio by segment and quarter")
+        for seg, q, ep, inc, n in rows(w, f"""
+            SELECT motor_segment_code, accident_quarter, SUM(earned_premium),
+                   SUM(claims_paid + case_reserves + ibnr - recoveries), SUM(claim_count)
+            FROM {CAT}.bricksurance_semantics.{a.book}_loss_ratio_components
+            WHERE accident_quarter IN ('2026Q2', '2026Q3') GROUP BY 1, 2 ORDER BY 1, 2""", wid):
+            print(f"  {seg} {q}: earned {float(ep):>13,.2f}  incurred {float(inc):>13,.2f}  LR {float(inc) / float(ep):6.2%}  claims {int(n):4d}")
+        return
+    print("\nSmoke: segment x quarter from semantics.motor_loss_ratio_components (GBP) - targets to the penny")
     res = rows(w, f"""
         SELECT motor_segment_code, accident_quarter,
                SUM(earned_premium), SUM(claims_paid + case_reserves + ibnr - recoveries), SUM(claim_count)

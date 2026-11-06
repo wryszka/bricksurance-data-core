@@ -1,0 +1,108 @@
+kind: mapping
+name: harbour_cc
+title: Harbour Mutual claim centre -> core concepts
+description: >
+  Harbour Mutual's claim centre: claims with PublicID / ClaimNumber / PolicyNumber /
+  LossCause (vehcollision, theft, propertydamage, bodilyinjury, glassbreakage, fire)
+  and transactions typed Payment / Reserve / Recovery with a CostType of claimcost or
+  expense. Mapped to the same core Claim and Claim Transaction concepts as the
+  Bricksurance motor claims system, so the same metric and the same questions work.
+source_system: HARBOUR_CC
+schema: harbour_cc
+owner: Harbour Mutual, Head of Claims
+certification: certified
+tables:
+  - source: cc_claim
+    concept: claim
+    conformed_view: vw_harbour_claim
+    grain: One row per claim.
+    description: Harbour motor claims.
+    columns:
+      - source: PublicID
+        attribute: claim_id
+        expr: concat('HARBOUR_CC:', PublicID)
+      - source: ClaimNumber
+        attribute: claim_number
+      - source: PolicyNumber
+        attribute: policy_id
+        expr: concat('HARBOUR_PC:', (SELECT max(PublicID) FROM {harbour_pc.pc_policyperiod} p WHERE p.PolicyNumber = c.PolicyNumber))
+        note: The claim centre holds the PolicyNumber; the policy id is resolved through the policy centre.
+      - source: State
+        attribute: claim_status_code
+        value_map: {open: OPEN, closed: CLOSED}
+      - source: LossCause
+        attribute: cause_of_loss_code
+        value_map: {vehcollision: COLLISION, theft: THEFT, propertydamage: LIABILITY_INCIDENT, bodilyinjury: LIABILITY_INCIDENT, glassbreakage: GLASS, fire: FIRE}
+      - source: LossDate
+        attribute: loss_date
+      - source: ReportedDate
+        attribute: reported_date
+      - attribute: source_system_code
+        expr: "'HARBOUR_CC'"
+    sql: |
+      SELECT concat('HARBOUR_CC:', c.PublicID) AS claim_id,
+             c.ClaimNumber AS claim_number,
+             concat('HARBOUR_PC:', p.PublicID) AS policy_id,
+             CASE c.State WHEN 'open' THEN 'OPEN' ELSE 'CLOSED' END AS claim_status_code,
+             CASE c.LossCause WHEN 'vehcollision' THEN 'COLLISION' WHEN 'theft' THEN 'THEFT' WHEN 'glassbreakage' THEN 'GLASS'
+                              WHEN 'fire' THEN 'FIRE' ELSE 'LIABILITY_INCIDENT' END AS cause_of_loss_code,
+             c.LossDate AS loss_date, c.ReportedDate AS reported_date, 'HARBOUR_CC' AS source_system_code,
+             CASE c.LossCause WHEN 'vehcollision' THEN 'AD' WHEN 'theft' THEN 'THEFT' WHEN 'propertydamage' THEN 'TPPD'
+                              WHEN 'bodilyinjury' THEN 'TPBI' WHEN 'glassbreakage' THEN 'WINDSCREEN' ELSE 'FIRE' END AS peril_code,
+             c.LossLocationPostalCode AS loss_postcode_area
+      FROM {src} c
+      LEFT JOIN {harbour_pc.pc_policyperiod} p ON p.PolicyNumber = c.PolicyNumber
+    extensions:
+      - name: peril_code
+        source: LossCause
+        definition: Harbour's loss cause translated to the shared peril vocabulary (AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE) so cross-insurer peril questions line up.
+      - name: loss_postcode_area
+        source: LossLocationPostalCode
+        definition: Postcode area where the loss occurred.
+  - source: cc_transaction
+    concept: claim_transaction
+    conformed_view: vw_harbour_claim_transaction
+    grain: One row per transaction, plus one reserve release per payment (core convention).
+    description: >
+      Claim centre transactions as core claim transactions. Payment with CostType expense
+      is a claims-handling cost; Payment with claimcost is indemnity and also generates
+      the core's reserve release.
+    columns:
+      - source: PublicID
+        attribute: claim_transaction_id
+        expr: concat('HARBOUR_CC:', PublicID)
+      - source: ClaimID
+        attribute: claim_id
+        expr: concat('HARBOUR_CC:', ClaimID)
+      - source: TransactionType
+        attribute: claim_transaction_type_code
+        value_map: {Payment: INDEMNITY_PAYMENT or EXPENSE_PAYMENT by CostType, Reserve: CASE_RESERVE_MOVEMENT, Recovery: RECOVERY}
+      - source: Amount
+        attribute: amount
+      - attribute: currency_code
+        expr: "'GBP'"
+      - source: CreateTime
+        attribute: transaction_date
+      - attribute: source_system_code
+        expr: "'HARBOUR_CC'"
+    sql: |
+      SELECT concat('HARBOUR_CC:', PublicID) AS claim_transaction_id,
+             concat('HARBOUR_CC:', ClaimID) AS claim_id,
+             CASE WHEN TransactionType = 'Payment' AND CostType = 'expense' THEN 'EXPENSE_PAYMENT'
+                  WHEN TransactionType = 'Payment' THEN 'INDEMNITY_PAYMENT'
+                  WHEN TransactionType = 'Reserve' THEN 'CASE_RESERVE_MOVEMENT' ELSE 'RECOVERY' END AS claim_transaction_type_code,
+             Amount AS amount, 'GBP' AS currency_code, CAST(CreateTime AS DATE) AS transaction_date, 'HARBOUR_CC' AS source_system_code,
+             CASE WHEN CostType = 'expense' THEN 'FEES' ELSE 'CLAIM_COST' END AS head_of_damage_code,
+             'OWN_DAMAGE' AS claim_feature_type_code
+      FROM {src}
+      UNION ALL
+      SELECT concat('HARBOUR_CC:', PublicID, ':REL'), concat('HARBOUR_CC:', ClaimID), 'CASE_RESERVE_MOVEMENT',
+             -Amount, 'GBP', CAST(CreateTime AS DATE), 'HARBOUR_CC', 'CLAIM_COST', 'OWN_DAMAGE'
+      FROM {src}
+      WHERE TransactionType = 'Payment' AND CostType = 'claimcost'
+    extensions:
+      - name: head_of_damage_code
+        source: CostType
+        definition: Harbour does not record head of damage; CostType (claimcost / expense) is carried in its place.
+      - name: claim_feature_type_code
+        definition: Not available from Harbour's claim centre at transaction level; defaulted to OWN_DAMAGE and said so.

@@ -1,0 +1,148 @@
+kind: mapping
+name: harbour_pc
+title: Harbour Mutual policy centre -> core concepts
+description: >
+  A second insurer, Harbour Mutual, on a different policy system shape: policy
+  periods with PublicID / PolicyNumber / PeriodStart / PeriodEnd / TotalPremiumRPT
+  and product codes PersonalAuto / CommercialAuto. Mapped to the same core
+  concepts as Bricksurance's motor book with one file. Harbour has no actuarial
+  warehouse, so earned premium is derived in the conformed view on the core's
+  daily pro-rata convention.
+source_system: HARBOUR_PC
+schema: harbour_pc
+owner: Harbour Mutual, Head of Personal Lines
+certification: certified
+tables:
+  - source: pc_policyperiod
+    concept: policy
+    conformed_view: vw_harbour_policy
+    grain: One row per policy period (annual).
+    description: Harbour Mutual motor policy periods.
+    columns:
+      - source: PublicID
+        attribute: policy_id
+        expr: concat('HARBOUR_PC:', PublicID)
+      - source: PolicyNumber
+        attribute: policy_number
+        note: Harbour's system calls it PolicyNumber; the claim centre carries the same value.
+      - source: ProductCode
+        attribute: line_of_business_code
+        expr: "'MOTOR'"
+        note: PersonalAuto and CommercialAuto are both Motor; the product code is kept as the segment extension.
+      - source: Status
+        attribute: policy_status_code
+        value_map: {Bound: IN_FORCE, Expired: EXPIRED}
+      - source: PeriodStart
+        attribute: inception_date
+      - source: PeriodEnd
+        attribute: expiry_date
+      - source: PeriodStart
+        attribute: underwriting_year
+        expr: year(PeriodStart)
+      - attribute: currency_code
+        expr: "'GBP'"
+      - attribute: source_system_code
+        expr: "'HARBOUR_PC'"
+    extensions:
+      - name: motor_segment_code
+        source: ProductCode
+        value_map: {PersonalAuto: HP, CommercialAuto: HC}
+        expr: "CASE ProductCode WHEN 'PersonalAuto' THEN 'HP' ELSE 'HC' END"
+        definition: Harbour Mutual segment - HP personal auto, HC commercial auto. Harbour's own segmentation, not the standard's.
+      - name: annual_premium
+        source: TotalPremiumRPT
+        definition: Total period premium in GBP as reported by the policy centre.
+      - name: risk_postcode
+        source: PrimaryInsuredPostalCode
+        definition: Postcode area of the primary insured.
+  - source: pc_policyperiod
+    concept: premium_transaction
+    conformed_view: vw_harbour_premium_transaction
+    grain: One written-premium row per policy period.
+    description: Harbour books premium once per period; the conformed view presents it as a WRITTEN premium transaction.
+    columns:
+      - source: PublicID
+        attribute: premium_transaction_id
+        expr: concat('HARBOUR_PC:PREM:', PublicID)
+      - source: PublicID
+        attribute: policy_id
+        expr: concat('HARBOUR_PC:', PublicID)
+      - attribute: premium_transaction_type_code
+        expr: "'WRITTEN'"
+      - source: TotalPremiumRPT
+        attribute: amount
+      - attribute: currency_code
+        expr: "'GBP'"
+      - source: PeriodStart
+        attribute: transaction_date
+      - attribute: source_system_code
+        expr: "'HARBOUR_PC'"
+  - source: pc_policyperiod
+    concept: premium_earning
+    conformed_view: vw_harbour_earned_premium
+    grain: One row per policy period per accounting month with cover in force.
+    description: >
+      Harbour has no earning engine in this extract, so earned premium is derived here
+      on the core convention - daily pro-rata over the period - month by month.
+    columns:
+      - source: PublicID
+        attribute: policy_id
+        expr: concat('HARBOUR_PC:', PublicID)
+        definition: Stable, source-agnostic identifier for the policy.
+      - source: TotalPremiumRPT
+        attribute: earned_premium
+        definition: Premium earned in the month, GBP, daily pro-rata over the policy period.
+      - attribute: accounting_month
+        expr: derived
+        definition: Accounting month as YYYYMM.
+      - attribute: accident_quarter
+        expr: derived
+        definition: Calendar quarter of the accounting month, e.g. 2026Q3.
+    sql: |
+      WITH months AS (
+        SELECT p.PublicID, p.ProductCode, p.TotalPremiumRPT, p.PeriodStart, p.PeriodEnd, m AS month_start
+        FROM {src} p
+        LATERAL VIEW explode(sequence(trunc(p.PeriodStart, 'MM'), trunc(p.PeriodEnd, 'MM'), interval 1 month)) AS m
+      )
+      SELECT concat('HARBOUR_PC:', PublicID) AS policy_id,
+             CAST(TotalPremiumRPT * (datediff(LEAST(date_add(PeriodEnd, 1), add_months(month_start, 1)), GREATEST(PeriodStart, month_start))) / 365.0 AS DECIMAL(18,2)) AS earned_premium,
+             year(month_start) * 100 + month(month_start) AS accounting_month,
+             concat(year(month_start), 'Q', quarter(month_start)) AS accident_quarter,
+             CAST(datediff(LEAST(date_add(PeriodEnd, 1), add_months(month_start, 1)), GREATEST(PeriodStart, month_start)) AS DECIMAL(18,6)) / 365.0 AS vehicle_years,
+             CASE ProductCode WHEN 'PersonalAuto' THEN 'HP' ELSE 'HC' END AS motor_segment_code
+      FROM months
+      WHERE datediff(LEAST(date_add(PeriodEnd, 1), add_months(month_start, 1)), GREATEST(PeriodStart, month_start)) > 0
+    extensions:
+      - name: vehicle_years
+        definition: Policy-years of exposure in the month (one vehicle assumed per personal policy; commercial fleets count their vehicles via pc_vehicle).
+      - name: motor_segment_code
+        source: ProductCode
+        definition: HP personal auto, HC commercial auto.
+  - source: pc_vehicle
+    concept: vehicle
+    conformed_view: vw_harbour_vehicle
+    grain: One row per vehicle on a policy period.
+    description: Vehicles on Harbour policy periods.
+    columns:
+      - source: PublicID
+        attribute: vehicle_id
+        expr: concat('HARBOUR_PC:', PublicID)
+      - source: PublicID
+        attribute: insured_object_id
+        expr: concat('HARBOUR_PC:', PublicID)
+      - source: PolicyPeriodID
+        attribute: insured_object.policy_id
+        expr: concat('HARBOUR_PC:', PolicyPeriodID)
+      - source: VIN
+        attribute: registration_number
+        note: Harbour keys vehicles by VIN, not registration mark; kept in the registration_number slot and said so.
+      - source: Make
+        attribute: make
+      - source: Model
+        attribute: model
+      - source: Year
+        attribute: year_of_manufacture
+    extensions:
+      - name: vehicle_value_amount
+        source: CostNew
+        definition: Cost new in GBP as recorded by the policy centre.

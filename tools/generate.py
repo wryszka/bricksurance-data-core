@@ -736,7 +736,12 @@ def generate_mappings(binding, manifest, entities, views, mappings):
                 note = " ".join(str(c.get("note", "")).split())
                 cols.append((alias, expr, f"{desc} {note}".strip()))
                 row = catalog_rows.setdefault((cdomain, concept, alias), {"definition": desc, "acord": acord, "systems": {}})
-                src_txt = f"`{t['source']}.{c['source']}`" if c.get("source") else f"constant {c.get('expr')}"
+                if c.get("source"):
+                    src_txt = f"`{t['source']}.{c['source']}`"
+                elif str(c.get("expr", "")).startswith("'"):
+                    src_txt = f"constant {c.get('expr')}"
+                else:
+                    src_txt = f"derived ({c.get('expr')})"
                 if c.get("value_map"):
                     src_txt += " (" + ", ".join(f"{k}->{v}" for k, v in c["value_map"].items()) + ")"
                 row["systems"][m["source_system"]] = (src_txt + (f" - {note}" if note else "")).strip()
@@ -747,7 +752,7 @@ def generate_mappings(binding, manifest, entities, views, mappings):
                     vocab.append(f"- `{t['source']}.{c['source']}` means **{target}**: {desc} {note}".rstrip())
             for x in t.get("extensions", []):
                 d = " ".join(str(x["definition"]).split())
-                cols.append((x["name"], x.get("expr") or x["source"], d))
+                cols.append((x["name"], x.get("expr") or x.get("source") or "NULL", d))
                 extension_rows.append((m["source_system"], x["name"], f"{t['source']}.{x.get('source', '')}", d))
                 if x.get("source"):
                     stmts.append(f"ALTER TABLE {src} ALTER COLUMN {x['source']} COMMENT '{esc(f'Enterprise extension {x['name']} (kept beside the standard, not forced into it): {d}')}';")

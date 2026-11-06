@@ -8,7 +8,7 @@ COMMENT ON TABLE lr_serverless_aws_us_catalog.bricksurance_src_actuarial.earned_
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_src_actuarial.earned_premium_monthly SET TAGS ('bxc_source_system' = 'ACT_DW', 'bxc_concept' = 'premium_earning', 'bxc_mapping' = 'actuarial_motor');
 
-ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_src_actuarial.earned_premium_monthly ALTER COLUMN pol_ref COMMENT 'Maps to premium_earning.policy_id: ''Pol ref'' is the policy system''s contract reference.';
+ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_src_actuarial.earned_premium_monthly ALTER COLUMN pol_ref COMMENT 'Maps to premium_earning.policy_id: Stable, source-agnostic identifier for the policy (same surrogate as the policy system mapping). ''Pol ref'' is the policy system''s contract reference.';
 
 ALTER TABLE lr_serverless_aws_us_catalog.bricksurance_src_actuarial.earned_premium_monthly ALTER COLUMN pol_ref SET TAGS ('bxc_concept' = 'premium_earning.policy_id');
 
@@ -49,7 +49,7 @@ SELECT
   seg_cd AS motor_segment_code
 FROM lr_serverless_aws_us_catalog.bricksurance_src_actuarial.earned_premium_monthly;
 
-COMMENT ON COLUMN lr_serverless_aws_us_catalog.bricksurance_semantics.vw_motor_earned_premium.policy_id IS '''Pol ref'' is the policy system''s contract reference.';
+COMMENT ON COLUMN lr_serverless_aws_us_catalog.bricksurance_semantics.vw_motor_earned_premium.policy_id IS 'Stable, source-agnostic identifier for the policy (same surrogate as the policy system mapping). ''Pol ref'' is the policy system''s contract reference.';
 
 COMMENT ON COLUMN lr_serverless_aws_us_catalog.bricksurance_semantics.vw_motor_earned_premium.earned_premium IS 'Premium earned in the month, GBP, daily pro-rata over the cover period.';
 

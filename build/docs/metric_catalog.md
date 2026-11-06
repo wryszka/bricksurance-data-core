@@ -140,6 +140,29 @@ Financial-statement line items assembled from the ledger via the statement mappi
 |---|---|---|
 | `line_amount` | The statement line value, sign-adjusted for presentation. | `SUM(amount * statement_line.sign)` |
 
+## Harbour Mutual Motor Performance Metrics (`semantics.harbour_performance_metrics`)
+
+The second insurer's motor loss ratio on the same definition as Bricksurance's motor_performance_metrics (paid plus outstanding case reserves plus IBNR, net of recoveries, over EARNED premium; accident-quarter basis; GBP), computed from the conformed views that two mapping files produce over Harbour Mutual's policy centre and claim centre. Harbour has no IBNR feed in this extract (ibnr is zero) and no region dimension (region_name is the postcode area). Use measure loss_ratio for loss-ratio questions; peril_code describes claims only.
+
+**Owner:** Harbour Mutual, Chief Actuary · **Certification:** certified · **Source:** `semantics.harbour_loss_ratio_components`
+
+**Dimensions:** accident_quarter, motor_segment, motor_segment_code, region_name, peril_code, large_loss_flag, component_kind
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `earned_premium` | Premium earned in the quarter, GBP, derived daily pro-rata from the policy period. | `SUM(earned_premium)` |
+| `written_premium` | Premium written in the quarter, GBP. | `SUM(written_premium)` |
+| `vehicle_years` | Policy-years of exposure (Harbour extract carries one vehicle per personal policy). | `SUM(vehicle_years)` |
+| `claims_paid` | Indemnity paid to the valuation date. | `SUM(claims_paid)` |
+| `case_reserves` | Outstanding case reserves at the valuation date. | `SUM(case_reserves)` |
+| `recoveries` | Recoveries, positive number. | `SUM(recoveries)` |
+| `claims_handling_costs` | Expense payments (claims handling), not in the loss ratio. | `SUM(claims_handling_costs)` |
+| `incurred_claims` | Incurred claims on the shared definition (IBNR is zero in this extract). | `SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)` |
+| `loss_ratio` | Harbour Mutual motor loss ratio on the shared definition, earned basis. | `(SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)) / NULLIF(SUM(earned_premium), 0)` |
+| `claim_count` | Number of claims. | `SUM(claim_count)` |
+| `frequency` | Claims per policy-year. | `SUM(claim_count) / NULLIF(SUM(vehicle_years), 0)` |
+| `severity` | Average net incurred per claim. | `(SUM(claims_paid) + SUM(case_reserves) - SUM(recoveries)) / NULLIF(SUM(claim_count), 0)` |
+
 ## Investment Metrics (`semantics.investment_metrics`)
 
 The asset side: market value, book cost, unrealised gain and investment income by asset class and legal entity. Query with MEASURE(); constrain currency_code.

@@ -1,0 +1,66 @@
+kind: view
+name: harbour_loss_ratio_components
+domain: semantics
+after_mappings: true
+title: Harbour Mutual Loss Ratio Components
+description: >
+  The second insurer's loss-ratio building blocks in exactly the shape of
+  motor_loss_ratio_components, built only from the conformed views that two
+  mapping files (harbour_pc, harbour_cc) produce over Harbour Mutual's policy
+  centre and claim centre. Same column names, same metric definition, same
+  questions. Harbour has no IBNR feed in this extract, so ibnr is zero and the
+  loss ratio is a case-incurred ratio; region is the postcode area because
+  Harbour has no region dimension. Both limits are stated, not hidden.
+grain: One row per policy-quarter (EXPOSURE) or per claim (CLAIM).
+sql: |
+  WITH pol AS (
+    SELECT p.policy_id, p.policy_number, p.motor_segment_code,
+           CASE p.motor_segment_code WHEN 'HP' THEN 'Harbour personal auto' ELSE 'Harbour commercial auto' END AS motor_segment,
+           CAST(NULL AS STRING) AS use_class_code, p.inception_date, p.annual_premium, p.risk_postcode AS postcode_area
+    FROM {semantics.vw_harbour_policy} p
+  ),
+  exposure AS (
+    SELECT policy_id, accident_quarter, SUM(earned_premium) AS earned_premium, SUM(vehicle_years) AS vehicle_years
+    FROM {semantics.vw_harbour_earned_premium} GROUP BY policy_id, accident_quarter
+  ),
+  written AS (
+    SELECT policy_id, concat(year(transaction_date), 'Q', quarter(transaction_date)) AS accident_quarter, SUM(amount) AS written_premium
+    FROM {semantics.vw_harbour_premium_transaction} GROUP BY 1, 2
+  ),
+  claim_tx AS (
+    SELECT claim_id,
+           SUM(CASE WHEN claim_transaction_type_code = 'INDEMNITY_PAYMENT' THEN amount ELSE 0 END) AS claims_paid,
+           SUM(CASE WHEN claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT' THEN amount ELSE 0 END) AS case_reserves,
+           SUM(CASE WHEN claim_transaction_type_code = 'EXPENSE_PAYMENT' THEN amount ELSE 0 END) AS claims_handling_costs,
+           -SUM(CASE WHEN claim_transaction_type_code = 'RECOVERY' THEN amount ELSE 0 END) AS recoveries,
+           MAX(head_of_damage_code) AS head_of_damage_code, MAX(claim_feature_type_code) AS claim_feature_type_code
+    FROM {semantics.vw_harbour_claim_transaction} GROUP BY claim_id
+  )
+  SELECT 'EXPOSURE' AS component_kind, x.policy_id, pol.policy_number, pol.motor_segment_code, pol.motor_segment,
+         x.accident_quarter, pol.postcode_area AS region_name, CAST(NULL AS STRING) AS urbanity_code, pol.use_class_code,
+         CAST(NULL AS STRING) AS claim_id, CAST(NULL AS STRING) AS claim_number, CAST(NULL AS DATE) AS loss_date,
+         CAST(NULL AS STRING) AS peril_code, CAST(NULL AS STRING) AS cause_of_loss_code,
+         CAST(NULL AS STRING) AS head_of_damage_code, CAST(NULL AS STRING) AS claim_feature_type_code,
+         CAST(NULL AS BOOLEAN) AS large_loss_flag,
+         CAST(x.earned_premium AS DECIMAL(18,2)) AS earned_premium,
+         CAST(COALESCE(w.written_premium, 0) AS DECIMAL(18,2)) AS written_premium,
+         CAST(x.vehicle_years AS DECIMAL(18,6)) AS vehicle_years,
+         CAST(0 AS DECIMAL(18,2)) AS claims_paid, CAST(0 AS DECIMAL(18,2)) AS case_reserves,
+         CAST(0 AS DECIMAL(18,2)) AS ibnr, CAST(0 AS DECIMAL(18,2)) AS claims_handling_costs,
+         CAST(0 AS DECIMAL(18,2)) AS recoveries, 0 AS claim_count
+  FROM exposure x
+  JOIN pol USING (policy_id)
+  LEFT JOIN written w ON w.policy_id = x.policy_id AND w.accident_quarter = x.accident_quarter
+  UNION ALL
+  SELECT 'CLAIM', c.policy_id, pol.policy_number, pol.motor_segment_code, pol.motor_segment,
+         concat(year(c.loss_date), 'Q', quarter(c.loss_date)), c.loss_postcode_area, NULL, pol.use_class_code,
+         c.claim_id, c.claim_number, c.loss_date, c.peril_code, c.cause_of_loss_code,
+         t.head_of_damage_code, t.claim_feature_type_code,
+         (t.claims_paid + t.case_reserves - t.recoveries) >= 500000,
+         CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,6)),
+         CAST(t.claims_paid AS DECIMAL(18,2)), CAST(t.case_reserves AS DECIMAL(18,2)),
+         CAST(0 AS DECIMAL(18,2)), CAST(t.claims_handling_costs AS DECIMAL(18,2)),
+         CAST(t.recoveries AS DECIMAL(18,2)), 1
+  FROM {semantics.vw_harbour_claim} c
+  JOIN claim_tx t USING (claim_id)
+  JOIN pol USING (policy_id)

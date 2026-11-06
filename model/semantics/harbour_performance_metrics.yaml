@@ -1,0 +1,75 @@
+kind: metric_view
+name: harbour_performance_metrics
+domain: semantics
+after_mappings: true
+title: Harbour Mutual Motor Performance Metrics
+description: >
+  The second insurer's motor loss ratio on the same definition as Bricksurance's
+  motor_performance_metrics (paid plus outstanding case reserves plus IBNR, net of
+  recoveries, over EARNED premium; accident-quarter basis; GBP), computed from the
+  conformed views that two mapping files produce over Harbour Mutual's policy
+  centre and claim centre. Harbour has no IBNR feed in this extract (ibnr is
+  zero) and no region dimension (region_name is the postcode area). Use measure
+  loss_ratio for loss-ratio questions; peril_code describes claims only.
+owner: Harbour Mutual, Chief Actuary
+certification: certified
+source: semantics.harbour_loss_ratio_components
+dimensions:
+  - name: accident_quarter
+    expr: accident_quarter
+    description: Accident quarter, e.g. 2026Q2, 2026Q3.
+  - name: motor_segment
+    expr: motor_segment
+    description: Harbour personal auto or Harbour commercial auto. Filter with labels.
+  - name: motor_segment_code
+    expr: motor_segment_code
+    description: HP or HC.
+  - name: region_name
+    expr: region_name
+    description: Postcode area (Harbour has no region dimension).
+  - name: peril_code
+    expr: peril_code
+    description: Claims only - AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE (translated from Harbour's loss causes).
+  - name: large_loss_flag
+    expr: large_loss_flag
+    description: Claims only - net incurred 500,000 GBP or more.
+  - name: component_kind
+    expr: component_kind
+    description: EXPOSURE or CLAIM row.
+measures:
+  - name: earned_premium
+    expr: SUM(earned_premium)
+    description: Premium earned in the quarter, GBP, derived daily pro-rata from the policy period.
+  - name: written_premium
+    expr: SUM(written_premium)
+    description: Premium written in the quarter, GBP.
+  - name: vehicle_years
+    expr: SUM(vehicle_years)
+    description: Policy-years of exposure (Harbour extract carries one vehicle per personal policy).
+  - name: claims_paid
+    expr: SUM(claims_paid)
+    description: Indemnity paid to the valuation date.
+  - name: case_reserves
+    expr: SUM(case_reserves)
+    description: Outstanding case reserves at the valuation date.
+  - name: recoveries
+    expr: SUM(recoveries)
+    description: Recoveries, positive number.
+  - name: claims_handling_costs
+    expr: SUM(claims_handling_costs)
+    description: Expense payments (claims handling), not in the loss ratio.
+  - name: incurred_claims
+    expr: SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)
+    description: Incurred claims on the shared definition (IBNR is zero in this extract).
+  - name: loss_ratio
+    expr: (SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)) / NULLIF(SUM(earned_premium), 0)
+    description: Harbour Mutual motor loss ratio on the shared definition, earned basis.
+  - name: claim_count
+    expr: SUM(claim_count)
+    description: Number of claims.
+  - name: frequency
+    expr: SUM(claim_count) / NULLIF(SUM(vehicle_years), 0)
+    description: Claims per policy-year.
+  - name: severity
+    expr: (SUM(claims_paid) + SUM(case_reserves) - SUM(recoveries)) / NULLIF(SUM(claim_count), 0)
+    description: Average net incurred per claim.

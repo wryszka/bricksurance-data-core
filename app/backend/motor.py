@@ -155,6 +155,8 @@ def metric_view_sql(d):
 def vocabulary_lines(limit=60):
     out = []
     for m in mappings():
+        if m["source_system"].startswith("HARBOUR"):
+            continue  # the second insurer has its own metric; keep Bricksurance's agent on its own book
         out.append(f"- {m['title']} (schema bricksurance_{m['schema']}, source system {m['source_system']}):")
         for tb in m["tables"]:
             for c in tb.get("columns", []):
@@ -346,6 +348,32 @@ def evidence():
     return {"regions": regions, "theft": theft, "repair": repair, "large": large, "freq_sev": freq_sev, "perils": perils}
 
 
+def second_insurer():
+    """Harbour Mutual: the same question over a second insurer mapped with two files. None if not loaded."""
+    maps = [m for m in mappings() if m["source_system"].startswith("HARBOUR")]
+    if not maps:
+        return None
+    try:
+        r = run_sql(f"SELECT accident_quarter, motor_segment, MEASURE(earned_premium), MEASURE(incurred_claims), "
+                    f"MEASURE(loss_ratio), MEASURE(claim_count) FROM {S}.harbour_performance_metrics "
+                    f"WHERE accident_quarter IN ('{Q2}', '{Q3}') GROUP BY 1, 2 ORDER BY 2, 1")
+    except Exception as e:
+        return {"name": "Harbour Mutual", "loaded": False, "error": type(e).__name__, "mappings": [m["title"] for m in maps]}
+    rows_ = [{"accident_quarter": q, "motor_segment": s, "earned_premium": _f(ep), "incurred_claims": _f(inc),
+              "loss_ratio": _f(lr), "claim_count": _f(n)} for q, s, ep, inc, lr, n in r]
+    tot = {}
+    for x in rows_:
+        tq = tot.setdefault(x["accident_quarter"], {"earned_premium": 0.0, "incurred_claims": 0.0})
+        tq["earned_premium"] += x["earned_premium"]
+        tq["incurred_claims"] += x["incurred_claims"]
+    for tq in tot.values():
+        tq["loss_ratio"] = tq["incurred_claims"] / tq["earned_premium"] if tq["earned_premium"] else 0
+    n_cols = sum(len(tb.get("columns", [])) + len(tb.get("extensions", [])) for m in maps for tb in m["tables"])
+    return {"name": "Harbour Mutual", "loaded": True, "mappings": [m["title"] for m in maps],
+            "systems": [m["source_system"] for m in maps], "mapped_columns": n_cols,
+            "segments": rows_, "totals": tot}
+
+
 def definitions_compare(h):
     return {
         "approved": {"q2": h["q2"].get("loss_ratio"), "q3": h["q3"].get("loss_ratio")},
@@ -401,13 +429,15 @@ def _cache():
 def state():
     from concurrent.futures import ThreadPoolExecutor
     client().config.authenticate()
-    with ThreadPoolExecutor(3) as ex:
-        f_defs, f_head, f_seg = ex.submit(on.definitions), ex.submit(headline), ex.submit(segments)
-        defs, h, seg = f_defs.result(), f_head.result(), f_seg.result()
+    with ThreadPoolExecutor(4) as ex:
+        f_defs, f_head, f_seg, f_sec = ex.submit(on.definitions), ex.submit(headline), ex.submit(segments), ex.submit(second_insurer)
+        defs, h, seg, sec = f_defs.result(), f_head.result(), f_seg.result(), f_sec.result()
     d = next(x for x in defs if x["status"] == "APPROVED")
+    bx = [s for s in systems() if not s["system"].startswith("HARBOUR")]
     return {"question": QUESTION, "follow_ups": FOLLOW_UPS, "valuation_date": VALUATION,
             "approved": d, "headline": h, "segments": seg, "definitions": definitions_compare(h),
-            "systems": systems(), "crosswalk": crosswalk(),
+            "systems": bx, "crosswalk": [r for r in crosswalk() if any(not k.startswith("HARBOUR") for k in r["systems"])],
+            "second_insurer": sec,
             "spaces": {"raw": RAW_SPACE, "governed": GOV_SPACE}, "host": client().config.host}
 
 

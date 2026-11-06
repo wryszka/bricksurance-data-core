@@ -288,6 +288,26 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - dimension legal_entity_id: Posting entity - filter for a solo statement.
   - dimension currency_code: Currency. Always constrain.
   - MEASURE(line_amount): The statement line value, sign-adjusted for presentation.
+- `lr_serverless_aws_us_catalog.bricksurance_semantics.harbour_performance_metrics` — The second insurer's motor loss ratio on the same definition as Bricksurance's motor_performance_metrics (paid plus outstanding case reserves plus IBNR, net of recoveries, over EARNED premium; accident-quarter basis; GBP), computed from the conformed views that two mapping files produce over Harbour Mutual's policy centre and claim centre. Harbour has no IBNR feed in this extract (ibnr is zero) and no region dimension (region_name is the postcode area). Use measure loss_ratio for loss-ratio questions; peril_code describes claims only.
+  - dimension accident_quarter: Accident quarter, e.g. 2026Q2, 2026Q3.
+  - dimension motor_segment: Harbour personal auto or Harbour commercial auto. Filter with labels.
+  - dimension motor_segment_code: HP or HC.
+  - dimension region_name: Postcode area (Harbour has no region dimension).
+  - dimension peril_code: Claims only - AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE (translated from Harbour's loss causes).
+  - dimension large_loss_flag: Claims only - net incurred 500,000 GBP or more.
+  - dimension component_kind: EXPOSURE or CLAIM row.
+  - MEASURE(earned_premium): Premium earned in the quarter, GBP, derived daily pro-rata from the policy period.
+  - MEASURE(written_premium): Premium written in the quarter, GBP.
+  - MEASURE(vehicle_years): Policy-years of exposure (Harbour extract carries one vehicle per personal policy).
+  - MEASURE(claims_paid): Indemnity paid to the valuation date.
+  - MEASURE(case_reserves): Outstanding case reserves at the valuation date.
+  - MEASURE(recoveries): Recoveries, positive number.
+  - MEASURE(claims_handling_costs): Expense payments (claims handling), not in the loss ratio.
+  - MEASURE(incurred_claims): Incurred claims on the shared definition (IBNR is zero in this extract).
+  - MEASURE(loss_ratio): Harbour Mutual motor loss ratio on the shared definition, earned basis.
+  - MEASURE(claim_count): Number of claims.
+  - MEASURE(frequency): Claims per policy-year.
+  - MEASURE(severity): Average net incurred per claim.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.investment_metrics` — The asset side: market value, book cost, unrealised gain and investment income by asset class and legal entity. Query with MEASURE(); constrain currency_code.
   - dimension asset_class: Asset class as its business label.
   - dimension asset_class_code: Asset class code.

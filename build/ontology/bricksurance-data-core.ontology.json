@@ -11364,6 +11364,16 @@
     },
     {
       "kind": "view",
+      "name": "harbour_loss_ratio_components",
+      "domain": "semantics",
+      "after_mappings": true,
+      "title": "Harbour Mutual Loss Ratio Components",
+      "description": "The second insurer's loss-ratio building blocks in exactly the shape of motor_loss_ratio_components, built only from the conformed views that two mapping files (harbour_pc, harbour_cc) produce over Harbour Mutual's policy centre and claim centre. Same column names, same metric definition, same questions. Harbour has no IBNR feed in this extract, so ibnr is zero and the loss ratio is a case-incurred ratio; region is the postcode area because Harbour has no region dimension. Both limits are stated, not hidden.\n",
+      "grain": "One row per policy-quarter (EXPOSURE) or per claim (CLAIM).",
+      "sql": "WITH pol AS (\n  SELECT p.policy_id, p.policy_number, p.motor_segment_code,\n         CASE p.motor_segment_code WHEN 'HP' THEN 'Harbour personal auto' ELSE 'Harbour commercial auto' END AS motor_segment,\n         CAST(NULL AS STRING) AS use_class_code, p.inception_date, p.annual_premium, p.risk_postcode AS postcode_area\n  FROM {semantics.vw_harbour_policy} p\n),\nexposure AS (\n  SELECT policy_id, accident_quarter, SUM(earned_premium) AS earned_premium, SUM(vehicle_years) AS vehicle_years\n  FROM {semantics.vw_harbour_earned_premium} GROUP BY policy_id, accident_quarter\n),\nwritten AS (\n  SELECT policy_id, concat(year(transaction_date), 'Q', quarter(transaction_date)) AS accident_quarter, SUM(amount) AS written_premium\n  FROM {semantics.vw_harbour_premium_transaction} GROUP BY 1, 2\n),\nclaim_tx AS (\n  SELECT claim_id,\n         SUM(CASE WHEN claim_transaction_type_code = 'INDEMNITY_PAYMENT' THEN amount ELSE 0 END) AS claims_paid,\n         SUM(CASE WHEN claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT' THEN amount ELSE 0 END) AS case_reserves,\n         SUM(CASE WHEN claim_transaction_type_code = 'EXPENSE_PAYMENT' THEN amount ELSE 0 END) AS claims_handling_costs,\n         -SUM(CASE WHEN claim_transaction_type_code = 'RECOVERY' THEN amount ELSE 0 END) AS recoveries,\n         MAX(head_of_damage_code) AS head_of_damage_code, MAX(claim_feature_type_code) AS claim_feature_type_code\n  FROM {semantics.vw_harbour_claim_transaction} GROUP BY claim_id\n)\nSELECT 'EXPOSURE' AS component_kind, x.policy_id, pol.policy_number, pol.motor_segment_code, pol.motor_segment,\n       x.accident_quarter, pol.postcode_area AS region_name, CAST(NULL AS STRING) AS urbanity_code, pol.use_class_code,\n       CAST(NULL AS STRING) AS claim_id, CAST(NULL AS STRING) AS claim_number, CAST(NULL AS DATE) AS loss_date,\n       CAST(NULL AS STRING) AS peril_code, CAST(NULL AS STRING) AS cause_of_loss_code,\n       CAST(NULL AS STRING) AS head_of_damage_code, CAST(NULL AS STRING) AS claim_feature_type_code,\n       CAST(NULL AS BOOLEAN) AS large_loss_flag,\n       CAST(x.earned_premium AS DECIMAL(18,2)) AS earned_premium,\n       CAST(COALESCE(w.written_premium, 0) AS DECIMAL(18,2)) AS written_premium,\n       CAST(x.vehicle_years AS DECIMAL(18,6)) AS vehicle_years,\n       CAST(0 AS DECIMAL(18,2)) AS claims_paid, CAST(0 AS DECIMAL(18,2)) AS case_reserves,\n       CAST(0 AS DECIMAL(18,2)) AS ibnr, CAST(0 AS DECIMAL(18,2)) AS claims_handling_costs,\n       CAST(0 AS DECIMAL(18,2)) AS recoveries, 0 AS claim_count\nFROM exposure x\nJOIN pol USING (policy_id)\nLEFT JOIN written w ON w.policy_id = x.policy_id AND w.accident_quarter = x.accident_quarter\nUNION ALL\nSELECT 'CLAIM', c.policy_id, pol.policy_number, pol.motor_segment_code, pol.motor_segment,\n       concat(year(c.loss_date), 'Q', quarter(c.loss_date)), c.loss_postcode_area, NULL, pol.use_class_code,\n       c.claim_id, c.claim_number, c.loss_date, c.peril_code, c.cause_of_loss_code,\n       t.head_of_damage_code, t.claim_feature_type_code,\n       (t.claims_paid + t.case_reserves - t.recoveries) >= 500000,\n       CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,6)),\n       CAST(t.claims_paid AS DECIMAL(18,2)), CAST(t.case_reserves AS DECIMAL(18,2)),\n       CAST(0 AS DECIMAL(18,2)), CAST(t.claims_handling_costs AS DECIMAL(18,2)),\n       CAST(t.recoveries AS DECIMAL(18,2)), 1\nFROM {semantics.vw_harbour_claim} c\nJOIN claim_tx t USING (claim_id)\nJOIN pol USING (policy_id)\n"
+    },
+    {
+      "kind": "view",
       "name": "motor_loss_ratio_components",
       "domain": "semantics",
       "after_mappings": true,
@@ -12011,6 +12021,116 @@
           "name": "line_amount",
           "expr": "SUM(amount * statement_line.sign)",
           "description": "The statement line value, sign-adjusted for presentation."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "harbour_performance_metrics",
+      "domain": "semantics",
+      "after_mappings": true,
+      "title": "Harbour Mutual Motor Performance Metrics",
+      "description": "The second insurer's motor loss ratio on the same definition as Bricksurance's motor_performance_metrics (paid plus outstanding case reserves plus IBNR, net of recoveries, over EARNED premium; accident-quarter basis; GBP), computed from the conformed views that two mapping files produce over Harbour Mutual's policy centre and claim centre. Harbour has no IBNR feed in this extract (ibnr is zero) and no region dimension (region_name is the postcode area). Use measure loss_ratio for loss-ratio questions; peril_code describes claims only.\n",
+      "owner": "Harbour Mutual, Chief Actuary",
+      "certification": "certified",
+      "source": "semantics.harbour_loss_ratio_components",
+      "dimensions": [
+        {
+          "name": "accident_quarter",
+          "expr": "accident_quarter",
+          "description": "Accident quarter, e.g. 2026Q2, 2026Q3."
+        },
+        {
+          "name": "motor_segment",
+          "expr": "motor_segment",
+          "description": "Harbour personal auto or Harbour commercial auto. Filter with labels."
+        },
+        {
+          "name": "motor_segment_code",
+          "expr": "motor_segment_code",
+          "description": "HP or HC."
+        },
+        {
+          "name": "region_name",
+          "expr": "region_name",
+          "description": "Postcode area (Harbour has no region dimension)."
+        },
+        {
+          "name": "peril_code",
+          "expr": "peril_code",
+          "description": "Claims only - AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE (translated from Harbour's loss causes)."
+        },
+        {
+          "name": "large_loss_flag",
+          "expr": "large_loss_flag",
+          "description": "Claims only - net incurred 500,000 GBP or more."
+        },
+        {
+          "name": "component_kind",
+          "expr": "component_kind",
+          "description": "EXPOSURE or CLAIM row."
+        }
+      ],
+      "measures": [
+        {
+          "name": "earned_premium",
+          "expr": "SUM(earned_premium)",
+          "description": "Premium earned in the quarter, GBP, derived daily pro-rata from the policy period."
+        },
+        {
+          "name": "written_premium",
+          "expr": "SUM(written_premium)",
+          "description": "Premium written in the quarter, GBP."
+        },
+        {
+          "name": "vehicle_years",
+          "expr": "SUM(vehicle_years)",
+          "description": "Policy-years of exposure (Harbour extract carries one vehicle per personal policy)."
+        },
+        {
+          "name": "claims_paid",
+          "expr": "SUM(claims_paid)",
+          "description": "Indemnity paid to the valuation date."
+        },
+        {
+          "name": "case_reserves",
+          "expr": "SUM(case_reserves)",
+          "description": "Outstanding case reserves at the valuation date."
+        },
+        {
+          "name": "recoveries",
+          "expr": "SUM(recoveries)",
+          "description": "Recoveries, positive number."
+        },
+        {
+          "name": "claims_handling_costs",
+          "expr": "SUM(claims_handling_costs)",
+          "description": "Expense payments (claims handling), not in the loss ratio."
+        },
+        {
+          "name": "incurred_claims",
+          "expr": "SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)",
+          "description": "Incurred claims on the shared definition (IBNR is zero in this extract)."
+        },
+        {
+          "name": "loss_ratio",
+          "expr": "(SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)) / NULLIF(SUM(earned_premium), 0)",
+          "description": "Harbour Mutual motor loss ratio on the shared definition, earned basis."
+        },
+        {
+          "name": "claim_count",
+          "expr": "SUM(claim_count)",
+          "description": "Number of claims."
+        },
+        {
+          "name": "frequency",
+          "expr": "SUM(claim_count) / NULLIF(SUM(vehicle_years), 0)",
+          "description": "Claims per policy-year."
+        },
+        {
+          "name": "severity",
+          "expr": "(SUM(claims_paid) + SUM(case_reserves) - SUM(recoveries)) / NULLIF(SUM(claim_count), 0)",
+          "description": "Average net incurred per claim."
         }
       ]
     },
@@ -13104,6 +13224,7 @@
               "source": "pol_ref",
               "attribute": "policy_id",
               "expr": "concat('PAS_MOTOR:', pol_ref)",
+              "definition": "Stable, source-agnostic identifier for the policy (same surrogate as the policy system mapping).",
               "note": "'Pol ref' is the policy system's contract reference."
             },
             {
@@ -13387,6 +13508,360 @@
               "name": "claim_feature_type_code",
               "source": "head_of_damage",
               "definition": "Head of damage rolled up to the core claim feature type (OWN_DAMAGE, THIRD_PARTY_PROPERTY, THIRD_PARTY_INJURY)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "mapping",
+      "name": "harbour_cc",
+      "title": "Harbour Mutual claim centre -> core concepts",
+      "description": "Harbour Mutual's claim centre: claims with PublicID / ClaimNumber / PolicyNumber / LossCause (vehcollision, theft, propertydamage, bodilyinjury, glassbreakage, fire) and transactions typed Payment / Reserve / Recovery with a CostType of claimcost or expense. Mapped to the same core Claim and Claim Transaction concepts as the Bricksurance motor claims system, so the same metric and the same questions work.\n",
+      "source_system": "HARBOUR_CC",
+      "schema": "harbour_cc",
+      "owner": "Harbour Mutual, Head of Claims",
+      "certification": "certified",
+      "tables": [
+        {
+          "source": "cc_claim",
+          "concept": "claim",
+          "conformed_view": "vw_harbour_claim",
+          "grain": "One row per claim.",
+          "description": "Harbour motor claims.",
+          "columns": [
+            {
+              "source": "PublicID",
+              "attribute": "claim_id",
+              "expr": "concat('HARBOUR_CC:', PublicID)"
+            },
+            {
+              "source": "ClaimNumber",
+              "attribute": "claim_number"
+            },
+            {
+              "source": "PolicyNumber",
+              "attribute": "policy_id",
+              "expr": "concat('HARBOUR_PC:', (SELECT max(PublicID) FROM {harbour_pc.pc_policyperiod} p WHERE p.PolicyNumber = c.PolicyNumber))",
+              "note": "The claim centre holds the PolicyNumber; the policy id is resolved through the policy centre."
+            },
+            {
+              "source": "State",
+              "attribute": "claim_status_code",
+              "value_map": {
+                "open": "OPEN",
+                "closed": "CLOSED"
+              }
+            },
+            {
+              "source": "LossCause",
+              "attribute": "cause_of_loss_code",
+              "value_map": {
+                "vehcollision": "COLLISION",
+                "theft": "THEFT",
+                "propertydamage": "LIABILITY_INCIDENT",
+                "bodilyinjury": "LIABILITY_INCIDENT",
+                "glassbreakage": "GLASS",
+                "fire": "FIRE"
+              }
+            },
+            {
+              "source": "LossDate",
+              "attribute": "loss_date"
+            },
+            {
+              "source": "ReportedDate",
+              "attribute": "reported_date"
+            },
+            {
+              "attribute": "source_system_code",
+              "expr": "'HARBOUR_CC'"
+            }
+          ],
+          "sql": "SELECT concat('HARBOUR_CC:', c.PublicID) AS claim_id,\n       c.ClaimNumber AS claim_number,\n       concat('HARBOUR_PC:', p.PublicID) AS policy_id,\n       CASE c.State WHEN 'open' THEN 'OPEN' ELSE 'CLOSED' END AS claim_status_code,\n       CASE c.LossCause WHEN 'vehcollision' THEN 'COLLISION' WHEN 'theft' THEN 'THEFT' WHEN 'glassbreakage' THEN 'GLASS'\n                        WHEN 'fire' THEN 'FIRE' ELSE 'LIABILITY_INCIDENT' END AS cause_of_loss_code,\n       c.LossDate AS loss_date, c.ReportedDate AS reported_date, 'HARBOUR_CC' AS source_system_code,\n       CASE c.LossCause WHEN 'vehcollision' THEN 'AD' WHEN 'theft' THEN 'THEFT' WHEN 'propertydamage' THEN 'TPPD'\n                        WHEN 'bodilyinjury' THEN 'TPBI' WHEN 'glassbreakage' THEN 'WINDSCREEN' ELSE 'FIRE' END AS peril_code,\n       c.LossLocationPostalCode AS loss_postcode_area\nFROM {src} c\nLEFT JOIN {harbour_pc.pc_policyperiod} p ON p.PolicyNumber = c.PolicyNumber\n",
+          "extensions": [
+            {
+              "name": "peril_code",
+              "source": "LossCause",
+              "definition": "Harbour's loss cause translated to the shared peril vocabulary (AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE) so cross-insurer peril questions line up."
+            },
+            {
+              "name": "loss_postcode_area",
+              "source": "LossLocationPostalCode",
+              "definition": "Postcode area where the loss occurred."
+            }
+          ]
+        },
+        {
+          "source": "cc_transaction",
+          "concept": "claim_transaction",
+          "conformed_view": "vw_harbour_claim_transaction",
+          "grain": "One row per transaction, plus one reserve release per payment (core convention).",
+          "description": "Claim centre transactions as core claim transactions. Payment with CostType expense is a claims-handling cost; Payment with claimcost is indemnity and also generates the core's reserve release.\n",
+          "columns": [
+            {
+              "source": "PublicID",
+              "attribute": "claim_transaction_id",
+              "expr": "concat('HARBOUR_CC:', PublicID)"
+            },
+            {
+              "source": "ClaimID",
+              "attribute": "claim_id",
+              "expr": "concat('HARBOUR_CC:', ClaimID)"
+            },
+            {
+              "source": "TransactionType",
+              "attribute": "claim_transaction_type_code",
+              "value_map": {
+                "Payment": "INDEMNITY_PAYMENT or EXPENSE_PAYMENT by CostType",
+                "Reserve": "CASE_RESERVE_MOVEMENT",
+                "Recovery": "RECOVERY"
+              }
+            },
+            {
+              "source": "Amount",
+              "attribute": "amount"
+            },
+            {
+              "attribute": "currency_code",
+              "expr": "'GBP'"
+            },
+            {
+              "source": "CreateTime",
+              "attribute": "transaction_date"
+            },
+            {
+              "attribute": "source_system_code",
+              "expr": "'HARBOUR_CC'"
+            }
+          ],
+          "sql": "SELECT concat('HARBOUR_CC:', PublicID) AS claim_transaction_id,\n       concat('HARBOUR_CC:', ClaimID) AS claim_id,\n       CASE WHEN TransactionType = 'Payment' AND CostType = 'expense' THEN 'EXPENSE_PAYMENT'\n            WHEN TransactionType = 'Payment' THEN 'INDEMNITY_PAYMENT'\n            WHEN TransactionType = 'Reserve' THEN 'CASE_RESERVE_MOVEMENT' ELSE 'RECOVERY' END AS claim_transaction_type_code,\n       Amount AS amount, 'GBP' AS currency_code, CAST(CreateTime AS DATE) AS transaction_date, 'HARBOUR_CC' AS source_system_code,\n       CASE WHEN CostType = 'expense' THEN 'FEES' ELSE 'CLAIM_COST' END AS head_of_damage_code,\n       'OWN_DAMAGE' AS claim_feature_type_code\nFROM {src}\nUNION ALL\nSELECT concat('HARBOUR_CC:', PublicID, ':REL'), concat('HARBOUR_CC:', ClaimID), 'CASE_RESERVE_MOVEMENT',\n       -Amount, 'GBP', CAST(CreateTime AS DATE), 'HARBOUR_CC', 'CLAIM_COST', 'OWN_DAMAGE'\nFROM {src}\nWHERE TransactionType = 'Payment' AND CostType = 'claimcost'\n",
+          "extensions": [
+            {
+              "name": "head_of_damage_code",
+              "source": "CostType",
+              "definition": "Harbour does not record head of damage; CostType (claimcost / expense) is carried in its place."
+            },
+            {
+              "name": "claim_feature_type_code",
+              "definition": "Not available from Harbour's claim centre at transaction level; defaulted to OWN_DAMAGE and said so."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "mapping",
+      "name": "harbour_pc",
+      "title": "Harbour Mutual policy centre -> core concepts",
+      "description": "A second insurer, Harbour Mutual, on a different policy system shape: policy periods with PublicID / PolicyNumber / PeriodStart / PeriodEnd / TotalPremiumRPT and product codes PersonalAuto / CommercialAuto. Mapped to the same core concepts as Bricksurance's motor book with one file. Harbour has no actuarial warehouse, so earned premium is derived in the conformed view on the core's daily pro-rata convention.\n",
+      "source_system": "HARBOUR_PC",
+      "schema": "harbour_pc",
+      "owner": "Harbour Mutual, Head of Personal Lines",
+      "certification": "certified",
+      "tables": [
+        {
+          "source": "pc_policyperiod",
+          "concept": "policy",
+          "conformed_view": "vw_harbour_policy",
+          "grain": "One row per policy period (annual).",
+          "description": "Harbour Mutual motor policy periods.",
+          "columns": [
+            {
+              "source": "PublicID",
+              "attribute": "policy_id",
+              "expr": "concat('HARBOUR_PC:', PublicID)"
+            },
+            {
+              "source": "PolicyNumber",
+              "attribute": "policy_number",
+              "note": "Harbour's system calls it PolicyNumber; the claim centre carries the same value."
+            },
+            {
+              "source": "ProductCode",
+              "attribute": "line_of_business_code",
+              "expr": "'MOTOR'",
+              "note": "PersonalAuto and CommercialAuto are both Motor; the product code is kept as the segment extension."
+            },
+            {
+              "source": "Status",
+              "attribute": "policy_status_code",
+              "value_map": {
+                "Bound": "IN_FORCE",
+                "Expired": "EXPIRED"
+              }
+            },
+            {
+              "source": "PeriodStart",
+              "attribute": "inception_date"
+            },
+            {
+              "source": "PeriodEnd",
+              "attribute": "expiry_date"
+            },
+            {
+              "source": "PeriodStart",
+              "attribute": "underwriting_year",
+              "expr": "year(PeriodStart)"
+            },
+            {
+              "attribute": "currency_code",
+              "expr": "'GBP'"
+            },
+            {
+              "attribute": "source_system_code",
+              "expr": "'HARBOUR_PC'"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "motor_segment_code",
+              "source": "ProductCode",
+              "value_map": {
+                "PersonalAuto": "HP",
+                "CommercialAuto": "HC"
+              },
+              "expr": "CASE ProductCode WHEN 'PersonalAuto' THEN 'HP' ELSE 'HC' END",
+              "definition": "Harbour Mutual segment - HP personal auto, HC commercial auto. Harbour's own segmentation, not the standard's."
+            },
+            {
+              "name": "annual_premium",
+              "source": "TotalPremiumRPT",
+              "definition": "Total period premium in GBP as reported by the policy centre."
+            },
+            {
+              "name": "risk_postcode",
+              "source": "PrimaryInsuredPostalCode",
+              "definition": "Postcode area of the primary insured."
+            }
+          ]
+        },
+        {
+          "source": "pc_policyperiod",
+          "concept": "premium_transaction",
+          "conformed_view": "vw_harbour_premium_transaction",
+          "grain": "One written-premium row per policy period.",
+          "description": "Harbour books premium once per period; the conformed view presents it as a WRITTEN premium transaction.",
+          "columns": [
+            {
+              "source": "PublicID",
+              "attribute": "premium_transaction_id",
+              "expr": "concat('HARBOUR_PC:PREM:', PublicID)"
+            },
+            {
+              "source": "PublicID",
+              "attribute": "policy_id",
+              "expr": "concat('HARBOUR_PC:', PublicID)"
+            },
+            {
+              "attribute": "premium_transaction_type_code",
+              "expr": "'WRITTEN'"
+            },
+            {
+              "source": "TotalPremiumRPT",
+              "attribute": "amount"
+            },
+            {
+              "attribute": "currency_code",
+              "expr": "'GBP'"
+            },
+            {
+              "source": "PeriodStart",
+              "attribute": "transaction_date"
+            },
+            {
+              "attribute": "source_system_code",
+              "expr": "'HARBOUR_PC'"
+            }
+          ]
+        },
+        {
+          "source": "pc_policyperiod",
+          "concept": "premium_earning",
+          "conformed_view": "vw_harbour_earned_premium",
+          "grain": "One row per policy period per accounting month with cover in force.",
+          "description": "Harbour has no earning engine in this extract, so earned premium is derived here on the core convention - daily pro-rata over the period - month by month.\n",
+          "columns": [
+            {
+              "source": "PublicID",
+              "attribute": "policy_id",
+              "expr": "concat('HARBOUR_PC:', PublicID)",
+              "definition": "Stable, source-agnostic identifier for the policy."
+            },
+            {
+              "source": "TotalPremiumRPT",
+              "attribute": "earned_premium",
+              "definition": "Premium earned in the month, GBP, daily pro-rata over the policy period."
+            },
+            {
+              "attribute": "accounting_month",
+              "expr": "derived",
+              "definition": "Accounting month as YYYYMM."
+            },
+            {
+              "attribute": "accident_quarter",
+              "expr": "derived",
+              "definition": "Calendar quarter of the accounting month, e.g. 2026Q3."
+            }
+          ],
+          "sql": "WITH months AS (\n  SELECT p.PublicID, p.ProductCode, p.TotalPremiumRPT, p.PeriodStart, p.PeriodEnd, m AS month_start\n  FROM {src} p\n  LATERAL VIEW explode(sequence(trunc(p.PeriodStart, 'MM'), trunc(p.PeriodEnd, 'MM'), interval 1 month)) AS m\n)\nSELECT concat('HARBOUR_PC:', PublicID) AS policy_id,\n       CAST(TotalPremiumRPT * (datediff(LEAST(date_add(PeriodEnd, 1), add_months(month_start, 1)), GREATEST(PeriodStart, month_start))) / 365.0 AS DECIMAL(18,2)) AS earned_premium,\n       year(month_start) * 100 + month(month_start) AS accounting_month,\n       concat(year(month_start), 'Q', quarter(month_start)) AS accident_quarter,\n       CAST(datediff(LEAST(date_add(PeriodEnd, 1), add_months(month_start, 1)), GREATEST(PeriodStart, month_start)) AS DECIMAL(18,6)) / 365.0 AS vehicle_years,\n       CASE ProductCode WHEN 'PersonalAuto' THEN 'HP' ELSE 'HC' END AS motor_segment_code\nFROM months\nWHERE datediff(LEAST(date_add(PeriodEnd, 1), add_months(month_start, 1)), GREATEST(PeriodStart, month_start)) > 0\n",
+          "extensions": [
+            {
+              "name": "vehicle_years",
+              "definition": "Policy-years of exposure in the month (one vehicle assumed per personal policy; commercial fleets count their vehicles via pc_vehicle)."
+            },
+            {
+              "name": "motor_segment_code",
+              "source": "ProductCode",
+              "definition": "HP personal auto, HC commercial auto."
+            }
+          ]
+        },
+        {
+          "source": "pc_vehicle",
+          "concept": "vehicle",
+          "conformed_view": "vw_harbour_vehicle",
+          "grain": "One row per vehicle on a policy period.",
+          "description": "Vehicles on Harbour policy periods.",
+          "columns": [
+            {
+              "source": "PublicID",
+              "attribute": "vehicle_id",
+              "expr": "concat('HARBOUR_PC:', PublicID)"
+            },
+            {
+              "source": "PublicID",
+              "attribute": "insured_object_id",
+              "expr": "concat('HARBOUR_PC:', PublicID)"
+            },
+            {
+              "source": "PolicyPeriodID",
+              "attribute": "insured_object.policy_id",
+              "expr": "concat('HARBOUR_PC:', PolicyPeriodID)"
+            },
+            {
+              "source": "VIN",
+              "attribute": "registration_number",
+              "note": "Harbour keys vehicles by VIN, not registration mark; kept in the registration_number slot and said so."
+            },
+            {
+              "source": "Make",
+              "attribute": "make"
+            },
+            {
+              "source": "Model",
+              "attribute": "model"
+            },
+            {
+              "source": "Year",
+              "attribute": "year_of_manufacture"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "vehicle_value_amount",
+              "source": "CostNew",
+              "definition": "Cost new in GBP as recorded by the policy centre."
             }
           ]
         }
