@@ -65,9 +65,10 @@ def attr_type(attr):
 def load_model():
     manifest = yaml.safe_load((ROOT / "model" / "model.yaml").read_text())
     entities, code_sets, views, metric_views, functions = [], [], [], [], []
+    MAPPINGS.clear()
     buckets = {"entity": entities, "code_set": code_sets,
                "view": views, "metric_view": metric_views,
-               "function": functions}
+               "function": functions, "mapping": MAPPINGS}
     for path in sorted((ROOT / "model").rglob("*.yaml")):
         if path.name == "model.yaml":
             continue
@@ -77,6 +78,12 @@ def load_model():
             raise ValueError(f"{path}: unknown kind {kind!r}")
         buckets[kind].append(spec)
     return manifest, entities, code_sets, views, metric_views, functions
+
+
+# Mapping specs (kind: mapping) are loaded alongside the five core kinds. They are
+# kept in a module-level list so load_model() keeps its historical signature for
+# plan_migration.py and import_ontology.py.
+MAPPINGS = []
 
 
 def code_set_as_entity(cs):
@@ -482,13 +489,19 @@ def generate_platform(binding, manifest, entities, code_sets, views, metric_view
         path = out / f"20_{e['domain']}_{e['name']}.sql"
         path.write_text(header + entity_ddl(binding, manifest, e) + "\n")
 
-    # 30+ - semantic layer: plain views everywhere, metric views on Databricks
+    # 30+ - semantic layer: plain views everywhere, metric views on Databricks.
+    # Specs flagged after_mappings depend on conformed views generated from
+    # mapping specs over source extracts that deploy_databricks.py does not load,
+    # so they go under mappings/ (applied by tools/motor_load.py), not top level.
+    (out / "mappings").mkdir(exist_ok=True)
     for v in views:
-        path = out / f"30_{v['domain']}_{v['name']}.sql"
+        sub, n = ("mappings", "60") if v.get("after_mappings") else ("", "30")
+        path = out / sub / f"{n}_{v['domain']}_{v['name']}.sql"
         path.write_text(header + view_ddl(binding, v) + "\n")
     if platform == "databricks":
         for mv in metric_views:
-            path = out / f"35_{mv['domain']}_{mv['name']}.sql"
+            sub, n = ("mappings", "70") if mv.get("after_mappings") else ("", "35")
+            path = out / sub / f"{n}_{mv['domain']}_{mv['name']}.sql"
             path.write_text(header + metric_view_ddl(binding, mv) + "\n")
         for fn in functions:
             path = out / f"40_{fn['domain']}_{fn['name']}.sql"
@@ -646,6 +659,160 @@ def generate_genie(binding, manifest, entities, code_sets, views=(), metric_view
     (out / "genie_instructions.md").write_text("\n".join(lines) + "\n")
 
 
+def _value_map_case(source, value_map):
+    whens = " ".join(f"WHEN '{k}' THEN '{v}'" for k, v in value_map.items())
+    return f"CASE {source} {whens} END"
+
+
+def generate_mappings(binding, manifest, entities, views, mappings):
+    """kind: mapping -> the reusable ACORD-base -> enterprise -> Unity Catalog mechanism.
+
+    For every mapping spec (a source system's tables and columns mapped to core
+    concepts) this emits, for the Databricks binding:
+      build/databricks/mappings/50_mapping_<name>.sql
+          CREATE SCHEMA for the source extract; COMMENT + tags on every mapped
+          source column ("maps to policy.policy_number (ACORD PolicyNumber): ...");
+          one conformed view per source table in the semantics schema whose
+          column comments ARE the core definitions; tags on the views.
+      build/docs/mapping_catalog.md
+          the crosswalk: one row per core attribute, one column per source system,
+          plus the enterprise extensions that are preserved, not forced into the
+          standard. This is the Page-ready content for Unity Catalog Pages.
+      build/genie/vocabulary_<name>.md
+          the same crosswalk as Genie instructions ("in the claims system,
+          'notified' means reported_date").
+    The ontology JSON carries the mapping specs verbatim (platform-neutral).
+    """
+    if not mappings:
+        return
+    out = BUILD / binding["platform"] / "mappings"
+    out.mkdir(parents=True, exist_ok=True)
+    header = HEADER.format(version=manifest["version"])
+    entity_index = {e["name"]: e for e in entities}
+    view_index = {v["name"]: v for v in views}
+    pfx = binding.get("tag_prefix", "")
+    container = binding.get("catalog") or binding.get("database")
+
+    def attr_def(concept, attribute):
+        if "." in attribute:
+            concept, attribute = attribute.split(".", 1)
+        e = entity_index.get(concept)
+        if e:
+            for a in e["attributes"]:
+                if a["name"] == attribute:
+                    return " ".join(str(a.get("description", "")).split()), (a.get("standards") or {}).get("acord")
+        return None, None
+
+    catalog_rows = {}   # (concept, attribute) -> {"definition", "acord", systems: {system: "table.col note"}}
+    extension_rows = [] # (system, name, source, definition)
+    conformed = []
+    for m in mappings:
+        stmts = [f"CREATE SCHEMA IF NOT EXISTS {container}.{schema_name(binding, m['schema'])}\n"
+                 f"{table_comment(binding['platform'], f'Source extract of {m['title']} (source system {m['source_system']}). Mapped to core concepts by mapping {m['name']}; see the conformed views in the semantics schema.')};"]
+        vocab = [f"## Vocabulary of {m['title']} (source system {m['source_system']})", "",
+                 " ".join(str(m["description"]).split()), ""]
+        for t in m["tables"]:
+            src = fqn(binding, m["schema"], t["source"])
+            concept = t.get("concept")
+            cdomain = (entity_index.get(concept) or view_index.get(concept) or {}).get("domain") if concept else None
+            concept_txt = (f"Maps to the core concept {cdomain}.{concept}." if concept
+                           else "Enterprise extension: no core concept, published as insurer-specific.")
+            stmts.append(f"COMMENT ON TABLE {src} IS '{esc(f'{t['description']} Grain: {t['grain']} Source system {m['source_system']}. {concept_txt}')}';")
+            stmts.append(f"ALTER TABLE {src} SET TAGS ('{pfx}source_system' = '{m['source_system']}', "
+                         f"'{pfx}concept' = '{concept or 'extension'}', '{pfx}mapping' = '{m['name']}');")
+            cols = []  # (alias, expr, comment)
+            for c in t.get("columns", []):
+                attribute = c["attribute"]
+                alias = attribute.split(".")[-1]
+                desc, acord = attr_def(concept, attribute)
+                desc = c.get("definition") or desc or ""
+                target = attribute if "." in attribute else f"{concept}.{attribute}"
+                if c.get("expr"):
+                    expr = c["expr"]
+                elif c.get("value_map") and not t.get("sql"):
+                    expr = _value_map_case(c["source"], c["value_map"])
+                else:
+                    expr = c.get("source") or "NULL"
+                note = " ".join(str(c.get("note", "")).split())
+                cols.append((alias, expr, f"{desc} {note}".strip()))
+                row = catalog_rows.setdefault((cdomain, concept, alias), {"definition": desc, "acord": acord, "systems": {}})
+                src_txt = f"`{t['source']}.{c['source']}`" if c.get("source") else f"constant {c.get('expr')}"
+                if c.get("value_map"):
+                    src_txt += " (" + ", ".join(f"{k}->{v}" for k, v in c["value_map"].items()) + ")"
+                row["systems"][m["source_system"]] = (src_txt + (f" - {note}" if note else "")).strip()
+                if c.get("source"):
+                    text = f"Maps to {target}" + (f" (ACORD {acord})" if acord else "") + f": {desc} {note}"
+                    stmts.append(f"ALTER TABLE {src} ALTER COLUMN {c['source']} COMMENT '{esc(text)}';")
+                    stmts.append(f"ALTER TABLE {src} ALTER COLUMN {c['source']} SET TAGS ('{pfx}concept' = '{target}');")
+                    vocab.append(f"- `{t['source']}.{c['source']}` means **{target}**: {desc} {note}".rstrip())
+            for x in t.get("extensions", []):
+                d = " ".join(str(x["definition"]).split())
+                cols.append((x["name"], x.get("expr") or x["source"], d))
+                extension_rows.append((m["source_system"], x["name"], f"{t['source']}.{x.get('source', '')}", d))
+                if x.get("source"):
+                    stmts.append(f"ALTER TABLE {src} ALTER COLUMN {x['source']} COMMENT '{esc(f'Enterprise extension {x['name']} (kept beside the standard, not forced into it): {d}')}';")
+                    stmts.append(f"ALTER TABLE {src} ALTER COLUMN {x['source']} SET TAGS ('{pfx}concept' = 'extension:{x['name']}');")
+                vocab.append(f"- `{t['source']}.{x.get('source', x['name'])}` is the enterprise extension **{x['name']}**: {d}")
+            if t.get("conformed_view"):
+                vf = fqn(binding, "semantics", t["conformed_view"])
+                if t.get("sql"):
+                    body = resolve_refs(binding, t["sql"]).replace("{src}", src).strip()
+                else:
+                    body = "SELECT\n  " + ",\n  ".join(f"{expr} AS {alias}" for alias, expr, _ in cols) + f"\nFROM {src}"
+                    if t.get("filter"):
+                        body += f"\nWHERE {t['filter']}"
+                vcomment = (f"{t['description']} Grain: {t['grain']} Conformed from {m['source_system']} ({src}) "
+                            f"by mapping {m['name']}; column names and definitions are the core concept {concept or 'extension'}. "
+                            f"Owner {m.get('owner', '')}; {m.get('certification', 'draft')}.")
+                stmts.append(f"CREATE OR REPLACE VIEW {vf}\n{table_comment(binding['platform'], vcomment)}\nAS\n{body};")
+                for alias, _, comment in cols:
+                    if comment:
+                        stmts.append(f"COMMENT ON COLUMN {vf}.{alias} IS '{esc(comment)}';")
+                stmts.append(f"ALTER VIEW {vf} SET TAGS ('{pfx}source_system' = '{m['source_system']}', "
+                             f"'{pfx}concept' = '{concept or 'extension'}', '{pfx}mapping' = '{m['name']}', "
+                             f"'{pfx}certification' = '{m.get('certification', 'draft')}');")
+                conformed.append((vf, concept, m["source_system"], t["conformed_view"]))
+                vocab.append(f"- Conformed view `{vf}` presents `{t['source']}` in core terms; prefer it over the raw table.")
+        (out / f"50_mapping_{m['name']}.sql").write_text(header + "\n\n".join(stmts) + "\n")
+        (BUILD / "genie").mkdir(parents=True, exist_ok=True)
+        (BUILD / "genie" / f"vocabulary_{m['name']}.md").write_text("\n".join(vocab) + "\n")
+
+    # the crosswalk document
+    systems = [m["source_system"] for m in mappings]
+    lines = [f"# Mapping catalog — {manifest['title']} v{manifest['version']}", "",
+             "How each source system's vocabulary maps to the core (ACORD-aligned) concepts. "
+             "One row per core attribute; one column per source system. Generated from "
+             "`model/mappings/*.yaml`; this is the content a Unity Catalog Page per concept would carry.", ""]
+    for m in mappings:
+        lines.append(f"- **{m['source_system']}** — {m['title']} (schema `{schema_name(binding, m['schema'])}`, "
+                     f"owner {m.get('owner', '-')}, {m.get('certification', 'draft')})")
+    lines.append("")
+    by_concept = {}
+    for (cdomain, concept, alias), row in catalog_rows.items():
+        by_concept.setdefault((cdomain, concept), []).append((alias, row))
+    # business reading order: the contract first, then what it covers, then what happened
+    order = ["policy", "coverage", "insured_object", "vehicle", "party", "premium_transaction",
+             "premium_earning", "claim", "claim_transaction", "valuation_result"]
+    rank = {c: i for i, c in enumerate(order)}
+    for (cdomain, concept), rows in sorted(by_concept.items(), key=lambda kv: (rank.get(kv[0][1], 99), kv[0][1] or "")):
+        lines += [f"## {concept} ({cdomain})" if concept else "## Enterprise-only tables", "",
+                  "| Core attribute | Definition | ACORD | " + " | ".join(systems) + " |",
+                  "|---|---|---|" + "---|" * len(systems)]
+        for alias, row in rows:
+            cells = [row["systems"].get(s, "") for s in systems]
+            lines.append(f"| `{alias}` | {row['definition']} | {row['acord'] or ''} | " + " | ".join(cells) + " |")
+        lines.append("")
+    lines += ["## Enterprise extensions (preserved, not forced into the standard)", "",
+              "| Source system | Extension | Source column | Definition |", "|---|---|---|---|"]
+    for s, name, srccol, d in extension_rows:
+        lines.append(f"| {s} | `{name}` | `{srccol}` | {d} |")
+    lines += ["", "## Conformed views", ""]
+    for vf, concept, s, _ in conformed:
+        lines.append(f"- `{vf}` — {s} in core terms ({concept or 'extension'})")
+    (BUILD / "docs").mkdir(parents=True, exist_ok=True)
+    (BUILD / "docs" / "mapping_catalog.md").write_text("\n".join(lines) + "\n")
+
+
 def generate_ontology(manifest, entities, code_sets, views, metric_views, functions):
     """The whole model as ONE portable JSON document — the ontology.
 
@@ -687,6 +854,7 @@ def generate_ontology(manifest, entities, code_sets, views, metric_views, functi
         "views": views,
         "metric_views": metric_views,
         "functions": functions,
+        "mappings": MAPPINGS,
         "relationships": relationships,
         "attestations": load_attestations(),
     }
@@ -757,6 +925,7 @@ def main():
         generated.append(binding["platform"])
         if binding["platform"] == "databricks":
             generate_genie(binding, manifest, entities, code_sets, views, metric_views)
+            generate_mappings(binding, manifest, entities, views, MAPPINGS)
     generate_docs(manifest, entities, code_sets)
     generate_metric_catalog(manifest, metric_views)
     generate_ontology(manifest, entities, code_sets, views, metric_views, functions)
@@ -764,8 +933,8 @@ def main():
     print(
         f"Generated {n_files} files for platforms {', '.join(generated)} "
         f"from {len(entities)} entities, {len(code_sets)} code sets, "
-        f"{len(views)} views, {len(metric_views)} metric views and {len(functions)} functions "
-        f"(model v{manifest['version']})."
+        f"{len(views)} views, {len(metric_views)} metric views, {len(functions)} functions "
+        f"and {len(MAPPINGS)} source mappings (model v{manifest['version']})."
     )
 
 

@@ -1,0 +1,178 @@
+kind: mapping
+name: pas_motor
+title: Policy administration (motor book) -> core concepts
+description: >
+  The motor policy administration extract in the policy system's own vocabulary:
+  a 'contract' with a 'contract reference', product codes PMU / PMO / CMV, 'cover
+  start' and 'cover end' dates and an 'annual premium amount'. Mapped column by
+  column to the core Policy, Coverage, Insured Object, Vehicle and Premium
+  Transaction concepts. Insurer-specific terms (motor segment, use class) are
+  preserved as extensions rather than forced into the standard.
+source_system: PAS_MOTOR
+schema: src_pas
+owner: Head of Motor Underwriting
+certification: certified
+tables:
+  - source: pol_master
+    concept: policy
+    conformed_view: vw_motor_policy
+    grain: One row per motor contract.
+    description: >
+      Motor contracts as the policy system holds them. 'Contract' is what the
+      core calls a policy.
+    columns:
+      - source: contract_reference
+        attribute: policy_id
+        expr: concat('PAS_MOTOR:', contract_reference)
+        note: Surrogate key = source system plus contract reference.
+      - source: contract_reference
+        attribute: policy_number
+        note: The policy system calls the policy number a 'contract reference'.
+      - source: product_cd
+        attribute: line_of_business_code
+        expr: "'MOTOR'"
+        note: All three product codes are Motor; the product code itself is kept as the motor_segment_code extension.
+      - source: contract_status
+        attribute: policy_status_code
+        value_map: {LIVE: IN_FORCE, EXPIRED: EXPIRED}
+      - source: cover_start_dt
+        attribute: inception_date
+      - source: cover_end_dt
+        attribute: expiry_date
+        note: Cover end date is the last day of cover in the policy system; the core expiry_date is the same day.
+      - source: cover_start_dt
+        attribute: underwriting_year
+        expr: year(cover_start_dt)
+      - attribute: currency_code
+        expr: "'GBP'"
+        note: The policy system is single-currency (GBP) and carries no currency column.
+      - source: source_sys
+        attribute: source_system_code
+    extensions:
+      - name: motor_segment_code
+        source: product_cd
+        definition: >
+          Bricksurance SE motor segment: PMU urban private motor, PMO other private
+          motor, CMV commercial motor. Insurer-specific; the standard has no segment
+          concept, so it is kept beside the standard columns, not forced into them.
+      - name: use_class_code
+        source: use_class
+        definition: >
+          Declared use of the vehicle(s): SDP social domestic and pleasure, SDP_COMMUTE
+          including commuting, BUSINESS; commercial uses DELIVERY, HAULAGE, TRADES,
+          FLEET_CAR, TAXI.
+      - name: vehicle_count
+        source: veh_count
+        definition: Number of vehicles on the contract (fleets carry several).
+      - name: risk_postcode
+        source: risk_postcode
+        definition: Postcode area and district where the vehicle(s) are kept overnight.
+      - name: annual_premium
+        source: annual_prem_amt
+        definition: Annual contract premium excluding insurance premium tax, in GBP.
+  - source: pol_vehicle
+    concept: vehicle
+    conformed_view: vw_motor_vehicle
+    grain: One row per vehicle on a contract.
+    description: Vehicles on motor contracts; the insured object of the Risk.
+    columns:
+      - source: contract_reference
+        attribute: vehicle_id
+        expr: concat('PAS_MOTOR:', contract_reference, ':', vehicle_seq)
+      - source: contract_reference
+        attribute: insured_object_id
+        expr: concat('PAS_MOTOR:', contract_reference, ':', vehicle_seq)
+        note: One insured object per vehicle; the vehicle is its typed satellite.
+      - source: contract_reference
+        attribute: insured_object.policy_id
+        expr: concat('PAS_MOTOR:', contract_reference)
+      - source: reg_mark
+        attribute: registration_number
+        note: The policy system says 'reg mark'.
+      - source: make
+        attribute: make
+      - source: model
+        attribute: model
+      - source: year_of_manufacture
+        attribute: year_of_manufacture
+      - source: abi_group
+        attribute: vehicle_group
+        note: UK ABI insurance group 1-50; the core vehicle_group is the same scale.
+    extensions:
+      - name: vehicle_value_amount
+        source: vehicle_value_amt
+        definition: Declared vehicle value in GBP at inception.
+  - source: pol_cover
+    concept: coverage
+    conformed_view: vw_motor_coverage
+    grain: One row per contract per coverage (two rows for comprehensive cover).
+    description: >
+      The policy system stores one cover code per contract (COMP, TPFT, TPO). The
+      core models coverages as rows: every contract carries MOTOR_TPL; COMP and
+      TPFT also carry MOTOR_OWN_DAMAGE. The conformed view explodes accordingly.
+    columns:
+      - source: contract_reference
+        attribute: coverage_id
+        expr: "concat('PAS_MOTOR:', contract_reference, ':TPL') or ':OD'"
+      - source: contract_reference
+        attribute: policy_id
+        expr: concat('PAS_MOTOR:', contract_reference)
+      - source: cover_cd
+        attribute: coverage_type_code
+        value_map: {COMP: MOTOR_OWN_DAMAGE + MOTOR_TPL, TPFT: MOTOR_OWN_DAMAGE + MOTOR_TPL, TPO: MOTOR_TPL}
+        note: One source row becomes one or two coverage rows.
+      - source: tpl_limit_amt
+        attribute: limit_amount
+        note: Third-party liability limit; applies to the MOTOR_TPL row.
+      - source: excess_amt
+        attribute: deductible_amount
+        note: The policy system says 'excess'; applies to the MOTOR_OWN_DAMAGE row.
+      - attribute: sum_insured_amount
+        expr: NULL
+        note: Not held by the policy system for motor; vehicle value is on the vehicle.
+    sql: |
+      SELECT concat('PAS_MOTOR:', contract_reference, ':TPL') AS coverage_id,
+             concat('PAS_MOTOR:', contract_reference) AS policy_id,
+             'MOTOR_TPL' AS coverage_type_code,
+             tpl_limit_amt AS limit_amount,
+             CAST(NULL AS DECIMAL(18,2)) AS deductible_amount,
+             CAST(NULL AS DECIMAL(18,2)) AS sum_insured_amount,
+             cover_cd AS cover_code
+      FROM {src}
+      UNION ALL
+      SELECT concat('PAS_MOTOR:', contract_reference, ':OD'),
+             concat('PAS_MOTOR:', contract_reference),
+             'MOTOR_OWN_DAMAGE', CAST(NULL AS DECIMAL(18,2)), excess_amt, CAST(NULL AS DECIMAL(18,2)), cover_cd
+      FROM {src}
+      WHERE cover_cd IN ('COMP', 'TPFT')
+    extensions:
+      - name: cover_code
+        source: cover_cd
+        definition: "Policy-system cover code kept for reference: COMP comprehensive, TPFT third party fire and theft, TPO third party only."
+  - source: pol_premium_txn
+    concept: premium_transaction
+    conformed_view: vw_motor_premium_transaction
+    grain: One row per premium transaction (new business in this extract).
+    description: Written premium as booked by the policy system.
+    columns:
+      - source: txn_id
+        attribute: premium_transaction_id
+        expr: concat('PAS_MOTOR:', txn_id)
+      - source: contract_reference
+        attribute: policy_id
+        expr: concat('PAS_MOTOR:', contract_reference)
+      - source: txn_type
+        attribute: premium_transaction_type_code
+        value_map: {NEW_BUSINESS: WRITTEN}
+        note: "The policy system distinguishes new business from renewals; both are WRITTEN premium in the core."
+      - source: txn_amt
+        attribute: amount
+      - attribute: currency_code
+        expr: "'GBP'"
+      - source: ipt_amt
+        attribute: ipt_amount
+      - source: txn_dt
+        attribute: transaction_date
+      - source: txn_type
+        attribute: source_system_code
+        expr: "'PAS_MOTOR'"

@@ -1,6 +1,6 @@
 # Bricksurance Data Core - Metric Catalog
 
-*Generated from model v0.16.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
+*Generated from model v0.17.0. Every measure is defined once here and physicalised as a Unity Catalog metric view; the formula is platform-neutral SQL.*
 
 ## Delegated Authority Metrics (`delegated_authority.da_metrics`)
 
@@ -170,6 +170,31 @@ Governance KPIs over the model estate - how many models and versions exist, how 
 | `champion_count` | Versions currently serving as champion. | `COUNT(DISTINCT CASE WHEN model_status_code = 'CHAMPION' THEN model_version_id END)` |
 | `challenger_count` | Versions being evaluated as challengers. | `COUNT(DISTINCT CASE WHEN model_status_code = 'CHALLENGER' THEN model_version_id END)` |
 | `retired_count` | Retired versions kept for lineage. | `COUNT(DISTINCT CASE WHEN model_status_code = 'RETIRED' THEN model_version_id END)` |
+
+## Motor Performance Metrics (`semantics.motor_performance_metrics`)
+
+THE motor loss ratio and its drivers. Use measure loss_ratio for any question about the motor loss ratio: it is the company definition approved by the Chief Actuary (paid plus outstanding case reserves plus IBNR, net of recoveries, over EARNED premium), accident-quarter basis, valued 31 October 2026. Segment, quarter, region and urbanity work on every measure. Peril, head of damage and large-loss flag describe claims only, so pair them with claim measures (incurred_claims, claim_count, severity), not with earned premium. The claims_operations_ratio (paid over WRITTEN premium) is the legacy weekly claims-ops number kept for reconciliation; it answers a different question and is not the loss ratio. All amounts GBP.
+
+**Owner:** Chief Actuary · **Certification:** certified · **Source:** `semantics.motor_loss_ratio_components`
+
+**Dimensions:** accident_quarter, motor_segment, motor_segment_code, region_name, urbanity_code, use_class_code, peril_code, head_of_damage_code, claim_feature_type_code, large_loss_flag, component_kind
+
+| Measure | Definition | Formula |
+|---|---|---|
+| `earned_premium` | Premium earned in the accident quarter, GBP (actuarial warehouse earning engine). | `SUM(earned_premium)` |
+| `written_premium` | Premium written (booked) in the quarter, GBP. Denominator of the legacy claims-ops ratio only. | `SUM(written_premium)` |
+| `vehicle_years` | Vehicle-years of exposure in the quarter. Denominator for frequency. | `SUM(vehicle_years)` |
+| `claims_paid` | Indemnity paid to the valuation date. | `SUM(claims_paid)` |
+| `case_reserves` | Outstanding case reserves at the valuation date. | `SUM(case_reserves)` |
+| `ibnr` | Incurred-but-not-reported estimate (segment x quarter, Q3 2026 close). | `SUM(ibnr)` |
+| `recoveries` | Salvage and subrogation recovered, positive number. | `SUM(recoveries)` |
+| `claims_handling_costs` | Allocated claims handling fees (ALAE). Not part of the approved loss ratio. | `SUM(claims_handling_costs)` |
+| `incurred_claims` | Incurred claims on the approved definition - paid plus case reserves plus IBNR, net of recoveries. | `SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)` |
+| `loss_ratio` | THE motor loss ratio - approved definition, earned basis. Group by accident_quarter and motor_segment for the executive view. | `(SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)) / NULLIF(SUM(earned_premium), 0)` |
+| `claim_count` | Number of claims (accident quarter). | `SUM(claim_count)` |
+| `frequency` | Claims per vehicle-year. Multiply by 100 for claims per 100 vehicle-years. | `SUM(claim_count) / NULLIF(SUM(vehicle_years), 0)` |
+| `severity` | Average net incurred per claim (case basis, excludes IBNR). | `(SUM(claims_paid) + SUM(case_reserves) - SUM(recoveries)) / NULLIF(SUM(claim_count), 0)` |
+| `claims_operations_ratio` | LEGACY - paid claims over written premium, the weekly claims-ops dashboard number. Not the loss ratio; use only when asked for it by name. | `SUM(claims_paid) / NULLIF(SUM(written_premium), 0)` |
 
 ## Performance Metrics (`semantics.performance_metrics`)
 

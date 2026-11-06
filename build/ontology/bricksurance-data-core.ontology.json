@@ -2,7 +2,7 @@
   "ontology_format": "bricksurance-data-core/ontology-v1",
   "name": "bricksurance-data-core",
   "title": "Bricksurance Data Core",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "An open, business-first semantic data model for insurance, aligned to ACORD terminology with a crosswalk to the Lloyd's Core Data Record. Platform artifacts are generated from these specs; see bindings/ and tools/.",
   "standards_basis": "Aligned to ACORD terminology with an indicative Lloyd's Core Data Record crosswalk. The crosswalk is a hand-authored, best-knowledge mapping to ACORD / Lloyd's CDR element names, not a verified extract from the licensed models; element names are cited only, and the licensed standards are not reproduced.",
   "domains": [
@@ -463,6 +463,11 @@
           "code": "FREEZE",
           "label": "Freeze",
           "description": "Freeze, frost and burst-pipe damage from severe cold weather."
+        },
+        {
+          "code": "GLASS",
+          "label": "Glass",
+          "description": "Windscreen and other glass damage, a distinct motor cause of loss."
         }
       ]
     },
@@ -2580,6 +2585,21 @@
           "code": "COMPANY_DATA_PROVIDER",
           "label": "External Company Data Provider",
           "description": "Third-party business information (Dun & Bradstreet-style) matched to our commercial parties by a global company identifier. Synthetic in this demo.\n"
+        },
+        {
+          "code": "PAS_MOTOR",
+          "label": "Motor policy administration",
+          "description": "The motor book's policy administration system (extract schema src_pas)."
+        },
+        {
+          "code": "CLM_MOTOR",
+          "label": "Motor claims management",
+          "description": "The motor book's claims management system (extract schema src_claims)."
+        },
+        {
+          "code": "ACT_DW",
+          "label": "Actuarial warehouse",
+          "description": "The actuarial data warehouse (earning engine output, IBNR, pricing dimensions; extract schema src_actuarial)."
         }
       ]
     },
@@ -11344,6 +11364,16 @@
     },
     {
       "kind": "view",
+      "name": "motor_loss_ratio_components",
+      "domain": "semantics",
+      "after_mappings": true,
+      "title": "Motor Loss Ratio Components",
+      "description": "Every building block of the motor loss ratio in one place, so any definition can be computed from the same numbers. Three kinds of row, all carrying segment, accident quarter, region and urbanity: EXPOSURE rows (one per policy per quarter: earned premium, written premium, vehicle-years), CLAIM rows (one per claim: paid, outstanding case reserves, recoveries, claims-handling fees, peril, head of damage, large-loss flag) and IBNR rows (one per segment per quarter). Valued at 31 October 2026, accident-quarter basis. Built only from the conformed views over the three motor source systems; the motor experience book is not posted to the group ledger.\n",
+      "grain": "One row per policy-quarter (EXPOSURE), per claim (CLAIM) or per segment-quarter (IBNR).",
+      "sql": "WITH pol AS (\n  SELECT p.policy_id, p.policy_number, p.motor_segment_code, s.motor_segment, p.use_class_code,\n         p.vehicle_count, p.inception_date, p.annual_premium,\n         split(p.risk_postcode, ' ')[0] AS postcode_area\n  FROM {semantics.vw_motor_policy} p\n  JOIN {semantics.vw_motor_segment} s USING (motor_segment_code)\n),\ngeo AS (\n  SELECT postcode AS postcode_area, region_code AS region_name, urbanity_code\n  FROM {semantics.vw_motor_postcode_region}\n),\nexposure AS (\n  SELECT e.policy_id, e.accident_quarter,\n         SUM(e.earned_premium) AS earned_premium,\n         SUM(e.vehicle_years) AS vehicle_years\n  FROM {semantics.vw_motor_earned_premium} e\n  GROUP BY e.policy_id, e.accident_quarter\n),\nwritten AS (\n  SELECT policy_id,\n         concat(year(transaction_date), 'Q', quarter(transaction_date)) AS accident_quarter,\n         SUM(amount) AS written_premium\n  FROM {semantics.vw_motor_premium_transaction}\n  GROUP BY 1, 2\n),\nclaim_tx AS (\n  SELECT claim_id,\n         SUM(CASE WHEN claim_transaction_type_code = 'INDEMNITY_PAYMENT' THEN amount ELSE 0 END) AS claims_paid,\n         SUM(CASE WHEN claim_transaction_type_code = 'CASE_RESERVE_MOVEMENT' THEN amount ELSE 0 END) AS case_reserves,\n         SUM(CASE WHEN claim_transaction_type_code = 'EXPENSE_PAYMENT' THEN amount ELSE 0 END) AS claims_handling_costs,\n         -SUM(CASE WHEN claim_transaction_type_code = 'RECOVERY' THEN amount ELSE 0 END) AS recoveries,\n         MAX(head_of_damage_code) AS head_of_damage_code,\n         MAX(claim_feature_type_code) AS claim_feature_type_code\n  FROM {semantics.vw_motor_claim_transaction}\n  GROUP BY claim_id\n)\nSELECT 'EXPOSURE' AS component_kind, x.policy_id, pol.policy_number, pol.motor_segment_code, pol.motor_segment,\n       x.accident_quarter, geo.region_name, geo.urbanity_code, pol.use_class_code,\n       CAST(NULL AS STRING) AS claim_id, CAST(NULL AS STRING) AS claim_number, CAST(NULL AS DATE) AS loss_date,\n       CAST(NULL AS STRING) AS peril_code, CAST(NULL AS STRING) AS cause_of_loss_code,\n       CAST(NULL AS STRING) AS head_of_damage_code, CAST(NULL AS STRING) AS claim_feature_type_code,\n       CAST(NULL AS BOOLEAN) AS large_loss_flag,\n       CAST(x.earned_premium AS DECIMAL(18,2)) AS earned_premium,\n       CAST(COALESCE(w.written_premium, 0) AS DECIMAL(18,2)) AS written_premium,\n       CAST(x.vehicle_years AS DECIMAL(18,6)) AS vehicle_years,\n       CAST(0 AS DECIMAL(18,2)) AS claims_paid, CAST(0 AS DECIMAL(18,2)) AS case_reserves,\n       CAST(0 AS DECIMAL(18,2)) AS ibnr, CAST(0 AS DECIMAL(18,2)) AS claims_handling_costs,\n       CAST(0 AS DECIMAL(18,2)) AS recoveries, 0 AS claim_count\nFROM exposure x\nJOIN pol USING (policy_id)\nLEFT JOIN geo USING (postcode_area)\nLEFT JOIN written w ON w.policy_id = x.policy_id AND w.accident_quarter = x.accident_quarter\nUNION ALL\nSELECT 'CLAIM', c.policy_id, pol.policy_number, pol.motor_segment_code, pol.motor_segment,\n       concat(year(c.loss_date), 'Q', quarter(c.loss_date)), geo.region_name, geo.urbanity_code, pol.use_class_code,\n       c.claim_id, c.claim_number, c.loss_date, c.peril_code, c.cause_of_loss_code,\n       t.head_of_damage_code, t.claim_feature_type_code,\n       (t.claims_paid + t.case_reserves - t.recoveries) >= 500000,\n       CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,6)),\n       CAST(t.claims_paid AS DECIMAL(18,2)), CAST(t.case_reserves AS DECIMAL(18,2)),\n       CAST(0 AS DECIMAL(18,2)), CAST(t.claims_handling_costs AS DECIMAL(18,2)),\n       CAST(t.recoveries AS DECIMAL(18,2)), 1\nFROM {semantics.vw_motor_claim} c\nJOIN claim_tx t USING (claim_id)\nJOIN pol USING (policy_id)\nLEFT JOIN geo ON geo.postcode_area = c.loss_postcode_area\nUNION ALL\nSELECT 'IBNR', NULL, NULL, i.motor_segment_code, s.motor_segment, i.cohort, NULL, NULL, NULL,\n       NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,\n       CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,6)),\n       CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,2)),\n       CAST(i.amount AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,2)), CAST(0 AS DECIMAL(18,2)), 0\nFROM {semantics.vw_motor_ibnr} i\nJOIN {semantics.vw_motor_segment} s USING (motor_segment_code)\n"
+    },
+    {
+      "kind": "view",
       "name": "premium_earning",
       "domain": "semantics",
       "title": "Premium Earning",
@@ -12108,6 +12138,147 @@
           "name": "retired_count",
           "expr": "COUNT(DISTINCT CASE WHEN model_status_code = 'RETIRED' THEN model_version_id END)",
           "description": "Retired versions kept for lineage."
+        }
+      ]
+    },
+    {
+      "kind": "metric_view",
+      "name": "motor_performance_metrics",
+      "domain": "semantics",
+      "after_mappings": true,
+      "published_by": "rulebook",
+      "title": "Motor Performance Metrics",
+      "description": "THE motor loss ratio and its drivers. Use measure loss_ratio for any question about the motor loss ratio: it is the company definition approved by the Chief Actuary (paid plus outstanding case reserves plus IBNR, net of recoveries, over EARNED premium), accident-quarter basis, valued 31 October 2026. Segment, quarter, region and urbanity work on every measure. Peril, head of damage and large-loss flag describe claims only, so pair them with claim measures (incurred_claims, claim_count, severity), not with earned premium. The claims_operations_ratio (paid over WRITTEN premium) is the legacy weekly claims-ops number kept for reconciliation; it answers a different question and is not the loss ratio. All amounts GBP.\n",
+      "owner": "Chief Actuary",
+      "certification": "certified",
+      "source": "semantics.motor_loss_ratio_components",
+      "dimensions": [
+        {
+          "name": "accident_quarter",
+          "expr": "accident_quarter",
+          "description": "Accident quarter, e.g. 2026Q2, 2026Q3. Premium is earned in the quarter; claims occurred in it."
+        },
+        {
+          "name": "motor_segment",
+          "expr": "motor_segment",
+          "description": "Segment label - Urban private motor, Other private motor, Commercial motor. Filter with labels."
+        },
+        {
+          "name": "motor_segment_code",
+          "expr": "motor_segment_code",
+          "description": "Segment code PMU / PMO / CMV."
+        },
+        {
+          "name": "region_name",
+          "expr": "region_name",
+          "description": "Region of the risk postcode (exposure) or loss postcode (claims), e.g. Greater London."
+        },
+        {
+          "name": "urbanity_code",
+          "expr": "urbanity_code",
+          "description": "URBAN_MAJOR, URBAN, SUBURBAN, RURAL."
+        },
+        {
+          "name": "use_class_code",
+          "expr": "use_class_code",
+          "description": "Declared vehicle use."
+        },
+        {
+          "name": "peril_code",
+          "expr": "peril_code",
+          "description": "Claims only - AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE."
+        },
+        {
+          "name": "head_of_damage_code",
+          "expr": "head_of_damage_code",
+          "description": "Claims only - VEHICLE_REPAIR, THEFT_TOTAL_LOSS, TP_PROPERTY, BODILY_INJURY, GLASS, FIRE_TOTAL_LOSS."
+        },
+        {
+          "name": "claim_feature_type_code",
+          "expr": "claim_feature_type_code",
+          "description": "Claims only - OWN_DAMAGE, THIRD_PARTY_PROPERTY, THIRD_PARTY_INJURY."
+        },
+        {
+          "name": "large_loss_flag",
+          "expr": "large_loss_flag",
+          "description": "Claims only - true when net incurred is 500,000 GBP or more."
+        },
+        {
+          "name": "component_kind",
+          "expr": "component_kind",
+          "description": "EXPOSURE, CLAIM or IBNR row. Rarely needed; measures already pick the right rows."
+        }
+      ],
+      "measures": [
+        {
+          "name": "earned_premium",
+          "expr": "SUM(earned_premium)",
+          "description": "Premium earned in the accident quarter, GBP (actuarial warehouse earning engine)."
+        },
+        {
+          "name": "written_premium",
+          "expr": "SUM(written_premium)",
+          "description": "Premium written (booked) in the quarter, GBP. Denominator of the legacy claims-ops ratio only."
+        },
+        {
+          "name": "vehicle_years",
+          "expr": "SUM(vehicle_years)",
+          "description": "Vehicle-years of exposure in the quarter. Denominator for frequency."
+        },
+        {
+          "name": "claims_paid",
+          "expr": "SUM(claims_paid)",
+          "description": "Indemnity paid to the valuation date."
+        },
+        {
+          "name": "case_reserves",
+          "expr": "SUM(case_reserves)",
+          "description": "Outstanding case reserves at the valuation date."
+        },
+        {
+          "name": "ibnr",
+          "expr": "SUM(ibnr)",
+          "description": "Incurred-but-not-reported estimate (segment x quarter, Q3 2026 close)."
+        },
+        {
+          "name": "recoveries",
+          "expr": "SUM(recoveries)",
+          "description": "Salvage and subrogation recovered, positive number."
+        },
+        {
+          "name": "claims_handling_costs",
+          "expr": "SUM(claims_handling_costs)",
+          "description": "Allocated claims handling fees (ALAE). Not part of the approved loss ratio."
+        },
+        {
+          "name": "incurred_claims",
+          "expr": "SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)",
+          "description": "Incurred claims on the approved definition - paid plus case reserves plus IBNR, net of recoveries."
+        },
+        {
+          "name": "loss_ratio",
+          "expr": "(SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)) / NULLIF(SUM(earned_premium), 0)",
+          "description": "THE motor loss ratio - approved definition, earned basis. Group by accident_quarter and motor_segment for the executive view."
+        },
+        {
+          "name": "claim_count",
+          "expr": "SUM(claim_count)",
+          "description": "Number of claims (accident quarter)."
+        },
+        {
+          "name": "frequency",
+          "expr": "SUM(claim_count) / NULLIF(SUM(vehicle_years), 0)",
+          "description": "Claims per vehicle-year. Multiply by 100 for claims per 100 vehicle-years."
+        },
+        {
+          "name": "severity",
+          "expr": "(SUM(claims_paid) + SUM(case_reserves) - SUM(recoveries)) / NULLIF(SUM(claim_count), 0)",
+          "description": "Average net incurred per claim (case basis, excludes IBNR)."
+        },
+        {
+          "name": "claims_operations_ratio",
+          "expr": "SUM(claims_paid) / NULLIF(SUM(written_premium), 0)",
+          "description": "LEGACY - paid claims over written premium, the weekly claims-ops dashboard number. Not the loss ratio; use only when asked for it by name."
         }
       ]
     },
@@ -12909,6 +13080,567 @@
         "description": "Semicolon-separated 'treaty @ share' list; NULL when nothing is ceded."
       },
       "sql": "(SELECT array_join(sort_array(collect_list(\n          concat(t.treaty_reference, ' @ ', cast(ces.ceded_share AS STRING)))), '; ')\n FROM {reinsurance.cession} ces\n JOIN {policy.policy} p ON p.policy_id = ces.policy_id\n JOIN {reinsurance.treaty} t ON t.treaty_id = ces.treaty_id\n WHERE p.policy_number = in_policy_number)\n"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "mapping",
+      "name": "actuarial_motor",
+      "title": "Actuarial warehouse (motor) -> core concepts",
+      "description": "The actuarial warehouse holds what neither operational system does: earned premium and vehicle-years by policy and accounting month (the earning engine output), the IBNR estimate by segment and accident quarter, and the reference dimensions the pricing team uses (segment, postcode region). Its vocabulary is the actuaries' own: 'pol ref', 'yyyymm', 'ep amt', 'veh years', 'acc qtr'.\n",
+      "source_system": "ACT_DW",
+      "schema": "src_actuarial",
+      "owner": "Chief Actuary",
+      "certification": "certified",
+      "tables": [
+        {
+          "source": "earned_premium_monthly",
+          "concept": "premium_earning",
+          "conformed_view": "vw_motor_earned_premium",
+          "grain": "One row per policy per accounting month with cover in force.",
+          "description": "Earned premium by policy and month on the warehouse's daily pro-rata basis. The core premium_earning view is the same concept at policy grain; this is its monthly form, and the authoritative denominator for the motor loss ratio.\n",
+          "columns": [
+            {
+              "source": "pol_ref",
+              "attribute": "policy_id",
+              "expr": "concat('PAS_MOTOR:', pol_ref)",
+              "note": "'Pol ref' is the policy system's contract reference."
+            },
+            {
+              "source": "ep_amt",
+              "attribute": "earned_premium",
+              "definition": "Premium earned in the month, GBP, daily pro-rata over the cover period."
+            },
+            {
+              "source": "yyyymm",
+              "attribute": "accounting_month",
+              "definition": "Accounting month as YYYYMM."
+            },
+            {
+              "source": "yyyymm",
+              "attribute": "accident_quarter",
+              "expr": "concat(floor(yyyymm / 100), 'Q', ceil((yyyymm % 100) / 3))",
+              "definition": "Calendar quarter of the accounting month, e.g. 2026Q3. Same labelling as the claims accident quarter so premium and claims line up."
+            }
+          ],
+          "extensions": [
+            {
+              "name": "vehicle_years",
+              "source": "veh_years",
+              "definition": "Vehicle-years of exposure earned in the month (vehicles x days in force / 365). The denominator for claim frequency."
+            },
+            {
+              "name": "days_in_force",
+              "source": "days_in_force",
+              "definition": "Days of cover in the month."
+            },
+            {
+              "name": "motor_segment_code",
+              "source": "seg_cd",
+              "definition": "Bricksurance SE motor segment (PMU / PMO / CMV) as carried by the warehouse."
+            }
+          ]
+        },
+        {
+          "source": "ibnr_estimate",
+          "concept": "valuation_result",
+          "conformed_view": "vw_motor_ibnr",
+          "grain": "One row per motor segment per accident quarter at the valuation date.",
+          "description": "Incurred-but-not-reported reserve estimate from the Q3 2026 close.",
+          "columns": [
+            {
+              "source": "ibnr_amt",
+              "attribute": "amount"
+            },
+            {
+              "attribute": "valuation_measure_code",
+              "expr": "'IBNR'"
+            },
+            {
+              "attribute": "line_of_business_code",
+              "expr": "'MOTOR'"
+            },
+            {
+              "source": "acc_qtr",
+              "attribute": "cohort",
+              "note": "The warehouse cohort is the accident quarter."
+            },
+            {
+              "attribute": "currency_code",
+              "expr": "'GBP'"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "motor_segment_code",
+              "source": "seg_cd",
+              "definition": "Bricksurance SE motor segment."
+            },
+            {
+              "name": "valuation_date",
+              "source": "valuation_dt",
+              "definition": "Date the estimate was struck."
+            },
+            {
+              "name": "reserving_method_code",
+              "source": "method_cd",
+              "definition": "Reserving method (CHAIN_LADDER)."
+            }
+          ]
+        },
+        {
+          "source": "segment_dim",
+          "concept": null,
+          "conformed_view": "vw_motor_segment",
+          "grain": "One row per motor segment.",
+          "description": "The insurer's own motor segmentation. There is no segment concept in the standard; this dimension is an enterprise extension and is published as such.\n",
+          "extensions": [
+            {
+              "name": "motor_segment_code",
+              "source": "seg_cd",
+              "definition": "PMU urban private motor, PMO other private motor, CMV commercial motor."
+            },
+            {
+              "name": "motor_segment",
+              "source": "seg_desc",
+              "definition": "Segment label for people (use for filtering with labels)."
+            },
+            {
+              "name": "line_of_business_code",
+              "source": "lob_cd",
+              "definition": "Always MOTOR."
+            }
+          ]
+        },
+        {
+          "source": "postcode_region_dim",
+          "concept": "postcode_enrichment",
+          "conformed_view": "vw_motor_postcode_region",
+          "grain": "One row per postcode area.",
+          "description": "Postcode area to region and urbanity, as the pricing team classifies them.",
+          "columns": [
+            {
+              "source": "postcode_area",
+              "attribute": "postcode",
+              "note": "Postcode AREA (letters only), not a full postcode."
+            },
+            {
+              "source": "urbanity_code",
+              "attribute": "urbanity_code"
+            },
+            {
+              "source": "region_name",
+              "attribute": "region_code",
+              "note": "The warehouse carries the region name; the core attribute is a code. Kept as the name."
+            },
+            {
+              "attribute": "country_code",
+              "expr": "'GB'"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "mapping",
+      "name": "clm_motor",
+      "title": "Claims management (motor) -> core concepts",
+      "description": "The motor claims system extract in the claims team's vocabulary: a 'claim ref' on a 'policy no', a 'peril code' (AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE), and 'movements' typed PAID / RESERVE / RECOVERY / FEE with a 'head of damage'. Mapped to the core Claim and Claim Transaction concepts. Two conventions differ and are translated, not hidden: the claims system books payments without releasing the reserve (the core releases reserve on payment), and recoveries are negative movements in both.\n",
+      "source_system": "CLM_MOTOR",
+      "schema": "src_claims",
+      "owner": "Head of Motor Claims",
+      "certification": "certified",
+      "tables": [
+        {
+          "source": "clm_header",
+          "concept": "claim",
+          "conformed_view": "vw_motor_claim",
+          "grain": "One row per claim.",
+          "description": "Motor claims as the claims system holds them.",
+          "columns": [
+            {
+              "source": "claim_ref",
+              "attribute": "claim_id",
+              "expr": "concat('CLM_MOTOR:', claim_ref)"
+            },
+            {
+              "source": "claim_ref",
+              "attribute": "claim_number"
+            },
+            {
+              "source": "policy_no",
+              "attribute": "policy_id",
+              "expr": "concat('PAS_MOTOR:', policy_no)",
+              "note": "The claims system stores the policy system's contract reference as 'policy no'; this is the join to the policy."
+            },
+            {
+              "source": "claim_status",
+              "attribute": "claim_status_code",
+              "value_map": {
+                "OPEN": "OPEN",
+                "SETTLED": "CLOSED"
+              },
+              "note": "The claims team says 'settled'; the core says CLOSED."
+            },
+            {
+              "source": "peril_cd",
+              "attribute": "cause_of_loss_code",
+              "value_map": {
+                "AD": "COLLISION",
+                "THEFT": "THEFT",
+                "TPPD": "LIABILITY_INCIDENT",
+                "TPBI": "LIABILITY_INCIDENT",
+                "WINDSCREEN": "GLASS",
+                "FIRE": "FIRE"
+              },
+              "note": "AD (accidental damage) is a collision in the standard vocabulary; third party property damage and bodily injury are both liability incidents, so the finer peril code is kept as the peril_code extension.\n"
+            },
+            {
+              "source": "loss_dt",
+              "attribute": "loss_date"
+            },
+            {
+              "source": "notified_dt",
+              "attribute": "reported_date",
+              "note": "The claims team says 'notified'."
+            },
+            {
+              "source": "handling_office",
+              "attribute": "handling_office"
+            },
+            {
+              "attribute": "source_system_code",
+              "expr": "'CLM_MOTOR'"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "peril_code",
+              "source": "peril_cd",
+              "definition": "Claims-system peril: AD accidental damage, THEFT, TPPD third party property damage, TPBI third party bodily injury, WINDSCREEN, FIRE. Finer than the standard cause of loss; this is the code to use for peril questions.\n"
+            },
+            {
+              "name": "fault_indicator",
+              "source": "fault_ind",
+              "definition": "Y at fault, N non-fault, SPLIT shared liability."
+            },
+            {
+              "name": "loss_postcode_area",
+              "source": "loss_postcode_area",
+              "definition": "Postcode area where the loss occurred; joins to the actuarial postcode region dimension."
+            }
+          ]
+        },
+        {
+          "source": "clm_movement",
+          "concept": "claim_transaction",
+          "conformed_view": "vw_motor_claim_transaction",
+          "grain": "One row per movement, plus one reserve release per payment (core convention).",
+          "description": "Claims movements translated to core claim transactions. Payment rows become INDEMNITY_PAYMENT and ALSO generate a matching negative CASE_RESERVE_MOVEMENT, because the core convention is that a payment releases the reserve it pays. Without this translation the claims-system view double-counts outstanding.\n",
+          "columns": [
+            {
+              "source": "movement_id",
+              "attribute": "claim_transaction_id",
+              "expr": "concat('CLM_MOTOR:', movement_id)"
+            },
+            {
+              "source": "claim_ref",
+              "attribute": "claim_id",
+              "expr": "concat('CLM_MOTOR:', claim_ref)"
+            },
+            {
+              "source": "movement_type",
+              "attribute": "claim_transaction_type_code",
+              "value_map": {
+                "PAID": "INDEMNITY_PAYMENT",
+                "RESERVE": "CASE_RESERVE_MOVEMENT",
+                "RECOVERY": "RECOVERY",
+                "FEE": "EXPENSE_PAYMENT"
+              },
+              "note": "FEE is allocated claims handling cost (ALAE); RECOVERY is negative in both systems."
+            },
+            {
+              "source": "amount",
+              "attribute": "amount"
+            },
+            {
+              "attribute": "currency_code",
+              "expr": "'GBP'"
+            },
+            {
+              "source": "movement_dt",
+              "attribute": "transaction_date"
+            },
+            {
+              "attribute": "source_system_code",
+              "expr": "'CLM_MOTOR'"
+            }
+          ],
+          "sql": "SELECT concat('CLM_MOTOR:', movement_id) AS claim_transaction_id,\n       concat('CLM_MOTOR:', claim_ref) AS claim_id,\n       CASE movement_type WHEN 'PAID' THEN 'INDEMNITY_PAYMENT' WHEN 'RESERVE' THEN 'CASE_RESERVE_MOVEMENT'\n                          WHEN 'RECOVERY' THEN 'RECOVERY' WHEN 'FEE' THEN 'EXPENSE_PAYMENT' END AS claim_transaction_type_code,\n       amount, 'GBP' AS currency_code, movement_dt AS transaction_date, 'CLM_MOTOR' AS source_system_code,\n       head_of_damage AS head_of_damage_code,\n       CASE head_of_damage WHEN 'BODILY_INJURY' THEN 'THIRD_PARTY_INJURY' WHEN 'TP_PROPERTY' THEN 'THIRD_PARTY_PROPERTY'\n                           ELSE 'OWN_DAMAGE' END AS claim_feature_type_code\nFROM {src}\nUNION ALL\nSELECT concat('CLM_MOTOR:', movement_id, ':REL'), concat('CLM_MOTOR:', claim_ref), 'CASE_RESERVE_MOVEMENT',\n       -amount, 'GBP', movement_dt, 'CLM_MOTOR', head_of_damage,\n       CASE head_of_damage WHEN 'BODILY_INJURY' THEN 'THIRD_PARTY_INJURY' WHEN 'TP_PROPERTY' THEN 'THIRD_PARTY_PROPERTY'\n                           ELSE 'OWN_DAMAGE' END\nFROM {src}\nWHERE movement_type = 'PAID'\n",
+          "extensions": [
+            {
+              "name": "head_of_damage_code",
+              "source": "head_of_damage",
+              "definition": "Claims-system head of damage: VEHICLE_REPAIR, THEFT_TOTAL_LOSS, TP_PROPERTY, BODILY_INJURY, GLASS, FIRE_TOTAL_LOSS. The level at which repair-cost and injury questions are answered.\n"
+            },
+            {
+              "name": "claim_feature_type_code",
+              "source": "head_of_damage",
+              "definition": "Head of damage rolled up to the core claim feature type (OWN_DAMAGE, THIRD_PARTY_PROPERTY, THIRD_PARTY_INJURY)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "mapping",
+      "name": "pas_motor",
+      "title": "Policy administration (motor book) -> core concepts",
+      "description": "The motor policy administration extract in the policy system's own vocabulary: a 'contract' with a 'contract reference', product codes PMU / PMO / CMV, 'cover start' and 'cover end' dates and an 'annual premium amount'. Mapped column by column to the core Policy, Coverage, Insured Object, Vehicle and Premium Transaction concepts. Insurer-specific terms (motor segment, use class) are preserved as extensions rather than forced into the standard.\n",
+      "source_system": "PAS_MOTOR",
+      "schema": "src_pas",
+      "owner": "Head of Motor Underwriting",
+      "certification": "certified",
+      "tables": [
+        {
+          "source": "pol_master",
+          "concept": "policy",
+          "conformed_view": "vw_motor_policy",
+          "grain": "One row per motor contract.",
+          "description": "Motor contracts as the policy system holds them. 'Contract' is what the core calls a policy.\n",
+          "columns": [
+            {
+              "source": "contract_reference",
+              "attribute": "policy_id",
+              "expr": "concat('PAS_MOTOR:', contract_reference)",
+              "note": "Surrogate key = source system plus contract reference."
+            },
+            {
+              "source": "contract_reference",
+              "attribute": "policy_number",
+              "note": "The policy system calls the policy number a 'contract reference'."
+            },
+            {
+              "source": "product_cd",
+              "attribute": "line_of_business_code",
+              "expr": "'MOTOR'",
+              "note": "All three product codes are Motor; the product code itself is kept as the motor_segment_code extension."
+            },
+            {
+              "source": "contract_status",
+              "attribute": "policy_status_code",
+              "value_map": {
+                "LIVE": "IN_FORCE",
+                "EXPIRED": "EXPIRED"
+              }
+            },
+            {
+              "source": "cover_start_dt",
+              "attribute": "inception_date"
+            },
+            {
+              "source": "cover_end_dt",
+              "attribute": "expiry_date",
+              "note": "Cover end date is the last day of cover in the policy system; the core expiry_date is the same day."
+            },
+            {
+              "source": "cover_start_dt",
+              "attribute": "underwriting_year",
+              "expr": "year(cover_start_dt)"
+            },
+            {
+              "attribute": "currency_code",
+              "expr": "'GBP'",
+              "note": "The policy system is single-currency (GBP) and carries no currency column."
+            },
+            {
+              "source": "source_sys",
+              "attribute": "source_system_code"
+            }
+          ],
+          "extensions": [
+            {
+              "name": "motor_segment_code",
+              "source": "product_cd",
+              "definition": "Bricksurance SE motor segment: PMU urban private motor, PMO other private motor, CMV commercial motor. Insurer-specific; the standard has no segment concept, so it is kept beside the standard columns, not forced into them.\n"
+            },
+            {
+              "name": "use_class_code",
+              "source": "use_class",
+              "definition": "Declared use of the vehicle(s): SDP social domestic and pleasure, SDP_COMMUTE including commuting, BUSINESS; commercial uses DELIVERY, HAULAGE, TRADES, FLEET_CAR, TAXI.\n"
+            },
+            {
+              "name": "vehicle_count",
+              "source": "veh_count",
+              "definition": "Number of vehicles on the contract (fleets carry several)."
+            },
+            {
+              "name": "risk_postcode",
+              "source": "risk_postcode",
+              "definition": "Postcode area and district where the vehicle(s) are kept overnight."
+            },
+            {
+              "name": "annual_premium",
+              "source": "annual_prem_amt",
+              "definition": "Annual contract premium excluding insurance premium tax, in GBP."
+            }
+          ]
+        },
+        {
+          "source": "pol_vehicle",
+          "concept": "vehicle",
+          "conformed_view": "vw_motor_vehicle",
+          "grain": "One row per vehicle on a contract.",
+          "description": "Vehicles on motor contracts; the insured object of the Risk.",
+          "columns": [
+            {
+              "source": "contract_reference",
+              "attribute": "vehicle_id",
+              "expr": "concat('PAS_MOTOR:', contract_reference, ':', vehicle_seq)"
+            },
+            {
+              "source": "contract_reference",
+              "attribute": "insured_object_id",
+              "expr": "concat('PAS_MOTOR:', contract_reference, ':', vehicle_seq)",
+              "note": "One insured object per vehicle; the vehicle is its typed satellite."
+            },
+            {
+              "source": "contract_reference",
+              "attribute": "insured_object.policy_id",
+              "expr": "concat('PAS_MOTOR:', contract_reference)"
+            },
+            {
+              "source": "reg_mark",
+              "attribute": "registration_number",
+              "note": "The policy system says 'reg mark'."
+            },
+            {
+              "source": "make",
+              "attribute": "make"
+            },
+            {
+              "source": "model",
+              "attribute": "model"
+            },
+            {
+              "source": "year_of_manufacture",
+              "attribute": "year_of_manufacture"
+            },
+            {
+              "source": "abi_group",
+              "attribute": "vehicle_group",
+              "note": "UK ABI insurance group 1-50; the core vehicle_group is the same scale."
+            }
+          ],
+          "extensions": [
+            {
+              "name": "vehicle_value_amount",
+              "source": "vehicle_value_amt",
+              "definition": "Declared vehicle value in GBP at inception."
+            }
+          ]
+        },
+        {
+          "source": "pol_cover",
+          "concept": "coverage",
+          "conformed_view": "vw_motor_coverage",
+          "grain": "One row per contract per coverage (two rows for comprehensive cover).",
+          "description": "The policy system stores one cover code per contract (COMP, TPFT, TPO). The core models coverages as rows: every contract carries MOTOR_TPL; COMP and TPFT also carry MOTOR_OWN_DAMAGE. The conformed view explodes accordingly.\n",
+          "columns": [
+            {
+              "source": "contract_reference",
+              "attribute": "coverage_id",
+              "expr": "concat('PAS_MOTOR:', contract_reference, ':TPL') or ':OD'"
+            },
+            {
+              "source": "contract_reference",
+              "attribute": "policy_id",
+              "expr": "concat('PAS_MOTOR:', contract_reference)"
+            },
+            {
+              "source": "cover_cd",
+              "attribute": "coverage_type_code",
+              "value_map": {
+                "COMP": "MOTOR_OWN_DAMAGE + MOTOR_TPL",
+                "TPFT": "MOTOR_OWN_DAMAGE + MOTOR_TPL",
+                "TPO": "MOTOR_TPL"
+              },
+              "note": "One source row becomes one or two coverage rows."
+            },
+            {
+              "source": "tpl_limit_amt",
+              "attribute": "limit_amount",
+              "note": "Third-party liability limit; applies to the MOTOR_TPL row."
+            },
+            {
+              "source": "excess_amt",
+              "attribute": "deductible_amount",
+              "note": "The policy system says 'excess'; applies to the MOTOR_OWN_DAMAGE row."
+            },
+            {
+              "attribute": "sum_insured_amount",
+              "expr": null,
+              "note": "Not held by the policy system for motor; vehicle value is on the vehicle."
+            }
+          ],
+          "sql": "SELECT concat('PAS_MOTOR:', contract_reference, ':TPL') AS coverage_id,\n       concat('PAS_MOTOR:', contract_reference) AS policy_id,\n       'MOTOR_TPL' AS coverage_type_code,\n       tpl_limit_amt AS limit_amount,\n       CAST(NULL AS DECIMAL(18,2)) AS deductible_amount,\n       CAST(NULL AS DECIMAL(18,2)) AS sum_insured_amount,\n       cover_cd AS cover_code\nFROM {src}\nUNION ALL\nSELECT concat('PAS_MOTOR:', contract_reference, ':OD'),\n       concat('PAS_MOTOR:', contract_reference),\n       'MOTOR_OWN_DAMAGE', CAST(NULL AS DECIMAL(18,2)), excess_amt, CAST(NULL AS DECIMAL(18,2)), cover_cd\nFROM {src}\nWHERE cover_cd IN ('COMP', 'TPFT')\n",
+          "extensions": [
+            {
+              "name": "cover_code",
+              "source": "cover_cd",
+              "definition": "Policy-system cover code kept for reference: COMP comprehensive, TPFT third party fire and theft, TPO third party only."
+            }
+          ]
+        },
+        {
+          "source": "pol_premium_txn",
+          "concept": "premium_transaction",
+          "conformed_view": "vw_motor_premium_transaction",
+          "grain": "One row per premium transaction (new business in this extract).",
+          "description": "Written premium as booked by the policy system.",
+          "columns": [
+            {
+              "source": "txn_id",
+              "attribute": "premium_transaction_id",
+              "expr": "concat('PAS_MOTOR:', txn_id)"
+            },
+            {
+              "source": "contract_reference",
+              "attribute": "policy_id",
+              "expr": "concat('PAS_MOTOR:', contract_reference)"
+            },
+            {
+              "source": "txn_type",
+              "attribute": "premium_transaction_type_code",
+              "value_map": {
+                "NEW_BUSINESS": "WRITTEN"
+              },
+              "note": "The policy system distinguishes new business from renewals; both are WRITTEN premium in the core."
+            },
+            {
+              "source": "txn_amt",
+              "attribute": "amount"
+            },
+            {
+              "attribute": "currency_code",
+              "expr": "'GBP'"
+            },
+            {
+              "source": "ipt_amt",
+              "attribute": "ipt_amount"
+            },
+            {
+              "source": "txn_dt",
+              "attribute": "transaction_date"
+            },
+            {
+              "source": "txn_type",
+              "attribute": "source_system_code",
+              "expr": "'PAS_MOTOR'"
+            }
+          ]
+        }
+      ]
     }
   ],
   "relationships": [

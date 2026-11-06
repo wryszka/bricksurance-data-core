@@ -1,0 +1,97 @@
+kind: metric_view
+name: motor_performance_metrics
+domain: semantics
+after_mappings: true
+published_by: rulebook
+title: Motor Performance Metrics
+description: >
+  THE motor loss ratio and its drivers. Use measure loss_ratio for any question
+  about the motor loss ratio: it is the company definition approved by the
+  Chief Actuary (paid plus outstanding case reserves plus IBNR, net of
+  recoveries, over EARNED premium), accident-quarter basis, valued 31 October
+  2026. Segment, quarter, region and urbanity work on every measure. Peril,
+  head of damage and large-loss flag describe claims only, so pair them with
+  claim measures (incurred_claims, claim_count, severity), not with earned
+  premium. The claims_operations_ratio (paid over WRITTEN premium) is the legacy
+  weekly claims-ops number kept for reconciliation; it answers a different
+  question and is not the loss ratio. All amounts GBP.
+owner: Chief Actuary
+certification: certified
+source: semantics.motor_loss_ratio_components
+dimensions:
+  - name: accident_quarter
+    expr: accident_quarter
+    description: Accident quarter, e.g. 2026Q2, 2026Q3. Premium is earned in the quarter; claims occurred in it.
+  - name: motor_segment
+    expr: motor_segment
+    description: Segment label - Urban private motor, Other private motor, Commercial motor. Filter with labels.
+  - name: motor_segment_code
+    expr: motor_segment_code
+    description: Segment code PMU / PMO / CMV.
+  - name: region_name
+    expr: region_name
+    description: Region of the risk postcode (exposure) or loss postcode (claims), e.g. Greater London.
+  - name: urbanity_code
+    expr: urbanity_code
+    description: URBAN_MAJOR, URBAN, SUBURBAN, RURAL.
+  - name: use_class_code
+    expr: use_class_code
+    description: Declared vehicle use.
+  - name: peril_code
+    expr: peril_code
+    description: Claims only - AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE.
+  - name: head_of_damage_code
+    expr: head_of_damage_code
+    description: Claims only - VEHICLE_REPAIR, THEFT_TOTAL_LOSS, TP_PROPERTY, BODILY_INJURY, GLASS, FIRE_TOTAL_LOSS.
+  - name: claim_feature_type_code
+    expr: claim_feature_type_code
+    description: Claims only - OWN_DAMAGE, THIRD_PARTY_PROPERTY, THIRD_PARTY_INJURY.
+  - name: large_loss_flag
+    expr: large_loss_flag
+    description: Claims only - true when net incurred is 500,000 GBP or more.
+  - name: component_kind
+    expr: component_kind
+    description: EXPOSURE, CLAIM or IBNR row. Rarely needed; measures already pick the right rows.
+measures:
+  - name: earned_premium
+    expr: SUM(earned_premium)
+    description: Premium earned in the accident quarter, GBP (actuarial warehouse earning engine).
+  - name: written_premium
+    expr: SUM(written_premium)
+    description: Premium written (booked) in the quarter, GBP. Denominator of the legacy claims-ops ratio only.
+  - name: vehicle_years
+    expr: SUM(vehicle_years)
+    description: Vehicle-years of exposure in the quarter. Denominator for frequency.
+  - name: claims_paid
+    expr: SUM(claims_paid)
+    description: Indemnity paid to the valuation date.
+  - name: case_reserves
+    expr: SUM(case_reserves)
+    description: Outstanding case reserves at the valuation date.
+  - name: ibnr
+    expr: SUM(ibnr)
+    description: Incurred-but-not-reported estimate (segment x quarter, Q3 2026 close).
+  - name: recoveries
+    expr: SUM(recoveries)
+    description: Salvage and subrogation recovered, positive number.
+  - name: claims_handling_costs
+    expr: SUM(claims_handling_costs)
+    description: Allocated claims handling fees (ALAE). Not part of the approved loss ratio.
+  - name: incurred_claims
+    expr: SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)
+    description: Incurred claims on the approved definition - paid plus case reserves plus IBNR, net of recoveries.
+  - name: loss_ratio
+    expr: (SUM(claims_paid) + SUM(case_reserves) + SUM(ibnr) - SUM(recoveries)) / NULLIF(SUM(earned_premium), 0)
+    description: THE motor loss ratio - approved definition, earned basis. Group by accident_quarter and motor_segment for the executive view.
+  - name: claim_count
+    expr: SUM(claim_count)
+    description: Number of claims (accident quarter).
+  - name: frequency
+    expr: SUM(claim_count) / NULLIF(SUM(vehicle_years), 0)
+    description: Claims per vehicle-year. Multiply by 100 for claims per 100 vehicle-years.
+  - name: severity
+    expr: (SUM(claims_paid) + SUM(case_reserves) - SUM(recoveries)) / NULLIF(SUM(claim_count), 0)
+    description: Average net incurred per claim (case basis, excludes IBNR).
+  - name: claims_operations_ratio
+    expr: SUM(claims_paid) / NULLIF(SUM(written_premium), 0)
+    description: LEGACY - paid claims over written premium, the weekly claims-ops dashboard number. Not the loss ratio; use only when asked for it by name.

@@ -51,6 +51,8 @@ def import_ontology(doc, model_dir):
     for kind in ("entities", "views", "metric_views", "functions"):
         for spec in doc.get(kind, []):
             dump_yaml(spec, model_dir / spec["domain"] / f"{spec['name']}.yaml")
+    for spec in doc.get("mappings", []):
+        dump_yaml(spec, model_dir / "mappings" / f"{spec['name']}.yaml")
 
 
 def load_specs(model_dir):

@@ -198,6 +198,12 @@ def publish():
     d = approved()
     run_sql(metric_view_sql(d))
     client().api_client.do("PATCH", f"/api/2.0/genie/spaces/{GOV_SPACE}", body=governed_space_payload(d))
+    # one rulebook, every line: the motor chapter publishes from the same approved version
+    try:
+        from . import motor
+        motor.publish(d)
+    except Exception as e:  # motor book may not be loaded yet; never block the One Number approval
+        print(f"motor republish skipped: {type(e).__name__}: {e}")
     return d
 
 

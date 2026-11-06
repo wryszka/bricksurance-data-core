@@ -1037,6 +1037,8 @@ if (FRONTEND / "assets").exists():
 
 from . import one_number  # noqa: E402
 app.include_router(one_number.router)
+from . import motor  # noqa: E402
+app.include_router(motor.router)
 
 
 @app.get("/")

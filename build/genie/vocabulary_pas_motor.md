@@ -1,0 +1,43 @@
+## Vocabulary of Policy administration (motor book) -> core concepts (source system PAS_MOTOR)
+
+The motor policy administration extract in the policy system's own vocabulary: a 'contract' with a 'contract reference', product codes PMU / PMO / CMV, 'cover start' and 'cover end' dates and an 'annual premium amount'. Mapped column by column to the core Policy, Coverage, Insured Object, Vehicle and Premium Transaction concepts. Insurer-specific terms (motor segment, use class) are preserved as extensions rather than forced into the standard.
+
+- `pol_master.contract_reference` means **policy.policy_id**: Stable, source-agnostic identifier for the policy. A surrogate key owned by the data layer, not by any policy administration system. Surrogate key = source system plus contract reference.
+- `pol_master.contract_reference` means **policy.policy_number**: Policy number as issued to the policyholder. Unique within a source system, not globally - always interpret together with source_system_code. The policy system calls the policy number a 'contract reference'.
+- `pol_master.product_cd` means **policy.line_of_business_code**: Line of business written under this policy. All three product codes are Motor; the product code itself is kept as the motor_segment_code extension.
+- `pol_master.contract_status` means **policy.policy_status_code**: Current lifecycle status of the policy.
+- `pol_master.cover_start_dt` means **policy.inception_date**: Date on which cover begins (inclusive).
+- `pol_master.cover_end_dt` means **policy.expiry_date**: Date on which cover ends (inclusive). Must be on or after inception_date. Cover end date is the last day of cover in the policy system; the core expiry_date is the same day.
+- `pol_master.cover_start_dt` means **policy.underwriting_year**: Year of account to which the policy is allocated; drives reinsurance cession and market reporting.
+- `pol_master.source_sys` means **policy.source_system_code**: System of record this policy originates from. Provenance is part of the model, not an afterthought.
+- `pol_master.product_cd` is the enterprise extension **motor_segment_code**: Bricksurance SE motor segment: PMU urban private motor, PMO other private motor, CMV commercial motor. Insurer-specific; the standard has no segment concept, so it is kept beside the standard columns, not forced into them.
+- `pol_master.use_class` is the enterprise extension **use_class_code**: Declared use of the vehicle(s): SDP social domestic and pleasure, SDP_COMMUTE including commuting, BUSINESS; commercial uses DELIVERY, HAULAGE, TRADES, FLEET_CAR, TAXI.
+- `pol_master.veh_count` is the enterprise extension **vehicle_count**: Number of vehicles on the contract (fleets carry several).
+- `pol_master.risk_postcode` is the enterprise extension **risk_postcode**: Postcode area and district where the vehicle(s) are kept overnight.
+- `pol_master.annual_prem_amt` is the enterprise extension **annual_premium**: Annual contract premium excluding insurance premium tax, in GBP.
+- Conformed view `lr_serverless_aws_us_catalog.bricksurance_semantics.vw_motor_policy` presents `pol_master` in core terms; prefer it over the raw table.
+- `pol_vehicle.contract_reference` means **vehicle.vehicle_id**: Identifier for the vehicle record.
+- `pol_vehicle.contract_reference` means **vehicle.insured_object_id**: The insured object this vehicle detail belongs to (object type VEHICLE). One insured object per vehicle; the vehicle is its typed satellite.
+- `pol_vehicle.contract_reference` means **insured_object.policy_id**: Policy the object is insured under.
+- `pol_vehicle.reg_mark` means **vehicle.registration_number**: Vehicle registration mark. The policy system says 'reg mark'.
+- `pol_vehicle.make` means **vehicle.make**: Manufacturer.
+- `pol_vehicle.model` means **vehicle.model**: Model designation.
+- `pol_vehicle.year_of_manufacture` means **vehicle.year_of_manufacture**: Year of manufacture.
+- `pol_vehicle.abi_group` means **vehicle.vehicle_group**: Insurance vehicle group used in rating, e.g. an ABI-style group. UK ABI insurance group 1-50; the core vehicle_group is the same scale.
+- `pol_vehicle.vehicle_value_amt` is the enterprise extension **vehicle_value_amount**: Declared vehicle value in GBP at inception.
+- Conformed view `lr_serverless_aws_us_catalog.bricksurance_semantics.vw_motor_vehicle` presents `pol_vehicle` in core terms; prefer it over the raw table.
+- `pol_cover.contract_reference` means **coverage.coverage_id**: Identifier for the coverage.
+- `pol_cover.contract_reference` means **coverage.policy_id**: Policy the coverage is granted under.
+- `pol_cover.cover_cd` means **coverage.coverage_type_code**: Kind of cover granted. One source row becomes one or two coverage rows.
+- `pol_cover.tpl_limit_amt` means **coverage.limit_amount**: Maximum amount payable under this coverage, in the policy currency; empty where unlimited or not applicable. Third-party liability limit; applies to the MOTOR_TPL row.
+- `pol_cover.excess_amt` means **coverage.deductible_amount**: Amount borne by the insured before this coverage responds, in the policy currency. The policy system says 'excess'; applies to the MOTOR_OWN_DAMAGE row.
+- `pol_cover.cover_cd` is the enterprise extension **cover_code**: Policy-system cover code kept for reference: COMP comprehensive, TPFT third party fire and theft, TPO third party only.
+- Conformed view `lr_serverless_aws_us_catalog.bricksurance_semantics.vw_motor_coverage` presents `pol_cover` in core terms; prefer it over the raw table.
+- `pol_premium_txn.txn_id` means **premium_transaction.premium_transaction_id**: Identifier for the premium transaction.
+- `pol_premium_txn.contract_reference` means **premium_transaction.policy_id**: Policy the premium movement belongs to.
+- `pol_premium_txn.txn_type` means **premium_transaction.premium_transaction_type_code**: Kind of premium movement. The policy system distinguishes new business from renewals; both are WRITTEN premium in the core.
+- `pol_premium_txn.txn_amt` means **premium_transaction.amount**: Signed amount of the movement in the transaction currency: written and positive adjustments positive, returns negative.
+- `pol_premium_txn.ipt_amt` means **premium_transaction.ipt_amount**: Insurance premium tax on the movement, in the transaction currency.
+- `pol_premium_txn.txn_dt` means **premium_transaction.transaction_date**: Date the movement was booked.
+- `pol_premium_txn.txn_type` means **premium_transaction.source_system_code**: System of record the movement originates from.
+- Conformed view `lr_serverless_aws_us_catalog.bricksurance_semantics.vw_motor_premium_transaction` presents `pol_premium_txn` in core terms; prefer it over the raw table.

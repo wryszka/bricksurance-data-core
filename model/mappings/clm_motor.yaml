@@ -1,0 +1,119 @@
+kind: mapping
+name: clm_motor
+title: Claims management (motor) -> core concepts
+description: >
+  The motor claims system extract in the claims team's vocabulary: a 'claim ref'
+  on a 'policy no', a 'peril code' (AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE), and
+  'movements' typed PAID / RESERVE / RECOVERY / FEE with a 'head of damage'.
+  Mapped to the core Claim and Claim Transaction concepts. Two conventions differ
+  and are translated, not hidden: the claims system books payments without
+  releasing the reserve (the core releases reserve on payment), and recoveries
+  are negative movements in both.
+source_system: CLM_MOTOR
+schema: src_claims
+owner: Head of Motor Claims
+certification: certified
+tables:
+  - source: clm_header
+    concept: claim
+    conformed_view: vw_motor_claim
+    grain: One row per claim.
+    description: Motor claims as the claims system holds them.
+    columns:
+      - source: claim_ref
+        attribute: claim_id
+        expr: concat('CLM_MOTOR:', claim_ref)
+      - source: claim_ref
+        attribute: claim_number
+      - source: policy_no
+        attribute: policy_id
+        expr: concat('PAS_MOTOR:', policy_no)
+        note: The claims system stores the policy system's contract reference as 'policy no'; this is the join to the policy.
+      - source: claim_status
+        attribute: claim_status_code
+        value_map: {OPEN: OPEN, SETTLED: CLOSED}
+        note: The claims team says 'settled'; the core says CLOSED.
+      - source: peril_cd
+        attribute: cause_of_loss_code
+        value_map: {AD: COLLISION, THEFT: THEFT, TPPD: LIABILITY_INCIDENT, TPBI: LIABILITY_INCIDENT, WINDSCREEN: GLASS, FIRE: FIRE}
+        note: >
+          AD (accidental damage) is a collision in the standard vocabulary; third
+          party property damage and bodily injury are both liability incidents, so
+          the finer peril code is kept as the peril_code extension.
+      - source: loss_dt
+        attribute: loss_date
+      - source: notified_dt
+        attribute: reported_date
+        note: The claims team says 'notified'.
+      - source: handling_office
+        attribute: handling_office
+      - attribute: source_system_code
+        expr: "'CLM_MOTOR'"
+    extensions:
+      - name: peril_code
+        source: peril_cd
+        definition: >
+          Claims-system peril: AD accidental damage, THEFT, TPPD third party property
+          damage, TPBI third party bodily injury, WINDSCREEN, FIRE. Finer than the
+          standard cause of loss; this is the code to use for peril questions.
+      - name: fault_indicator
+        source: fault_ind
+        definition: Y at fault, N non-fault, SPLIT shared liability.
+      - name: loss_postcode_area
+        source: loss_postcode_area
+        definition: Postcode area where the loss occurred; joins to the actuarial postcode region dimension.
+  - source: clm_movement
+    concept: claim_transaction
+    conformed_view: vw_motor_claim_transaction
+    grain: One row per movement, plus one reserve release per payment (core convention).
+    description: >
+      Claims movements translated to core claim transactions. Payment rows become
+      INDEMNITY_PAYMENT and ALSO generate a matching negative CASE_RESERVE_MOVEMENT,
+      because the core convention is that a payment releases the reserve it pays.
+      Without this translation the claims-system view double-counts outstanding.
+    columns:
+      - source: movement_id
+        attribute: claim_transaction_id
+        expr: concat('CLM_MOTOR:', movement_id)
+      - source: claim_ref
+        attribute: claim_id
+        expr: concat('CLM_MOTOR:', claim_ref)
+      - source: movement_type
+        attribute: claim_transaction_type_code
+        value_map: {PAID: INDEMNITY_PAYMENT, RESERVE: CASE_RESERVE_MOVEMENT, RECOVERY: RECOVERY, FEE: EXPENSE_PAYMENT}
+        note: FEE is allocated claims handling cost (ALAE); RECOVERY is negative in both systems.
+      - source: amount
+        attribute: amount
+      - attribute: currency_code
+        expr: "'GBP'"
+      - source: movement_dt
+        attribute: transaction_date
+      - attribute: source_system_code
+        expr: "'CLM_MOTOR'"
+    sql: |
+      SELECT concat('CLM_MOTOR:', movement_id) AS claim_transaction_id,
+             concat('CLM_MOTOR:', claim_ref) AS claim_id,
+             CASE movement_type WHEN 'PAID' THEN 'INDEMNITY_PAYMENT' WHEN 'RESERVE' THEN 'CASE_RESERVE_MOVEMENT'
+                                WHEN 'RECOVERY' THEN 'RECOVERY' WHEN 'FEE' THEN 'EXPENSE_PAYMENT' END AS claim_transaction_type_code,
+             amount, 'GBP' AS currency_code, movement_dt AS transaction_date, 'CLM_MOTOR' AS source_system_code,
+             head_of_damage AS head_of_damage_code,
+             CASE head_of_damage WHEN 'BODILY_INJURY' THEN 'THIRD_PARTY_INJURY' WHEN 'TP_PROPERTY' THEN 'THIRD_PARTY_PROPERTY'
+                                 ELSE 'OWN_DAMAGE' END AS claim_feature_type_code
+      FROM {src}
+      UNION ALL
+      SELECT concat('CLM_MOTOR:', movement_id, ':REL'), concat('CLM_MOTOR:', claim_ref), 'CASE_RESERVE_MOVEMENT',
+             -amount, 'GBP', movement_dt, 'CLM_MOTOR', head_of_damage,
+             CASE head_of_damage WHEN 'BODILY_INJURY' THEN 'THIRD_PARTY_INJURY' WHEN 'TP_PROPERTY' THEN 'THIRD_PARTY_PROPERTY'
+                                 ELSE 'OWN_DAMAGE' END
+      FROM {src}
+      WHERE movement_type = 'PAID'
+    extensions:
+      - name: head_of_damage_code
+        source: head_of_damage
+        definition: >
+          Claims-system head of damage: VEHICLE_REPAIR, THEFT_TOTAL_LOSS, TP_PROPERTY,
+          BODILY_INJURY, GLASS, FIRE_TOTAL_LOSS. The level at which repair-cost and
+          injury questions are answered.
+      - name: claim_feature_type_code
+        source: head_of_damage
+        definition: Head of damage rolled up to the core claim feature type (OWN_DAMAGE, THIRD_PARTY_PROPERTY, THIRD_PARTY_INJURY).

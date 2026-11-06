@@ -33,3 +33,12 @@ codes:
     description: >
       Third-party business information (Dun & Bradstreet-style) matched to our
       commercial parties by a global company identifier. Synthetic in this demo.
+  - code: PAS_MOTOR
+    label: Motor policy administration
+    description: The motor book's policy administration system (extract schema src_pas).
+  - code: CLM_MOTOR
+    label: Motor claims management
+    description: The motor book's claims management system (extract schema src_claims).
+  - code: ACT_DW
+    label: Actuarial warehouse
+    description: The actuarial data warehouse (earning engine output, IBNR, pricing dimensions; extract schema src_actuarial).

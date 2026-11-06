@@ -17,11 +17,13 @@ import ReinsuranceView from './views/ReinsuranceView';
 import LiveEventView from './views/LiveEventView';
 import EngineersView from './views/EngineersView';
 import OneNumberView from './views/OneNumberView';
+import MotorView from './views/MotorView';
 import ExchangeTab from './components/ExchangeTab';
 import NetworkTab from './components/NetworkTab';
 
 const NAV = [
   { to: '#/one-number', label: 'One Number', match: (p: string) => p.startsWith('one-number') },
+  { to: '#/motor', label: 'Motor', match: (p: string) => p.startsWith('motor') },
   { to: '#/', label: 'Home', match: (p: string) => p === '' || p.startsWith('search') || p.startsWith('metric') || p.startsWith('entity') || p.startsWith('code_set') || p.startsWith('function') || p.startsWith('lineage') },
   { to: '#/underwriting', label: 'Underwriting', match: (p: string) => p.startsWith('underwriting') },
   { to: '#/reserving', label: 'Reserving', match: (p: string) => p.startsWith('reserving') },
@@ -142,6 +144,8 @@ export default function App() {
         return <NetworkTab />;
       case 'one-number':
         return <OneNumberView beat={parts[1]} />;
+      case 'motor':
+        return <MotorView beat={parts[1]} />;
       case 'engineers':
         return <EngineersView meta={meta} />;
       default:

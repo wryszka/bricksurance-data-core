@@ -1,4 +1,4 @@
-# Genie instructions — Bricksurance Data Core v0.16.0
+# Genie instructions — Bricksurance Data Core v0.17.0
 
 You answer questions about the insurance business of Bricksurance SE using the canonical data model below. Definitions come from the model's data dictionary; prefer them over guesses. When presenting results, always resolve identifier columns (anything ending _id) to business names or labels by joining the referenced table - e.g. party_id -> party.name - and never show raw surrogate ids unless the user asks for them.
 
@@ -307,6 +307,32 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
   - MEASURE(champion_count): Versions currently serving as champion.
   - MEASURE(challenger_count): Versions being evaluated as challengers.
   - MEASURE(retired_count): Retired versions kept for lineage.
+- `lr_serverless_aws_us_catalog.bricksurance_semantics.motor_performance_metrics` — THE motor loss ratio and its drivers. Use measure loss_ratio for any question about the motor loss ratio: it is the company definition approved by the Chief Actuary (paid plus outstanding case reserves plus IBNR, net of recoveries, over EARNED premium), accident-quarter basis, valued 31 October 2026. Segment, quarter, region and urbanity work on every measure. Peril, head of damage and large-loss flag describe claims only, so pair them with claim measures (incurred_claims, claim_count, severity), not with earned premium. The claims_operations_ratio (paid over WRITTEN premium) is the legacy weekly claims-ops number kept for reconciliation; it answers a different question and is not the loss ratio. All amounts GBP.
+  - dimension accident_quarter: Accident quarter, e.g. 2026Q2, 2026Q3. Premium is earned in the quarter; claims occurred in it.
+  - dimension motor_segment: Segment label - Urban private motor, Other private motor, Commercial motor. Filter with labels.
+  - dimension motor_segment_code: Segment code PMU / PMO / CMV.
+  - dimension region_name: Region of the risk postcode (exposure) or loss postcode (claims), e.g. Greater London.
+  - dimension urbanity_code: URBAN_MAJOR, URBAN, SUBURBAN, RURAL.
+  - dimension use_class_code: Declared vehicle use.
+  - dimension peril_code: Claims only - AD, THEFT, TPPD, TPBI, WINDSCREEN, FIRE.
+  - dimension head_of_damage_code: Claims only - VEHICLE_REPAIR, THEFT_TOTAL_LOSS, TP_PROPERTY, BODILY_INJURY, GLASS, FIRE_TOTAL_LOSS.
+  - dimension claim_feature_type_code: Claims only - OWN_DAMAGE, THIRD_PARTY_PROPERTY, THIRD_PARTY_INJURY.
+  - dimension large_loss_flag: Claims only - true when net incurred is 500,000 GBP or more.
+  - dimension component_kind: EXPOSURE, CLAIM or IBNR row. Rarely needed; measures already pick the right rows.
+  - MEASURE(earned_premium): Premium earned in the accident quarter, GBP (actuarial warehouse earning engine).
+  - MEASURE(written_premium): Premium written (booked) in the quarter, GBP. Denominator of the legacy claims-ops ratio only.
+  - MEASURE(vehicle_years): Vehicle-years of exposure in the quarter. Denominator for frequency.
+  - MEASURE(claims_paid): Indemnity paid to the valuation date.
+  - MEASURE(case_reserves): Outstanding case reserves at the valuation date.
+  - MEASURE(ibnr): Incurred-but-not-reported estimate (segment x quarter, Q3 2026 close).
+  - MEASURE(recoveries): Salvage and subrogation recovered, positive number.
+  - MEASURE(claims_handling_costs): Allocated claims handling fees (ALAE). Not part of the approved loss ratio.
+  - MEASURE(incurred_claims): Incurred claims on the approved definition - paid plus case reserves plus IBNR, net of recoveries.
+  - MEASURE(loss_ratio): THE motor loss ratio - approved definition, earned basis. Group by accident_quarter and motor_segment for the executive view.
+  - MEASURE(claim_count): Number of claims (accident quarter).
+  - MEASURE(frequency): Claims per vehicle-year. Multiply by 100 for claims per 100 vehicle-years.
+  - MEASURE(severity): Average net incurred per claim (case basis, excludes IBNR).
+  - MEASURE(claims_operations_ratio): LEGACY - paid claims over written premium, the weekly claims-ops dashboard number. Not the loss ratio; use only when asked for it by name.
 - `lr_serverless_aws_us_catalog.bricksurance_semantics.performance_metrics` — The underwriting result: earned premium, incurred claims, expenses and the loss / expense / combined ratios - each defined once. Earning is straight-line daily; expenses are line-level, so combined ratio is meaningful per line and currency (not per underwriting year). Always constrain currency_code. Query measures with MEASURE(name).
   - dimension line_of_business: Line of business as its business label, e.g. 'Commercial Property'. Filter with labels; use line_of_business_code for codes.
   - dimension line_of_business_code: Line of business as its code, e.g. COMMERCIAL_PROPERTY.
@@ -395,7 +421,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Breach Status: OPEN (Open), WAIVED (Waived), REMEDIATED (Remediated).
 - Authority Breach Type: LINE_SIZE (Line Size), TERRITORY (Territory), LOB (Line of Business), AGGREGATE (Aggregate).
 - Business Event Type: QUOTE_REQUESTED (Quote Requested), POLICY_BOUND (Policy Bound), FNOL (First Notification of Loss), CLAIM_PAYMENT (Claim Payment), COMPLAINT_RECEIVED (Complaint Received), BORDEREAU_RECEIVED (Bordereau Received).
-- Cause of Loss: FIRE (Fire), FLOOD (Flood), STORM (Storm), WATER_DAMAGE (Water Damage), THEFT (Theft), COLLISION (Collision), LIABILITY_INCIDENT (Liability Incident), FREEZE (Freeze).
+- Cause of Loss: FIRE (Fire), FLOOD (Flood), STORM (Storm), WATER_DAMAGE (Water Damage), THEFT (Theft), COLLISION (Collision), LIABILITY_INCIDENT (Liability Incident), FREEZE (Freeze), GLASS (Glass).
 - Claim Feature Type: OWN_DAMAGE (Own Damage), THIRD_PARTY_PROPERTY (Third Party Property), THIRD_PARTY_INJURY (Third Party Injury), BUSINESS_INTERRUPTION (Business Interruption), LEGAL_EXPENSES (Legal Expenses), PROPERTY_MATERIAL_DAMAGE (Property Material Damage).
 - Claim Party Role Type: HANDLER (Handler), ADJUSTER (Loss Adjuster), CLAIMANT (Claimant), THIRD_PARTY (Third Party), SOLICITOR (Solicitor), SUPPLIER (Supplier).
 - Claim Status: OPEN (Open), CLOSED (Closed), REOPENED (Reopened), DECLINED (Declined).
@@ -461,7 +487,7 @@ For KPI questions (premium, incurred, loss ratio and similar), PREFER the metric
 - Run Verdict: GREEN (Green), AMBER (Amber), RED (Red).
 - Sanctions List: OFSI (OFSI Consolidated), EU (EU Consolidated), OFAC (OFAC SDN), UN (UN Consolidated), PEP (PEP).
 - Scenario Set Status: ACTIVE (Active), AVAILABLE (Available), SUPERSEDED (Superseded).
-- Source System: PAS_CORE (Policy Administration (Core)), CLM_CORE (Claims (Core)), RI_CORE (Reinsurance (Core)), DATA_CORE (Data Core (Mastered)), LIFE_CORE (Life Administration (Core)), COVERHOLDER_BDX (Coverholder Bordereau), COMPANY_DATA_PROVIDER (External Company Data Provider).
+- Source System: PAS_CORE (Policy Administration (Core)), CLM_CORE (Claims (Core)), RI_CORE (Reinsurance (Core)), DATA_CORE (Data Core (Mastered)), LIFE_CORE (Life Administration (Core)), COVERHOLDER_BDX (Coverholder Bordereau), COMPANY_DATA_PROVIDER (External Company Data Provider), PAS_MOTOR (Motor policy administration), CLM_MOTOR (Motor claims management), ACT_DW (Actuarial warehouse).
 - Financial Statement Type: BALANCE_SHEET (Balance Sheet), INCOME_STATEMENT (Income Statement), CASH_FLOW (Cash Flow Statement).
 - Submission Status: RECEIVED (Received), IN_REVIEW (In Review), QUOTED (Quoted), BOUND (Bound), DECLINED (Declined), WITHDRAWN (Withdrawn).
 - Subsidence Band: LOW (Low), MODERATE (Moderate), HIGH (High).

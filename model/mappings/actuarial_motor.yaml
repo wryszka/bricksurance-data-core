@@ -1,0 +1,108 @@
+kind: mapping
+name: actuarial_motor
+title: Actuarial warehouse (motor) -> core concepts
+description: >
+  The actuarial warehouse holds what neither operational system does: earned
+  premium and vehicle-years by policy and accounting month (the earning engine
+  output), the IBNR estimate by segment and accident quarter, and the reference
+  dimensions the pricing team uses (segment, postcode region). Its vocabulary is
+  the actuaries' own: 'pol ref', 'yyyymm', 'ep amt', 'veh years', 'acc qtr'.
+source_system: ACT_DW
+schema: src_actuarial
+owner: Chief Actuary
+certification: certified
+tables:
+  - source: earned_premium_monthly
+    concept: premium_earning
+    conformed_view: vw_motor_earned_premium
+    grain: One row per policy per accounting month with cover in force.
+    description: >
+      Earned premium by policy and month on the warehouse's daily pro-rata basis.
+      The core premium_earning view is the same concept at policy grain; this is
+      its monthly form, and the authoritative denominator for the motor loss ratio.
+    columns:
+      - source: pol_ref
+        attribute: policy_id
+        expr: concat('PAS_MOTOR:', pol_ref)
+        definition: Stable, source-agnostic identifier for the policy (same surrogate as the policy system mapping).
+        note: "'Pol ref' is the policy system's contract reference."
+      - source: ep_amt
+        attribute: earned_premium
+        definition: Premium earned in the month, GBP, daily pro-rata over the cover period.
+      - source: yyyymm
+        attribute: accounting_month
+        definition: Accounting month as YYYYMM.
+      - source: yyyymm
+        attribute: accident_quarter
+        expr: concat(floor(yyyymm / 100), 'Q', ceil((yyyymm % 100) / 3))
+        definition: Calendar quarter of the accounting month, e.g. 2026Q3. Same labelling as the claims accident quarter so premium and claims line up.
+    extensions:
+      - name: vehicle_years
+        source: veh_years
+        definition: Vehicle-years of exposure earned in the month (vehicles x days in force / 365). The denominator for claim frequency.
+      - name: days_in_force
+        source: days_in_force
+        definition: Days of cover in the month.
+      - name: motor_segment_code
+        source: seg_cd
+        definition: Bricksurance SE motor segment (PMU / PMO / CMV) as carried by the warehouse.
+  - source: ibnr_estimate
+    concept: valuation_result
+    conformed_view: vw_motor_ibnr
+    grain: One row per motor segment per accident quarter at the valuation date.
+    description: Incurred-but-not-reported reserve estimate from the Q3 2026 close.
+    columns:
+      - source: ibnr_amt
+        attribute: amount
+      - attribute: valuation_measure_code
+        expr: "'IBNR'"
+      - attribute: line_of_business_code
+        expr: "'MOTOR'"
+      - source: acc_qtr
+        attribute: cohort
+        note: The warehouse cohort is the accident quarter.
+      - attribute: currency_code
+        expr: "'GBP'"
+    extensions:
+      - name: motor_segment_code
+        source: seg_cd
+        definition: Bricksurance SE motor segment.
+      - name: valuation_date
+        source: valuation_dt
+        definition: Date the estimate was struck.
+      - name: reserving_method_code
+        source: method_cd
+        definition: Reserving method (CHAIN_LADDER).
+  - source: segment_dim
+    concept: null
+    conformed_view: vw_motor_segment
+    grain: One row per motor segment.
+    description: >
+      The insurer's own motor segmentation. There is no segment concept in the
+      standard; this dimension is an enterprise extension and is published as such.
+    extensions:
+      - name: motor_segment_code
+        source: seg_cd
+        definition: PMU urban private motor, PMO other private motor, CMV commercial motor.
+      - name: motor_segment
+        source: seg_desc
+        definition: Segment label for people (use for filtering with labels).
+      - name: line_of_business_code
+        source: lob_cd
+        definition: Always MOTOR.
+  - source: postcode_region_dim
+    concept: postcode_enrichment
+    conformed_view: vw_motor_postcode_region
+    grain: One row per postcode area.
+    description: Postcode area to region and urbanity, as the pricing team classifies them.
+    columns:
+      - source: postcode_area
+        attribute: postcode
+        note: Postcode AREA (letters only), not a full postcode.
+      - source: urbanity_code
+        attribute: urbanity_code
+      - source: region_name
+        attribute: region_code
+        note: The warehouse carries the region name; the core attribute is a code. Kept as the name.
+      - attribute: country_code
+        expr: "'GB'"
